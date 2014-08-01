@@ -25,7 +25,7 @@ To install Rosette:
   binaries, but it also supports [Z3](http://z3.codeplex.com).  To use Z3, 
   download the binaries for your system and put them in the `rosette/bin` directory.
 
-  `$ ls rosette/bin`
+  `$ ls rosette/bin`  
   `kodkod z3`
 
 * Use Racket's raco tool to install Rosette as one of your Racket
