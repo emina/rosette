@@ -43,9 +43,9 @@ To execute a Rosette program:
   compile the Rosette implementation, which may take a few seconds.
   Subsequent compilations should be fast.
 
-* DrRacket is the preferred way to run Rosette.  If you need to run it
-  from the command line, make sure to first compile the program (and
-  the Rosette implementation):
+* DrRacket is the preferred way to execute Rosette programs.  If you
+  need to use the command line, make sure to first compile the program
+  (and the Rosette implementation):
 
   $ raco make <your program>
   $ racket -r <your program> 
@@ -53,8 +53,8 @@ To execute a Rosette program:
 A note on the available languages:
 
 * Rosette ships with two languages:
-  #lang s-exp rosette
   #lang s-exp rosette/safe
+  #lang s-exp rosette
 
 * The rosette/safe language includes only constructs that are safe to
   use with symbolic values.  This (for now) excludes some nice Racket
