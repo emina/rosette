@@ -36,7 +36,7 @@ solver-aided DSLs and demos.
 
 ### Executing Rosette programs
 
-* Open the target program in DrRacket (e.g., rosette/sdsl/fsm/demo.rkt)
+* Open the target program in DrRacket (e.g., [`rosette/sdsl/fsm/demo.rkt`](https://github.com/emina/rosette/blob/master/sdsl/fsm/demo.rkt))
   and hit run!
 
 * The first time you run any program in Rosette, DrRacket will have to
