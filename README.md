@@ -12,10 +12,10 @@ To install Rosette:
 * Make sure that the default Java installation on your system is a
   64-bit server VM, version 1.7x:
 
-  $ java -version
+  `$ java -version
   java version "1.7.0_25"
   Java(TM) SE Runtime Environment (build 1.7.0_25-b15)
-  Java HotSpot(TM) 64-Bit Server VM (build 23.25-b01, mixed mode)
+  Java HotSpot(TM) 64-Bit Server VM (build 23.25-b01, mixed mode)`
 
 * Clone the rosette repository:
 
