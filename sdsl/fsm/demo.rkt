@@ -21,8 +21,7 @@
            (r → (? s1 s2 end reject))]
    [end  : ]))
 
-; example commands
-(viz m)  
+; example commands 
 (m '(c a r)) 
 (m '(c d r))
 (m '(c a d a r))
