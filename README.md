@@ -77,8 +77,8 @@ solver-aided DSLs and demos.
 
 * For more on Rosette, see:
 
-  [1] Emina Torlak and Rastislav Bodik. _A lightweight symbolic
-  virtual machine for solver-aided host languages._ In PLDI'14.
+  - Emina Torlak and Rastislav Bodik. [_A lightweight symbolic
+  virtual machine for solver-aided host languages._](http://people.csail.mit.edu/emina/pubs/rosette.pldi14.pdf) In PLDI'14.
 
-  [2] Emina Torlak and Rastislav Bodik. _Growing solver-aided
-  languages with rosette._ In Onward!'13.
+  - Emina Torlak and Rastislav Bodik. [_Growing solver-aided
+  languages with rosette._](http://people.csail.mit.edu/emina/pubs/rosette.onward13.pdf) In Onward!'13.
