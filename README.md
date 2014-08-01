@@ -5,7 +5,7 @@ This repository includes the source code and default solver binaries
 for the Rosette solver-aided host language, as well as several example
 solver-aided DSLs and demos.
 
-**Install Rosette**
+### Installing Rosette
 
 * Download and install Racket 6.0.1 from http://racket-lang.org
 
@@ -34,9 +34,9 @@ solver-aided DSLs and demos.
   `$ cd rosette`  
   `$ raco link rosette`  
 
-**Execute a Rosette program**
+### Executing Rosette programs
 
-* Open the program in DrRacket (e.g., rosette/sdsl/fsm/demo.rkt)
+* Open the target program in DrRacket (e.g., rosette/sdsl/fsm/demo.rkt)
   and hit run!
 
 * The first time you run any program in Rosette, DrRacket will have to
@@ -50,7 +50,7 @@ solver-aided DSLs and demos.
   `$ raco make <your program>`  
   `$ racket -r <your program>`  
 
-**Available languages**
+### Available languages
 
 * Rosette ships with two languages: `#lang s-exp rosette/safe` and  `#lang s-exp rosette`.
 
