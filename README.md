@@ -61,7 +61,12 @@ A note on the available languages:
   features, such as iteration constructs.  The semantics of these
   constructs can be expressed in the core language, however, so no
   expressiveness is lost (just convenience).  It is recommended for
-  new users of Rosette to start with the rosette/safe language.
+  new users of Rosette to start with the rosette/safe language.  To
+  see the list of syntactic forms and procedures provided by
+  rosette/safe, type the following into the Rosette REPL:
+  
+  > (rosette)
+  '(define assert let let* ...)
 
 * The rosette language includes all of Racket.  This places the burden
   on the programmer to decide whether a given Racket construct (which

@@ -1,0 +1,27 @@
+#lang s-exp "../../../lang/main.rkt"
+
+(kernel void (fwtKernel [float* tArray] [int step])
+  (: int tid group pair match)
+  (: float t1 t2)
+  (= tid (get_global_id 0))
+  (= group (% tid step))
+  (= pair  (+ (* (<< step 1) (/ tid step)) group)) 
+  (= match (+ pair step))
+  (= t1 [tArray pair])
+  (= t2 [tArray match])
+  (= [tArray pair]  (+ t1 t2))
+  (= [tArray match] (- t1 t2)))
+
+(kernel void (fwtKernel4 [float4* tArray] [int step])
+  (: int tid group pair match)
+  (: float4 t1 t2)
+  (= tid (get_global_id 0))
+  (= step (/ step 4))
+  (= group (% tid step))
+  (= pair  (+ (* (<< step 1) (/ tid step)) group)) 
+  (= match (+ pair step))
+  (= t1 [tArray pair])
+  (= t2 [tArray match])
+  (= [tArray pair]  (+ t1 t2))
+  (= [tArray match] (- t1 t2)))
+
