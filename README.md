@@ -77,8 +77,8 @@ A note on the available languages:
 
 * For more on Rosette, see:
 
-  [1] Emina Torlak and Rastislav Bodik. 2014. A lightweight symbolic
-  virtual machine for solver-aided host languages. In PLDI'14.
+  [1] Emina Torlak and Rastislav Bodik. _A lightweight symbolic
+  virtual machine for solver-aided host languages._ In PLDI'14.
 
-  [2] Emina Torlak and Rastislav Bodik. 2013. Growing solver-aided
-  languages with rosette. In Onward!'13.
+  [2] Emina Torlak and Rastislav Bodik. _Growing solver-aided
+  languages with rosette._ In Onward!'13.
