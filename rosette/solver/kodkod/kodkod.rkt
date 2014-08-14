@@ -86,8 +86,11 @@
              (log-time [this] "solving"     : (send kodkod-server read (curryr decode env)))]))))
 
 (define (compile env asserts cores? solver)
+  (define bw (configured bitwidth))
+  (when (> bw 32)
+    (error 'kodkod "Kodkod supports bitvectors of length up to 32; current bitwidth is set to ~a" bw))
   (curryr encode env asserts  
-          ':bitwidth (configured bitwidth)
+          ':bitwidth bw
           ':produce-cores cores? 
           ':solver solver
           ':verbosity 0)) 

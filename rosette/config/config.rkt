@@ -19,9 +19,9 @@
           (error 'configure "expects a positive loop bound, given ~s" bound)))
     
     (define/public (set-bitwidth! bound)
-      (or (and (>= bound 1) (<= bound 32)
-               (set! bitwidth bound))
-          (error 'configure "expects a bitwidth between 1 and 32, inclusive, given ~s" bound)))
+      (if (>= bound 1) 
+          (set! bitwidth bound)
+          (error 'configure "expects a positive bitwidth, given ~s" bound)))
     
     (define/public (set-seed! vec)
       (or (and (pseudo-random-generator-vector? vec)
