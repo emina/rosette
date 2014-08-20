@@ -96,7 +96,7 @@
  syntax quasisyntax unsyntax unsyntax-splicing
  syntax/loc quasisyntax/loc quote-syntax/prune
  syntax-rules syntax-id-rules
- define-syntax-rule ... _
+ define-syntax define-syntax-rule ... _ 
  local-expand expand expand-syntax expand-once
  expand-syntax-once expand-to-top-form
  expand-syntax-to-top-form

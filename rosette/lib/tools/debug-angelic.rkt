@@ -25,7 +25,7 @@
          (parameterize ([current-oracle (oracle)]
                         [current-solution (empty-solution)]
                         [relate (lambda (relaxer val)
-                                  (if (sym=? relaxer indicator)
+                                  (if (term=? relaxer indicator)
                                       (not (equal? relaxer val))
                                       (equal? relaxer val)))])
            (solve (validator input))

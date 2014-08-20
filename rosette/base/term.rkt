@@ -23,6 +23,7 @@
  term-e            ; (-> any/c any/c)
  term->datum       ; (-> any/c any/c)
  term->list        ; (-> any/c any/c)
+ clear-terms!      ; (-> void? void?)
  (all-from-out "type.rkt"))
 
 
@@ -59,6 +60,7 @@
                 [_ #f]))
 
 (define cache (make-hash))
+(define (clear-terms!) (hash-clear! cache))
 
 (define-syntax-rule (make-term args type) 
   (let ([val args]) 
