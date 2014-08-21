@@ -60,7 +60,9 @@
                 [_ #f]))
 
 (define cache (make-hash))
-(define (clear-terms!) (hash-clear! cache))
+(define (clear-terms!)
+  (set! cache (for/hash ([(k v) cache] #:when (constant? v)) (values k v))))
+                
 
 (define-syntax-rule (make-term args type) 
   (let ([val args]) 
