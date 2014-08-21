@@ -61,7 +61,10 @@
 
 (define cache (make-hash))
 (define (clear-terms!)
-  (set! cache (for/hash ([(k v) cache] #:when (constant? v)) (values k v))))
+  (define tmp cache)
+  (set! cache (make-hash))
+  (for([(k v) tmp] #:when (constant? v)) 
+    (hash-set! cache k v)))
                 
 
 (define-syntax-rule (make-term args type) 
