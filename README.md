@@ -23,7 +23,7 @@ solver-aided DSLs and demos.
 
 * Rosette ships with the [Kodkod](http://alloy.mit.edu/kodkod/) solver 
   binaries, but it also supports [Z3](http://z3.codeplex.com).  To use Z3, 
-  download the binaries for your system and put them in the `rosette/bin` directory.
+  download (or build) the binaries for your system and put them in the `rosette/bin` directory.
 
   `$ ls rosette/bin`  
   `kodkod z3`
