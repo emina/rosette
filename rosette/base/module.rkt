@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/dict syntax/parse syntax/id-table (only-in racket pretty-print) 
                      (only-in "lift.rkt" drop@))
-         racket/require
+         racket/require racket/undefined
          (filtered-in drop@ "box.rkt")
          (only-in racket/splicing splicing-let splicing-let-values))
 
@@ -17,8 +17,14 @@
      (let* ([core (local-expand #'(#%plain-module-begin forms ...) 'module-begin '())]
             [vars (find-mutated-vars core)]      
             [transformed (box-mutated-vars core vars)])
+       ;(printf "vars:~a\n" (dict->list vars))
        ;(printf "core:\n") (pretty-print (syntax->datum core))
-       ;(printf "transformed:\n") (pretty-print (syntax->datum transformed))
+       ;(call-with-output-file "bad.rkt" 
+       ;  (lambda (out) (parameterize ([current-output-port out])
+                         ;(printf "transformed:\n") 
+       ;                  (pretty-print (syntax->datum transformed))))
+       ;  #:mode 'text
+       ;  #:exists 'replace)
        transformed)]))
 
 (define-syntax (@#%top-interaction stx)
@@ -165,7 +171,7 @@
         (cond [(any-mutated? vs)
                (let ([ves (syntax->list #'((var ...) ...))])
                  (quasisyntax/loc stx
-                   (letrec-values ([#,vs (values #,@vs)])
+                   (letrec-values ([#,vs (apply values (make-list #,(length vs) undefined))])
                      #,@(for/list ([v vs] #:when (mutated? v))
                           #`(set! #,v (box #,v)))
                      #,@(for/fold ([result '()]) ([ve ves] [e es])
@@ -187,7 +193,7 @@
         (cond [(any-mutated? vs)
                (let ([ves (syntax->list #'((var ...) ...))])
                  (quasisyntax/loc stx  
-                   (letrec-syntaxes+values stx-decls ([#,vs (values #,@vs)])
+                   (letrec-syntaxes+values stx-decls ([#,vs (apply values (make-list #,(length vs) undefined))])
                      #,@(for/list ([v vs] #:when (mutated? v))
                           #`(set! #,v (box #,v)))
                      #,@(for/fold ([result '()]) ([ve ves] [e es])  
