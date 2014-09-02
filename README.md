@@ -7,7 +7,7 @@ solver-aided DSLs and demos.
 
 ### Installing Rosette
 
-* Download and install Racket 6.0.1 from http://racket-lang.org
+* Download and install Racket 6.1 from http://racket-lang.org
 
 * Make sure that the default Java installation on your system is a
   64-bit server VM, version 1.7x:
