@@ -2,7 +2,7 @@
 
 (require "define.rkt" (for-syntax racket/syntax) "compile.rkt")
 
-(provide define-synthax choose choose-number option tag syntax/source)
+(provide define-synthax choose choose-number ?? option tag syntax/source)
 
 (define-syntax (define-synthax stx)
   (syntax-case stx ()
@@ -39,7 +39,15 @@
                (let ([val (evaluate v)])
                  (and (not (term? val))
                       (gen #`#,val)))))
-                    
+
+(define-synthesis-rule (??)
+  #:declare [v number?]
+  #:compile v
+  #:generate (lambda (gen)
+               (let ([val (evaluate v)])
+                 (and (not (term? val))
+                      (gen #`#,val)))))
+
 (define-synthesis-rule (option p expr)
   #:declare  [opt? boolean?]
   #:compile  (let ([e (thunk expr)]) (if opt? (p (e)) (e)))

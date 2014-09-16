@@ -1,7 +1,7 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/config/config rosette/query/eval
+         rosette/query/eval
          rosette/base/term rosette/base/bool rosette/base/num
          rosette/solver/solution
          (only-in rosette/base/define define-symbolic))

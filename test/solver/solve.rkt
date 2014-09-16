@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui
          rosette/query/eval rosette/base/define
-         rosette/config/config rosette/solver/solution
+         rosette/solver/solution
          rosette/base/term rosette/base/bool rosette/base/num 
          rosette/base/merge rosette/base/procedure
          rosette/base/enum rosette/base/equality)
@@ -25,7 +25,7 @@
 (define-enum idx '(a b c d e f g h))
 (define-symbolic e idx? [8])
     
-(define bits (configured bitwidth))
+(define bits (current-bitwidth))
 (define min-bv (- (arithmetic-shift 1 (- bits 1))))
 (define max-bv (- (arithmetic-shift 1 (- bits 1)) 1))
 

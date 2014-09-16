@@ -4,7 +4,7 @@
 
 (provide current-log-source current-log-handler
          define-log log-handler 
-         log log-fatal log-error log-warning log-info log-debug
+         log-fatal log-error log-warning log-info log-debug
          log-time)
 
 (define current-log-source (make-parameter #f))

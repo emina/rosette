@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/syntax) 
          racket/stxparam 
-         "../lib/util/syntax-properties.rkt"
+         "../lib/util/syntax-properties.rkt"  
          "../base/define.rkt" "../base/assert.rkt" "state.rkt" "../base/state.rkt" 
          "../solver/solver.rkt" "../solver/solution.rkt" 
          "../base/equality.rkt" "../base/term.rkt")
@@ -20,8 +20,8 @@
            (unless (unsat? sol)
              (error 'debug "found a solution instead of a minimal core: ~a" sol))
            sol)))]
-    [(debug [pred] form)
-     (parameterize ([relax? pred])
+    [(debug [pred other ...] form)
+     (parameterize ([relax? (list pred other ...)])
        (debug form))]))
 
 (define-syntax-rule (define/debug head body ...) 
@@ -43,9 +43,11 @@
 (define relax?
   (make-parameter none/c
                   (lambda (pred)
-                    (unless (contract? pred)
-                      (error 'relax? "expected a contract, given ~s" pred))
-                    pred)))
+                    (unless (or (type? pred) (and (list? pred) (andmap type? pred)))
+                      (error 'relax? "expected a type or list of types, given ~s" pred))
+                    (match pred
+                      [(or (? type? p) (list p)) (lambda (v) (eq? (type-of v) p))]
+                      [_ (lambda (v) (not (false? (memq (type-of v) pred))))]))))
 
 (define relate
   (make-parameter @equal?

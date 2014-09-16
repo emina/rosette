@@ -1,7 +1,7 @@
 #lang racket
 
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "any.rkt" "generic.rkt" "merge.rkt"
-         (only-in "bitwise.rkt" define-not define-and define-or) "../config/config.rkt")
+         (only-in "bitwise.rkt" define-not define-and define-or))
 
 (provide 
  @number?                ; type?
@@ -14,7 +14,15 @@
  @quotient @remainder ; (-> @number? @number? @number?) 
  @expt @sqrt                  
  @<< @>> @>>>
- @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor)
+ @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor
+ current-bitwidth)
+
+(define current-bitwidth
+  (make-parameter 5 
+                  (lambda (bw) 
+                    (unless (and (integer? bw) (positive? bw))
+                      (raise-argument-error 'current-bitwidth "positive integer" bw))
+                    bw)))
 
 (define (num/cast v)
   (match v
@@ -179,7 +187,7 @@
                          [(x y) (expression @expt x y)]))
 
 (define (mask x)
-  (bitwise-and x (bitwise-not (arithmetic-shift -1 (configured bitwidth)))))
+  (bitwise-and x (bitwise-not (arithmetic-shift -1 (current-bitwidth)))))
 
 (define-op @<<
   #:name '<<
@@ -261,7 +269,7 @@
     [(? number? x) (sqrt (max 0 x))]
     [(expression (== @*) x x) (@abs x)]
     [(expression (== @expt) x (and (? integer?) (? even?) k)) (@expt (@abs x) (/ k 2))]
-    [x (define n (arithmetic-shift (configured bitwidth) -1))
+    [x (define n (arithmetic-shift (current-bitwidth) -1))
        (let loop ([res 0] [add (arithmetic-shift 1 (sub1 n))] [i n])
          (if (<= i 0) 
              res

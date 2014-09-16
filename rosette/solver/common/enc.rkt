@@ -1,11 +1,11 @@
 #lang racket
 
-(require (only-in "../../config/config.rkt" configured) (only-in "../../base/enum.rkt" enums enum-<?))
+(require (only-in "../../base/num.rkt" current-bitwidth) (only-in "../../base/enum.rkt" enums enum-<?))
 
 (provide finitize define-encoder enum-comparison-op?)
 
 (define (finitize n) 
-  (let ([bw (configured bitwidth)])
+  (let ([bw (current-bitwidth)])
     (match n
       [+inf.0 (let ([out (sub1 (arithmetic-shift 1 (sub1 bw)))]) 
                 (log-info "cannot represent ~a exactly; truncating to ~a" n out)

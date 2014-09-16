@@ -1,7 +1,7 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         racket/fixnum rosette/config/config
+         racket/fixnum 
          rosette/base/term
          rosette/base/bool
          rosette/base/num
@@ -180,6 +180,6 @@
    (check-shift-op @<< fxlshift)
    (check-shift-op @>> fxrshift)
    (check-shift-op @>>> 
-                   (lambda (x y) (fxrshift (fxand x (fxnot (fxlshift -1 (configured bitwidth)))) y)))))
+                   (lambda (x y) (fxrshift (fxand x (fxnot (fxlshift -1 (current-bitwidth)))) y)))))
   
 (time (run-tests num-tests))

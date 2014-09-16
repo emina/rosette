@@ -2,7 +2,7 @@
 
 (require (prefix-in smt/ (only-in "smtlib2.rkt" not and or xor => <=> ite = <))
          (except-in "smtlib2.rkt" not and or xor => <=> ite = <) "env.rkt" 
-         "../common/enc.rkt" "../../config/config.rkt" "../../base/term.rkt" 
+         "../common/enc.rkt" "../../base/term.rkt" 
          "../../base/generic.rkt" "../../base/num.rkt" "../../base/bool.rkt"
          "../../base/enum.rkt")
 
@@ -43,7 +43,7 @@
   (match v 
     [#t true]
     [#f false]
-    [(? number?) (bv (finitize v) (configured bitwidth))]
+    [(? number?) (bv (finitize v) (current-bitwidth))]
     [(? enum-literal?) (ordinal v)]
     [_ (error 'enc-literal "expected a boolean?, number? or enum-literal?, given ~a" v)]))
 
@@ -58,11 +58,11 @@
   [#:?  [enum-comparison-op? smt/<]])
 
 (define (smt/abs e)
-  (smt/ite (bvslt e (bv 0 (configured bitwidth))) (bvneg e) e))
+  (smt/ite (bvslt e (bv 0 (current-bitwidth))) (bvneg e) e))
 
 (define (smt/sgn e)
-  (let ([zero (bv 0 (configured bitwidth))]) 
+  (let ([zero (bv 0 (current-bitwidth))]) 
     (smt/ite (smt/= e zero) zero 
              (smt/ite (bvslt e zero) 
-                      (bv -1 (configured bitwidth))
-                      (bv  1 (configured bitwidth))))))
+                      (bv -1 (current-bitwidth))
+                      (bv  1 (current-bitwidth))))))

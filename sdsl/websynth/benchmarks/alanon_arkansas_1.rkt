@@ -14,7 +14,7 @@
 (define-symbolic r0f0zpath tag? [max_zpath_depth])
 
 (current-log-handler (log-handler #:info any/c))
-(configure [bitwidth 1])
+(current-bitwidth 1)
 
 ; Record 0 zpath asserts
 (assert (path? r0f0zpath dom "Alexander AFG"))

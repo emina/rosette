@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../config/config.rkt" "../../lib/data/ord-dict.rkt" 
+(require "../../lib/data/ord-dict.rkt" 
          "../../base/term.rkt"  "../../base/bool.rkt" "../../base/num.rkt"
          "../../base/enum.rkt")
 
@@ -48,11 +48,11 @@
         [_ (error 'interpret "expected a boolean relation, given ~a" rel)])])))
 
 ; Returns a new domain for the number type that consists of the bit values 
-; 2^0, ..., 2^(bw-2), - 2^(bw-1), where bw is (configured bitwidth).  All 
+; 2^0, ..., 2^(bw-2), - 2^(bw-1), where bw is (current-bitwidth).  All 
 ; other number values are represented as sets (unary relations) over these 
 ; bit values.
 (define (int-domain)
-  (let* ([bw (configured bitwidth)]
+  (let* ([bw (current-bitwidth)]
          [bits (list->vector `(,@(for/list ([i (- bw 1)]) (expt 2 i)) 
                                ,(- (expt 2 (- bw 1)))))])
     (domain 

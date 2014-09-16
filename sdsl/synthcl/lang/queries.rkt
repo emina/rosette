@@ -19,7 +19,7 @@
        (syntax/loc stx 
          (syntax-parameterize
           ([range (syntax-rules () [(_ arg (... ...)) (in-range arg (... ...))])])
-          (configure [bitwidth 32])
+          (current-bitwidth 32)
           (define clock (current-milliseconds))
           (for* ([id seq] ...)
             (define m (with-handlers ([exn:fail? (lambda (e) #f)]) (rosette/verify expr)))
@@ -40,7 +40,7 @@
                    (syntax/loc stx 
                      (syntax-parameterize
                       ([range (syntax-rules () [(_ arg (... ...)) (in-range arg (... ...))])])
-                      (configure [bitwidth bw]) ;(current-log-handler (log-handler #:info any/c))
+                      (current-bitwidth bw) ;(current-log-handler (log-handler #:info any/c))
                       (define-values (id ...)
                         (for*/lists (tmp ...) ([id seq] ...) (values id ...)))
                       (define clock (current-milliseconds))

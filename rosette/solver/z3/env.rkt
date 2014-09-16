@@ -2,7 +2,7 @@
 
 (require racket/syntax 
          (only-in "smtlib2.rkt" Int Bool BitVec declare-const define-const assert [< Int<] [<= Int<=]) 
-         "../../config/config.rkt" "../../base/term.rkt" 
+         "../../base/term.rkt" 
          "../../base/bool.rkt" "../../base/num.rkt" "../../base/enum.rkt")
 
 (provide (rename-out [make-env env] 
@@ -36,7 +36,7 @@
 (define (smt-type val)
   (match (type-of val)
     [(== @boolean?) Bool]
-    [(== @number?) (BitVec (configured bitwidth))]
+    [(== @number?) (BitVec (current-bitwidth))]
     [(? enum?) Int]
     [t (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
 

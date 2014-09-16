@@ -2,7 +2,7 @@
 
 (require racket/runtime-path "../solver.rkt" "../solution.rkt" 
          (only-in "../common/util.rkt" filter-asserts)
-         "../../config/log.rkt" (only-in "../../config/config.rkt" configured)
+         "../../config/log.rkt" (only-in "../../base/num.rkt" current-bitwidth)
          (only-in "kks.rkt" cmd TRUE FALSE) (prefix-in kks/ (only-in "kks.rkt" clear))
          "server.rkt" "cmd.rkt" (rename-in "env.rkt" [env make-env]))
 
@@ -86,7 +86,7 @@
              (log-time [this] "solving"     : (send kodkod-server read (curryr decode env)))]))))
 
 (define (compile env asserts cores? solver)
-  (define bw (configured bitwidth))
+  (define bw (current-bitwidth))
   (when (> bw 32)
     (error 'kodkod "Kodkod supports bitvectors of length up to 32; current bitwidth is set to ~a" bw))
   (curryr encode env asserts  

@@ -23,7 +23,8 @@
    ! || && => <=> 
    = < <= > >=
    + - * / quotient remainder expt abs sgn sqrt
-   << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor)))
+   << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor 
+   current-bitwidth)))
 
 (define (impersonate-operator op origin)
   (impersonate-procedure 

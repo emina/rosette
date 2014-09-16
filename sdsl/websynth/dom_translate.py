@@ -65,7 +65,7 @@ def generate(args):
     
     
     f.write('(current-log-handler (log-handler #:info any/c))\n')
-    f.write('(configure [bitwidth 1])\n\n')
+    f.write('(current-bitwidth 1)\n\n')
     
     # All zpath asserts
     for r_index in range(0, rec_count):

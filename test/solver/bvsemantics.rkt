@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui
          rosette/query/eval rosette/base/define
-         rosette/config/config rosette/solver/solution
+         rosette/base/num rosette/solver/solution
          rosette/base/term rosette/base/bool rosette/base/num rosette/base/merge
          rosette/base/equality 
          rosette/solver/kodkod/kodkod rosette/solver/z3/z3)
@@ -28,7 +28,7 @@
   (if (equal? @boolean? (type-of val)) (merge val 1 0) val))
 
 (define (solve solver op x-val [y-val #f])
-  (with-configuration ([bitwidth bits])
+  (parameterize ([current-bitwidth bits])
     (send solver clear)
     (send solver assert (@= x x-val))
     (cond [y-val (send solver assert (@= y y-val))

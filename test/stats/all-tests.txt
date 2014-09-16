@@ -249,3 +249,6 @@
 [2014.09.02 16:16:38] [rosette/test/all-tests.rkt run-all] [cpu=6075, real=8352, gc=710]
 [2014.09.02 16:17:38] [rosette/test/all-tests.rkt run-z3] [cpu=39190, real=60147, gc=907]
 [2014.09.02 16:17:56] [rosette/test/all-tests.rkt run-bv] [cpu=11805, real=18579, gc=339]
+[2014.09.16 12:27:44] [rosette/test/all-tests.rkt run-all] [cpu=6896, real=9158, gc=1466]
+[2014.09.16 12:28:37] [rosette/test/all-tests.rkt run-z3] [cpu=34765, real=52230, gc=708]
+[2014.09.16 12:28:53] [rosette/test/all-tests.rkt run-bv] [cpu=10647, real=16905, gc=266]

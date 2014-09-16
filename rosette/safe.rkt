@@ -1,7 +1,6 @@
 #lang racket
 
-(require "config/config.rkt"
-         "config/log.rkt"
+(require  "config/log.rkt"
          
          "solver/solver.rkt" 
          "solver/solution.rkt" 
@@ -17,8 +16,7 @@
     (map car all)))
 
 (define (rosette)
-  (append (exported 'rosette/config/config)
-          (exported 'rosette/config/log)
+  (append (exported 'rosette/config/log)
           (exported 'rosette/solver/solver)
           (exported 'rosette/solver/solution)
           (exported 'rosette/base/base)
@@ -26,7 +24,6 @@
 
 (provide 
  (all-from-out 
-  "config/config.rkt"
   "config/log.rkt"
   
   "solver/solver.rkt" 
