@@ -10,7 +10,7 @@
          rosette/solver/solver 
          rosette/solver/solution
          rosette/solver/kodkod/kodkod
-         rosette/solver/z3/z3
+         rosette/solver/smt/z3
          "location.rkt" "instruction.rkt" "fragment.rkt")
 
 (provide ex-all-solve)
