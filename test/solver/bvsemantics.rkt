@@ -5,7 +5,7 @@
          rosette/base/num rosette/solver/solution
          rosette/base/term rosette/base/bool rosette/base/num rosette/base/merge
          rosette/base/equality 
-         rosette/solver/kodkod/kodkod rosette/solver/z3/z3)
+         rosette/solver/kodkod/kodkod rosette/solver/smt/z3)
 
 (define kodkod (new kodkod%))
 (define z3 (new z3%))

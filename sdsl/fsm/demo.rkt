@@ -8,6 +8,7 @@
            (r → end)] 
    [end : ]))
 
+(define rx #px"^c[ad]+r$")
 
 
 (define M 
@@ -22,10 +23,11 @@
    [end  : ]))
 
 ; example commands 
-(m '(c a r)) 
-(m '(c d r))
-(m '(c a d a r))
-(verify-automaton m #px"^c[ad]+r$")
-(debug-automaton m #px"^c[ad]+r$" '(c r))
-(synthesize-automaton M #px"^c[ad]+r$")
+;(m '(c a r)) 
+;(m '(c d r))
+;(m '(c a d a r))
+;(verify-automaton m #px"^c[ad]+r$")
+;(debug-automaton m #px"^c[ad]+r$" '(c r))
+;(synthesize-automaton M #px"^c[ad]+r$")
 
+(viz m)

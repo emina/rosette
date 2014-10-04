@@ -3,7 +3,7 @@
 (require "dom.rkt")
 (provide (except-out (all-defined-out) tag-type))
 
-(require rosette/solver/z3/z3)
+(require rosette/solver/smt/z3)
 (current-solver (new z3%))
 
 (define-syntax-rule (define-tags tags)

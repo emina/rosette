@@ -9,7 +9,7 @@
 (provide kodkod% kodkod-incremental%)
 
 (define kodkod% 
-  (class* object% (solver<%> writable<%>) 
+  (class* object% (solver<%> writable<%>) (inspect (make-inspector))
     
     (define kodkod-server (new server% 
                                [initializer (thunk (kodkod-initializer #f))]

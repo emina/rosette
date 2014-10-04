@@ -1,6 +1,6 @@
 #lang racket
 
-(require rosette/solver/z3/z3 
+(require rosette/solver/smt/z3 
          (prefix-in solve/ "solve.rkt")
          (prefix-in solve+/ "solve+.rkt"))
 

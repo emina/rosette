@@ -10,7 +10,7 @@
          "../solver/solver.rkt"  
          "../solver/solution.rkt"
          "../solver/kodkod/kodkod.rkt"
-         "../solver/z3/z3.rkt")
+         "../solver/smt/z3.rkt")
 
 (provide exists-forall)
 

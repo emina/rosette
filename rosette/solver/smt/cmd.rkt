@@ -51,6 +51,10 @@
        [(== true) #t]
        [(== false) #f]
        [_ (error 'decode-binding "expected 'true or 'false binding for ~a, given ~a" const val)])]
-    [(== @number?) (finitize val)]
+    [(== @number?) 
+     (match val
+       [(? number?) (finitize val)]
+       [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
+        (finitize n)])]
     [(? enum? t) (vector-ref (enum-members t) val)]
     [other other]))

@@ -33,7 +33,7 @@
 
 
 ; Uncomment the following two lines to use Z3 instead of Kodkod:
-;(require rosette/solver/z3/z3)
+;(require rosette/solver/smt/z3)
 ;(current-solver (new z3%))
 
 ; Shows counterexamples for bugs in basic semantics. 

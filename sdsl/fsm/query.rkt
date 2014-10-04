@@ -7,7 +7,7 @@
 
 (provide define/debug debug-automaton 
          verify-automaton solve-automaton 
-         synthesize-automaton)
+         synthesize-automaton matches?)
         
 ; Returns a symbolic word of length k, drawn from the given alphabet.
 (define (word k alphabet)
@@ -23,8 +23,11 @@
 (define (word->string w)
   (apply string-append (map symbol->string w)))
 
+(define (matches? regex w)
+  (regexp-match? regex (word->string w)))
+
 (define (correct? m regex w)
-  (eq? (m w) (regexp-match? regex (word->string w))))
+  (eq? (m w) (matches? regex w)))
 
 (define (verify-automaton m regex [k 4])
   (define w (word* k (alphabet m)))

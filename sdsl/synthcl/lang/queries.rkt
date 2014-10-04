@@ -4,7 +4,7 @@
          (for-syntax (only-in racket/syntax with-syntax*))
          (only-in "forms.rkt" range :)
          (only-in rosette/lib/meta/meta print-forms)
-         (only-in rosette/solver/z3/z3 z3%)
+         (only-in rosette/solver/smt/z3 z3%)
          (prefix-in rosette/ (only-in rosette verify synthesize)))
 
 (provide verify synth)
