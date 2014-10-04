@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/syntax (only-in racket [< racket/<] [- racket/-]))
+(require racket/syntax (only-in racket [< racket/<] [- racket/-] [= racket/=]))
 
 (provide (except-out (all-defined-out) define-ops smt-port print-cmd))
 
@@ -62,10 +62,10 @@
 
 ; Declarations and definitions
 (define (declare-const id type)
-  (print-cmd "(declare-const ~a ~a)" id type))
+  (print-cmd "(declare-const ~a ~s)" id type))
 
 (define (define-const id type body)
-  (print-cmd "(define-fun ~a () ~a ~a)" id type body))
+  (print-cmd "(define-fun ~a () ~a ~s)" id type body))
 
 (define-syntax-rule (define-ops id ...)
   (define-values (id ...)
@@ -83,12 +83,25 @@
 (define (bv val size)  (if (racket/< val 0)
                            (bvneg `(_ ,(format-symbol "bv~a" (racket/- val)) ,size))
                            `(_ ,(format-symbol "bv~a" val) ,size)))
+(define (nat2bv n size)
+  (apply bvor
+         (for/list ([i (in-range 0 size)])
+           (let ([bit (expt 2 i)])
+             (ite (= (mod (div n bit) 2) 1) (bv bit size) (bv 0 size))))))
+
+      
+
 (define-ops 
   bvnot bvand bvor bvxor 
   bvule bvult bvuge bvugt bvsle bvslt bvsge bvsgt
   bvneg bvadd bvsub bvmul bvsdiv bvudiv bvurem bvsrem bvsmod
-  bvshl bvlshr bvashr) 
+  bvshl bvlshr bvashr bv2nat) 
 
 ; Int theory
 (define Int 'Int)
-(define-ops < <=)
+(define-ops < <= div mod -)
+
+; String theory
+(define String 'String)
+(define-ops
+  str.++ str.len str.substr)

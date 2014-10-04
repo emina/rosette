@@ -10,7 +10,7 @@
   (class* smt% (writable<%>) (inspect (make-inspector))
 
     (super-new [path cvc4] 
-               [opts '("--lang=smt" "--output-lang=z3-str" "-m" "-q" "--strings-exp")])
+               [opts '("--lang=smt" "--output-lang=z3-str" "-m" "-q" "--strings-exp" "--rewrite-divk")])
     
     (define/public (custom-write port) (fprintf port "cvc4%"))
     (define/public (custom-display port) (custom-write port))))

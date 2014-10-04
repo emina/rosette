@@ -13,10 +13,11 @@
   (filtered-in add@ "bool.rkt")
   (only-in "merge.rkt" merge merge*)
   (only-in "union.rkt" union union?)
-  "num.rkt" )
+  "num.rkt" "string.rkt" )
              
 (provide 
  @boolean? @false? @number?
+ @string? @string-set! @string-copy! @string-fill!
  (filtered-out with@ (all-defined-out))
  (filtered-out add@ 
   (combine-out 
@@ -24,7 +25,8 @@
    = < <= > >=
    + - * / quotient remainder expt abs sgn sqrt
    << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor 
-   current-bitwidth)))
+   current-bitwidth 
+   string-length string-append substring)))
 
 (define (impersonate-operator op origin)
   (impersonate-procedure 
@@ -77,7 +79,10 @@
   [abs @abs] [sgn @sgn] [sqrt @sqrt] 
   [<< @<<] [>> @>>] [>>> @>>>]
   [bitwise-not @bitwise-not] [bitwise-and @bitwise-and] 
-  [bitwise-ior @bitwise-ior] [bitwise-xor @bitwise-xor])
+  [bitwise-ior @bitwise-ior] [bitwise-xor @bitwise-xor]
+  [string-length @string-length] 
+  [string-append @string-append] 
+  [substring @substring])
 
 (define @boolean=? <=>)
 (define (@add1 x) (+ x 1))

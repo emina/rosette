@@ -3,7 +3,7 @@
 (require (prefix-in smt/ (only-in "smtlib2.rkt" not and or xor => <=> ite = <))
          (except-in "smtlib2.rkt" not and or xor => <=> ite = <) "env.rkt" 
          "../common/enc.rkt" "../../base/term.rkt" 
-         "../../base/generic.rkt" "../../base/num.rkt" "../../base/bool.rkt"
+         "../../base/generic.rkt" "../../base/num.rkt" "../../base/bool.rkt" "../../base/string.rkt"
          "../../base/enum.rkt")
 
 (provide enc finitize)
@@ -19,7 +19,7 @@
                 [(? constant?)  (enc-const v env)]
                 [_             (enc-lit v env)])))
 
-(define (enc-expr v env)
+(define (enc-expr v env) 
   (match v
     [(expression (== @*) -1 e) 
      (bvneg (enc e env))]
@@ -32,6 +32,10 @@
     [(expression (== @expt) e (? integer? n)) 
      (let ([e^n (apply bvmul (make-list (abs n) (enc e env)))])
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
+    [(expression (== @substring) str i j)
+     (str.++ (enc str env) (bv2nat (enc i env)) (bv2nat (enc j env)))]
+    [(expression (== @string-length) str) 
+     (nat2bv (str.len (enc str env)) (current-bitwidth))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...)
      (apply smt/op (for/list ([e es]) (enc e env)))]
     [_ (error 'encode "cannot encode expression ~a" v)]))
@@ -44,6 +48,7 @@
     [#t true]
     [#f false]
     [(? number?) (bv (finitize v) (current-bitwidth))]
+    [(? string?) v]
     [(? enum-literal?) (ordinal v)]
     [_ (error 'enc-literal "expected a boolean?, number? or enum-literal?, given ~a" v)]))
 
@@ -54,7 +59,8 @@
         [@bitwise-not bvnot] [@bitwise-xor bvxor]
         [@<< bvshl] [@>>> bvlshr] [@>> bvashr]
         [@+ bvadd] [@* bvmul] [@quotient bvsdiv] [@remainder bvsrem]
-        [@abs smt/abs] [@sgn smt/sgn]]
+        [@abs smt/abs] [@sgn smt/sgn] 
+        [@string-append str.++]]
   [#:?  [enum-comparison-op? smt/<]])
 
 (define (smt/abs e)

@@ -2,7 +2,8 @@
 
 (require racket/syntax 
          (only-in "smtlib2.rkt" cmd assert check-sat get-model read-solution true false)
-         "../../base/term.rkt" "../../base/bool.rkt" "../../base/num.rkt" "../solution.rkt"  "../../base/enum.rkt"
+         "../../base/term.rkt" "../../base/bool.rkt" "../../base/num.rkt" "../../base/string.rkt" 
+         "../solution.rkt"  "../../base/enum.rkt"
          "env.rkt" "enc.rkt")
 
 (provide encode decode)
@@ -56,5 +57,6 @@
        [(? number?) (finitize val)]
        [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
         (finitize n)])]
+    [(== @string?) val]
     [(? enum? t) (vector-ref (enum-members t) val)]
     [other other]))
