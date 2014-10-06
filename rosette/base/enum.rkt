@@ -91,6 +91,7 @@
   #:methods gen:custom-write
   [(define (write-proc self p m)   (fprintf p "~a?" (object-name (enum-member self))))])
 
+
 ; Given an enum and a concrete or symbolic label, returns the enum 
 ; member with that label.  If no such member exists, an error is thrown.
 (define (enum-value t label) ((enum-member t) label))
@@ -119,7 +120,7 @@
                   (for/list ([(g v) (in-union* v)] #:when (enum? (type-of v)))
                     (cons g (label v)))
                   (type-error 'label enum? v)))]
-    [_ (raise-argument-error 'label "enum?" v)]))
+    [_ (raise-argument-error 'label "enum? element" v)]))
 
 ; Given a concrete or symbolic value of type t, where t is an enum? type,
 ; returns the index of that value in (enum-members t).
@@ -134,7 +135,7 @@
                   (for/list ([(g v) (in-union* v)] #:when (enum? (type-of v)))
                     (cons g (ordinal v)))
                   (type-error 'ordinal enum? v)))]
-    [_ (raise-argument-error 'ordinal "enum?" v)]))
+    [_ (raise-argument-error 'ordinal "enum? element" v)]))
 
 ;;; Helpers ;;; 
 

@@ -91,6 +91,8 @@
  identity const thunk thunk* curry curryr compose compose1
  ; void
  void
+ ; structs
+ prop:procedure gen:equal+hash  gen:custom-write
  ; macros
  syntax-case syntax-case* with-syntax
  syntax quasisyntax unsyntax unsyntax-splicing
