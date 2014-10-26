@@ -59,10 +59,11 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 @defform[(assert expr maybe-message)
          #:grammar
          [(maybe-message (code:line) expr)]]{
-  Checks that @racket[expr] is a non-false value, and if it is, throws an error using the 
+  If @racket[expr] evaluates to @racket[#f], an error is thrown using the 
   optional failure message. If @racket[expr] evaluates to a symbolic boolean value,  
   that value is pushed onto the stack of assertions that will eventually be used to formulate 
-  a query to the underlying solver.
+  a query to the underlying solver.  If @racket[expr] evaluates to any other value, @racket[assert]
+  has no effect.
   @examples[#:eval rosette-eval
   (code:line (assert #t) (code:comment "no effect"))
   (code:line (assert 1)  (code:comment "no effect"))
