@@ -70,7 +70,7 @@ solver-aided DSLs.
 
 * For more on Rosette, see:
 
-  - Emina Torlak.  [_The Rosette Guide_](https://github.com/emina/rosette/doc/guide/html/index.html).
+  - Emina Torlak.  [_The Rosette Guide_](http://homes.cs.washington.edu/~emina/rosette/guide/index.html).
   - Emina Torlak and Rastislav Bodik. [_A lightweight symbolic
   virtual machine for solver-aided host languages._](http://people.csail.mit.edu/emina/pubs/rosette.pldi14.pdf) In PLDI'14.
 
