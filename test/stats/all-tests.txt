@@ -258,3 +258,4 @@
 [2014.10.03 15:18:24] [rosette/test/all-tests.rkt run-all] [cpu=5973, real=8224, gc=685]
 [2014.10.03 15:20:13] [rosette/test/all-tests.rkt run-z3] [cpu=72339, real=108317, gc=911]
 [2014.10.03 15:20:47] [rosette/test/all-tests.rkt run-bv] [cpu=22652, real=33967, gc=2224]
+[2014.10.25 22:07:09] [rosette/test/all-tests.rkt run-all] [cpu=15806, real=24736, gc=2273]

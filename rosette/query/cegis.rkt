@@ -66,8 +66,9 @@
     (if (sat? cex)        
         (let ([witness (cex->witness cex inputs)])
           (log-cegis-info [trial] "solution falsified by ~s; searching for a new candidate ..." (map witness inputs))
-          (send/apply synthesizer assert (evaluate assumes witness))
-          (send/apply synthesizer assert (evaluate asserts witness))
+          (parameterize ([ignore-division-by-0 #t])
+            (send/apply synthesizer assert (evaluate assumes witness))
+            (send/apply synthesizer assert (evaluate asserts witness)))
           (loop (solve/unbind synthesizer input? cleanup) (+ 1 trial)))
         (begin            
           (log-cegis-info [trial] "solution verified!")
