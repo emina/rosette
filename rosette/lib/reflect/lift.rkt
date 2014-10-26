@@ -36,7 +36,8 @@
        (syntax/loc stx
          (define (id arg ...)
            (match* (arg ...)
-             [((? type? arg) ...) (impl arg ...)]))))]
+             [((? type? arg) ...) (impl arg ...)]
+             [(arg ...) (error 'id "expected ~a, given ~a" (list type? ...) (list arg ...))]))))]
     [(_ id [type?  impl])
      (syntax/loc stx
        (define id

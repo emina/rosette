@@ -129,10 +129,7 @@
   [(define (write-proc self port mode) 
      (if (expression? self)
          (fprintf port "~.a" (term->datum self))
-         (case mode
-           [(#t) (write (var-e self) port)]
-           [(#f) (display (term-name self) port)]
-           [else (fprintf port "~.a" (var-e self))])))])
+         (write (var-e self) port)))])
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
