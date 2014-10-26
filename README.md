@@ -23,9 +23,9 @@ solver-aided DSLs.
 
 * Use Racket's `raco` tool to install Rosette as one of your Racket collections:
 
-  `$ cd rosette`
-  `$ raco link rosette`
-  `$ raco setup -l rosette`
+  `$ cd rosette`  
+  `$ raco link rosette`  
+  `$ raco setup -l rosette`  
 
 * Rosette ships with the [Kodkod](http://alloy.mit.edu/kodkod/) solver 
   binaries, but it also supports [Z3](http://z3.codeplex.com) and 
