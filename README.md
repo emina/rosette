@@ -22,6 +22,7 @@ solver-aided DSLs.
   `$ git clone git@github.com:emina/rosette.git`
 
 * Use Racket's `raco` tool to install Rosette as one of your Racket collections:
+
   `$ cd rosette`
   `$ raco link rosette`
   `$ raco setup -l rosette`
