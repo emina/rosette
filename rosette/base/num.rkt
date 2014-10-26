@@ -15,7 +15,10 @@
  @expt @sqrt                  
  @<< @>> @>>>
  @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor
- current-bitwidth)
+ current-bitwidth ignore-division-by-0)
+
+(define ignore-division-by-0
+  (make-parameter #f))
 
 (define current-bitwidth
   (make-parameter 5 
@@ -157,10 +160,12 @@
   #:name '% 
   #:type binary-type
   #:pre  (lambda (x y) (non-zero? y))
-  #:op   (match-lambda** [((? integer? x) (? integer? y)) (remainder x y)]
+  #:op   (match-lambda** [(x 0) (if (ignore-division-by-0) 
+                                    (expression @remainder x 0)
+                                    (error '@remainder "% undefined for 0"))]
+                         [((? integer? x) (? integer? y)) (remainder x y)]
                          [(x 1) 0]
                          [(x x) 0]
-                         [(x 0) (error '@remainder "% undefined for 0")]
                          [((or (? integer? x) (? term? x)) 
                            (or (? integer? y) (? term? y))) (expression @remainder x y)]))
 
@@ -168,10 +173,12 @@
   #:name 'div 
   #:type binary-type
   #:pre  (op-pre @remainder)
-  #:op   (match-lambda** [((? integer? x) (? integer? y)) (quotient x y)]
+  #:op   (match-lambda** [(x 0) (if (ignore-division-by-0) 
+                                    (expression @quotient x 0)
+                                    (error '@quotient "/ undefined for 0"))]
+                         [((? integer? x) (? integer? y)) (quotient x y)]
                          [(x 1) x]
-                         [(x x) 1]
-                         [(x 0) (error '@quotient "% undefined for 0")]
+                         [(x x) 1]  
                          [((or (? integer? x) (? term? x)) 
                            (or (? integer? y) (? term? y))) (expression @quotient x y)]))
 
