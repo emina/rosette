@@ -35,13 +35,12 @@
      (fprintf port "}"))])
 
 (define (fprintf-entry port p mode)
-  (let ([guard (car p)])
-    (fprintf port "[")
-    (print (car p) port mode)
-    (fprintf port " ")
-    (print (cdr p) port mode)
-    (fprintf port "]")))
-    ;(fprintf port "[~.a ~.a]" (if (constant? guard) (term-e guard) guard) (cdr p)))) 
+  (fprintf port "[")
+  (print (car p) port mode)
+  (fprintf port " ")
+  (print (cdr p) port mode)
+  (fprintf port "]")) 
+
   
 (define nil (union '() @any?))
 

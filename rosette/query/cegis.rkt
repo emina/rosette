@@ -4,7 +4,7 @@
          "state.rkt" 
          (only-in "../base/term.rkt" constant) 
          (only-in "../base/bool.rkt" @boolean? ! ||) 
-         (only-in "../base/num.rkt" @number?)
+         (only-in "../base/num.rkt" @number? ignore-division-by-0)
          (only-in "../base/enum.rkt" enum? enum-first)
          "../config/log.rkt"
          "../solver/solver.rkt"  
@@ -37,13 +37,14 @@
   (define (input? var) (member var inputs))
   
   (log-cegis-info [0] "searching for an initial solution over ~s" (map (curryr map inputs) inits))
-  (for ([init inits])
-    (cond [(zero? (dict-count (model init)))
-           (send/apply synthesizer assert assumes)
-           (send/apply synthesizer assert asserts)]
-          [else 
-           (send/apply synthesizer assert (evaluate assumes init))
-           (send/apply synthesizer assert (evaluate asserts init))]))
+  (parameterize ([ignore-division-by-0 #t])
+    (for ([init inits])
+      (cond [(zero? (dict-count (model init)))
+             (send/apply synthesizer assert assumes)
+             (send/apply synthesizer assert asserts)]
+            [else 
+             (send/apply synthesizer assert (evaluate assumes init))
+             (send/apply synthesizer assert (evaluate asserts init))])))
   
   ;(log-cegis-info [0] "assumes: ~a\n" (pretty-format assumes))
   ;(log-cegis-info [0] "asserts: ~a\n" (pretty-format asserts))
@@ -65,8 +66,9 @@
     (if (sat? cex)        
         (let ([witness (cex->witness cex inputs)])
           (log-cegis-info [trial] "solution falsified by ~s; searching for a new candidate ..." (map witness inputs))
-          (send/apply synthesizer assert (evaluate assumes witness))
-          (send/apply synthesizer assert (evaluate asserts witness))
+          (parameterize ([ignore-division-by-0 #t])
+            (send/apply synthesizer assert (evaluate assumes witness))
+            (send/apply synthesizer assert (evaluate asserts witness)))
           (loop (solve/unbind synthesizer input? cleanup) (+ 1 trial)))
         (begin            
           (log-cegis-info [trial] "solution verified!")
