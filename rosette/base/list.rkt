@@ -317,9 +317,9 @@
   (define/lift/applicator findf f list)
   (define (@member x xs) (@memf (curry @equal? x) xs))
   (define (@memq x xs) (@memf (curry @eq? x) xs))
-  (define @assoc (case-lambda [(x xs) (@findf (compose (curry @equal? x) car) xs)]
-                                 [(x xs eq?) (assert-arity-includes eq? 2 'assoc)
-                                             (@findf (compose (curry eq? x) car) xs)]))
+  (define @assoc (case-lambda [(x xs) (@findf (compose (curry @equal? x) @car) xs)]
+                              [(x xs eq?) (assert-arity-includes eq? 2 'assoc)
+                                          (@findf (compose (curry eq? x) @car) xs)]))
   (define (@assq x xs) (@assoc x xs @eq?))
   (define (@assf proc xs) (@findf (compose proc car) xs)))
 
