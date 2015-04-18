@@ -22,7 +22,7 @@
   (combine-out 
    ! || && => <=> 
    = < <= > >=
-   + - * / quotient remainder expt abs sgn sqrt
+   + - * *h / quotient remainder expt abs sgn sqrt
    << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor 
    current-bitwidth)))
 
@@ -73,7 +73,7 @@
   [! @!] [&& @&&] [|| @||] [=> @=>] [<=> @<=>] 
   [= @=] [> @>] [>= @>=] [< @<] [<= @<=]
   [+ @+] [- @-] [* @*] [/ @/]
-  [quotient @quotient] [remainder @remainder] [expt @expt]
+  [quotient @quotient] [remainder @remainder] [expt @expt] [*h @*h]
   [abs @abs] [sgn @sgn] [sqrt @sqrt] 
   [<< @<<] [>> @>>] [>>> @>>>]
   [bitwise-not @bitwise-not] [bitwise-and @bitwise-and] 

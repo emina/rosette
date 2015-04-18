@@ -87,7 +87,10 @@
   bvnot bvand bvor bvxor 
   bvule bvult bvuge bvugt bvsle bvslt bvsge bvsgt
   bvneg bvadd bvsub bvmul bvsdiv bvudiv bvurem bvsrem bvsmod
-  bvshl bvlshr bvashr) 
+  bvshl bvlshr bvashr concat) 
+
+(define (extract i j s)
+  `((_ extract ,i ,j) ,s))
 
 ; Int theory
 (define Int 'Int)

@@ -34,6 +34,11 @@
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...)
      (apply smt/op (for/list ([e es]) (enc e env)))]
+    [(expression (== @*h) x y)
+     (extract (sub1 (* 2 (current-bitwidth))) 
+              (current-bitwidth)
+              (bvmul (concat (enc 0 env) (enc x env)) 
+                     (concat (enc 0 env) (enc y env))))]
     [_ (error 'encode "cannot encode expression ~a" v)]))
 
 (define (enc-const v env)

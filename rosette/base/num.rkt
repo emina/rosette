@@ -8,7 +8,8 @@
  @=                      ; (-> @number? @number? @boolean?)
  @< @<=    
  @> @>=  
- @+ @*                ; (->* ()() #:rest (listof @number?) @number?)
+ @+ @*                   ; (->* ()() #:rest (listof @number?) @number?)
+ @*h                     ; (-> @number? @number? @number?)
  @- @/     
  @abs @sgn            ; (-> @number? @number?)
  @quotient @remainder ; (-> @number? @number? @number?) 
@@ -192,6 +193,16 @@
                          [(x 1) x]
                          [((expression (== @expt) x y) z) (@expt x (@* y z))]
                          [(x y) (expression @expt x y)]))
+
+(define-op  @*h
+  #:name '*h 
+  #:type binary-type
+  #:op   (match-lambda** [(x 0) 0]
+                         [(0 x) 0]
+                         [((? integer? x) (? integer? y)) 
+                           (arithmetic-shift (* x y) (- (current-bitwidth)))]
+                         [(x y) (sort/expression @*h x y)]))
+                          
 
 (define (mask x)
   (bitwise-and x (bitwise-not (arithmetic-shift -1 (current-bitwidth)))))
