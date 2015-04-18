@@ -2,7 +2,7 @@
 
 (provide p24 p24-stx)
 
-(configure [bitwidth 32])
+(current-bitwidth 32)
 
 ; Round up to the next higher power of 2.
 (define (pp24 x) 

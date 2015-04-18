@@ -8,7 +8,7 @@
          bvshl bvshr bvushr 
          bveq bvle bvlt bvge bvgt 
          bvule bvult bvuge bvugt
-         bvlib verify32)
+         bvlib verify32 finitize)
 
 (define-syntax-rule (bool->num b) (if b 1 0))
 
