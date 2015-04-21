@@ -200,7 +200,11 @@
   #:op   (match-lambda** [(x 0) 0]
                          [(0 x) 0]
                          [((? integer? x) (? integer? y)) 
-                           (arithmetic-shift (* x y) (- (current-bitwidth)))]
+                          (let* ([bw (current-bitwidth)]
+                                 [masked (mask (arithmetic-shift (* (mask x) (mask y)) (- bw)))])
+                            (if (bitwise-bit-set? masked (- bw 1))
+                                (bitwise-ior (arithmetic-shift -1 bw) masked)  
+                                masked))]
                          [(x y) (sort/expression @*h x y)]))
                           
 
