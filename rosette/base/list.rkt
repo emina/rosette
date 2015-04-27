@@ -21,7 +21,7 @@
 ;; Pair and List Predicates
 (define (pair=? =?)
   (lambda (x y) 
-    (and-&& (=? (car x) (car y)) (=? (cdr x) (cdr y)))))
+    (and-&& (not (null? x)) (not (null? y)) (=? (car x) (car y)) (=? (cdr x) (cdr y)))))
 
 ; force? is ignored since pairs are immutable and therefore always merged
 (define (pair/compress force? ps) 
