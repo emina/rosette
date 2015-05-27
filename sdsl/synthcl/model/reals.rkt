@@ -230,8 +230,8 @@
   (match v
     [(? boolean?) bool]
     [(term _ (== number?)) int]
-    [(? fixnum?) int]
-    [(? flonum?) float]
+    [(? integer?) int]
+    [(? real?) float]
     [(? has-vector-type?) (vector-type v)]
     [_ #f]))
 
