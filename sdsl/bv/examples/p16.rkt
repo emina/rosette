@@ -18,5 +18,5 @@
          [o2 (bvuge x y)]
          [o3 (bvneg o2)]
          [o4 (bvand o1 o2)]
-         [o5 (bvxor o3 y)])
+         [o5 (bvxor o4 y)])
     o5))
