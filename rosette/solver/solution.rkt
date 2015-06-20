@@ -98,10 +98,10 @@
           (for ([binding trace])
             (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
         (fprintf port ")"))
-      (let ([core (sort (remove-duplicates (filter-map term-origin (solution-core sol))) 
-                        stx<?)])        
+      (let* ([core (solution-core sol)]
+             [core (and core (sort (remove-duplicates (filter-map term-origin core)) stx<?))])        
         (fprintf port "(core")
-        (unless (null? core)
+        (when core
           (for ([assertion core])
             (fprintf port "\n ~a" assertion)))
         (fprintf port ")"))))
