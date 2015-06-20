@@ -546,7 +546,7 @@
                      [props 
                       (if (null? props)
                           #'null
-                          #`(list #,@(for/list ([p props] #:unless (gen:equal+hash? p))
+                          #`(list #,@(for/list ([p props]); #:unless (gen:equal+hash? p))
                                        #`(cons #,(car p) #,(cdr p)))))])
                  (let ([run-time-defns
                         (lambda ()

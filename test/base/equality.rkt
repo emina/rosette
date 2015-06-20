@@ -163,6 +163,9 @@
                 (|| (&& a (! c) (@equal? b a)) 
                     (&& (! a) c (@equal? x y)))))
 
+(define (struct-hash-tests)
+  (check-equal? (equal-hash-code (h0 1)) (equal-hash-code (h0 1))))
+
 (define equality-tests
   (test-suite 
    "Tests for rosette/base/equality.rkt"
@@ -197,6 +200,7 @@
    (union-equality-tests)
    ; struct tests
    (struct-equal?-tests)
-   (struct-eq?-tests)))
+   (struct-eq?-tests)
+   (struct-hash-tests)))
 
 (time (run-tests equality-tests))
