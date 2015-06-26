@@ -22,7 +22,7 @@
   
   (for ([level      (in-list '(#:debug #:info #:warning #:error #:fatal))]
         [log-level? (in-list `(,log-debug? ,log-info? ,log-warning? ,log-error? ,log-fatal?))]
-        #:unless (flat-contract? log-level?))
+        #:unless (and (procedure? log-level?) (flat-contract? log-level?)))
     (error 'log-handler "expected a flat contract for ~s, given ~s" level log-level?))
   
   (procedure-rename 
