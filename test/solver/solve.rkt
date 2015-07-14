@@ -59,7 +59,7 @@
   (for ([f formulas])
     (match f
       [(expression (== @=) (? number? n) other)
-       (check-equal? n (truncate (evaluate other sol))
+       (check-equal? (truncate (evaluate other sol)) n
                      (format "solution violates ~s: ~s" f sol))]))) 
 
 (define-syntax-rule (test-suite-for name expr ...)
@@ -231,3 +231,7 @@
   (time (run-tests merge-tests))
   (time (run-tests type-tests))
   (send solver shutdown))
+
+;(require rosette/solver/kodkod/kodkod)
+;(set! solver (new kodkod%))
+;(check-sat div-validator (@= x -16) (@= y -16) (@= (@/ y x) 1))
