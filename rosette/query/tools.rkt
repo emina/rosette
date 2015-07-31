@@ -61,9 +61,9 @@
            [asserts (with-handlers ([exn:fail? always-false]) (with-asserts-only form))])
        (when (null? asserts) 
          (error 'verify "no counterexample found"))
-       (cond [(or (false? assumes) (false? asserts))
+       (cond [(false? assumes)
               (error 'verify "no counterexample found")]
-             [(and (andmap passes? assumes) (ormap fails? asserts))
+             [(or (false? asserts) (and (andmap passes? assumes) (ormap fails? asserts)))
               (void)]
              [else 
               (send (current-solver) clear)
