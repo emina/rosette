@@ -62,7 +62,7 @@
        (when (null? asserts) 
          (error 'verify "no counterexample found"))
        (cond [(or (false? assumes) (false? asserts))
-              (current-solution (sat (hash)))]
+              (error 'verify "no counterexample found")]
              [(and (andmap passes? assumes) (ormap fails? asserts))
               (void)]
              [else 
