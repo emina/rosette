@@ -61,9 +61,9 @@
            [asserts (with-handlers ([exn:fail? always-false]) (with-asserts-only form))])
        (when (null? asserts) 
          (error 'verify "no counterexample found"))
-       (cond [(false? assumes)
+       (cond [(equal? assumes '(#f))
               (error 'verify "no counterexample found")]
-             [(or (false? asserts) (and (andmap passes? assumes) (ormap fails? asserts)))
+             [(and (andmap passes? assumes) (ormap fails? asserts))
               (void)]
              [else 
               (send (current-solver) clear)
@@ -130,7 +130,7 @@
 
 #|--------------helper functions--------------|#
 
-(define always-false (const #f))
+(define always-false (const '(#f)))
 (define always-unsat (const '(#f)))
 
 (define (passes? assertion)
