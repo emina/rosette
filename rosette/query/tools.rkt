@@ -41,6 +41,7 @@
 
 (define-syntax-rule (solve-all form)  
   (let-values ([(val asserts) (with-asserts form)])
+    (send (current-solver) clear)
     (send/apply (current-solver) assert asserts)
     (let loop ()
       (let ([sol (send/handle-breaks (current-solver) solve)])
@@ -65,6 +66,7 @@
              [(and (andmap passes? assumes) (ormap fails? asserts))
               (void)]
              [else 
+              (send (current-solver) clear)
               (send/apply (current-solver) assert assumes)
               (send (current-solver) assert (apply || (map ! asserts)))
               (let ([sol (send/handle-breaks (current-solver) solve)])
