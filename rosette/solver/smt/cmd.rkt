@@ -1,11 +1,11 @@
 #lang racket
 
 (require racket/syntax 
-         (only-in "smtlib2.rkt" cmd assert check-sat get-model read-solution true false)
+         (only-in "smtlib2.rkt" cmd assert check-sat get-model reset read-solution true false)
          "../../base/term.rkt" "../../base/bool.rkt" "../../base/num.rkt" "../solution.rkt"  "../../base/enum.rkt"
          "env.rkt" "enc.rkt")
 
-(provide encode decode)
+(provide encode decode clear-solver)
 
 ; Given an encoding environment, a list of asserts, and
 ; a solver output port, the encode procedure prints an SMT 
@@ -38,6 +38,13 @@
                         (decode-binding const (hash-ref sol id))
                         (default-binding const)))))]
     [#f (unsat)]))
+
+; Given a solver input port, the reset procedure prints
+; commands necessary to clear the solver's state to the
+; given port.
+(define (clear-solver port)
+  (cmd [port]
+    (reset)))
 
 (define (default-binding const)
   (match (type-of const)
