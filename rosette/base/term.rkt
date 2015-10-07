@@ -60,22 +60,23 @@
   (match-lambda [(constant (cons _ idx) _) idx]
                 [_ #f]))
 
-(define cache (make-hash))
+(define cache (make-parameter (make-hash)))
 
 (define (clear-terms!)
-  (define tmp cache)
-  (set! cache (make-hash))
-  (for([(k v) tmp] #:when (constant? v)) 
-    (hash-set! cache k v)))
+  (define tmp (cache))
+  (cache (make-hash))
+  (define new-cache (cache))
+  (for ([(k v) tmp] #:when (constant? v)) 
+    (hash-set! new-cache k v)))
 
 (define (unsafe-clear-terms!)
-  (hash-clear! cache))
+  (hash-clear! (cache)))
                 
 
 (define-syntax-rule (make-term args type) 
   (let ([val args]) 
-    (or (hash-ref cache val #f)
-        (hash-ref! cache val (term val type (hash-count cache) #f)))))
+    (or (hash-ref (cache) val #f)
+        (hash-ref! (cache) val (term val type (hash-count (cache)) #f)))))
    
 (define (make-var id-stx t [index #f])
   (unless (identifier? id-stx)
