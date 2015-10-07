@@ -3,7 +3,7 @@
 (require (for-syntax racket/syntax)
          racket/stxparam racket/stxparam-exptime
          "../config/log.rkt" 
-         "term.rkt" "bool.rkt" "equality.rkt")
+         "term.rkt" "bool.rkt")
  
 (provide @assert pc with-asserts with-asserts-only relax 
          (rename-out [export-asserts asserts])
