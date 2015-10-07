@@ -1,28 +1,41 @@
 #lang racket
 
 (require "stats/stats.rkt")
-(require rosette/config/log)
+(require rosette/config/log rosette/query/state rosette/solver/solution)
+(require (only-in rosette oracle current-oracle clear-asserts unsafe-clear-terms!))
 (current-log-handler (log-handler #:info none/c))
 
-(define (run-all)
-  (parameterize ([current-namespace (make-base-namespace)])
-    (eval '(require "base/effects.rkt"
-                    "base/term.rkt"
-                    "base/bool.rkt"
-                    "base/num.rkt"
-                    "base/list.rkt"
-                    "base/equality.rkt"
-                    "base/merge.rkt"
-                    "solver/kodkod.rkt"))))
+(define (run-test file)
+  (parameterize ([current-namespace (make-base-namespace)]
+                 [current-solution (empty-solution)]
+                 [current-oracle (oracle)])
+    (eval `(require ,file))
+    (clear-asserts)
+    (unsafe-clear-terms!)))
 
-(define (run-z3)
-  (parameterize ([current-namespace (make-base-namespace)])
-    (eval '(require "solver/z3.rkt"))))
+(define (base)
+  (run-test "base/effects.rkt")
+  (run-test "base/term.rkt")
+  (run-test "base/bool.rkt")
+  (run-test "base/num.rkt")
+  (run-test "base/list.rkt")
+  (run-test "base/equality.rkt")
+  (run-test "base/merge.rkt"))
 
-(define (run-bv)
-  (parameterize ([current-namespace (make-base-namespace)])
-    (eval '(require "solver/bvsemantics.rkt"))))
+(define (forms)
+  (run-test "forms/verify.rkt"))
 
-(run/time/log (run-all) "stats/all-tests.txt")
-(run/time/log (run-z3)  "stats/all-tests.txt")
-(run/time/log (run-bv)  "stats/all-tests.txt")
+(define (kodkod)
+ (run-test "solver/kodkod.rkt"))
+
+(define (z3)
+  (run-test "solver/z3.rkt"))
+
+(define (bv-semantics)
+  (run-test "solver/bvsemantics.rkt"))
+
+(run/time/log (base) "stats/all-tests.txt")
+(run/time/log (forms) "stats/all-tests.txt")
+(run/time/log (kodkod)  "stats/all-tests.txt")
+(run/time/log (z3)  "stats/all-tests.txt")
+(run/time/log (bv-semantics)  "stats/all-tests.txt")

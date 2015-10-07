@@ -1,0 +1,2 @@
+[2015.10.07 12:54:58] [rosette/test/all-demos.rkt websynth] [cpu=6339, real=3185, gc=1002]
+[2015.10.07 12:55:22] [rosette/test/all-demos.rkt hackers-delight] [cpu=13002, real=24480, gc=4441]
