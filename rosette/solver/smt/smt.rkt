@@ -27,11 +27,13 @@
     (define/public assert 
       (lambda in (set! asserts (append asserts (filter-asserts in)))))
     
-    (define/public (clear) 
-      (send server shutdown)
+    (define/public (clear)
+      (send server write clear-solver)
       (set!-values (asserts env) (values '() (make-env))))
     
-    (define/public (shutdown)  (clear))
+    (define/public (shutdown)
+      (clear)
+      (send server shutdown))
     
     (define/public (debug)     (error 'debug "not supported by ~a" this))      
     (define/public (solve-all) (error 'solve-all "not supported by ~a" this))
