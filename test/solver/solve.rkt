@@ -1,11 +1,11 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/query/eval rosette/base/define
+         rosette/query/eval rosette/base/form/define
          rosette/solver/solution
-         rosette/base/term rosette/base/bool rosette/base/num 
-         rosette/base/merge rosette/base/procedure
-         rosette/base/enum rosette/base/equality)
+         rosette/base/core/term rosette/base/core/bool rosette/base/core/num 
+         rosette/base/core/merge rosette/base/adt/procedure
+         rosette/base/struct/enum rosette/base/core/equality)
 
 (provide run-tests-with)
 

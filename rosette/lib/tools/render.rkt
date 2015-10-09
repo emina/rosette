@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../solver/solution.rkt" "../../base/term.rkt" 
+(require "../../solver/solution.rkt" "../../base/core/term.rkt" 
          rosette/lib/util/syntax (only-in racket/syntax format-id)
          slideshow/code (only-in slideshow vl-append current-font-size))
          

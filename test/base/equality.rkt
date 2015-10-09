@@ -1,18 +1,18 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/base/equality 
-         rosette/base/term
-         rosette/base/bool
-         rosette/base/box
-         rosette/base/num 
-         rosette/base/procedure
-         rosette/base/enum
-         rosette/base/list
-         rosette/base/vector
-         (only-in rosette/base/struct struct)
-         rosette/base/merge
-         (only-in rosette/base/define define-symbolic))
+         rosette/base/core/equality 
+         rosette/base/core/term
+         rosette/base/core/bool
+         rosette/base/core/num 
+         rosette/base/adt/box
+         rosette/base/adt/procedure
+         rosette/base/struct/enum
+         rosette/base/adt/list
+         rosette/base/adt/vector
+         (only-in rosette/base/struct/struct struct)
+         rosette/base/core/merge
+         (only-in rosette/base/form/define define-symbolic))
 
 (define-symbolic x @number?)
 (define-symbolic y @number?)

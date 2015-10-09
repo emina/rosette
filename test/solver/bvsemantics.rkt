@@ -1,10 +1,10 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/query/eval rosette/base/define
-         rosette/base/num rosette/solver/solution
-         rosette/base/term rosette/base/bool rosette/base/num rosette/base/merge
-         rosette/base/equality 
+         rosette/query/eval rosette/base/form/define
+         rosette/base/core/num rosette/solver/solution
+         rosette/base/core/term rosette/base/core/bool  
+         rosette/base/core/merge rosette/base/core/equality 
          rosette/solver/kodkod/kodkod rosette/solver/smt/z3)
 
 (define kodkod (new kodkod%))

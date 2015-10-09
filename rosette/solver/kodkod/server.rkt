@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/runtime-path "../../config/log.rkt" "../common/server.rkt")
+(require racket/runtime-path "../../base/util/log.rkt" "../common/server.rkt")
 
 (provide kodkod-initializer kodkod-stderr-handler server%)
 

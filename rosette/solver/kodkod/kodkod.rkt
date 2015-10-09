@@ -2,7 +2,7 @@
 
 (require racket/runtime-path "../solver.rkt" "../solution.rkt" 
          (only-in "../common/util.rkt" filter-asserts)
-         "../../config/log.rkt" (only-in "../../base/num.rkt" current-bitwidth)
+         "../../base/util/log.rkt" (only-in "../../base/core/num.rkt" current-bitwidth)
          (only-in "kks.rkt" cmd TRUE FALSE) (prefix-in kks/ (only-in "kks.rkt" clear))
          "server.rkt" "cmd.rkt" (rename-in "env.rkt" [env make-env]))
 

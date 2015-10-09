@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in "../../base/num.rkt" current-bitwidth) (only-in "../../base/enum.rkt" enums enum-<?))
+(require (only-in "../../base/core/num.rkt" current-bitwidth) (only-in "../../base/struct/enum.rkt" enums enum-<?))
 
 (provide finitize define-encoder enum-comparison-op?)
 

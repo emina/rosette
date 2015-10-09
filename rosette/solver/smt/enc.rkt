@@ -2,9 +2,9 @@
 
 (require (prefix-in smt/ (only-in "smtlib2.rkt" not and or xor => <=> ite = <))
          (except-in "smtlib2.rkt" not and or xor => <=> ite = <) "env.rkt" 
-         "../common/enc.rkt" "../../base/term.rkt" 
-         "../../base/generic.rkt" "../../base/num.rkt" "../../base/bool.rkt"
-         "../../base/enum.rkt")
+         "../common/enc.rkt" "../../base/core/term.rkt" 
+         "../../base/core/generic.rkt" "../../base/core/num.rkt" "../../base/core/bool.rkt"
+         "../../base/struct/enum.rkt")
 
 (provide enc finitize)
 

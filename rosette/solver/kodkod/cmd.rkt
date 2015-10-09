@@ -2,7 +2,7 @@
 
 (require racket/syntax)
 
-(require "../../base/term.rkt" "../../base/num.rkt" "../solution.rkt"
+(require "../../base/core/term.rkt" "../../base/core/num.rkt" "../solution.rkt"
          (only-in "kks.rkt" cmd configure declare-univ declare-ints assert solve read-solution)
          "env.rkt" "enc.rkt" "univ.rkt")
 

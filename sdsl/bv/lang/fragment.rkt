@@ -1,6 +1,6 @@
 #lang racket
 
-(require "location.rkt" "instruction.rkt" rosette/query/eval rosette/config/log)
+(require "location.rkt" "instruction.rkt" rosette/query/eval rosette/base/util/log)
 
 (provide fragment fragment->syntax)
 

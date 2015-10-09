@@ -2,7 +2,7 @@
 
 (require "../solver.rkt" "../solution.rkt" 
          "../common/server.rkt" (only-in "../common/util.rkt" filter-asserts)
-         "../../config/log.rkt" "cmd.rkt" (rename-in "env.rkt" [env make-env]))
+         "../../base/util/log.rkt" "cmd.rkt" (rename-in "env.rkt" [env make-env]))
 
 (provide smt%)
 

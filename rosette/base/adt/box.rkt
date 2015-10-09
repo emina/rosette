@@ -1,16 +1,16 @@
 #lang racket
 
-(require (for-syntax racket/syntax "lift.rkt") 
+(require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/provide 
-         "safe.rkt" "lift.rkt" "seq.rkt" "forall.rkt"
-         (only-in "effects.rkt" apply!) 
-         (only-in "term.rkt" define-type)
-         (only-in "equality.rkt" @eq? @equal?)
-         (only-in "generic.rkt" make-cast)
-         (only-in "any.rkt" @any?)
-         (only-in "bool.rkt" instance-of? && ||)
-         (only-in "union.rkt" union)
-         (only-in "merge.rkt" merge merge*))
+         "../core/safe.rkt" 
+         (only-in "../core/effects.rkt" apply!) 
+         (only-in "../core/term.rkt" define-type)
+         (only-in "../core/equality.rkt" @eq? @equal?)
+         (only-in "../core/generic.rkt" make-cast)
+         (only-in "../core/any.rkt" @any?)
+         (only-in "../core/bool.rkt" instance-of? && ||)
+         (only-in "../core/union.rkt" union)
+         (only-in "../core/merge.rkt" merge merge*))
 
 (provide (filtered-out with@ (all-defined-out))
          (rename-out [box @box] [box-immutable @box-immutable]))

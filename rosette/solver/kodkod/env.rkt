@@ -1,7 +1,7 @@
 #lang racket
 
 (require (only-in "kks.rkt"  declare-const define-const assert r e f i tupleset tuple NONE) 
-         "univ.rkt" "../../base/term.rkt" "../../base/bool.rkt" "../../base/num.rkt")
+         "univ.rkt" "../../base/core/term.rkt" "../../base/core/bool.rkt" "../../base/core/num.rkt")
 
 (provide (rename-out [make-env env] [env-univ univ] [env-defs defs] [env-decls decls]) 
          env? ref! ref) 

@@ -1,9 +1,9 @@
 #lang racket
 
 (require (for-syntax racket/dict syntax/parse syntax/id-table (only-in racket pretty-print) 
-                     (only-in "lift.rkt" drop@))
+                     (only-in "../core/lift.rkt" drop@))
          racket/require racket/undefined
-         (filtered-in drop@ "box.rkt")
+         (filtered-in drop@ "../adt/box.rkt")
          (only-in racket/splicing splicing-let splicing-let-values))
 
 (provide @#%module-begin @#%top-interaction

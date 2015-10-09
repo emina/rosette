@@ -2,9 +2,9 @@
 
 (require rackunit rackunit/text-ui
          rosette/query/eval
-         rosette/base/term rosette/base/bool rosette/base/num
+         rosette/base/core/term rosette/base/core/bool rosette/base/core/num
          rosette/solver/solution
-         (only-in rosette/base/define define-symbolic))
+         (only-in rosette/base/form/define define-symbolic))
 
 (provide run-tests-with)
 

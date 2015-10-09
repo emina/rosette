@@ -1,9 +1,9 @@
 #lang racket
 
-(require "state.rkt" "../config/log.rkt"
-         "../base/term.rkt" "../base/bool.rkt" 
-         "../base/generic.rkt" "../base/union.rkt"
-         "../base/merge.rkt" "../solver/solution.rkt" )
+(require "state.rkt" "../base/util/log.rkt"
+         "../base/core/term.rkt" "../base/core/bool.rkt"  "../base/core/num.rkt"
+         "../base/core/generic.rkt" "../base/core/union.rkt"
+         "../base/core/merge.rkt" "../solver/solution.rkt" )
 
 (provide evaluate time/evaluate)
 
@@ -64,7 +64,6 @@
         (hash-set! cache expr result)
         result)))
 
-(require "../base/num.rkt")
 (define (finitize num) 
   (match num
     [(? number? v) 

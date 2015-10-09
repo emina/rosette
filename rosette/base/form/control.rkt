@@ -1,8 +1,8 @@
 #lang racket
 
-(require "effects.rkt" "assert.rkt" 
-         "term.rkt" "equality.rkt" 
-         "merge.rkt" "bool.rkt")
+(require "../core/effects.rkt" "../core/assert.rkt" 
+         "../core/term.rkt" "../core/equality.rkt" 
+         "../core/merge.rkt" "../core/bool.rkt")
 
 (provide @if @and @or @not @nand @nor @xor @implies
          @unless @when @cond @case else)

@@ -2,14 +2,14 @@
 
 (require rackunit rackunit/text-ui
          racket/fixnum
-         rosette/base/term
-         rosette/base/list
-         rosette/base/bool
-         rosette/base/num
-         rosette/base/any
-         rosette/base/merge
-         rosette/base/union
-         (only-in rosette/base/define define-symbolic)
+         rosette/base/core/term
+         rosette/base/adt/list
+         rosette/base/core/bool
+         rosette/base/core/num
+         rosette/base/core/any
+         rosette/base/core/merge
+         rosette/base/core/union
+         (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
 (define-symbolic x @number?)

@@ -1,9 +1,9 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/base/term
-         rosette/base/bool
-         (only-in rosette/base/define define-symbolic)
+         rosette/base/core/term
+         rosette/base/core/bool
+         (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
 (define-symbolic a @boolean?)

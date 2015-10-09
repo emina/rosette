@@ -1,10 +1,10 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/base/term
-         rosette/base/bool
-         rosette/base/num
-         (only-in rosette/base/define define-symbolic))
+         rosette/base/core/term
+         rosette/base/core/bool
+         rosette/base/core/num
+         (only-in rosette/base/form/define define-symbolic))
 
 (define-symbolic x @number?)
 (define-symbolic y @number?)

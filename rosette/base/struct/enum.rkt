@@ -1,16 +1,16 @@
 #lang racket
 
 (require (for-syntax racket/syntax)  
-         (only-in "safe.rkt" coerce type-error argument-error assert-some)
-         (only-in "lift.rkt" merge**)
-         "term.rkt" "op.rkt" 
-         (only-in "bool.rkt" @boolean? || and-&&)
-         (only-in "num.rkt" @number?)
-         (only-in "any.rkt" @any?)
-         (only-in "merge.rkt" merge*)
-         (only-in "union.rkt" union union? in-union* in-union-guards union-filter union-guards)
-         (only-in "equality.rkt" @equal?)
-         (only-in "generic.rkt" do-cast =?))
+         (only-in "../core/safe.rkt" coerce type-error argument-error assert-some)
+         (only-in "../core/lift.rkt" merge**)
+         "../core/term.rkt" "../core/op.rkt" 
+         (only-in "../core/bool.rkt" @boolean? || and-&&)
+         (only-in "../core/num.rkt" @number?)
+         (only-in "../core/any.rkt" @any?)
+         (only-in "../core/merge.rkt" merge*)
+         (only-in "../core/union.rkt" union union? in-union* in-union-guards union-filter union-guards)
+         (only-in "../core/equality.rkt" @equal?)
+         (only-in "../core/generic.rkt" do-cast =?))
 
 (provide define-enum enums enum? enum-size enum-members enum-<? label ordinal
          enum-first enum-last enum-value [rename-out (atom? enum-literal?)])

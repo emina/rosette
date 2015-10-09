@@ -1,9 +1,9 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/base/define rosette/base/assert
-         rosette/solver/solution rosette/base/bool rosette/base/num
-         rosette/query/tools rosette/base/control)
+         rosette/base/form/define rosette/base/core/assert
+         rosette/solver/solution rosette/base/core/bool rosette/base/core/num
+         rosette/query/tools rosette/base/form/control)
 
 (define-symbolic x @boolean?)
 (define-symbolic n @number?)

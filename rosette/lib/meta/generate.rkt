@@ -3,7 +3,7 @@
 (require (only-in "identifiers.rkt" syntax-identifier) 
          (only-in rosette/lib/util/syntax read-module 
                   location location-source location-contains?)
-         (only-in rosette/lib/data/ord-dict ord-dict)
+         (only-in rosette/base/util/ord-dict ord-dict)
          (only-in rosette/query/state current-solution))
 
 (provide add-generator! tagged? generate-forms generate-expressions)

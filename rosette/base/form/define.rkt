@@ -1,7 +1,7 @@
 #lang racket
  
-(require (for-syntax racket racket/syntax)
-         "../lib/data/array.rkt" "state.rkt" "term.rkt" )
+(require (for-syntax racket)
+         "../util/array.rkt" "../core/term.rkt" "state.rkt")
 
 (provide define-symbolic define-symbolic*)
 

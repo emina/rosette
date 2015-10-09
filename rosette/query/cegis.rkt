@@ -2,11 +2,11 @@
 
 (require "eval.rkt" 
          "state.rkt" 
-         (only-in "../base/term.rkt" constant) 
-         (only-in "../base/bool.rkt" @boolean? ! ||) 
-         (only-in "../base/num.rkt" @number? ignore-division-by-0)
-         (only-in "../base/enum.rkt" enum? enum-first)
-         "../config/log.rkt"
+         (only-in "../base/core/term.rkt" constant) 
+         (only-in "../base/core/bool.rkt" @boolean? ! ||) 
+         (only-in "../base/core/num.rkt" @number? ignore-division-by-0)
+         (only-in "../base/struct/enum.rkt" enum? enum-first)
+         "../base/util/log.rkt"
          "../solver/solver.rkt"  
          "../solver/solution.rkt"
          "../solver/kodkod/kodkod.rkt"

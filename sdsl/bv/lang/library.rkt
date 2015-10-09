@@ -1,8 +1,8 @@
 #lang racket
 
 (require "location.rkt" "instruction.rkt" 
-         rosette/base/define
-         rosette/base/num
+         rosette/base/form/define
+         rosette/base/core/num
          (for-syntax racket/syntax))
 
 (provide library)

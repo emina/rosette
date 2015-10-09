@@ -1,12 +1,12 @@
 #lang racket
 
 (require rosette/query/eval
-         rosette/query/state rosette/base/state
-         (only-in rosette/base/bool && ! ||)
-         (only-in rosette/base/num @<= current-bitwidth)
-         (only-in rosette/base/term term? [angelic? angelic?] term-e)
-         (only-in rosette/base/assert with-asserts with-asserts-only clear-asserts)
-         rosette/config/log 
+         rosette/query/state rosette/base/form/state
+         (only-in rosette/base/core/bool && ! ||)
+         (only-in rosette/base/core/num @<= current-bitwidth)
+         (only-in rosette/base/core/term term? [angelic? angelic?] term-e)
+         (only-in rosette/base/core/assert with-asserts with-asserts-only clear-asserts)
+         rosette/base/util/log 
          rosette/solver/solver 
          rosette/solver/solution
          rosette/solver/kodkod/kodkod

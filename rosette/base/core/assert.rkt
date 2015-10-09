@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/syntax)
          racket/stxparam racket/stxparam-exptime
-         "../config/log.rkt" 
+         "../util/log.rkt" 
          "term.rkt" "bool.rkt")
  
 (provide @assert pc with-asserts with-asserts-only relax 

@@ -1,14 +1,14 @@
 #lang racket
 
-(require (for-syntax racket/syntax "lift.rkt") 
+(require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/splicing racket/stxparam
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
-         "safe.rkt" "lift.rkt"
-         (only-in "bool.rkt" && or-|| ||)
-         (only-in "num.rkt" @number? @= @< @<=)
-         (only-in "union.rkt" union union?)
-         (only-in "merge.rkt" merge merge* unsafe-merge*)
-         (only-in "forall.rkt" guard-apply))
+         "../core/safe.rkt" "../core/lift.rkt"
+         (only-in "../core/bool.rkt" && or-|| ||)
+         (only-in "../core/num.rkt" @number? @= @< @<=)
+         (only-in "../core/union.rkt" union union?)
+         (only-in "../core/merge.rkt" merge merge* unsafe-merge*)
+         (only-in "../core/forall.rkt" guard-apply))
 
 (provide seq-compress
          lift/apply/higher-order higher-order/for 

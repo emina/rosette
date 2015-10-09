@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rosette/base/term rosette/base/merge rosette/base/union)
+(require rackunit rosette/base/core/term rosette/base/core/merge rosette/base/core/union)
 (provide (all-defined-out))
 
 (define (check-nary op id x y z)

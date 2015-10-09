@@ -2,46 +2,38 @@
 
 ;; Rosette (lifted) syntax and procedures
 (require 
-  (for-syntax racket/syntax (only-in "lift.rkt" drop@)) 
+  (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
-  "primitive.rkt" 
-  "any.rkt" 
-  "list.rkt" 
-  "box.rkt" 
-  "vector.rkt" 
-  "procedure.rkt" 
-  "struct.rkt" 
-  "enum.rkt"
-  "equality.rkt" 
-  "reflect.rkt" 
-  "generics.rkt" 
-  "state.rkt"
-  "module.rkt"  
-  "define.rkt" 
-  "app.rkt" 
-  "assert.rkt" 
-  "control.rkt") 
+  "core/primitive.rkt" 
+  "core/any.rkt" 
+  "core/assert.rkt" 
+  "core/equality.rkt" 
+  "core/reflect.rkt" 
+  "adt/list.rkt" 
+  "adt/box.rkt" 
+  "adt/vector.rkt" 
+  "adt/procedure.rkt" 
+  "struct/struct.rkt" 
+  "struct/enum.rkt"
+  "struct/generics.rkt" 
+  "form/state.rkt"
+  "form/module.rkt"  
+  "form/define.rkt" 
+  "form/app.rkt"
+  "form/control.rkt"
+  "util/log.rkt") 
 
 (provide 
  (filtered-out
   drop@
   (combine-out
-   (except-out (all-from-out "primitive.rkt") @||)
-   (all-from-out "list.rkt" 
-                 "box.rkt"
-                 "vector.rkt" 
-                 "procedure.rkt"
-                 "struct.rkt"
-                 "enum.rkt"
-                 "equality.rkt"
-                 "reflect.rkt"
-                 "generics.rkt"    
-                 "state.rkt"
-                 "module.rkt"
-                 "define.rkt"
-                 "app.rkt"
-                 "assert.rkt"
-                 "control.rkt")))
+   (except-out (all-from-out "core/primitive.rkt") @||)
+   (all-from-out 
+    "core/equality.rkt" "core/reflect.rkt" "core/assert.rkt"
+    "adt/list.rkt" "adt/box.rkt" "adt/vector.rkt" "adt/procedure.rkt"
+    "struct/struct.rkt" "struct/enum.rkt" "struct/generics.rkt"    
+    "form/state.rkt" "form/module.rkt" "form/define.rkt"
+    "form/app.rkt" "form/control.rkt" "util/log.rkt")))
  (rename-out [@any? any/c] [@|| ||]))
 
 (require racket/local)

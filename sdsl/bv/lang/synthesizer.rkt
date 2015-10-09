@@ -1,12 +1,12 @@
 #lang racket
 
 (require "location.rkt" "instruction.rkt" "solver.rkt" "fragment.rkt"
-         rosette/base/num
-         rosette/base/define
+         rosette/base/core/num
+         rosette/base/form/define
          rosette/query/eval
-         rosette/query/state rosette/base/state
+         rosette/query/state rosette/base/form/state
          rosette/solver/solution
-         rosette/config/log
+         rosette/base/util/log
          (for-syntax racket/syntax))
 
 (provide define-fragment)

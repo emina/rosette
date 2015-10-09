@@ -1,16 +1,16 @@
 #lang racket
 
 
-(require (for-syntax "lift.rkt" racket/syntax) 
-         (only-in "effects.rkt" apply!)
-         "term.rkt"  "lift.rkt" "safe.rkt"
-         (only-in "bool.rkt" || && and-&&)
-         (only-in "any.rkt" @any?)
-         (only-in "procedure.rkt" @procedure?)
-         (only-in "merge.rkt" merge merge*)
-         (only-in "union.rkt" union union? in-union-guards)
-         (only-in "equality.rkt" @equal? @eq?)
-         (only-in "generic.rkt" do-cast))
+(require (for-syntax "../core/lift.rkt" racket/syntax) 
+         (only-in "../core/effects.rkt" apply!)
+         "../core/term.rkt"  "../core/lift.rkt" "../core/safe.rkt"
+         (only-in "../core/bool.rkt" || && and-&&)
+         (only-in "../core/any.rkt" @any?)
+         (only-in "../adt/procedure.rkt" @procedure?)
+         (only-in "../core/merge.rkt" merge merge*)
+         (only-in "../core/union.rkt" union union? in-union-guards)
+         (only-in "../core/equality.rkt" @equal? @eq?)
+         (only-in "../core/generic.rkt" do-cast))
 
 (provide @struct-predicate @make-struct-field-accessor @make-struct-field-mutator)
 

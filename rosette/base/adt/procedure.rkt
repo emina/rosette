@@ -2,15 +2,15 @@
 
 (require 
   racket/provide 
-  (for-syntax racket/syntax (only-in "lift.rkt" with@)) 
-  (only-in "generic.rkt" make-cast)
-  (only-in "type.rkt" define-type typed? get-type subtype? type-applicable?)
-  (only-in "bool.rkt" ||)
-  (only-in "union.rkt" union union? in-union-guards union-filter union-guards)
-  (only-in "forall.rkt" guard-apply)
-  (only-in "safe.rkt" assert)
-  (only-in "any.rkt" @any?)
-  (only-in "control.rkt" @not))
+  (for-syntax racket/syntax (only-in "../core/lift.rkt" with@)) 
+  (only-in "../core/generic.rkt" make-cast)
+  (only-in "../core/type.rkt" define-type typed? get-type subtype? type-applicable?)
+  (only-in "../core/bool.rkt" ||)
+  (only-in "../core/union.rkt" union union? in-union-guards union-filter union-guards)
+  (only-in "../core/safe.rkt" assert)
+  (only-in "../core/any.rkt" @any?)
+  (only-in "../core/forall.rkt" guard-apply)
+  (only-in "../form/control.rkt" @not))
 
 (provide (filtered-out with@ (all-defined-out)))
 

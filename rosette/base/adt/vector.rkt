@@ -1,20 +1,20 @@
 #lang racket
 
-(require (for-syntax racket/syntax "lift.rkt") 
+(require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/provide 
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
-         "safe.rkt" "lift.rkt" "seq.rkt" "forall.rkt"
+         "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" "../core/forall.rkt"
          (only-in "list.rkt" @list?)
-         (only-in "effects.rkt" apply!) 
-         (only-in "control.rkt" @when)
-         (only-in "term.rkt" define-type)
-         (only-in "equality.rkt" @eq? @equal?)
-         (only-in "generic.rkt" make-cast)
-         (only-in "any.rkt" @any?)
-         (only-in "bool.rkt" instance-of? && ||)
-         (only-in "num.rkt" @number? @= @<= @< @- @+)
-         (only-in "union.rkt" union)
-         (only-in "merge.rkt" merge))
+         (only-in "../form/control.rkt" @when)
+         (only-in "../core/effects.rkt" apply!) 
+         (only-in "../core/term.rkt" define-type)
+         (only-in "../core/equality.rkt" @eq? @equal?)
+         (only-in "../core/generic.rkt" make-cast)
+         (only-in "../core/any.rkt" @any?)
+         (only-in "../core/bool.rkt" instance-of? && ||)
+         (only-in "../core/num.rkt" @number? @= @<= @< @- @+)
+         (only-in "../core/union.rkt" union)
+         (only-in "../core/merge.rkt" merge))
 
 (provide (filtered-out with@ (all-defined-out))
          (rename-out [vector @vector] [vector-immutable @vector-immutable]))

@@ -1,15 +1,15 @@
 #lang racket
 
 (require rackunit rackunit/text-ui
-         rosette/base/term
-         rosette/base/bool
-         rosette/base/num
-         (only-in rosette/base/list @list?)
-         rosette/base/procedure
-         rosette/base/merge
-         rosette/base/struct
-         rosette/base/assert
-         (only-in rosette/base/define define-symbolic)
+         rosette/base/core/term
+         rosette/base/core/bool
+         rosette/base/core/num
+         (only-in rosette/base/adt/list @list?)
+         rosette/base/adt/procedure
+         rosette/base/core/merge
+         rosette/base/struct/struct
+         rosette/base/core/assert
+         (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
 (define-symbolic x @number?)

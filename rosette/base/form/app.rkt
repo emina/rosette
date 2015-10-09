@@ -1,6 +1,6 @@
 #lang racket
 
-(require "assert.rkt")
+(require "../core/assert.rkt")
 
 (provide (rename-out [app #%app] [app #%plain-app]))
 

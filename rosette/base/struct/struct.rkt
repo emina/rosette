@@ -2,7 +2,7 @@
 
 ;; Copied (with modifications) from racket/private/define-struct and racket/private/struct
 
-(require racket/stxparam "struct-type.rkt" "type.rkt" 
+(require racket/stxparam "struct-type.rkt" "../core/type.rkt" 
          (except-in racket/private/generic-methods define/generic) 
          (for-syntax racket/base racket/struct-info racket/syntax))
 

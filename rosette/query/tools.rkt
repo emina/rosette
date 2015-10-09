@@ -1,11 +1,11 @@
 #lang racket
 
-(require "eval.rkt" "state.rkt" "../base/assert.rkt" "../base/define.rkt" "cegis.rkt"
-         "../config/log.rkt"
-         (only-in "../base/reflect.rkt" symbolics)
-         (only-in "../base/bool.rkt" || !)
-         (only-in "../base/equality.rkt" @equal?)
-         (only-in "../base/term.rkt" expression constant? typed? get-type type-deconstruct)
+(require "eval.rkt" "state.rkt" "../base/core/assert.rkt" "../base/form/define.rkt" "cegis.rkt"
+         "../base/util/log.rkt"
+         (only-in "../base/core/reflect.rkt" symbolics)
+         (only-in "../base/core/bool.rkt" || !)
+         (only-in "../base/core/equality.rkt" @equal?)
+         (only-in "../base/core/term.rkt" expression constant? typed? get-type type-deconstruct)
          "../solver/solver.rkt"  "../solver/solution.rkt")
 
 (provide solve solve/evaluate solve+ solve-all verify synthesize symbolics)

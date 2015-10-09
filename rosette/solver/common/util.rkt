@@ -1,7 +1,7 @@
 #lang racket
 
-(require (only-in "../../base/term.rkt" term? term-type)
-         (only-in "../../base/bool.rkt" @boolean?))
+(require (only-in "../../base/core/term.rkt" term? term-type)
+         (only-in "../../base/core/bool.rkt" @boolean?))
 
 (provide filter-asserts)
 

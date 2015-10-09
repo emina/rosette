@@ -2,10 +2,10 @@
 
 (require (for-syntax (only-in racket/syntax format-id))
          (only-in racket/generic define-generics)
-         (only-in "control.rkt" @if)
-         (only-in "assert.rkt" @assert)
-         (only-in "forall.rkt" for/all)
-         "union.rkt")
+         (only-in "../form/control.rkt" @if)
+         (only-in "../core/assert.rkt" @assert)
+         (only-in "../core/forall.rkt" for/all)
+         "../core/union.rkt")
 
 (provide @define-generics @make-struct-type-property)
 

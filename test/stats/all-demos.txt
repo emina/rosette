@@ -1,2 +1,8 @@
 [2015.10.07 12:54:58] [rosette/test/all-demos.rkt websynth] [cpu=6339, real=3185, gc=1002]
 [2015.10.07 12:55:22] [rosette/test/all-demos.rkt hackers-delight] [cpu=13002, real=24480, gc=4441]
+[2015.10.08 16:41:35] [rosette/test/all-demos.rkt websynth] [cpu=3182, real=3195, gc=525]
+[2015.10.08 16:43:52] [rosette/test/all-demos.rkt websynth] [cpu=3230, real=3247, gc=586]
+[2015.10.08 16:49:17] [rosette/test/all-demos.rkt websynth] [cpu=4712, real=4724, gc=2083]
+[2015.10.08 16:49:40] [rosette/test/all-demos.rkt hackers-delight] [cpu=7707, real=23365, gc=1530]
+[2015.10.09 10:37:52] [rosette/test/all-demos.rkt websynth] [cpu=4432, real=4443, gc=1758]
+[2015.10.09 10:38:18] [rosette/test/all-demos.rkt hackers-delight] [cpu=10381, real=25816, gc=4198]

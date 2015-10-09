@@ -1,8 +1,8 @@
 #lang racket
 
 (require rackunit/text-ui racket/splicing)
-(require rackunit rosette/base/effects)
-(require rosette/base/struct rosette/base/vector rosette/base/box)
+(require rackunit rosette/base/core/effects)
+(require rosette/base/struct/struct rosette/base/adt/vector rosette/base/adt/box)
 
 (splicing-let ([&x (@box 0)]
                [&y (@box 10)])

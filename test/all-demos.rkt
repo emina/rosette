@@ -2,7 +2,7 @@
 
 (require racket/sandbox)
 (require "stats/stats.rkt")
-(require rosette/config/log rosette/query/state rosette/solver/solution)
+(require rosette/base/util/log rosette/query/state rosette/solver/solution)
 (require (only-in rosette  oracle current-oracle clear-asserts unsafe-clear-terms!))
 (current-log-handler (log-handler #:info none/c))
 

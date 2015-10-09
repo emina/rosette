@@ -2,7 +2,7 @@
 
 (require racket/syntax 
          (only-in "smtlib2.rkt" cmd assert check-sat get-model reset read-solution true false)
-         "../../base/term.rkt" "../../base/bool.rkt" "../../base/num.rkt" "../solution.rkt"  "../../base/enum.rkt"
+         "../../base/core/term.rkt" "../../base/core/bool.rkt" "../../base/core/num.rkt" "../solution.rkt"  "../../base/struct/enum.rkt"
          "env.rkt" "enc.rkt")
 
 (provide encode decode clear-solver)

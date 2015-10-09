@@ -181,7 +181,7 @@
                 (thunk (typecheck #'(= [mptr 1] z))))
      
      (for ([sel (syntax->list #'(x y z s0 s1 s2))])
-       (check-not-exn (thunk (typecheck #`(= [z #,sel] 1.0)))))
+       (check-not-exn (thunk (typecheck #`(= [z #,sel] 1.01)))))
      (for ([sel (syntax->list #'(xy xz yx yz zx zy s01 s02 s10 s12 s20 s21))])
        (check-not-exn (thunk (typecheck #`(= [z #,sel] v)))))
      (for ([sel (syntax->list #'(xyz xzy yxz yzx zxy zyx s012 s021 s102 s120 s201 s210))])

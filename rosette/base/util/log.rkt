@@ -1,6 +1,5 @@
 #lang racket
 
-(require racket/syntax "../base/type.rkt")
 
 (provide current-log-source current-log-handler
          define-log log-handler 

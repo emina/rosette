@@ -1,11 +1,9 @@
 #lang racket
 
 (require 
- (for-syntax racket)
- (rename-in racket [set! racket/set!]))
+ (for-syntax racket))
 
-(provide speculate speculate* [rename-out (racket/set! set!)] apply!
-         location=? (rename-out [state-val location-final-value]))
+(provide speculate speculate* apply! location=? (rename-out [state-val location-final-value]))
 
 ; The env parameter stores an eq? based hash-map which we use to keep
 ; track of boxes, vectors and structs that are mutated.  

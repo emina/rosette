@@ -1,8 +1,8 @@
 #lang racket
 
-(require "../../lib/data/ord-dict.rkt" 
-         "../../base/term.rkt"  "../../base/bool.rkt" "../../base/num.rkt"
-         "../../base/enum.rkt")
+(require "../../base/util/ord-dict.rkt" 
+         "../../base/core/term.rkt"  "../../base/core/bool.rkt" "../../base/core/num.rkt"
+         "../../base/struct/enum.rkt")
 
 (provide universe universe-size domain-of 
          domain? domain-min domain-max

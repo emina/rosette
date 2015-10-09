@@ -3,9 +3,9 @@
 (require (for-syntax racket/syntax) 
          racket/stxparam 
          "../lib/util/syntax-properties.rkt"  
-         "../base/define.rkt" "../base/assert.rkt" "state.rkt" "../base/state.rkt" 
+         "../base/form/define.rkt" "../base/core/assert.rkt" "state.rkt" "../base/form/state.rkt" 
          "../solver/solver.rkt" "../solver/solution.rkt" 
-         "../base/equality.rkt" "../base/term.rkt")
+         "../base/core/equality.rkt" "../base/core/term.rkt")
 
 (provide relax? relate relaxer? relaxed-by debug define/debug protect true false)
 

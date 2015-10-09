@@ -2,8 +2,8 @@
 
 (require racket/syntax 
          (only-in "smtlib2.rkt" Int Bool BitVec declare-const define-const assert [< Int<] [<= Int<=]) 
-         "../../base/term.rkt" 
-         "../../base/bool.rkt" "../../base/num.rkt" "../../base/enum.rkt")
+         "../../base/core/term.rkt" 
+         "../../base/core/bool.rkt" "../../base/core/num.rkt" "../../base/struct/enum.rkt")
 
 (provide (rename-out [make-env env] 
                      [env-decls decls]

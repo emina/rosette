@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/runtime-path  "../../config/log.rkt")
+(require racket/runtime-path  "../../base/util/log.rkt")
 
 (provide server%)
 

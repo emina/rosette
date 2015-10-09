@@ -2,11 +2,11 @@
 
 (require rackunit rackunit/text-ui
          racket/fixnum 
-         rosette/base/term
-         rosette/base/bool
-         rosette/base/num
-         rosette/base/merge
-         (only-in rosette/base/define define-symbolic)
+         rosette/base/core/term
+         rosette/base/core/bool
+         rosette/base/core/num
+         rosette/base/core/merge
+         (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
 (define-symbolic x @number?)

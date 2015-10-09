@@ -1,10 +1,7 @@
 #lang racket
 
-(require  "config/log.rkt"
-         
-         "solver/solver.rkt" 
+(require "solver/solver.rkt" 
          "solver/solution.rkt" 
-         
          "base/base.rkt"
          "query/query.rkt"
          (for-syntax racket))
@@ -24,11 +21,8 @@
 
 (provide 
  (all-from-out 
-  "config/log.rkt"
-  
   "solver/solver.rkt" 
   "solver/solution.rkt" 
-  
   "base/base.rkt"
   "query/query.rkt") 
  (for-syntax (all-from-out racket))

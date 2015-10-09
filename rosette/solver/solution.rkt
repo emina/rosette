@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../base/term.rkt")
+(require "../base/core/term.rkt")
 
 (provide solution? 
          sat unsat 
