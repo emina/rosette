@@ -66,11 +66,11 @@ The Rosette system ships with two dialects of the Rosette language:
 
 To use the safe dialect, start your programs with the following line:
 
-@racketmod[s-exp rosette/safe]
+@racketmod[rosette/safe]
 
 To use the unsafe dialect, type this line instead:
 
-@racketmod[s-exp rosette]
+@racketmod[rosette]
 
 We strongly recommend that you start with the safe dialect, which includes a core subset of Racket.  The unsafe dialect includes all of Racket, but unless you understand and observe the restrictions on using non-core features, your seemingly correct programs may crash or produce unexpected results.
 
