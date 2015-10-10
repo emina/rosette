@@ -1,4 +1,4 @@
-#lang s-exp rosette/safe
+#lang rosette/safe
 
 (define (poly x)
   (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
