@@ -10,7 +10,7 @@
   (match* (b x y)
     [(#t _ _) x]
     [(#f _ _) y]
-    [(_ _ (== x same?)) x]
+    [(_ _ (== x eq?)) x]
     [(_ _ _) (merge* (cons b x) (cons (! b) y))]))
 
 ; Returns a value that joins the provided values 
@@ -36,14 +36,6 @@
     [(list (cons g v)) (assert (not (false? g))) v]
     [(list _ (... ...) (cons #t v) _ (... ...)) v]
     [vs (apply union vs)]))
-      
-(define (same? x y)
-  (match* (x y)
-    [(_ (== x eq?)) #t]
-    [((term v (? primitive-type?)) (term v _)) #t]
-    [((union vs (? primitive-type?)) (union vs _)) #t]
-    [((? immutable?) (? immutable?)) (equal? x y)]
-    [(_ _) #f]))
 
 (define (guard-&& a b)
   (match b  
@@ -97,13 +89,13 @@
   ;(printf "merge ~a\n" ps)
   (match ps
     [(or (list) (list _)) ps]
-    [(list (cons g v) (cons h u)) (if (same? v u) (list (cons (|| g h) v)) ps)]
+    [(list (cons g v) (cons h u)) (if (eq? v u) (list (cons (|| g h) v)) ps)]
     [_ (let loop ([ps ps] [out '()])
          (if (null? ps)
              out
              (match-let*-values 
               ([((cons g v)) (car ps)]
-               [((list (cons h _) ...) rest) (partition (compose (curry same? v) cdr) (cdr ps))]
+               [((list (cons h _) ...) rest) (partition (compose (curry eq? v) cdr) (cdr ps))]
                [(g) (apply || g h)])
               (if (equal? g #t)
                   (list (cons g v))
