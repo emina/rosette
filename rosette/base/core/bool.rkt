@@ -8,7 +8,7 @@
   (match v
     [(? boolean?) (values #t v)]
     [(term _ (== @boolean?))  (values #t v)]
-    [(union : [g (and (app type-of (== @boolean?)) u)] _ ...) (values g u)]
+    [(union : [g (and (or (? boolean?) (term _ (== @boolean?))) u)] _ ...) (values g u)]
     [_ (values #f v)]))
 
 (define (bool/compress force? ps)  ; force? is ignored since booleans are immutable and therefore always merged
