@@ -1,6 +1,6 @@
 #lang racket
 
-(require "type.rkt")
+(require (only-in "type.rkt" define-type))
 
 (provide @any?)
 

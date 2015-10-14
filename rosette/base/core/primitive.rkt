@@ -7,7 +7,7 @@
   racket/splicing
   "safe.rkt" 
   "op.rkt"
-  "type.rkt"
+  (only-in "type.rkt" cast)
   "any.rkt"
   (only-in "term.rkt" expression term)
   (filtered-in add@ "bool.rkt")

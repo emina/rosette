@@ -21,8 +21,6 @@
  type-construct    ; (-> type? (listof any/c) any/c)
  type-deconstruct  ; (-> type? any/c (listof any/c))
 
- type-of           ; (-> any/c type?)
-
  gen:typed
  typed?            ; (-> any/c boolean?)
  get-type          ; (-> typed? (or/c #f (-> any/c @boolean?)))
@@ -110,18 +108,6 @@
   (syntax-rules ()
     [(_ id [name] args ...) (define id (make-type base-type (quote name) args ...))]
     [(_ id args ...)        (define id (make-type base-type (quote id) args ...))]))
-
-; Returns a type t that accepts the given values, and there is no t' 
-; such that t' != t, (subtype? t' t), and t' also accepts the given values. 
-; the behavior of this function is undefined if no type accepts all values.
-; a type accepts a value v iff (type v) is #t.
-(define type-of
-  (case-lambda [(v)   (if (typed? v)
-                          (get-type v)
-                          (for/first ([t types] #:when (t v)) t))]
-               [(v u) (least-common-supertype (type-of v) (type-of u))]
-               [vs    (for/fold ([t (type-of (car vs))]) ([v (cdr vs)])
-                        (least-common-supertype t (type-of v)))]))
 
 (define (subtype? t0 t1)
   (eq? t1 (least-common-supertype t0 t1)))
