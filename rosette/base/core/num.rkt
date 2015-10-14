@@ -32,7 +32,7 @@
   (match v
     [(? number?) (values #t v)]
     [(term _ (== @number?)) (values #t v)]
-    [(union : [g (and (app type-of (== @number?)) u)] _ ...) (values g u)]
+    [(union : [g (and (or (? number?) (term _ (== @number?))) u)] _ ...) (values g u)]
     [_ (values #f v)]))
 
 (define simplify-ite
