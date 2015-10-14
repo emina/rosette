@@ -21,9 +21,6 @@
  type-construct    ; (-> type? (listof any/c) any/c)
  type-deconstruct  ; (-> type? any/c (listof any/c))
 
- base-type?        ; (-> any/c boolean?)
- primitive-type?   ; (-> any/c boolean?)
-
  type-of           ; (-> any/c type?)
 
  gen:typed
@@ -111,11 +108,6 @@
 
 (define-syntax define-type
   (syntax-rules ()
-;    [(_ id type)            (define id (let ([t type])
-;                                         (unless (type? t)
-;                                           (error 'define-type "expected a type, given ~a" t))
-;                                         (set-types! `(,@types ,t))
-;                                         t))]
     [(_ id [name] args ...) (define id (make-type base-type (quote name) args ...))]
     [(_ id args ...)        (define id (make-type base-type (quote id) args ...))]))
 
