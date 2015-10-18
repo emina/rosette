@@ -4,10 +4,9 @@
          racket/provide 
          "../core/safe.rkt" 
          (only-in "../core/effects.rkt" apply!) 
-         (only-in "../core/term.rkt" define-type)
+         (only-in "../core/term.rkt" lift-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/generic.rkt" make-cast)
-         (only-in "../core/any.rkt" @any?)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/union.rkt" union)
          (only-in "../core/merge.rkt" merge merge*))
@@ -34,15 +33,17 @@
     (append (unsafe/compress box-immutable immutable)
             (if force? (unsafe/compress box mutable) mutable))))
 
-(define-type @box?
-  #:pred      (instance-of? box? @box?)
-  #:least-common-supertype (lambda (t) (if (eq? t @box?) @box? @any?))
-  #:eq?       box/eq?
-  #:equal?    box/equal?
-  #:cast      (make-cast box? @box?)
-  #:compress  box/compress
-  #:construct (compose1 box car)
-  #:deconstruct (compose1 list unbox))
+(define @box?
+  (lift-type
+   box?
+   #:is-a?     (instance-of? box? @box?)
+   #:least-common-supertype (lambda (t) (if (eq? t @box?) @box? @any/c))
+   #:eq?       box/eq?
+   #:equal?    box/equal?
+   #:cast      (make-cast box? @box?)
+   #:compress  box/compress
+   #:construct (compose1 box car)
+   #:deconstruct (compose1 list unbox)))
 
 (define (@unbox b)
   (match (coerce b @box? 'unbox)

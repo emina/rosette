@@ -4,8 +4,7 @@
 (require 
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
-  "core/primitive.rkt" 
-  "core/any.rkt" 
+  "core/primitive.rkt"  
   "core/assert.rkt" 
   "core/equality.rkt" 
   "core/reflect.rkt" 
@@ -34,7 +33,7 @@
     "struct/struct.rkt" "struct/enum.rkt" "struct/generics.rkt"    
     "form/state.rkt" "form/module.rkt" "form/define.rkt"
     "form/app.rkt" "form/control.rkt" "util/log.rkt")))
- (rename-out [@any? any/c] [@|| ||]))
+ (rename-out [@|| ||]))
 
 (require racket/local)
 

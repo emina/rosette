@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "any.rkt")
+(require "term.rkt")
 
 (provide union? (rename-out [a-union union])
          union-contents union-type union-guards union-values union-filter
@@ -42,20 +42,13 @@
   (fprintf port "]")) 
 
   
-(define nil (union '() @any?))
+(define nil (union '() @any/c))
 
 ; A λunion is a symoblic union that must contain a procedure object.  Every 
 ; λunion is itself an applicable procedure.
 (struct λunion union (procedure)
   #:transparent
   #:property prop:procedure [struct-field-index procedure])
-
-(define @procedure?
-  (let ([t #f])
-    (lambda () 
-      (cond [t t]
-            [else (set! t (for/first ([t types] #:when (equal? (type-name t) '@procedure?)) t))
-                  t]))))
 
 (define (make-union . vs)
   (match vs
@@ -64,21 +57,21 @@
      (let ([vs  (if (term<? g1 g2) vs (list c2 c1))]
            [t (type-of v1 v2)])
        (cond [(procedure? v1)
-              (λunion vs t (type-compress (@procedure?) #t (if (procedure? v2) vs (list c1))))]
+              (λunion vs t (type-compress (lifted-type procedure?) #t (if (procedure? v2) vs (list c1))))]
              [(procedure? v2)
-              (λunion vs t (type-compress (@procedure?) #t (list c2)))]
+              (λunion vs t (type-compress (lifted-type procedure?) #t (list c2)))]
              [else
               (union vs t)]))]
     [_ 
      (let ([vs (sort vs term<? #:key car)]
            [t (apply type-of (map cdr vs))])
        (cond [(type-applicable? t) 
-              (λunion vs t (type-compress (@procedure?) #t vs))]
+              (λunion vs t (type-compress (lifted-type procedure?) #t vs))]
              [else
               (let ([ps (for/list ([v vs] #:when (procedure? (cdr v))) v)])
                 (if (null? ps)
                     (union vs t)
-                    (λunion vs t (type-compress (@procedure?) #t ps))))]))]))
+                    (λunion vs t (type-compress (lifted-type procedure?) #t ps))))]))]))
         
 (define (union-filter r type)
   (if (or (eq? r nil) (subtype? (union-type r) type))

@@ -7,10 +7,9 @@
          (only-in "list.rkt" @list?)
          (only-in "../form/control.rkt" @when)
          (only-in "../core/effects.rkt" apply!) 
-         (only-in "../core/term.rkt" define-type)
+         (only-in "../core/term.rkt" lift-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/generic.rkt" make-cast)
-         (only-in "../core/any.rkt" @any?)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/num.rkt" @number? @= @<= @< @- @+)
          (only-in "../core/union.rkt" union)
@@ -47,15 +46,17 @@
               (cons (car p) (vector->immutable-vector (cdr p))))
             (if force? (unsafe/compress mutable) mutable))))
                    
-(define-type @vector?  
-  #:pred     (instance-of? vector? @vector?)      
-  #:least-common-supertype (lambda (t) (if (eq? t @vector?) @vector? @any?))
-  #:eq?      vector/eq?
-  #:equal?   vector/equal?
-  #:cast     (make-cast vector? @vector?)
-  #:compress vector/compress
-  #:construct list->vector
-  #:deconstruct vector->list)
+(define @vector?  
+  (lift-type
+   vector?
+   #:is-a?     (instance-of? vector? @vector?)      
+   #:least-common-supertype (lambda (t) (if (eq? t @vector?) @vector? @any/c))
+   #:eq?      vector/eq?
+   #:equal?   vector/equal?
+   #:cast     (make-cast vector? @vector?)
+   #:compress vector/compress
+   #:construct list->vector
+   #:deconstruct vector->list))
 
 (define/lift (vector-length vector->list vector->immutable-vector) :: vector? -> @vector?)
 (define/lift (list->vector) :: list? -> @list?)

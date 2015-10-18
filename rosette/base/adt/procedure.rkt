@@ -4,11 +4,10 @@
   racket/provide 
   (for-syntax racket/syntax (only-in "../core/lift.rkt" with@)) 
   (only-in "../core/generic.rkt" make-cast)
-  (only-in "../core/type.rkt" define-type typed? get-type subtype? type-applicable?)
+  (only-in "../core/type.rkt" lift-type typed? get-type subtype? type-applicable? @any/c)
   (only-in "../core/bool.rkt" ||)
   (only-in "../core/union.rkt" union union? in-union-guards union-filter union-guards)
   (only-in "../core/safe.rkt" assert)
-  (only-in "../core/any.rkt" @any?)
   (only-in "../core/forall.rkt" guard-apply)
   (only-in "../form/control.rkt" @not))
 
@@ -65,18 +64,20 @@
            [(3)  (lambda (x y z) (assert good) (guard-apply (lambda (p) (p x y z)) ps))]
            [else (lambda xs (assert good) (guard-apply (lambda (p) (apply p xs)) ps))])]))
                
-(define-type @procedure?
-  #:pred is-procedure?
-  #:least-common-supertype 
-  (lambda (t) 
-    (if (or (eq? t @procedure?) (type-applicable? t)) 
-        @procedure? 
-        @any?))
-  #:eq? eq?
-  #:equal? equal?
-  #:applicable? #t
-  #:cast procedure/cast
-  #:compress procedure/compress)
+(define @procedure?
+  (lift-type
+   procedure?
+   #:is-a? is-procedure?
+   #:least-common-supertype 
+   (lambda (t) 
+     (if (or (eq? t @procedure?) (type-applicable? t)) 
+         @procedure? 
+         @any/c))
+   #:eq? eq?
+   #:equal? equal?
+   #:applicable? #t
+   #:cast procedure/cast
+   #:compress procedure/compress))
   
 (define (@procedure-rename proc name)
   (match proc

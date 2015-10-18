@@ -4,9 +4,8 @@
          racket/provide racket/splicing racket/stxparam 
          "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" 
          (only-in "../form/control.rkt" @if @and @or @cond)
-         (only-in "../core/term.rkt" term? define-type)
+         (only-in "../core/term.rkt" term? lift-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
-         (only-in "../core/any.rkt" @any?)
          (only-in "../core/generic.rkt" make-cast)
          (only-in "../core/bool.rkt" instance-of? and-&& && || =>)
          (only-in "../core/num.rkt" @number? @<= @< @= @> @+)
@@ -46,29 +45,33 @@
 (define (list/compress force? ps) 
   (seq-compress ps length map : [(for/seq head body) (for/list head body)]))
 
-(define-type @pair?
-  #:pred     (instance-of? pair? (and/c @pair? (not/c @null?)))      
-  #:least-common-supertype (lambda (t) (if (or (eq? t @pair?) (eq? t @list?)) @pair? @any?))
-  #:eq?      (pair=? @eq?)
-  #:equal?   (pair=? @equal?)
-  #:cast     (make-cast pair? @pair?)
-  #:compress pair/compress
-  #:construct (match-lambda [(list a b) (cons a b)]
-                            [v (error 'construct-pair "expected a list of two elements, given ~a" v)])
-  #:deconstruct (match-lambda [(cons a b) (list a b)]
-                              [v (error 'deconstruct-pair "expected a pair, given ~a" v)]))
+(define @pair?
+  (lift-type
+   pair?
+   #:is-a?     (instance-of? pair? (and/c @pair? (not/c @null?)))      
+   #:least-common-supertype (lambda (t) (if (or (eq? t @pair?) (eq? t @list?)) @pair? @any/c))
+   #:eq?      (pair=? @eq?)
+   #:equal?   (pair=? @equal?)
+   #:cast     (make-cast pair? @pair?)
+   #:compress pair/compress
+   #:construct (match-lambda [(list a b) (cons a b)]
+                             [v (error 'construct-pair "expected a list of two elements, given ~a" v)])
+   #:deconstruct (match-lambda [(cons a b) (list a b)]
+                               [v (error 'deconstruct-pair "expected a pair, given ~a" v)])))
 
-(define-type @list?  
-  #:pred     (instance-of? list? @list?)      
-  #:least-common-supertype (lambda (t) (cond [(eq? t @list?) @list?]
-                                             [(eq? t @pair?) @pair?]
-                                             [else @any?]))
-  #:eq?      (list=? @eq?)
-  #:equal?   (list=? @equal?)
-  #:cast     (make-cast list? @list?)
-  #:compress list/compress
-  #:construct identity
-  #:deconstruct identity)
+(define @list?  
+  (lift-type
+   list?
+   #:is-a?    (instance-of? list? @list?)      
+   #:least-common-supertype (lambda (t) (cond [(eq? t @list?) @list?]
+                                              [(eq? t @pair?) @pair?]
+                                              [else @any/c]))
+   #:eq?      (list=? @eq?)
+   #:equal?   (list=? @equal?)
+   #:cast     (make-cast list? @list?)
+   #:compress list/compress
+   #:construct identity
+   #:deconstruct identity))
 
 
 

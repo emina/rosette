@@ -6,7 +6,7 @@
          "../core/term.rkt" "../core/op.rkt" 
          (only-in "../core/bool.rkt" @boolean? || and-&&)
          (only-in "../core/num.rkt" @number?)
-         (only-in "../core/any.rkt" @any?)
+         (only-in "../core/type.rkt" @any/c)
          (only-in "../core/merge.rkt" merge*)
          (only-in "../core/union.rkt" union union? in-union* in-union-guards union-filter union-guards)
          (only-in "../core/equality.rkt" @equal?)
@@ -67,10 +67,10 @@
       [(atom _ _ (== self)) #t]
       [(term  _ (== self)) #t]
       [(union  _ (== self)) #t]
-      [(union vs (== @any?)) (apply || (for/list ([g (in-union-guards vs self)]) g))]
+      [(union vs (== @any/c)) (apply || (for/list ([g (in-union-guards vs self)]) g))]
       [_ #f]))
   #:methods gen:type
-  [(define (least-common-supertype t other) (if (eq? t other) t @any?))
+  [(define (least-common-supertype t other) (if (eq? t other) t @any/c))
    (define (type-name t)      (string->symbol (~a (object-name (enum-member t)) '?)))
    (define (type-applicable? t) #f)
    (define (cast t v)              
@@ -78,7 +78,7 @@
        [(atom _ _ (== t)) (values #t v)]
        [(term  _ (== t)) (values #t v)]
        [(union  _ (== t)) (values #t v)]
-       [(union vs (== @any?))
+       [(union vs (== @any/c))
         (match (union-filter v t)
           [(union (list (cons g u))) (values g u)]
           [r (values (apply || (union-guards r)) r)])]
@@ -115,7 +115,7 @@
     [(term _ (enum members _ _)) 
      (apply merge* (for/list ([m members]) (cons (@equal? v m) (atom-label m))))]
     [(union vs (? enum?)) (merge** vs label)]
-    [(union _ (== @any?))
+    [(union _ (== @any/c))
      (apply merge* (assert-some 
                   (for/list ([(g v) (in-union* v)] #:when (enum? (type-of v)))
                     (cons g (label v)))
@@ -130,7 +130,7 @@
     [(term _ (enum members _ _)) 
      (apply merge* (for/list ([m members]) (cons (@equal? v m) (atom-index m))))]
     [(union vs (? enum?)) (merge** vs ordinal)]
-    [(union _ (== @any?))
+    [(union _ (== @any/c))
      (apply merge* (assert-some 
                   (for/list ([(g v) (in-union* v)] #:when (enum? (type-of v)))
                     (cons g (ordinal v)))

@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/syntax (for-syntax racket racket/syntax) "type.rkt" "typecheck.rkt" "op.rkt")
+(require racket/syntax (for-syntax racket racket/syntax) "type.rkt" "op.rkt")
 
 (provide
  cache
@@ -25,7 +25,7 @@
  term->list        ; (-> any/c any/c)
  clear-terms!      ; (-> void? void?)
  unsafe-clear-terms!
- (all-from-out "type.rkt" "typecheck.rkt"))
+ (all-from-out "type.rkt"))
 
 
 (define constant?

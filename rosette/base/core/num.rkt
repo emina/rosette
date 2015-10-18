@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "any.rkt" "generic.rkt" "merge.rkt"
+(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "generic.rkt" "merge.rkt"
          (only-in "bitwise.rkt" define-not define-and define-or))
 
 (provide 
@@ -75,13 +75,15 @@
 
 (define (num/eq? x y) (@= x y))
   
-(define-primitive-type @number? 
-  #:pred     (instance-of? number? @number?) 
-  #:least-common-supertype (lambda (t) (if (eq? t @number?) @number? @any?))
-  #:eq?      num/eq?
-  #:equal?   num/eq?
-  #:cast     num/cast
-  #:compress num/compress)
+(define  @number? 
+  (lift-type
+   number?
+   #:is-a?     (instance-of? number? @number?) 
+   #:least-common-supertype (lambda (t) (if (eq? t @number?) @number? @any/c))
+   #:eq?      num/eq?
+   #:equal?   num/eq?
+   #:cast     num/cast
+   #:compress num/compress))
 
 (define binary-predicate-type (op/-> (@number? @number?) @boolean?))
 (define nary-type (op/-> (#:rest @number?) @number?))

@@ -4,20 +4,20 @@
          "solver/solution.rkt" 
          "base/base.rkt"
          "query/query.rkt"
-         (for-syntax racket))
+         (for-syntax racket)
+         (prefix-in racket/ (only-in racket append append-map map car)))
 
 
 (define (exported mod)
   (let*-values ([(vars stx) (module->exports  mod)]
-                [(all) (append (append-map cdr vars) (append-map cdr stx))])
-    (map car all)))
+                [(all) (racket/append (racket/append-map cdr vars) (racket/append-map cdr stx))])
+    (racket/map racket/car all)))
 
 (define (rosette)
-  (append (exported 'rosette/config/log)
-          (exported 'rosette/solver/solver)
-          (exported 'rosette/solver/solution)
-          (exported 'rosette/base/base)
-          (exported 'rosette/query/query)))
+  (racket/append (exported 'rosette/solver/solver)
+                 (exported 'rosette/solver/solution)
+                 (exported 'rosette/base/base)
+                 (exported 'rosette/query/query)))
 
 (provide 
  (all-from-out 

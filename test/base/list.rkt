@@ -6,7 +6,6 @@
          rosette/base/adt/list
          rosette/base/core/bool
          rosette/base/core/num
-         rosette/base/core/any
          rosette/base/core/merge
          rosette/base/core/union
          (only-in rosette/base/form/define define-symbolic)

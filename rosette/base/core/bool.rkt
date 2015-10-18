@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "union.rkt" "any.rkt" "op.rkt")
+(require "term.rkt" "union.rkt" "op.rkt")
 
 (provide @boolean? @false? ! && || => <=>  and-&& or-|| instance-of?)
 
@@ -20,13 +20,14 @@
 
 (define (bool/eq? x y) (<=> x y))
 
-(define-primitive-type @boolean? 
-  #:pred     (instance-of? boolean? @boolean?) 
-  #:least-common-supertype (lambda (t) (if (eq? t @boolean?) @boolean? @any?))
-  #:eq?      bool/eq?
-  #:equal?   bool/eq?
-  #:cast     bool/cast
-  #:compress bool/compress) 
+(define @boolean? 
+  (lift-type boolean?
+             #:is-a?     (instance-of? boolean? @boolean?) 
+             #:least-common-supertype (lambda (t) (if (eq? t @boolean?) @boolean? @any/c))
+             #:eq?      bool/eq?
+             #:equal?   bool/eq?
+             #:cast     bool/cast
+             #:compress bool/compress))
 
 (define binary-type (op/-> (@boolean? @boolean?) @boolean?)) 
 (define nary-type (op/-> (#:rest @boolean?) @boolean?)) 

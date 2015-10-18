@@ -1,7 +1,6 @@
 #lang racket
 
-(require ;racket/stxparam 
-         "term.rkt" "union.rkt" "op.rkt" "bool.rkt" "any.rkt")
+(require "term.rkt" "union.rkt" "op.rkt" "bool.rkt")
 
 (provide 
  ite          ; (-> @boolean? any/c any/c any/c)
@@ -10,7 +9,7 @@
 
 (define-op =? 
   #:name '=? 
-  #:type (op/-> (@any? @any?) @boolean?)
+  #:type (op/-> (@any/c @any/c) @boolean?)
   #:pre  (lambda (x y) (equal? (type-of x) (type-of y)))
   #:op   (lambda (x y)
            (match* (x y)
@@ -24,7 +23,7 @@
 
 (define-op ite 
   #:name 'ite  
-  #:type (op/->  [b t f] (@boolean? @any? @any?) (type-of t f))
+  #:type (op/->  [b t f] (@boolean? @any/c @any/c) (type-of t f))
   #:pre  (lambda (b t f) (equal? (type-of t) (type-of f)))
   #:op   (lambda (b t f)
            (match* (b t f)

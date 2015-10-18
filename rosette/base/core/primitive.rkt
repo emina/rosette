@@ -7,8 +7,7 @@
   racket/splicing
   "safe.rkt" 
   "op.rkt"
-  (only-in "type.rkt" cast)
-  "any.rkt"
+  (only-in "type.rkt" cast @any/c)
   (only-in "term.rkt" expression term)
   (filtered-in add@ "bool.rkt")
   (only-in "merge.rkt" merge merge*)
@@ -16,7 +15,7 @@
   "num.rkt" )
              
 (provide 
- @boolean? @false? @number?
+ @boolean? @false? @number? @any/c
  (filtered-out with@ (all-defined-out))
  (filtered-out add@ 
   (combine-out 
