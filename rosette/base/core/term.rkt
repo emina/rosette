@@ -95,14 +95,14 @@
       [(_ id-stx idx type)     #'(make-var id-stx type idx)])))
 
 (define (make-expr op . vs)
-  (make-term (cons op vs) (apply op/type op vs)))
+  (make-term (cons op vs) (op-out-type op vs)))
 
 (define-match-expander expression
   (lambda (stx)
     (syntax-case stx ()
       [(_ op-pat elts-pat ...) #'(term (list op-pat elts-pat ...) _ _ _)]))
   (syntax-id-rules ()
-    [(expression op elts ...) (make-term (list op elts ...) (op/type op elts ...))]
+    [(expression op elts ...) (make-expr op elts ...)]
     [expression make-expr]))
 
 (define-match-expander a-term

@@ -2,19 +2,18 @@
 
 (provide 
  op?                          ; (-> any/c boolean?)
- op-id                        ; (-> op? identifier?)
  op-name                      ; (-> op? symbol?)
  op-pre                       ; (unconstrained-domain-> @boolean?)
  ops                          ; (listof op?)
  define-op                    ; (define-op id (symbol? (-> (listof any/c) type?) (and/c op? (->* () () #:rest (listof any/c) any)))
- op/arg-types                 ; (->* (op?) () #:rest (listof any/c) (listof @type?))
- op/type                      ; (->* (op?) () #:rest (listof any/c) type?)
+ op-arg-type                  ; (-> op? exact-nonnegative-integer? type?)
+ op-out-type                  ; (-> op? (listof any/c) type?)
  op/->)                       ; (-> (or/c contract? (listof contract?)) type? (->* ()() #:rest (listof any/c) (values (listof @boolean?) type?)) ))  
 
 (struct op 
-  (id     ; identifier?
-   name   ; symbol?
-   type   ; (cons (unconstrained-domain-> (listof type?)) (unconstrained-domain-> type?))
+  (name   ; symbol?
+   arg    ; (-> exact-nonnegative-integer? type?)
+   out    ; (unconstrained-domain-> type?)
    pre    ; (unconstrained-domain-> @boolean?)
    proc   ; (unconstrained-domain-> any/c)
    h1 h2)  
@@ -30,7 +29,7 @@
 (define ops (list))
 
 (define (create-op id #:name [name (syntax->datum id)] #:type type #:pre [pre (const #t)] #:op proc) 
-  (let ([o  (op id name type pre proc ;(procedure-rename proc name)
+  (let ([o  (op name (car type) (cdr type) pre proc 
                 (equal-hash-code (symbol->string name))
                 (equal-secondary-hash-code (symbol->string name))) ])
     (set! ops (append ops (list o)))
@@ -40,11 +39,11 @@
   (syntax-case stx ()
     [(_ id args ...) #`(define id (create-op #'id args ...))]))
 
-(define (op/arg-types op . args) 
-  (apply (car (op-type op)) args))
+(define (op-arg-type op idx)
+  ((op-arg op) idx))
 
-(define (op/type op . args) 
-  (apply (cdr (op-type op)) args))
+(define (op-out-type op args) 
+  (apply (op-out op) args))
 
 ; Creates an operator type specification using the given argument and result types.
 ; If arg-types is just one type, then the specification corresponds to an
@@ -53,22 +52,21 @@
 (define-syntax (op/-> stx)
   (syntax-case stx ()
     [(_ (#:rest rest-type) out-type)
-     #'(cons (let ([type1 (list rest-type)]
-                   [type2 (list rest-type rest-type)]
-                   [type-proc (const rest-type)]) 
-               (case-lambda [() '()]
-                            [(param) type1]
-                            [(param0 param1) type2]
-                            [params (map type-proc params)])) 
-             (const out-type))]
+     #'(cons (lambda (i) rest-type)
+             (lambda xs out-type))]
     [(_ (arg-type ... #:rest rest-type) out-type)
-     (with-syntax ([(param ...) (generate-temporaries #'(arg-type ...))])
-       #'(cons (lambda (param ... . rest) (list* arg-type ... (map (const rest-type) rest))) 
-               (const out-type)))]
+     (with-syntax ([(idx ...) (build-list (length (syntax->list #'(arg-type ...))) values)])
+       #'(cons (lambda (i)
+                 (case i 
+                   [(idx) arg-type] ...
+                   [else rest-type]))
+               (lambda xs out-type)))]
     [(_ (arg-type ...) out-type) 
-     (with-syntax ([(param ...) (generate-temporaries #'(arg-type ...))])
-       #'(cons (let ([types (list arg-type ...)]) 
-                 (lambda (param ...) types)) 
-               (const out-type)))]
-    [(_ args pre out-type)
-     #'(cons (lambda args pre) (lambda args out-type))]))
+     (with-syntax ([(idx ...) (build-list (length (syntax->list #'(arg-type ...))) values)])
+       #'(cons (lambda (i)
+                 (case i 
+                   [(idx) arg-type] ...
+                   [else (error 'op-arg-type "Index out of bounds: ~a" i)])) 
+               (lambda xs out-type)))]
+    [(_ #:arg-type arg-type-proc #:out-type out-type-proc)
+     #'(cons arg-type-proc out-type-proc)]))

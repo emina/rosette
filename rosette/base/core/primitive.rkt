@@ -36,19 +36,17 @@
 (define-syntax (assert-validate stx)
   (syntax-case stx ()
     [(_ (op #:rest args) origin)
-     #'(let ([vals (for/list ([(arg pos) (in-indexed args)]
-                              [arg-type (apply op/arg-types op args)])
-                     (assert-type arg-type arg op origin))])
+     #'(let ([vals (for/list ([(arg pos) (in-indexed args)])
+                     (assert-type (op-arg-type op pos) arg op origin))])
          (assert-precondition (apply (op-pre op) vals) op origin)
          vals)]
     [(_ (op arg) origin)
-     #'(let ([val (assert-type (first (op/arg-types op arg)) arg op origin)])
+     #'(let ([val (assert-type (op-arg-type op 0) arg op origin)])
          (assert-precondition ((op-pre op) val) op origin)
          val)]
     [(_ (op arg0 arg1) origin)
-     #'(let* ([arg-types (op/arg-types op arg0 arg1)]
-              [val0 (assert-type (first arg-types) arg0 op origin)]
-              [val1 (assert-type (second arg-types) arg1 op origin)])
+     #'(let* ([val0 (assert-type (op-arg-type op 0) arg0 op origin)]
+              [val1 (assert-type (op-arg-type op 1) arg1 op origin)])
          (assert-precondition ((op-pre op) val0 val1) op origin)
          (values val0 val1))]))
 

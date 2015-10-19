@@ -18,19 +18,27 @@
     [_ (list (cons (apply || (map car ps)) 
                    (apply || (for/list ([p ps]) (&& (car p) (cdr p))))))]))
 
-(define (bool/eq? x y) (<=> x y))
+(define binary-type (op/-> (@boolean? @boolean?) @boolean?)) 
+(define nary-type (op/-> (#:rest @boolean?) @boolean?)) 
+
+(define-op <=> 
+  #:type binary-type
+  #:op   (lambda (x y) ;(|| (&& x y) (&& (! x) (! y))))))
+           (cond [(equal? x y) #t]
+                 [(boolean? x) (if x y (! y))]
+                 [(boolean? y) (if y x (! x))]
+                 [(cancel? x y) #f]
+                 [(term<? x y) (expression <=> x y)]
+                 [else         (expression <=> y x)])))
 
 (define @boolean? 
   (lift-type boolean?
              #:is-a?     (instance-of? boolean? @boolean?) 
              #:least-common-supertype (lambda (t) (if (eq? t @boolean?) @boolean? @any/c))
-             #:eq?      bool/eq?
-             #:equal?   bool/eq?
+             #:eq?      <=>
+             #:equal?   <=>
              #:cast     bool/cast
              #:compress bool/compress))
-
-(define binary-type (op/-> (@boolean? @boolean?) @boolean?)) 
-(define nary-type (op/-> (#:rest @boolean?) @boolean?)) 
 
 (define-op !
   #:type (op/-> (@boolean?) @boolean?)
@@ -53,15 +61,7 @@
   #:type binary-type
   #:op   (lambda (x y) (|| (! x) y)))
 
-(define-op <=> 
-  #:type binary-type
-  #:op   (lambda (x y) ;(|| (&& x y) (&& (! x) (! y))))))
-           (cond [(equal? x y) #t]
-                 [(boolean? x) (if x y (! y))]
-                 [(boolean? y) (if y x (! x))]
-                 [(cancel? x y) #f]
-                 [(term<? x y)  (expression <=> x y)]
-                 [else         (expression <=> y x)])))
+
 
 (define (@false? v) 
   (or (false? v)  

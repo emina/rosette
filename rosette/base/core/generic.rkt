@@ -23,7 +23,8 @@
 
 (define-op ite 
   #:name 'ite  
-  #:type (op/->  [b t f] (@boolean? @any/c @any/c) (type-of t f))
+  #:type (op/-> #:arg-type (lambda (i) (if (= i 0) @boolean? @any/c)) 
+                #:out-type (lambda (b t f) (type-of t f)))
   #:pre  (lambda (b t f) (equal? (type-of t) (type-of f)))
   #:op   (lambda (b t f)
            (match* (b t f)

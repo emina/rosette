@@ -73,18 +73,6 @@
                      x
                      (apply @bitwise-ior (ite a x 0) (map (curryr ite 0) b y)))))]))
 
-(define (num/eq? x y) (@= x y))
-  
-(define  @number? 
-  (lift-type
-   number?
-   #:is-a?     (instance-of? number? @number?) 
-   #:least-common-supertype (lambda (t) (if (eq? t @number?) @number? @any/c))
-   #:eq?      num/eq?
-   #:equal?   num/eq?
-   #:cast     num/cast
-   #:compress num/compress))
-
 (define binary-predicate-type (op/-> (@number? @number?) @boolean?))
 (define nary-type (op/-> (#:rest @number?) @number?))
 (define binary-type (op/-> (@number? @number?) @number?))
@@ -104,6 +92,16 @@
              [((? number?) (? term?)) (expression @= x y)]
              [((? term?) (? number?)) (expression @= y x)]
              [(_ _) (or (equal? x y) (sort/expression @= x y))])))
+
+(define  @number? 
+  (lift-type
+   number?
+   #:is-a?     (instance-of? number? @number?) 
+   #:least-common-supertype (lambda (t) (if (eq? t @number?) @number? @any/c))
+   #:eq?      @=
+   #:equal?   @=
+   #:cast     num/cast
+   #:compress num/compress))
   
 (define-op @<  #:name '<  #:type binary-predicate-type #:op (lambda (x y) (cmp @< < x y)))
 (define-op @<= #:name '<= #:type binary-predicate-type #:op (lambda (x y) (cmp @<= <= x y)))
