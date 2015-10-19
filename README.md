@@ -1,6 +1,8 @@
 rosette
 =======
 
+[![Build Status](https://travis-ci.org/emina/rosette.svg?branch=master)](https://travis-ci.org/emina/rosette)
+
 This repository includes the source code and default solver binaries
 for the Rosette solver-aided host language, as well as several example
 solver-aided DSLs.

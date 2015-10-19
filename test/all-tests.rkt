@@ -13,6 +13,8 @@
     (clear-asserts)
     (unsafe-clear-terms!)))
 
+; Note: Travis greps for the (run-test "...") form to determine which tests it will run
+
 (define (base)
   (run-test "base/effects.rkt")
   (run-test "base/term.rkt")
