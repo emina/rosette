@@ -67,7 +67,7 @@
       [(atom _ _ (== self)) #t]
       [(term  _ (== self)) #t]
       [(union  _ (== self)) #t]
-      [(union vs (== @any/c)) (apply || (for/list ([g (in-union-guards vs self)]) g))]
+      [(union vs (== @any/c)) (apply || (for/list ([g (in-union-guards v self)]) g))]
       [_ #f]))
   #:methods gen:type
   [(define (least-common-supertype t other) (if (eq? t other) t @any/c))
