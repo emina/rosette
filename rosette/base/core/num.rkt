@@ -35,44 +35,6 @@
     [(union : [g (and (or (? number?) (term _ (== @number?))) u)] _ ...) (values g u)]
     [_ (values #f v)]))
 
-(define simplify-ite
-  (case-lambda 
-    [(p) (let* ([g (car p)]
-                [v (cdr p)]
-                [w (simplify-ite g v)])
-           (if (equal? v w) p (cons g w)))]
-    [(g v) (match* (g v)
-             [(a (expression (== ite) a x _)) x]
-             [(a (expression (== ite) (expression (== !) a) _ x)) x]
-             [((expression (== !) a) (expression (== ite) a _ x)) x]
-             ;[(a (expression (== ite) b x y))
-             ; (match* ((simplify-ite a x) (simplify-ite a y))
-             ;   [((== x) (== y)) v]
-             ;   [(m n) (ite b m n)])]
-             [(_ _) v])]))
-
-(define (num/compress force? ps) ; force? is ignored since numbers are immutable and therefore always merged
-  ;(printf "num/compress ~a ~a\n" (length ps) ps)
-  (match ps
-    [(list _) ps]
-    [(list (cons g a) (cons (expression (== !) g) b)) (list (cons #t (ite g a b)))]
-    [(list (cons (expression (== !) g) b) (cons g a)) (list (cons #t (ite g a b)))]
-    [(or (list (cons (expression (== &&) g h) x) (cons (expression (== &&) g f) y)) 
-         (list (cons (expression (== &&) g h) x) (cons (expression (== &&) f g) y)) 
-         (list (cons (expression (== &&) h g) x) (cons (expression (== &&) g f) y)) 
-         (list (cons (expression (== &&) h g) x) (cons (expression (== &&) f g) y)))
-     (list (cons g (match* (h f)
-                     [(_ (expression (== !) h)) (ite h x y)]
-                     [((expression (== !) f) _) (ite f y x)]
-                     [(_ _) (@bitwise-ior (ite h x 0) (ite f y 0))])))]
-    [(list (app simplify-ite (cons g x)) (app simplify-ite (cons h y))) 
-     (list (cons (|| g h) (if (equal? x y) x (@bitwise-ior (ite g x 0) (ite h y 0)))))]
-    [(list (app simplify-ite (cons a x)) (app simplify-ite (cons b y)) ...)
-     (list (cons (apply || a b)
-                 (if (andmap (curry equal? x) y)
-                     x
-                     (apply @bitwise-ior (ite a x 0) (map (curryr ite 0) b y)))))]))
-
 (define binary-predicate-type (op/-> (@number? @number?) @boolean?))
 (define nary-type (op/-> (#:rest @number?) @number?))
 (define binary-type (op/-> (@number? @number?) @number?))
@@ -101,7 +63,7 @@
    #:eq?      @=
    #:equal?   @=
    #:cast     num/cast
-   #:compress num/compress))
+   #:compress (lambda (force? ps) (generic-merge @bitwise-ior 0 ps))))
   
 (define-op @<  #:name '<  #:type binary-predicate-type #:op (lambda (x y) (cmp @< < x y)))
 (define-op @<= #:name '<= #:type binary-predicate-type #:op (lambda (x y) (cmp @<= <= x y)))
