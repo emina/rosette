@@ -3,13 +3,12 @@
 (require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/provide 
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
-         "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" "../core/forall.rkt"
+         "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" "../core/forall.rkt" "generic.rkt"
          (only-in "list.rkt" @list?)
          (only-in "../form/control.rkt" @when)
          (only-in "../core/effects.rkt" apply!) 
          (only-in "../core/term.rkt" lift-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
-         (only-in "../core/generic.rkt" make-cast)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/num.rkt" @number? @= @<= @< @- @+)
          (only-in "../core/union.rkt" union)
@@ -53,7 +52,7 @@
    #:least-common-supertype (lambda (t) (if (eq? t @vector?) @vector? @any/c))
    #:eq?      vector/eq?
    #:equal?   vector/equal?
-   #:cast     (make-cast vector? @vector?)
+   #:cast     (adt-cast #:type vector? #:lifted @vector?)  
    #:compress vector/compress
    #:construct list->vector
    #:deconstruct vector->list))

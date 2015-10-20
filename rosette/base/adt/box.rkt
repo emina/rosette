@@ -2,11 +2,10 @@
 
 (require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/provide 
-         "../core/safe.rkt" 
+         "../core/safe.rkt" "generic.rkt"
          (only-in "../core/effects.rkt" apply!) 
          (only-in "../core/term.rkt" lift-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
-         (only-in "../core/generic.rkt" make-cast)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/union.rkt" union)
          (only-in "../core/merge.rkt" merge merge*))
@@ -40,7 +39,7 @@
    #:least-common-supertype (lambda (t) (if (eq? t @box?) @box? @any/c))
    #:eq?       box/eq?
    #:equal?    box/equal?
-   #:cast      (make-cast box? @box?)
+   #:cast      (adt-cast #:type box? #:lifted @box?)   
    #:compress  box/compress
    #:construct (compose1 box car)
    #:deconstruct (compose1 list unbox)))

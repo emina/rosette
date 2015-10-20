@@ -2,11 +2,10 @@
 
 (require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/provide racket/splicing racket/stxparam 
-         "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" 
+         "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" "generic.rkt"
          (only-in "../form/control.rkt" @if @and @or @cond)
          (only-in "../core/term.rkt" term? lift-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
-         (only-in "../core/generic.rkt" make-cast)
          (only-in "../core/bool.rkt" instance-of? and-&& && || =>)
          (only-in "../core/num.rkt" @number? @<= @< @= @> @+)
          (only-in "../core/union.rkt" union union?)
@@ -52,7 +51,7 @@
    #:least-common-supertype (lambda (t) (if (or (eq? t @pair?) (eq? t @list?)) @pair? @any/c))
    #:eq?      (pair=? @eq?)
    #:equal?   (pair=? @equal?)
-   #:cast     (make-cast pair? @pair?)
+   #:cast     (adt-cast #:type pair? #:lifted @pair?)                  
    #:compress pair/compress
    #:construct (match-lambda [(list a b) (cons a b)]
                              [v (error 'construct-pair "expected a list of two elements, given ~a" v)])
@@ -68,7 +67,7 @@
                                               [else @any/c]))
    #:eq?      (list=? @eq?)
    #:equal?   (list=? @equal?)
-   #:cast     (make-cast list? @list?)
+   #:cast     (adt-cast #:type list? #:lifted @list?)
    #:compress list/compress
    #:construct identity
    #:deconstruct identity))
