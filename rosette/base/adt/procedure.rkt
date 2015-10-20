@@ -3,7 +3,6 @@
 (require 
   racket/provide 
   (for-syntax racket/syntax (only-in "../core/lift.rkt" with@)) 
-  (only-in "../core/generic.rkt" make-cast)
   (only-in "../core/type.rkt" lift-type typed? get-type subtype? type-applicable? @any/c)
   (only-in "../core/bool.rkt" ||)
   (only-in "../core/union.rkt" union union? in-union-guards union-filter union-guards)
