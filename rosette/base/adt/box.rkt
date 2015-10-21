@@ -1,10 +1,9 @@
 #lang racket
 
-(require (for-syntax racket/syntax "../core/lift.rkt") 
-         racket/provide 
+(require (for-syntax racket/syntax "../core/lift.rkt") racket/provide 
          "../core/safe.rkt" "generic.rkt"
          (only-in "../core/effects.rkt" apply!) 
-         (only-in "../core/term.rkt" lift-type @any/c)
+         (only-in "../core/type.rkt" define-lifted-type)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/union.rkt" union)
@@ -13,12 +12,21 @@
 (provide (filtered-out with@ (all-defined-out))
          (rename-out [box @box] [box-immutable @box-immutable]))
 
-(define (box/eq? a b)
-  (or (eq? a b)
-      (and (immutable? a) (immutable? b) (@eq? (unbox a) (unbox b)))))
-
-(define (box/equal? a b)
-  (@equal? (unbox a) (unbox b)))
+(define-lifted-type @box?
+  #:base box?
+  #:is-a? (instance-of? box? @box?)
+  #:methods
+  [(define (type-eq? self u v) 
+     (or (eq? u v)
+         (and (immutable? u) (immutable? v) (@eq? (unbox u) (unbox v)))))
+   (define (type-equal? self u v) (@equal? (unbox u) (unbox v)))
+   (define (cast self v) (adt-cast v #:type box? #:lifted @box?))
+   (define (type-compress self force? ps)
+     (let*-values ([(immutable mutable) (partition (compose1 immutable? cdr) ps)])
+       (append (unsafe/compress box-immutable immutable)
+               (if force? (unsafe/compress box mutable) mutable))))
+   (define (type-construct self vals) (box (car vals)))
+   (define (type-deconstruct self val) (list (unbox val)))])
 
 (define (unsafe/compress box ps)
   (match ps
@@ -26,23 +34,6 @@
     [(list _) ps]
     [_  (cons (apply || (map car ps)) 
               (box (apply merge* (for/list ([p ps]) (cons (car p) (unbox (cdr p)))))))]))
-
-(define (box/compress force? ps)
-  (let*-values ([(immutable mutable) (partition (compose1 immutable? cdr) ps)])
-    (append (unsafe/compress box-immutable immutable)
-            (if force? (unsafe/compress box mutable) mutable))))
-
-(define @box?
-  (lift-type
-   box?
-   #:is-a?     (instance-of? box? @box?)
-   #:least-common-supertype (lambda (t) (if (eq? t @box?) @box? @any/c))
-   #:eq?       box/eq?
-   #:equal?    box/equal?
-   #:cast      (adt-cast #:type box? #:lifted @box?)   
-   #:compress  box/compress
-   #:construct (compose1 box car)
-   #:deconstruct (compose1 list unbox)))
 
 (define (@unbox b)
   (match (coerce b @box? 'unbox)
