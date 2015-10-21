@@ -17,13 +17,9 @@
 
 (define-lifted-type @pair?
   #:base pair?
-  #:is-a? (instance-of? pair? (and/c @pair? (not/c @null?)))
+  #:is-a? (instance-of? pair? @pair?) 
   #:methods
-  [(define (least-common-supertype self other)
-     (if (or (equal? other @pair?) (equal? other @list?)) 
-         @pair? 
-         @any/c))
-   (define (type-eq? self u v) (pair=? @eq? u v))
+  [(define (type-eq? self u v) (pair=? @eq? u v))
    (define (type-equal? self u v) (pair=? @equal? u v))
    (define (cast self v) (adt-cast v #:type pair? #:lifted @pair?))
    (define (type-compress self force? ps)
@@ -44,11 +40,7 @@
   #:base list?
   #:is-a? (instance-of? list? @list?)      
   #:methods
-  [(define (least-common-supertype self other)
-     (cond [(equal? other @list?) @list?]
-           [(equal? other @pair?) @pair?]
-           [else @any/c]))
-   (define (type-eq? self u v) (list=? @eq? u v))
+  [(define (type-eq? self u v) (list=? @eq? u v))
    (define (type-equal? self u v) (list=? @equal? u v))
    (define (cast self v) (adt-cast v #:type list? #:lifted @list?))
    (define (type-compress self force? ps) 
