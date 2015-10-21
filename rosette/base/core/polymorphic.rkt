@@ -80,20 +80,11 @@
      (list (cons (|| g h) (if (equal? x y) x (⊕ (ite g x ∅) (ite h y ∅)))))]
     [(list (app simplify-ite (cons a x)) (app simplify-ite (cons b y)) ...)
      (list (cons (apply || a b)
-                 (if (for/and ([z y]) (equal? x y))
+                 (if (for/and ([z y]) (equal? x z))
                      x
-                     (apply ⊕ (ite a x ∅) (for/list ([z y]) (ite b z ∅))))))]))
+                     (apply ⊕ (ite a x ∅) (map (curryr ite ∅) b y)))))]))
 
-(define (simplify-ite p)
-  (match p
-    [(or (cons a (expression (== ite) a x _)) 
-         (cons a (expression (== ite) (expression (== !) a) _ x))
-         (cons (expression (== !) a) (expression (== ite) a _ x))) 
-     (cons a x)]
-    [_ p]))
-       
-
-#|(define simplify-ite
+(define simplify-ite
   (case-lambda 
     [(p) (let* ([g (car p)]
                 [v (cdr p)]
@@ -103,7 +94,7 @@
              [(a (expression (== ite) a x _)) x]
              [(a (expression (== ite) (expression (== !) a) _ x)) x]
              [((expression (== !) a) (expression (== ite) a _ x)) x]
-             [(_ _) v])]))|#
+             [(_ _) v])]))
       
       
       
