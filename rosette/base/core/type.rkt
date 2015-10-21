@@ -14,7 +14,7 @@
  least-common-supertype 
  cast subtype?
  
- type-of @any/c lift-type lifted-type)
+ type-of @any/c lift-type lifted-type define-lifted-type)
 
 #|-----------------------------------------------------------------------------------|#
 ; The type generic interface defines a symbolic type.  Each value has a type.  Structures that 
@@ -38,6 +38,97 @@
 
 (define (subtype? t0 t1)
   (eq? t1 (least-common-supertype t0 t1)))
+
+
+; Defines a new lifted type for the given Racket built-in type, using the 
+; following argumets:
+;   id                               ; Identifier for the lifted type.
+;   #:base base                      ; Racket type being lifted.
+;   #:is-a? is-a?                    ; Predicate that recognizes concrete and symbolic values of the lifted type.
+;   #:methods ([method-id expr] ...) ; Definitions of gen:type methods, including at least cast.
+; A given Racket type cannot be lifted more than once.  That is, multiple attempts to 
+; call define-lifted-type with the same base type as argument will result in an error.
+; Only these Racket types are expected to be lifted:
+; boolean?, number?, list?, pair?, procedure?, vector?, and box?.
+(define-syntax (define-lifted-type stx)
+  (syntax-case stx ()
+    [(_ id #:base base #:is-a? is-a? #:methods defs)       
+       #`(begin
+           (unless (hash-has-key? types base)
+             (error 'lift "Cannot lift ~a.\nExpected one of ~a." base (hash-keys types)))
+           (unless (eq? @any/c (hash-ref types base))
+             (error 'lift "Type already lifted: ~a." base))
+           (define id (make-lifted-type #:base base #:is-a? is-a? #:methods defs))       
+           (hash-set! types base id))]))
+
+(define-syntax (make-lifted-type stx)
+  (syntax-case stx (define)
+    [(_ #:base base #:is-a? is-a? #:methods defs)       
+     (let* ([methods (for/hash ([expr (syntax->list #'defs)])
+                      (with-syntax ([(define (method arg ...) body ...) expr])
+                        (values (syntax->datum #'method) #'(lambda (arg ...) body ...))))]
+            [required (lambda (m) (or (hash-ref methods m #f)
+                                      (raise-syntax-error 
+                                       'define-lifted-type 
+                                       (format "missing required method definition ~a" m))))])
+       #`(let ()
+           (struct lifted (pred)
+             #:property prop:procedure [struct-field-index pred]
+             #:methods gen:custom-write
+             [(define (write-proc self port mode) (fprintf port "~a" 'base))]
+             #:methods gen:type
+             [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 
+                                                         #'(lambda (self other) (if (equal? self other) self @any/c))))
+              (define cast                   #,(required 'cast))  
+              (define type-name              #,(hash-ref methods 'type-name #'(lambda (self) 'base)))
+              (define type-applicable?       #,(hash-ref methods 'type-applicable? #'(lambda (self) #f)))             
+              (define type-eq?               #,(hash-ref methods 'type-eq? #'(lambda (self u v) (eq? u v))))                  
+              (define type-equal?            #,(hash-ref methods 'type-equal? #'(lambda (self u v) (equal? u v))))               
+              (define type-compress          #,(hash-ref methods 'type-compress #'(lambda (self force? ps) ps)))   
+              (define type-construct         #,(hash-ref methods 'type-construct #'(lambda (self vals) (car vals))))      
+              (define type-deconstruct       #,(hash-ref methods 'type-deconstruct #'(lambda (self val) (list val))))])      
+           (lifted is-a?)))]))
+
+; Universal type that accepts all Racket and Rosette values.  The least-common-supertype 
+; method of every type must return #t when given @any? as the argument.
+(define @any/c 
+  (make-lifted-type
+   #:base any/c 
+   #:is-a? (const #t) 
+   #:methods
+   [(define (least-common-supertype self other) self)
+    (define (cast self v) (values #t v))])) 
+
+; Binds liftable Racket built-in type predicates to their corresponding Rosette types.
+; Initially, all liftable types are bound to @any/c.  See the make-type-of macro.
+(define types (make-hash)) 
+
+; Returns the lifted Rosette type corresponding to the given liftable Racket built-in predicate.
+(define (lifted-type pred) (hash-ref types pred))
+
+; This macro constructs the type-of procedure.  To allow additional lifted types, 
+; add their Racket predicates to the #:base list of the type-of definition.  Note 
+; that the order of the #:base types is important---if p is a subtype? of q, then 
+; p must be listed before q.
+(define-syntax-rule (typechecker #:base id ...)
+  (begin
+    (hash-set! types id @any/c) ...
+    (case-lambda
+      [(v) (cond [(typed? v) (get-type v)]
+                 [(id v) (hash-ref types id)] ...
+                 [else @any/c])]
+      [(v u) (least-common-supertype (type-of v) (type-of u))]
+      [vs    (for/fold ([t (type-of (car vs))]) ([v (cdr vs)] #:break (eq? t @any/c))
+               (least-common-supertype t (type-of v)))])))
+
+; The type-of procedure a type t that accepts the given values, and there is no t' 
+; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
+(define type-of 
+  (typechecker 
+   #:base boolean? number? list? pair? procedure? vector? box?))
+
+
+
 
 #|-----------------------------------------------------------------------------------|#
 ; Rosette types that lift built-in Racket types are constructed using the lift-type procedure. 
@@ -102,40 +193,4 @@
                lcs cast (or compress no-compress) construct deconstruct))
   (hash-set! types base lifted)
   lifted)
-
-; Universal type that accepts all Racket and Rosette values.  The least-common-supertype 
-; method of every type must return #t when given @any? as the argument.
-(define @any/c 
-  (base-type 'any/c any/c #f eq? equal? 
-             (lambda (t) @any/c) (lambda (v) (values #t v)) 
-             no-compress car list))
-
-; Binds liftable Racket built-in type predicates to their corresponding Rosette types.
-; Initially, all liftable types are bound to @any/c.  See the make-type-of macro.
-(define types (make-hash)) 
-
-; Returns the lifted Rosette type corresponding to the given liftable Racket built-in predicate.
-(define (lifted-type pred) (hash-ref types pred))
-
-; This macro constructs the type-of procedure.  To allow additional lifted types, 
-; add their Racket predicates to the #:base list of the type-of definition.  Note 
-; that the order of the #:base types is important---if p is a subtype? of q, then 
-; p must be listed before q.
-(define-syntax-rule (typechecker #:base id ...)
-  (begin
-    (hash-set! types id @any/c) ...
-    (case-lambda
-      [(v) (cond [(typed? v) (get-type v)]
-                 [(id v) (hash-ref types id)] ...
-                 [else @any/c])]
-      [(v u) (least-common-supertype (type-of v) (type-of u))]
-      [vs    (for/fold ([t (type-of (car vs))]) ([v (cdr vs)] #:break (eq? t @any/c))
-               (least-common-supertype t (type-of v)))])))
-
-; The type-of procedure a type t that accepts the given values, and there is no t' 
-; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
-(define type-of 
-  (typechecker 
-   #:base boolean? number? list? pair? procedure? vector? box?))
-
 
