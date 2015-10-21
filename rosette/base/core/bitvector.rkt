@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "generic.rkt" "merge.rkt")
+(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt")
 
 (provide current-bitwidth 
          (rename-out [make-bv bv]) bv?)

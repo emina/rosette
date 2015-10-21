@@ -10,7 +10,7 @@
          (only-in "../core/merge.rkt" merge*)
          (only-in "../core/union.rkt" union union? in-union* in-union-guards union-filter union-guards)
          (only-in "../core/equality.rkt" @equal?)
-         (only-in "../core/generic.rkt" =?))
+         (only-in "../core/polymorphic.rkt" =?))
 
 (provide define-enum enums enum? enum-size enum-members enum-<? label ordinal
          enum-first enum-last enum-value [rename-out (atom? enum-literal?)])

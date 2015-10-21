@@ -3,7 +3,7 @@
 (require "env.rkt" (prefix-in kks/ (only-in "kks.rkt" not and or => <=> ite =))
          (except-in "kks.rkt" configure not and or => <=> ite =) "univ.rkt"
          "../common/enc.rkt"
-         "../../base/core/term.rkt" "../../base/core/generic.rkt" 
+         "../../base/core/term.rkt" "../../base/core/polymorphic.rkt" 
          "../../base/core/op.rkt" "../../base/core/num.rkt" "../../base/core/bool.rkt" "../../base/struct/enum.rkt")
 
 (provide enc)

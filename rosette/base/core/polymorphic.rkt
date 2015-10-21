@@ -5,8 +5,10 @@
 (provide 
  ite          ; (-> @boolean? any/c any/c any/c)
  =?           ; (-> anyc/ any/c @boolean?)
- generic-merge 
- make-cast do-cast)
+ generic-merge)
+
+; Polymorphic operators and procedures that are shared by 
+; multiple primitive types.
 
 (define-op =? 
   #:name '=? 

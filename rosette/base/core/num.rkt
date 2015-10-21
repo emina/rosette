@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "generic.rkt" "merge.rkt"
+(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt"
          (only-in "bitwise.rkt" define-not define-and define-or))
 
 (provide 
