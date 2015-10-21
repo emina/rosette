@@ -3,7 +3,7 @@
 (require 
   racket/provide 
   (for-syntax racket/syntax (only-in "../core/lift.rkt" with@)) 
-  (only-in "../core/type.rkt" lift-type typed? get-type subtype? type-applicable? @any/c)
+  (only-in "../core/type.rkt" define-lifted-type typed? get-type subtype? type-applicable? @any/c)
   (only-in "../core/bool.rkt" ||)
   (only-in "../core/union.rkt" union union? in-union-guards union-filter union-guards)
   (only-in "../core/safe.rkt" assert)
@@ -12,30 +12,33 @@
 
 (provide (filtered-out with@ (all-defined-out)))
 
-(define (is-procedure? v)
-  (match v
-    [(and (? typed?) (app get-type t)) 
-     (and t 
-          (or (subtype? t @procedure?)
-              (and (union? v) 
-                   (subtype? @procedure? t)
-                   (apply || (for/list ([g (in-union-guards v @procedure?)]) g)))))]
-    [(? procedure?) #t] 
-    [_ #f]))
-
-(define (procedure/cast v)
-  (match v
-    [(union _ (== @procedure?)) (values #t v)]
-    [(union _ (? (curryr subtype? @procedure?))) (values #t v)]
-    [(union vs (? (curry subtype? @procedure?)))
-     (match (union-filter v @procedure?)
-       [(union (list (cons g u))) (values g u)]
-       [r (values (apply || (union-guards r)) r)])]
-    [(? procedure?) (values #t v)]
-    [_ (values #f v)]))
-  
-(define (procedure/compress force? ps)
-  (if force? (procedure/unsafe-compress ps) ps))
+(define-lifted-type @procedure?
+  #:base procedure?
+  #:is-a? (match-lambda [(and (? typed?) (app get-type t) v) 
+                         (or (subtype? t @procedure?)
+                             (and (union? v) 
+                                  (subtype? @procedure? t)
+                                  (apply || (for/list ([g (in-union-guards v @procedure?)]) g))))]
+                        [(? procedure?) #t] 
+                        [_ #f])
+  #:methods
+  [(define (least-common-supertype self other) 
+    (if (or (equal? other @procedure?) (type-applicable? other)) 
+        @procedure? 
+        @any/c))
+   (define (type-applicable? self) #t)
+   (define (cast self v) 
+     (match v
+       [(union _ (== @procedure?)) (values #t v)]
+       [(union _ (? (curryr subtype? @procedure?))) (values #t v)]
+       [(union vs (? (curry subtype? @procedure?)))
+        (match (union-filter v @procedure?)
+          [(union (list (cons g u))) (values g u)]
+          [r (values (apply || (union-guards r)) r)])]
+       [(? procedure?) (values #t v)]
+       [_ (values #f v)]))
+   (define (type-compress self force? ps)
+     (if force? (procedure/unsafe-compress ps) ps))])
 
 (define (accepts-keywords? guarded-proc)
   (let-values ([(required accepted) (procedure-keywords (cdr guarded-proc))])
@@ -62,22 +65,7 @@
            [(2)  (lambda (x y) (assert good) (guard-apply (lambda (p) (p x y)) ps))]
            [(3)  (lambda (x y z) (assert good) (guard-apply (lambda (p) (p x y z)) ps))]
            [else (lambda xs (assert good) (guard-apply (lambda (p) (apply p xs)) ps))])]))
-               
-(define @procedure?
-  (lift-type
-   procedure?
-   #:is-a? is-procedure?
-   #:least-common-supertype 
-   (lambda (t) 
-     (if (or (eq? t @procedure?) (type-applicable? t)) 
-         @procedure? 
-         @any/c))
-   #:eq? eq?
-   #:equal? equal?
-   #:applicable? #t
-   #:cast procedure/cast
-   #:compress procedure/compress))
-  
+
 (define (@procedure-rename proc name)
   (match proc
     [(union gvs)    (guard-apply (curryr procedure-rename name) gvs)]
