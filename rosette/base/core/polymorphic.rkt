@@ -39,23 +39,6 @@
              [(_ _ (expression (== ite) (== (! b)) x _)) (ite b t x)]
              [(_ _ _) (expression ite b t f)])))
 
-(define-syntax-rule (do-cast v primitive-type? ... symbolic-type?)
-  (match v
-    [(? primitive-type?) (values #t v)] ...
-    [(term _ (== symbolic-type?)) (values #t v)]
-    [(union _ (== symbolic-type?)) (values #t v)]
-    [(union _ (? (curryr subtype? symbolic-type?))) (values #t v)]
-    [(union vs (? (curry subtype? symbolic-type?)))
-     (match (union-filter v symbolic-type?)
-       [(union (list (cons g u))) (values g u)]
-       [r (values (apply || (union-guards r)) r)])]
-    [_ (values #f v)]))
-
-(define-syntax-rule (make-cast primitive-type? ... symbolic-type?)
-  (lambda (v)
-    (do-cast v primitive-type? ... symbolic-type?)))
-
-
 ; A generic eager merging procedure that takes a list of guard-value pairs, 
 ; ps = '((g1 . v1) ... (gn . vn)), and merges them into a single value 
 ; of the form (⊕ (ite g1 v1 ∅) ... (ite gn vn ∅)). All guards must be 
