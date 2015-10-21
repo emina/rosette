@@ -4,7 +4,7 @@
          racket/provide racket/splicing racket/stxparam 
          "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" "generic.rkt"
          (only-in "../form/control.rkt" @if @and @or @cond)
-         (only-in "../core/term.rkt" term? lift-type @any/c)
+         (only-in "../core/term.rkt" term? define-lifted-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? and-&& && || =>)
          (only-in "../core/num.rkt" @number? @<= @< @= @> @+)
@@ -15,64 +15,58 @@
 (provide (filtered-out with@ (all-defined-out))
          (rename-out [list @list] [null @null]))
 
+(define-lifted-type @pair?
+  #:base pair?
+  #:is-a? (instance-of? pair? (and/c @pair? (not/c @null?)))
+  #:methods
+  [(define (least-common-supertype self other)
+     (if (or (equal? other @pair?) (equal? other @list?)) 
+         @pair? 
+         @any/c))
+   (define (type-eq? self u v) (pair=? @eq? u v))
+   (define (type-equal? self u v) (pair=? @equal? u v))
+   (define (cast self v) (adt-cast v #:type pair? #:lifted @pair?))
+   (define (type-compress self force? ps)
+     (match ps
+       [(list _ ) ps]
+       [(list (cons g (cons x y)) (cons h (cons u v))) 
+        (list (cons (|| g h) (cons (merge* (cons g x) (cons h u))
+                                   (merge* (cons g y) (cons h v)))))]
+       [_ (list (cons (apply || (map car ps))
+                      (cons (apply merge* (for/list ([p ps]) (cons (car p) (cadr p)))) 
+                            (apply merge* (for/list ([p ps]) (cons (car p) (cddr p)))))))]))
+   (define (type-construct self vals)
+     (match vals [(list a b) (cons a b)]))
+   (define (type-deconstruct self val)
+     (match val [(cons a b) (list a b)]))])
+
+(define-lifted-type @list?  
+  #:base list?
+  #:is-a? (instance-of? list? @list?)      
+  #:methods
+  [(define (least-common-supertype self other)
+     (cond [(equal? other @list?) @list?]
+           [(equal? other @pair?) @pair?]
+           [else @any/c]))
+   (define (type-eq? self u v) (list=? @eq? u v))
+   (define (type-equal? self u v) (list=? @equal? u v))
+   (define (cast self v) (adt-cast v #:type list? #:lifted @list?))
+   (define (type-compress self force? ps) 
+     (seq-compress ps length map : [(for/seq head body) (for/list head body)]))
+   (define (type-construct self vals) vals)
+   (define (type-deconstruct self val) val)])
+
 ;; Pair and List Predicates
-(define (pair=? =?)
-  (lambda (x y) 
-    (and-&& (not (null? x)) (not (null? y)) (=? (car x) (car y)) (=? (cdr x) (cdr y)))))
+(define (pair=? =? x y) 
+  (and-&& (not (null? x)) (not (null? y)) (=? (car x) (car y)) (=? (cdr x) (cdr y))))
 
-; force? is ignored since pairs are immutable and therefore always merged
-(define (pair/compress force? ps) 
-  (match ps
-    [(list _ ) ps]
-    [(list (cons g (cons x y)) (cons h (cons u v))) 
-     (list (cons (|| g h) (cons (merge* (cons g x) (cons h u))
-                                (merge* (cons g y) (cons h v)))))]
-    [_ (list (cons (apply || (map car ps))
-                   (cons (apply merge* (for/list ([p ps]) (cons (car p) (cadr p)))) 
-                         (apply merge* (for/list ([p ps]) (cons (car p) (cddr p)))))))]))
-
-(define (list=? =?)
-  (lambda (xs ys)
-    (and (= (length xs) (length ys))
-         (let loop ([xs xs] [ys ys] [eqs '()])
-           (if (null? xs) 
-               (apply && eqs)
-               (let ([eq (=? (car xs) (car ys))])
-                 (and eq (loop (cdr xs) (cdr ys) (cons eq eqs)))))))))
-
-; force? is ignored since lists are immutable and therefore always merged 
-(define (list/compress force? ps) 
-  (seq-compress ps length map : [(for/seq head body) (for/list head body)]))
-
-(define @pair?
-  (lift-type
-   pair?
-   #:is-a?     (instance-of? pair? (and/c @pair? (not/c @null?)))      
-   #:least-common-supertype (lambda (t) (if (or (eq? t @pair?) (eq? t @list?)) @pair? @any/c))
-   #:eq?      (pair=? @eq?)
-   #:equal?   (pair=? @equal?)
-   #:cast     (adt-cast #:type pair? #:lifted @pair?)                  
-   #:compress pair/compress
-   #:construct (match-lambda [(list a b) (cons a b)]
-                             [v (error 'construct-pair "expected a list of two elements, given ~a" v)])
-   #:deconstruct (match-lambda [(cons a b) (list a b)]
-                               [v (error 'deconstruct-pair "expected a pair, given ~a" v)])))
-
-(define @list?  
-  (lift-type
-   list?
-   #:is-a?    (instance-of? list? @list?)      
-   #:least-common-supertype (lambda (t) (cond [(eq? t @list?) @list?]
-                                              [(eq? t @pair?) @pair?]
-                                              [else @any/c]))
-   #:eq?      (list=? @eq?)
-   #:equal?   (list=? @equal?)
-   #:cast     (adt-cast #:type list? #:lifted @list?)
-   #:compress list/compress
-   #:construct identity
-   #:deconstruct identity))
-
-
+(define (list=? =? xs ys)
+  (and (= (length xs) (length ys))
+       (let loop ([xs xs] [ys ys] [eqs '()])
+         (if (null? xs) 
+             (apply && eqs)
+             (let ([eq (=? (car xs) (car ys))])
+               (and eq (loop (cdr xs) (cdr ys) (cons eq eqs))))))))
 
 ;; Pair Constructors and Selectors
 (define/lift (car cdr) :: pair? -> @pair?)
