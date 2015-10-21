@@ -4,41 +4,27 @@
 
 (provide @boolean? @false? ! && || => <=>  and-&& or-|| instance-of?)
 
-(define (bool/cast v)
-  (match v
-    [(? boolean?) (values #t v)]
-    [(term _ (== @boolean?))  (values #t v)]
-    [(union : [g (and (or (? boolean?) (term _ (== @boolean?))) u)] _ ...) (values g u)]
-    [_ (values #f v)]))
-
-(define (bool/compress force? ps)  ; force? is ignored since booleans are immutable and therefore always merged
-  (match ps
-    [(list _) ps]
-    [(list (cons g v) (cons u w)) (list (cons (|| g u) (|| (&& g v) (&& u w))))]
-    [_ (list (cons (apply || (map car ps)) 
-                   (apply || (for/list ([p ps]) (&& (car p) (cdr p))))))]))
+(define-lifted-type @boolean? 
+  #:base boolean?
+  #:is-a? (instance-of? boolean? @boolean?)
+  #:methods
+  [(define (type-eq? self u v) (<=> u v)) 
+   (define (type-equal? self u v) (<=> u v))
+   (define (cast self v) 
+     (match v
+       [(? boolean?) (values #t v)]
+       [(term _ (== self))  (values #t v)]
+       [(union : [g (and (or (? boolean?) (term _ (== self))) u)] _ ...) (values g u)]
+       [_ (values #f v)]))
+   (define (type-compress self force? ps)
+     (match ps
+       [(list _) ps]
+       [(list (cons g v) (cons u w)) (list (cons (|| g u) (|| (&& g v) (&& u w))))]
+       [_ (list (cons (apply || (map car ps)) 
+                      (apply || (for/list ([p ps]) (&& (car p) (cdr p))))))]))])
 
 (define binary-type (op/-> (@boolean? @boolean?) @boolean?)) 
 (define nary-type (op/-> (#:rest @boolean?) @boolean?)) 
-
-(define-op <=> 
-  #:type binary-type
-  #:op   (lambda (x y) ;(|| (&& x y) (&& (! x) (! y))))))
-           (cond [(equal? x y) #t]
-                 [(boolean? x) (if x y (! y))]
-                 [(boolean? y) (if y x (! x))]
-                 [(cancel? x y) #f]
-                 [(term<? x y) (expression <=> x y)]
-                 [else         (expression <=> y x)])))
-
-(define @boolean? 
-  (lift-type boolean?
-             #:is-a?     (instance-of? boolean? @boolean?) 
-             #:least-common-supertype (lambda (t) (if (eq? t @boolean?) @boolean? @any/c))
-             #:eq?      <=>
-             #:equal?   <=>
-             #:cast     bool/cast
-             #:compress bool/compress))
 
 (define-op !
   #:type (op/-> (@boolean?) @boolean?)
@@ -61,12 +47,20 @@
   #:type binary-type
   #:op   (lambda (x y) (|| (! x) y)))
 
-
+(define-op <=> 
+  #:type binary-type
+  #:op   (lambda (x y) ;(|| (&& x y) (&& (! x) (! y))))))
+           (cond [(equal? x y) #t]
+                 [(boolean? x) (if x y (! y))]
+                 [(boolean? y) (if y x (! x))]
+                 [(cancel? x y) #f]
+                 [(term<? x y) (expression <=> x y)]
+                 [else         (expression <=> y x)])))
 
 (define (@false? v) 
   (or (false? v)  
       (and (typed? v)
-           (let-values ([(g b) (bool/cast v)])
+           (let-values ([(g b) (cast @boolean? v)])
              (and g (&& g (! b)))))))
 
 (define-syntax and-&&
