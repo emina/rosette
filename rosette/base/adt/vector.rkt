@@ -7,7 +7,7 @@
          (only-in "list.rkt" @list?)
          (only-in "../form/control.rkt" @when)
          (only-in "../core/effects.rkt" apply!) 
-         (only-in "../core/term.rkt" lift-type @any/c)
+         (only-in "../core/term.rkt" define-lifted-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/num.rkt" @number? @= @<= @< @- @+)
@@ -16,13 +16,23 @@
 
 (provide (filtered-out with@ (all-defined-out))
          (rename-out [vector @vector] [vector-immutable @vector-immutable]))
-
-(define (vector/eq? xs ys)
-  (or (eq? xs ys)
-      (and (immutable? xs) (immutable? ys) (vector=? @eq? xs ys))))
-
-(define (vector/equal? xs ys)
-  (vector=? @equal? xs ys))
+                  
+(define-lifted-type @vector?  
+  #:base vector?
+  #:is-a? (instance-of? vector? @vector?)      
+  #:methods
+  [(define (type-eq? self xs ys)
+     (or (eq? xs ys)
+         (and (immutable? xs) (immutable? ys) (vector=? @eq? xs ys))))
+   (define (type-equal? self xs ys) (vector=? @equal? xs ys))
+   (define (cast self v) (adt-cast v #:type vector? #:lifted @vector?))  
+   (define (type-compress self force? ps)
+     (let-values ([(immutable mutable) (partition (compose1 immutable? cdr) ps)])
+       (append (for/list ([p (unsafe/compress immutable)])
+                 (cons (car p) (vector->immutable-vector (cdr p))))
+               (if force? (unsafe/compress mutable) mutable))))
+   (define (type-construct self vals) (list->vector vals))
+   (define (type-deconstruct self val) (vector->list val))])
 
 (define (vector=? =? xs ys)
   (let ([len (vector-length xs)])
@@ -38,24 +48,6 @@
                 [(for/seq ([x vec] rest ...) body)
                  (for/vector #:length (vector-length vec)
                    ([x vec] rest ...) body)]))
-  
-(define (vector/compress force? ps)
-  (let-values ([(immutable mutable) (partition (compose1 immutable? cdr) ps)])
-    (append (for/list ([p (unsafe/compress immutable)])
-              (cons (car p) (vector->immutable-vector (cdr p))))
-            (if force? (unsafe/compress mutable) mutable))))
-                   
-(define @vector?  
-  (lift-type
-   vector?
-   #:is-a?     (instance-of? vector? @vector?)      
-   #:least-common-supertype (lambda (t) (if (eq? t @vector?) @vector? @any/c))
-   #:eq?      vector/eq?
-   #:equal?   vector/equal?
-   #:cast     (adt-cast #:type vector? #:lifted @vector?)  
-   #:compress vector/compress
-   #:construct list->vector
-   #:deconstruct vector->list))
 
 (define/lift (vector-length vector->list vector->immutable-vector) :: vector? -> @vector?)
 (define/lift (list->vector) :: list? -> @list?)
