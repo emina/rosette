@@ -28,12 +28,19 @@
                       (raise-argument-error 'current-bitwidth "positive integer" bw))
                     bw)))
 
-(define (num/cast v)
-  (match v
-    [(? number?) (values #t v)]
-    [(term _ (== @number?)) (values #t v)]
-    [(union : [g (and (or (? number?) (term _ (== @number?))) u)] _ ...) (values g u)]
-    [_ (values #f v)]))
+(define-lifted-type @number? 
+  #:base number?
+  #:is-a? (instance-of? number? @number?)
+  #:methods
+  [(define (type-eq? self u v) (@= u v)) 
+   (define (type-equal? self u v) (@= u v))
+   (define (cast self v)
+     (match v
+       [(? number?) (values #t v)]
+       [(term _ (== self)) (values #t v)]
+       [(union : [g (and (or (? number?) (term _ (== self))) u)] _ ...) (values g u)]
+       [_ (values #f v)]))
+   (define (type-compress self force? ps) (generic-merge @bitwise-ior 0 ps))])
 
 (define binary-predicate-type (op/-> (@number? @number?) @boolean?))
 (define nary-type (op/-> (#:rest @number?) @number?))
@@ -55,16 +62,6 @@
              [((? term?) (? number?)) (expression @= y x)]
              [(_ _) (or (equal? x y) (sort/expression @= x y))])))
 
-(define  @number? 
-  (lift-type
-   number?
-   #:is-a?     (instance-of? number? @number?) 
-   #:least-common-supertype (lambda (t) (if (eq? t @number?) @number? @any/c))
-   #:eq?      @=
-   #:equal?   @=
-   #:cast     num/cast
-   #:compress (lambda (force? ps) (generic-merge @bitwise-ior 0 ps))))
-  
 (define-op @<  #:name '<  #:type binary-predicate-type #:op (lambda (x y) (cmp @< < x y)))
 (define-op @<= #:name '<= #:type binary-predicate-type #:op (lambda (x y) (cmp @<= <= x y)))
 (define-op @>  #:name '>  #:type binary-predicate-type #:op (lambda (x y) (@< y x)))
