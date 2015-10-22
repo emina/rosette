@@ -133,3 +133,90 @@
          [o5 (bvxor o4 o3)]
          [o6 (bvxor o5 x)])
     o6))
+
+; Next higher unsigned number with the same number of 1 bits.
+(define (p20 x)
+  (let* ([o1 (bvneg x)]
+         [o2 (bvand x o1)]
+         [o3 (bvadd x o2)]
+         [o4 (bvxor x o2)]
+         [o5 (bvshr o4 2)]
+         [o6 (bvdiv o5 o2)]
+         [o7 (bvor o6 o3)])
+    o7))
+
+; Cycling through 3 values a, b, c.
+(define (p21 x a b c)  
+  (let* ([o1 (bveq x c)]
+         [o2 (bvneg o1)]
+         [o3 (bvxor a c)]
+         [o4 (bveq x a)]
+         [o5 (bvneg o4)]
+         [o6 (bvxor b c)]
+         [o7 (bvand o2 o3)]
+         [o8 (bvand o5 o6)]
+         [o9 (bvxor o7 o8)]
+         [o10 (bvxor o9 c)])
+    o10))
+
+; Compute parity.
+(define (p22 x) 
+  (let* ([o1 (bvshr x 1)]
+         [o2 (bvxor o1 x)]
+         [o3 (bvshr o2 2)]
+         [o4 (bvxor o2 o3)]
+         [o5 (bvand o4 #x11111111)]
+         [o6 (bvmul o5 #x11111111)]
+         [o7 (bvshr o6 28)]
+         [o8 (bvand o7 1)]) 
+    o8))
+
+; Counting number of bits.
+(define (p23 x) 
+  (let* ([o1  (bvshr x 1)]
+         [o2  (bvand o1 #x55555555)]
+         [o3  (bvsub x o2)]
+         [o4  (bvand o3 #x33333333)]
+         [o5  (bvshr o3 2)]
+         [o6  (bvand o5 #x33333333)]
+         [o7  (bvadd o4 o6)]
+         [o8  (bvshr o7 4)]
+         [o9  (bvadd o8 o7)]
+         [o10 (bvand o9 #x0f0f0f0f)])
+    o10))
+
+; Round up to the next higher power of 2.
+(define (p24 x) 
+  (let* ([o1  (bvsub x 1)]
+         [o2  (bvshr o1 1)]
+         [o3  (bvor o1 o2)]
+         [o4  (bvshr o3 2)]
+         [o5  (bvor o3 o4)]
+         [o6  (bvshr o5 4)]
+         [o7  (bvor o5 o6)]
+         [o8  (bvshr o7 8)]
+         [o9  (bvor o7 o8)]
+         [o10 (bvshr o9 16)]
+         [o11 (bvor o9 o10)]
+         [o12 (bvadd o11 1)])
+    o12))
+
+; Compute higher order half of product of x and y.
+(define (p25 x y)
+  (let* ([o1  (bvand x #xffff)]
+         [o2  (bvshr x 16)]
+         [o3  (bvand y #xffff)]
+         [o4  (bvshr y 16)]
+         [o5  (bvmul o1 o3)]
+         [o6  (bvmul o2 o3)]
+         [o7  (bvmul o1 o4)]
+         [o8  (bvmul o2 o4)]
+         [o9  (bvshr o5 16)]
+         [o10 (bvadd o6 o9)]
+         [o11 (bvand o10 #xffff)]
+         [o12 (bvshr o10 16)]
+         [o13 (bvadd o7 o11)]
+         [o14 (bvshr o13 16)]
+         [o15 (bvadd o14 o12)]
+         [o16 (bvadd o15 o8)])
+    o16))
