@@ -3,7 +3,7 @@
 (require racket/syntax (for-syntax racket racket/syntax) "type.rkt" "op.rkt")
 
 (provide
- cache
+ term-cache
  term?             ; (-> any/c boolean?)
  (rename-out [a-term term])     ; pattern matching macro
  term-name         ; (-> term? (or/c syntax? false/c))
@@ -60,23 +60,23 @@
   (match-lambda [(constant (cons _ idx) _) idx]
                 [_ #f]))
 
-(define cache (make-parameter (make-hash)))
+(define term-cache (make-parameter (make-hash)))
 
 (define (clear-terms!)
-  (define tmp (cache))
-  (cache (make-hash))
-  (define new-cache (cache))
+  (define tmp (term-cache))
+  (term-cache (make-hash))
+  (define new-cache (term-cache))
   (for ([(k v) tmp] #:when (constant? v)) 
     (hash-set! new-cache k v)))
 
 (define (unsafe-clear-terms!)
-  (hash-clear! (cache)))
+  (hash-clear! (term-cache)))
                 
 
 (define-syntax-rule (make-term args type) 
   (let ([val args]) 
-    (or (hash-ref (cache) val #f)
-        (hash-ref! (cache) val (term val type (hash-count (cache)) #f)))))
+    (or (hash-ref (term-cache) val #f)
+        (hash-ref! (term-cache) val (term val type (hash-count (term-cache)) #f)))))
    
 (define (make-var id-stx t [index #f])
   (unless (identifier? id-stx)
