@@ -7,6 +7,7 @@
          rosette/query/state rosette/base/form/state
          rosette/solver/solution
          rosette/base/util/log
+         (only-in rosette/base/core/term term-cache)
          (for-syntax racket/syntax))
 
 (provide define-fragment synthesize-fragment)
@@ -17,6 +18,17 @@
 
 (define-syntax (define-fragment stx)
   (syntax-case stx ()
+    
+    [(_ (id param ...) #:implements post #:library lib-expr)
+     #'(define-fragment (id param ...) #:requires (const #t) #:implements post #:library lib-expr)]
+    [(_ (id param ...) #:requires pre #:implements post #:library lib-expr)
+     #'(define-fragment (id param ...) #:min-bitwidth 4 #:requires pre #:implements post #:library lib-expr)]
+    [(_ (id param ...) #:min-bitwidth k #:implements post #:library lib-expr)
+     #'(define-fragment (id param ...) #:min-bitwidth k #:requires (const #t) #:implements post #:library lib-expr)]
+    [(_ (id param ...) #:min-bitwidth k #:requires pre #:implements post #:library lib-expr )
+     #`(define-values (id #,(format-id #'id "~a-stx" #'id #:source #'id)) 
+         (synthesize-fragment (id param ...) #:min-bitwidth k #:requires pre #:implements post #:library lib-expr))]
+    
     [(_ (id param ...) #:ensures post #:library lib-expr)
      #'(define-fragment (id param ...) #:requires (const #t) #:ensures post #:library lib-expr)]
     [(_ (id param ...) #:requires pre #:ensures post #:library lib-expr)
@@ -32,6 +44,18 @@
 ; that satisfies the give post condition on all inputs that satisfy the given pre-condition.
 (define-syntax (synthesize-fragment stx)
   (syntax-case stx ()
+    [(_ (id param ...) #:implements post #:library lib-expr)
+     #'(synthesize-fragment (id param ...) #:requires (const #t) #:implements post #:library lib-expr)]
+    [(_ (id param ...) #:requires pre #:implements post #:library lib-expr)
+     #'(synthesize-fragment (id param ...) #:min-bitwidth 4 #:requires pre #:implements post #:library lib-expr)]
+    [(_ (id param ...) #:min-bitwidth k #:implements post #:library lib-expr)
+     #'(synthesize-fragment (id param ...) #:min-bitwidth k #:requires (const #t) #:implements post #:library lib-expr)]
+    [(_ (id param ...) #:min-bitwidth k #:requires pre #:implements post #:library lib-expr )
+     #'(synthesize-fragment (id param ...) 
+                            #:min-bitwidth k #:requires pre 
+                            #:ensures (lambda (param ... out) (@= (post param ...) out)) 
+                            #:library lib-expr)]
+     
     [(_ (id param ...) #:ensures post #:library lib-expr)
      #'(synthesize-fragment (id param ...) #:requires (const #t) #:ensures post #:library lib-expr)]
     [(_ (id param ...) #:requires pre #:ensures post #:library lib-expr)
@@ -42,6 +66,7 @@
      #`(parameterize ([current-oracle (oracle)]
                       [current-solution (empty-solution)]
                       [current-log-source (if (verbose?) 'define-fragment #f)]
+                      [term-cache (hash-copy (term-cache))]
                       [inputs #,(length (syntax->list #'(param ...)))])
          (log-info "synthesizing ~a" #'id)
          (define-symbolic* param @number?) ...
