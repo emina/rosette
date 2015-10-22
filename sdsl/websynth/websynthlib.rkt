@@ -49,12 +49,10 @@
 
 ; Mask function
 (define (generate-mask zpath1 zpath2 mask depth)
-  (if (= (length zpath1) 0)
-      null
-      (begin
-        (assert (eq? (car mask) 
-                   (eq? (car zpath1) (car zpath2))))
-        (generate-mask (cdr zpath1) (cdr zpath2) (cdr mask) depth))))
+  (unless (= (length zpath1) 0)
+    (assert (eq? (car mask) 
+                 (eq? (car zpath1) (car zpath2))))
+    (generate-mask (cdr zpath1) (cdr zpath2) (cdr mask) depth)))
 
 ; Zip
 ; Found at http://jeremykun.wordpress.com/2011/10/02/a-taste-of-racket/ in the comments.
