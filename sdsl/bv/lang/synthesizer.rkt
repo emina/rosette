@@ -10,7 +10,7 @@
          (only-in rosette/base/core/term term-cache)
          (for-syntax racket/syntax))
 
-(provide define-fragment synthesize-fragment)
+(provide define-fragment synthesize-fragment verbose?)
 
 (define verbose? (make-parameter #t))
 
