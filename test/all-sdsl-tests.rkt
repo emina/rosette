@@ -1,24 +1,13 @@
 #lang racket
 
-;; ----------- WebSynth ----------- ;; 
-(require "../sdsl/websynth/test/itunes100_2.rkt")
-(require "../sdsl/websynth/test/itunes100_4.rkt")
-(require "../sdsl/websynth/test/itunes100_8.rkt")
-(require "../sdsl/websynth/test/itunes100_16.rkt")
+(define-syntax-rule (module@ id)
+  (module+ id
+    (require "../sdsl/websynth/test/all-tests.rkt")  ; WebSynth
+    (require "../sdsl/bv/test/all-tests.rkt")        ; BV
+    (require (submod "../sdsl/ifc/test.rkt" id))))   ; IFC tests
 
-(require "../sdsl/websynth/test/imdb250_2.rkt")
-(require "../sdsl/websynth/test/imdb250_4.rkt")
-(require "../sdsl/websynth/test/imdb250_8.rkt")
-(require "../sdsl/websynth/test/imdb250_16.rkt")
+(module@ test) ; All tests
+(module@ fast) ; Fast tests
 
-(require "../sdsl/websynth/test/alanon_arkansas_2.rkt")
-(require "../sdsl/websynth/test/alanon_arkansas_4.rkt")
-(require "../sdsl/websynth/test/alanon_arkansas_8.rkt")
-(require "../sdsl/websynth/test/alanon_arkansas_16.rkt")
 
-;; ----------- BV ----------- ;; 
-(require "../sdsl/bv/test/easy.rkt")
-(require "../sdsl/bv/test/medium.rkt")
 
-;; ----------- IFC ----------- ;; 
-(require "../sdsl/ifc/test.rkt")
