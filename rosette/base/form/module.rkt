@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/dict syntax/parse syntax/id-table (only-in racket pretty-print) 
                      (only-in "../core/lift.rkt" drop@))
-         racket/require racket/undefined
+         racket/require racket/undefined 
          (filtered-in drop@ "../adt/box.rkt")
          (only-in racket/splicing splicing-let splicing-let-values))
 
@@ -14,17 +14,19 @@
 (define-syntax (@#%module-begin stx)
   (syntax-case stx ()
     [(_ forms ...)
-     (let* ([core (local-expand #'(#%plain-module-begin forms ...) 'module-begin '())]
+     (let* ([core (local-expand #'(#%plain-module-begin forms ...) 'module-begin (list #'module*))]
             [vars (find-mutated-vars core)]      
-            [transformed (box-mutated-vars core vars)])
+            [transformed (if (dict-empty? vars) core (box-mutated-vars core vars))])
+       ;(printf "eq? core transformed: ~a\n" (eq? core transformed))
        ;(printf "vars:~a\n" (dict->list vars))
        ;(printf "core:\n") (pretty-print (syntax->datum core))
        ;(call-with-output-file "bad.rkt" 
        ;  (lambda (out) (parameterize ([current-output-port out])
-                         ;(printf "transformed:\n") 
-       ;                  (pretty-print (syntax->datum transformed))))
-       ;  #:mode 'text
-       ;  #:exists 'replace)
+       ;                  (printf "transformed:\n") 
+       ;                  (pretty-print (syntax->datum transformed))
+       ;))
+        ; #:mode 'text
+        ; #:exists 'replace)
        transformed)]))
 
 (define-syntax (@#%top-interaction stx)
