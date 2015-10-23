@@ -19,6 +19,12 @@
                  (exported 'rosette/base/base)
                  (exported 'rosette/query/query)))
 
+(define (clear-state!)
+  (current-oracle (oracle))
+  (current-solution (empty-solution))
+  (clear-asserts)
+  (unsafe-clear-terms!))
+
 (provide 
  (all-from-out 
   "solver/solver.rkt" 
@@ -26,4 +32,4 @@
   "base/base.rkt"
   "query/query.rkt") 
  (for-syntax (all-from-out racket))
- rosette)
+ rosette clear-state!)
