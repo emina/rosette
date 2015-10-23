@@ -76,11 +76,9 @@
 		"itunes100_2"
 		#:before (lambda () (printf "Testing itunes100_2.~n"))
 		(test-case "itunes100_2"
-			(current-solution (empty-solution))
-			(clear-asserts)
-			(unsafe-clear-terms!)
 			(define expected (second (call-with-input-file out read)))
 			(define actual (scrape))
-			(check-equal? actual expected))))
+			(check-equal? actual expected)
+			(clear-state!))))
 
 (time (run-tests a-test))

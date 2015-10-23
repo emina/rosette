@@ -184,11 +184,9 @@
 		"alanon_arkansas_8"
 		#:before (lambda () (printf "Testing alanon_arkansas_8.~n"))
 		(test-case "alanon_arkansas_8"
-			(current-solution (empty-solution))
-			(clear-asserts)
-			(unsafe-clear-terms!)
 			(define expected (second (call-with-input-file out read)))
 			(define actual (scrape))
-			(check-equal? actual expected))))
+			(check-equal? actual expected)
+			(clear-state!))))
 
 (time (run-tests a-test))
