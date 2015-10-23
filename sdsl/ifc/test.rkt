@@ -54,9 +54,22 @@
             (program (list Push Call Push StoreCR Halt Push Push Call Pop Push Return))
             13))
 
-(time (run-tests basic-bugs))       ; ~10 sec
-(time (run-tests basic-correct))    ; ~20 sec
-(time (run-tests jump-bugs))        ; ~7 sec
-(time (run-tests jump-correct))     ; ~52 sec
-(time (run-tests call-return-bugs)) ; ~440 sec
-(time (run-tests reproduce-bugs))   ; ~256 sec
+(define (fast-tests)
+  (time (run-tests basic-bugs))       ; ~10 sec
+  (time (run-tests basic-correct))    ; ~20 sec
+  (time (run-tests jump-bugs)))       ; ~7 sec
+
+(define (slow-tests)
+  (time (run-tests jump-correct))     ; ~52 sec
+  (time (run-tests call-return-bugs)) ; ~440 sec
+  (time (run-tests reproduce-bugs)))  ; ~256 sec
+
+(module+ fast
+  (fast-tests))
+
+(module+ main
+  (fast-tests)
+  (slow-tests))
+
+
+
