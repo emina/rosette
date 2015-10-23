@@ -59,4 +59,4 @@
 (time (run-tests jump-bugs))        ; ~7 sec
 (time (run-tests jump-correct))     ; ~52 sec
 (time (run-tests call-return-bugs)) ; ~440 sec
-(time (run-tests reproduce-bugs))   ; ~480 sec
+(time (run-tests reproduce-bugs))   ; ~256 sec
