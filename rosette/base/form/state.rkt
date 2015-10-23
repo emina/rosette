@@ -1,22 +1,26 @@
 #lang racket
 
-(provide current-oracle oracle)
+(provide current-oracle oracle? (rename-out [make-oracle oracle]))
 
 #|--------------current state parameters--------------|#
 
-(define (oracle)
-  (let ([vars (make-hash)])
-    (procedure-rename 
-     (lambda (var)
-      (let ([choice-idx (hash-ref vars var 0)])
-        (hash-set! vars var (+ choice-idx 1))
-        choice-idx))
-     'oracle)))
+(struct oracle ([tbl])
+  #:property prop:procedure
+  (lambda (self var)
+    (let* ([vars (oracle-tbl self)]
+           [choice-idx (hash-ref vars var 0)])
+      (hash-set! vars var (+ choice-idx 1))
+      choice-idx)))
+
+(define make-oracle
+  (case-lambda 
+    [() (oracle (make-hash))]
+    [(other) (oracle (hash-copy (oracle-tbl other)))]))
 
 (define current-oracle
-  (make-parameter (oracle)
+  (make-parameter (make-oracle)
                   (lambda (oracle)
-                    (unless (procedure? oracle)
+                    (unless (oracle? oracle)
                       (error 'current-oracle "expected an oracle procedure, given ~s" oracle))
                     oracle)))
 
