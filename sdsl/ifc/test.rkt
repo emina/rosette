@@ -67,7 +67,7 @@
 (module+ fast
   (fast-tests))
 
-(module+ main
+(module+ test
   (fast-tests)
   (slow-tests))
 
