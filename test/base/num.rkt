@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          racket/fixnum 
          rosette/base/core/term
          rosette/base/core/bool
@@ -154,9 +154,8 @@
                 (bitwise-xor 47361 486193 -983823 6481 12 -4240)))
 
 (define num-tests
-  (test-suite 
-   "Tests for rosette/base/num.rkt"
-   #:before (lambda () (printf "Testing rosette/base/num.rkt\n"))
+  (test-suite+ 
+   "Tests for rosette/base/num.rkt" 
    
    (check-arithmetic @+ @- @* 0)
    (check-arithmetic @* @/ @expt 1)
