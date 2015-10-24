@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          racket/fixnum
          rosette/base/core/term
          rosette/base/adt/list
@@ -98,9 +98,8 @@
  
 
 (define list-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for rosette/base/list.rkt"
-   #:before (lambda () (printf "Testing rosette/base/list.rkt\n"))
    
    (check-null?)
    (check-cons)
