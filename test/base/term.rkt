@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/core/term
          rosette/base/core/bool
          rosette/base/core/num
@@ -22,9 +22,8 @@
   (check-true (equal? (apply op args) (apply op args))))
    
 (define value-tests
-  (test-suite
+  (test-suite+
    "Tests for rosette/base/term.rkt"
-   #:before (lambda () (printf "Testing rosette/base/term.rkt\n"))
 
    (check-false (term<? x x))
    (check-false (term<? a a))
