@@ -1,35 +1,46 @@
 #lang s-exp rosette
 
-(require "util.rkt" racket/stxparam
+(require "util.rkt" racket/stxparam 
+         (only-in rackunit test-pred) 
          (for-syntax (only-in racket/syntax with-syntax*))
          (only-in "forms.rkt" range :)
-         (only-in rosette/lib/meta/meta print-forms)
+         (only-in rosette/lib/meta/meta print-forms generate-forms)
          (only-in rosette/solver/smt/z3 z3%)
          (prefix-in rosette/ (only-in rosette verify synthesize)))
 
-(provide verify synth)
+(provide verify synth expected? query-output-port)
 
 (current-solver (new z3%))
+
+(define expected? (make-parameter any/c))
+(define query-output-port (make-parameter (current-output-port)))
 
 ; The verify form.
 (define-syntax (verify stx)
   (syntax-case stx ()
     [(verify #:forall [decl ...] #:ensure expr)
      (with-syntax ([([id seq] ...) (map id&range (syntax->list #'(decl ...)))])
-       (syntax/loc stx 
+       (quasisyntax/loc stx 
          (syntax-parameterize
           ([range (syntax-rules () [(_ arg (... ...)) (in-range arg (... ...))])])
-          (current-bitwidth 32)
-          (define clock (current-milliseconds))
-          (for* ([id seq] ...)
-            (define m (with-handlers ([exn:fail? (lambda (e) #f)]) (rosette/verify expr)))
-            (when m 
-              (set! clock (- (current-milliseconds) clock))
-              (printf "~a counterexample found (~a ms):\n" (source-of #'verify) clock)
-              (print-cex m (cons 'id id) ...)
-              (error 'verify "counterexample found")))
-          (set! clock (- (current-milliseconds) clock))
-          (printf "~a no counterexample found (~a ms).\n" (source-of #'verify) clock))))]))
+          (test-pred
+           #,(format "~a" #'verify)
+           (expected?)
+           (parameterize ([current-bitwidth 32]
+                          [current-oracle (oracle (current-oracle))]
+                          [current-output-port (query-output-port)]
+                          [term-cache (hash-copy (term-cache))])
+             (printf "Verifying ~a\n" (source-of #'verify))
+             (time 
+              (or  
+               (for*/or ([id seq] ...)
+                 (with-handlers ([exn:fail? (lambda (e) #f)])
+                   (define cex (rosette/verify expr))
+                   (printf "Counterexample found:\n")
+                   (print-cex cex (cons 'id id) ...)
+                   cex))
+               (unsat* "No counterexample found.\n"))))))))]))
+
 
 ; The synthesize form.
 (define-syntax (synth stx)
@@ -37,21 +48,29 @@
     [(synthesize #:forall [decl ...] #:bitwidth bw #:ensure expr)
      (with-syntax* ([([id seq] ...) (map id&range (syntax->list #'(decl ...)))]
                     [(tmp ...) (generate-temporaries #'(id ...))])
-                   (syntax/loc stx 
-                     (syntax-parameterize
-                      ([range (syntax-rules () [(_ arg (... ...)) (in-range arg (... ...))])])
-                      (current-bitwidth bw) ;(current-log-handler (log-handler #:info any/c))
-                      (define-values (id ...)
-                        (for*/lists (tmp ...) ([id seq] ...) (values id ...)))
-                      (define clock (current-milliseconds))
-                      (define m (with-handlers ([exn:fail? (lambda (e) #f)]) 
-                                  (rosette/synthesize
-                                   #:forall    (append id ...)
-                                   #:guarantee (for ([id id] ...) expr))))
-                      (set! clock (- (current-milliseconds) clock))
-                      (cond [m (printf "~a solution found (~a ms):\n" (source-of #'synthesize) clock)
-                               (print-forms m)]
-                            [else (printf "~a no solution found (~a ms).\n" (source-of #'synthesize) clock)]))))]
+       (quasisyntax/loc stx 
+         (syntax-parameterize
+          ([range (syntax-rules () [(_ arg (... ...)) (in-range arg (... ...))])])
+          (test-pred
+           #,(format "~a" #'synthesize)
+           (expected?)
+           (parameterize ([current-bitwidth bw]
+                          [current-oracle (oracle (current-oracle))]
+                          [current-output-port (query-output-port)]
+                          [term-cache (hash-copy (term-cache))])
+             (printf "Synthesizing ~a\n" (source-of #'synthesize))
+             (define-values (id ...)
+               (for*/lists (tmp ...) ([id seq] ...) (values id ...)))
+             (time
+              (or
+               (with-handlers ([exn:fail? (lambda (e) #f)]) 
+                 (define m
+                   (rosette/synthesize
+                    #:forall    (append id ...)
+                    #:guarantee (for ([id id] ...) expr)))
+                 (print-forms m)
+                 m)
+               (unsat* "No solution found.\n"))))))))]
     [(synthesize #:forall ds #:ensure e) (syntax/loc stx (synthesize #:forall ds #:bitwidth 8 #:ensure e))]))
 
 
@@ -72,3 +91,7 @@
     (write (evaluate (cdr name/val) m))
     (newline)))
 
+; Prints the given message and returns (unsat).
+(define (unsat* msg)
+  (printf msg)
+  (unsat))
