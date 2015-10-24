@@ -1,6 +1,6 @@
 #lang s-exp "../../../lang/main.rkt"
 
-; The reference implementation for square matrix multiplication.  
+; A buggy reference implementation for square matrix multiplication.  
 ; Multiplies two squre matrices A and B, where the dimension of A is 
 ; n x p and dimension of B is p x m.  Both matrices are given as 
 ; flat arrays in row-major form.  The output is the matrix C = A*B, 
@@ -10,7 +10,7 @@
   (= C ((int*) (malloc (* n m (sizeof int)))))
   (for [(: int i in (range n))
         (: int j in (range m))
-        (: int k in (range p))]
+        (: int k in (range 1 p))] ; seeded bug
         (+= [C (+ (* i m) j)] (* [A (+ (* i p) k)] [B (+ (* k m) j)])))
   C)
 
@@ -115,4 +115,5 @@
 ;(= n 8) (= p 4) (= m 4)
 ;(: int[(* n p)] A) (: int[(* p m)] B)
 ;(mmulVector A B n p m)
+
 
