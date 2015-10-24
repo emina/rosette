@@ -123,6 +123,7 @@
   (test-suite 
    "Tests for memory functions"
    #:before (lambda () (printf "Testing memory functions\n"))
+   #:after (lambda () (clear-state!))
    (check-exn (fails-with? "pointer-ref: cannot read from a write-only memory address #x0[1]")
               read-write-only-buffer)
    (check-exn (fails-with? "pointer-set!: cannot write to a read-only memory address #x0[1]") 

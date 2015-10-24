@@ -1,8 +1,16 @@
 #lang racket
 
-(require "memory.rkt")
-(require "operators.rkt")
-(require "reals.rkt")
-(require "typecheck.rkt")
-(require "work.rkt")
+(define-syntax-rule (module@ id)
+  (module+ id
+    (require "memory.rkt")
+    (require "operators.rkt")
+    (require "reals.rkt")
+    (require "typecheck.rkt")
+    (require "work.rkt")
+    (require (submod "../examples/matrixMultiply/synth/test.rkt" id)))) 
+
+(module@ test) ; All tests
+(module@ fast) ; Fast tests
+
+
 
