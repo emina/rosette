@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/core/term
          rosette/base/core/bool
          rosette/base/core/num
@@ -104,9 +104,8 @@
   
   
 (define merge-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for rosette/base/merge.rkt"
-   #:before (lambda () (printf "Testing rosette/base/merge.rkt\n"))
    
    (basic-merge-tests)
    (list-merge-tests)
