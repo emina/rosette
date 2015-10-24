@@ -16,17 +16,15 @@
     [(_ forms ...)
      (let* ([core (local-expand #'(#%plain-module-begin forms ...) 'module-begin (list #'module*))]
             [vars (find-mutated-vars core)]      
-            [transformed (if (dict-empty? vars) core (box-mutated-vars core vars))])
-       ;(printf "eq? core transformed: ~a\n" (eq? core transformed))
+            [transformed (box-mutated-vars core vars)])
        ;(printf "vars:~a\n" (dict->list vars))
        ;(printf "core:\n") (pretty-print (syntax->datum core))
        ;(call-with-output-file "bad.rkt" 
        ;  (lambda (out) (parameterize ([current-output-port out])
-       ;                  (printf "transformed:\n") 
-       ;                  (pretty-print (syntax->datum transformed))
-       ;))
-        ; #:mode 'text
-        ; #:exists 'replace)
+                         ;(printf "transformed:\n") 
+       ;                  (pretty-print (syntax->datum transformed))))
+       ;  #:mode 'text
+       ;  #:exists 'replace)
        transformed)]))
 
 (define-syntax (@#%top-interaction stx)
