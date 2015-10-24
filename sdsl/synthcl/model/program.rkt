@@ -40,7 +40,9 @@
            (list (cons (~a (quote id)) id) ...))))]))
 
 (define-for-syntax (parse-kernel-identifiers path)
-  (define source (read-module (syntax->datum path)))
+  (define-values (base name must-be-dir?) (split-path (syntax-source path)))
+  (define absolute-path (build-path base (syntax->datum path)))
+  (define source (read-module absolute-path))
   (syntax-case source ()
     [(mod id lang (mod-begin forms ...))
      (filter-map (lambda (form)
