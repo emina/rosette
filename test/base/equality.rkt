@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/core/equality 
          rosette/base/core/term
          rosette/base/core/bool
@@ -167,9 +167,8 @@
   (check-equal? (equal-hash-code (h0 1)) (equal-hash-code (h0 1))))
 
 (define equality-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for rosette/base/equality.rkt"
-   #:before (lambda () (printf "Testing rosette/base/equality.rkt\n"))
    
    ; eq? and equal? behave the same on transparent immutable values
    (primitive-equality-tests @eq?)
