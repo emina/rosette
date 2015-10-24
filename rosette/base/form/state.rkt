@@ -10,7 +10,10 @@
     (let* ([vars (oracle-tbl self)]
            [choice-idx (hash-ref vars var 0)])
       (hash-set! vars var (+ choice-idx 1))
-      choice-idx)))
+      choice-idx))
+  #:methods gen:custom-write
+  [(define (write-proc self port mode) 
+     (fprintf port "oracle~a" (oracle-tbl self)))])
 
 (define make-oracle
   (case-lambda 
