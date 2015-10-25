@@ -1,4 +1,6 @@
 #lang racket
 
-(require "easy.rkt")
-(require "medium.rkt")
+(require rosette/lib/util/roseunit)
+
+(run-all-tests "easy.rkt" 
+               "medium.rkt")

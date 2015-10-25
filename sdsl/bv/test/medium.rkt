@@ -1,17 +1,14 @@
 #lang s-exp "../bv.rkt"
 
-(require rackunit rackunit/text-ui "util.rkt")
+(require rackunit rackunit/text-ui "util.rkt" rosette/lib/util/roseunit)
 (require "../examples/reference.rkt" "../examples/consts.rkt")
 
-(current-bitwidth 32)
-(verbose? #f)
-
 (define medium-tests
-  (test-suite 
+  (test-suite+ 
    "Hacker's Delight Problems 11-19"
-   #:before (lambda () (printf "Hacker's Delight Problems 11-19.\n"))
    
-   (begin
+   (parameterize ([current-bitwidth 32]
+                  [verbose? #f])
      
      (test-fragment 
       (p11* x y) 
