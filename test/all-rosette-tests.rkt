@@ -18,4 +18,12 @@
  "solver/bvsemantics.rkt"
  )
 
-; (require rosette)(term-cache)(asserts)(current-oracle)(current-bitwidth)
+#|
+(require rosette)
+(term-cache)
+(asserts)
+(current-oracle)
+(current-bitwidth)
+(current-solver)
+(current-solution)
+|#

@@ -1,15 +1,15 @@
 #lang racket
 
-(define-syntax-rule (module@ id)
-  (module+ id
-    (require "../sdsl/websynth/test/all-tests.rkt")            ; WebSynth
-    (require "../sdsl/bv/test/all-tests.rkt")                  ; BV
-    (require (submod "../sdsl/ifc/test.rkt" id))               ; IFC tests
-    (require (submod "../sdsl/synthcl/test/all-tests.rkt" id)) ; SynthCL tests
-    ))   
+(require rosette/lib/util/roseunit)
 
-(module@ test) ; All tests
-(module@ fast) ; Fast tests
+(test-groups [test fast] 
+ "../sdsl/websynth/test/all-tests.rkt"         ; WebSynth
+ "../sdsl/bv/test/all-tests.rkt"               ; BV
+ (submod "../sdsl/ifc/test.rkt")               ; IFC tests
+ (submod "../sdsl/synthcl/test/all-tests.rkt") ; SynthCL tests
+)   
+
+
 
 
 
