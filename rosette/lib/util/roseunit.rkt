@@ -21,6 +21,7 @@
            (module id racket 
              (require path)
              (require (only-in rosette/safe clear-state!))
+             (current-bitwidth 5)
              (clear-state!)) ...
             (require 'id) ...))))))
 
