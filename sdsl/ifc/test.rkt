@@ -3,7 +3,7 @@
 (require "machine.rkt" "indistinguishable.rkt" "verify.rkt"
          "basic.rkt" "jump.rkt" "call.rkt")
 
-(require rackunit rackunit/text-ui)
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
 
 ; See verify-EENI-demo.rkt for details on the results expected by the tests.
 
@@ -15,9 +15,8 @@
 
 (define-syntax-rule (define-tests id desc expr ...)
   (define id
-    (test-suite 
+    (test-suite+ 
      desc 
-     #:before (lambda () (printf "~a.\n" desc))
      (begin expr ...))))
 
 ; Checks for counterexamples for bugs in basic semantics. 
