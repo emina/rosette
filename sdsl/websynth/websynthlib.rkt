@@ -1,10 +1,16 @@
 #lang s-exp rosette
 
 (require "dom.rkt")
-(provide (except-out (all-defined-out) tag-type))
+(provide (except-out (all-defined-out) tag-type)
+         (rename-out [z3-solve solve]))
 
 (require rosette/solver/smt/z3)
-(current-solver (new z3%))
+
+(define-syntax-rule (z3-solve form)
+  (parameterize ([current-solver (new z3%)])
+    (begin0 
+      (solve form)
+      (send (current-solver) shutdown))))
 
 (define-syntax-rule (define-tags tags)
   (begin

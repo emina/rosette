@@ -94,17 +94,14 @@
 		(DOM-Flatten (DOM-XPath dom field1_zpath))
 	))
 
-(require rackunit rackunit/text-ui)
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
 (define-runtime-path out (build-path "." "itunes_top100_v2.out"))
 
 (define a-test
-	(test-suite 
+	(test-suite+ 
 		"itunes100_4"
-		#:before (lambda () (printf "Testing itunes100_4.~n"))
 		(test-case "itunes100_4"
 			(define expected (second (call-with-input-file out read)))
 			(define actual (scrape))
-			(check-equal? actual expected)
-			(clear-state!))))
-
+			(check-equal? actual expected))))
 (time (run-tests a-test))

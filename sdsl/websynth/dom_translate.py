@@ -138,17 +138,15 @@ def generate(args):
     else :
         out = os.path.splitext(os.path.basename(args.html_filepath))[0]
         t = os.path.splitext(os.path.basename(args.examples))[0]
-        f.write('(require rackunit rackunit/text-ui)\n')
+        f.write('(require rackunit rackunit/text-ui rosette/lib/util/roseunit)\n')
         f.write('(define-runtime-path out (build-path "." "{name}.out"))\n\n'.format(name=out))
         f.write('(define a-test\n')
-        f.write('\t(test-suite \n')
+        f.write('\t(test-suite+ \n')
         f.write('\t\t"{name}"\n'.format(name=t))
-        f.write('\t\t#:before (lambda () (printf "Testing {name}.~n"))\n'.format(name=t))
         f.write('\t\t(test-case "{name}"\n'.format(name=t))
         f.write('\t\t\t(define expected (second (call-with-input-file out read)))\n')
         f.write('\t\t\t(define actual (scrape))\n')
-        f.write('\t\t\t(check-equal? actual expected)\n')
-        f.write('\t\t\t(clear-state!))))\n\n')
+        f.write('\t\t\t(check-equal? actual expected))))\n')
         f.write('(time (run-tests a-test))\n')
         
     f.close()

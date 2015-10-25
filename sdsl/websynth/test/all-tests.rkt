@@ -1,17 +1,19 @@
 #lang racket
 
-;; ----------- WebSynth ----------- ;; 
-(require "itunes100_2.rkt")
-(require "itunes100_4.rkt")
-(require "itunes100_8.rkt")
-(require "itunes100_16.rkt")
+(require rosette/lib/util/roseunit)
 
-(require "imdb250_2.rkt")
-(require "imdb250_4.rkt")
-(require "imdb250_8.rkt")
-(require "imdb250_16.rkt")
-
-(require "alanon_arkansas_2.rkt")
-(require "alanon_arkansas_4.rkt")
-(require "alanon_arkansas_8.rkt")
-(require "alanon_arkansas_16.rkt")
+(run-all-tests
+ "itunes100_2.rkt"
+ "itunes100_4.rkt"
+ "itunes100_8.rkt"
+ "itunes100_16.rkt"
+ 
+ "imdb250_2.rkt"
+ "imdb250_4.rkt"
+ "imdb250_8.rkt"
+ "imdb250_16.rkt"
+ 
+ "alanon_arkansas_2.rkt"
+ "alanon_arkansas_4.rkt"
+ "alanon_arkansas_8.rkt"
+ "alanon_arkansas_16.rkt")

@@ -67,17 +67,14 @@
 		(DOM-Flatten (DOM-XPath dom field0_zpath))
 	))
 
-(require rackunit rackunit/text-ui)
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
 (define-runtime-path out (build-path "." "imdb250.out"))
 
 (define a-test
-	(test-suite 
+	(test-suite+ 
 		"imdb250_4"
-		#:before (lambda () (printf "Testing imdb250_4.~n"))
 		(test-case "imdb250_4"
 			(define expected (second (call-with-input-file out read)))
 			(define actual (scrape))
-			(check-equal? actual expected)
-			(clear-state!))))
-
+			(check-equal? actual expected))))
 (time (run-tests a-test))

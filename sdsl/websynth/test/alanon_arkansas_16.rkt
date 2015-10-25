@@ -304,17 +304,14 @@
 		(DOM-Flatten (DOM-XPath dom field2_zpath))
 	))
 
-(require rackunit rackunit/text-ui)
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
 (define-runtime-path out (build-path "." "alanon_arkansas.out"))
 
 (define a-test
-	(test-suite 
+	(test-suite+ 
 		"alanon_arkansas_16"
-		#:before (lambda () (printf "Testing alanon_arkansas_16.~n"))
 		(test-case "alanon_arkansas_16"
 			(define expected (second (call-with-input-file out read)))
 			(define actual (scrape))
-			(check-equal? actual expected)
-			(clear-state!))))
-
+			(check-equal? actual expected))))
 (time (run-tests a-test))
