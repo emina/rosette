@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/form/define rosette/base/core/assert
          rosette/solver/solution rosette/base/core/bool rosette/base/core/num
          rosette/query/tools rosette/base/form/control)
@@ -14,7 +14,7 @@
     (check-true (pred sol) (format "not ~a for ~a: ~a" (quote pred) (quote test) sol))))
 
 (define verify-tests
-  (test-suite "verify"
+  (test-suite+ "Basic verify tests"
     ; basic verify tests
     (check-verify unsat? (verify (@assert (@or x (@not x)))))
     (check-verify sat? (verify (@assert (@and x (@not x)))))
@@ -28,7 +28,7 @@
     ))
 
 (define short-circuit-tests
-  (test-suite "verify: short-circuit"
+  (test-suite+ "Verify short-circuit tests"
     ; tests for the verify short-circuit logic
     (check-verify unsat? (verify (@assert #t)))
     (check-verify unsat? (verify #:assume (@assert #f) 
