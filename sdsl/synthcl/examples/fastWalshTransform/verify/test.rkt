@@ -3,12 +3,11 @@
 (require (only-in "host.rkt" verify_scalar verify_vector)
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui)
+         rackunit rackunit/text-ui rosette/lib/util/roseunit)
 
 (define fast-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: fast Walsh transform verification tests"
-   #:before (lambda () (printf "SynthCL: fast Walsh transform synthesis tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)])
      

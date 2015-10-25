@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui 
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          "../model/memory.rkt" "../model/work.rkt" 
          "../model/reals.rkt"  "../model/pointers.rkt"
          "../model/context.rkt" "../model/buffer.rkt" "../model/flags.rkt")
@@ -120,10 +120,9 @@
         
 
 (define memory-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for memory functions"
-   #:before (lambda () (printf "Testing memory functions\n"))
-   #:after (lambda () (clear-state!))
+
    (check-exn (fails-with? "pointer-ref: cannot read from a write-only memory address #x0[1]")
               read-write-only-buffer)
    (check-exn (fails-with? "pointer-set!: cannot write to a read-only memory address #x0[1]") 

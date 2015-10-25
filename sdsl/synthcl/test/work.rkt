@@ -1,12 +1,10 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui "../model/work.rkt") 
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit "../model/work.rkt") 
 
 (define work-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for work item functions"
-   #:before (lambda () (printf "Testing work item functions\n"))
-   #:after (lambda () (clear-state!))
    (parameterize ([current-work-size '(()(1)())]
                   [current-global-id 0])
      (check-equal? (get_global_size 0) 1)

@@ -1,15 +1,14 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui "../model/reals.rkt")
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit "../model/reals.rkt")
 
 (define-symbolic a b c boolean?)
 (define-symbolic x y z number?)
 (define x4 (int4 1 2 3 4))
    
 (define scalar-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for scalar types"
-   #:before (lambda () (printf "Testing scalar types\n"))
    
    (check-equal? (bool #t) #t)
    (check-equal? (bool #f) #f)
@@ -62,9 +61,8 @@
    (check-equal? ((float) (if a a 3.5)) (if a 1.0 3.5))))
 
 (define vector-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for vector types"
-   #:before (lambda () (printf "Testing vector types\n"))
 
    (check-equal? ((int2) a) (int2 (if a -1 0) (if a -1 0)))
    (check-equal? ((int2) (float x)) (int2 x x))

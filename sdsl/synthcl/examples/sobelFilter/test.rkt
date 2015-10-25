@@ -4,12 +4,11 @@
          (only-in "reference.rkt" verify_0_1 verify_1_2 verify_2_3 verify_3_4 verify_4_5 synth_3)
          (only-in "../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui)
+         rackunit rackunit/text-ui rosette/lib/util/roseunit)
 
 (define fast-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: fast Sobel synthesis and verification tests"
-   #:before (lambda () (printf "SynthCL: fast Sobel synthesis and verification tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)])
      
@@ -21,9 +20,8 @@
        (synth_vectorized)))))
 
 (define slow-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: slow Sobel synthesis and verification tests"
-   #:before (lambda () (printf "SynthCL: slow Sobel synthesis and verification tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)]) 
      (parameterize ([expected? unsat?])

@@ -3,12 +3,11 @@
 (require (only-in "host.rkt" synth_vector)
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui)
+         rackunit rackunit/text-ui rosette/lib/util/roseunit)
 
 (define fast-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: fast matrix-multiply synthesis tests"
-   #:before (lambda () (printf "SynthCL: fast matrix-multiply synthesis tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)])
      
@@ -21,9 +20,8 @@
        (synth_vector 4)))))
 
 (define slow-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: slow matrix-multiply synthesis tests"
-   #:before (lambda () (printf "SynthCL: slow matrix-multiply synthesis tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)])
      

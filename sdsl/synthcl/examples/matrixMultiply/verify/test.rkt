@@ -4,12 +4,11 @@
          (prefix-in buggy_ (only-in "host-buggy.rkt" verify_scalar verify_vector verify_vector_opt))
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui)
+         rackunit rackunit/text-ui rosette/lib/util/roseunit)
 
 (define fast-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: fast matrix-multiply verification tests"
-   #:before (lambda () (printf "SynthCL: fast matrix-multiply verification tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)])
      
@@ -24,9 +23,8 @@
        (buggy_verify_vector_opt 4 9)))))
 
 (define slow-tests
-  (test-suite 
+  (test-suite+ 
    "SynthCL: slow matrix-multiply verification tests"
-   #:before (lambda () (printf "SynthCL: slow matrix-multiply verification tests.\n"))
    
    (parameterize ([query-output-port (open-output-nowhere)])
      (parameterize ([expected? unsat?])

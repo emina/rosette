@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui  
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          (only-in "../model/memory.rkt" NULL)
          (only-in "../model/runtime.rkt" malloc)
          "../model/work.rkt"
@@ -20,9 +20,8 @@
 
 
 (define env-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for environment functions"
-   #:before (lambda () (printf "Testing environment functions\n"))
    (parameterize ([current-env (env)])
      (bind #'x int)
      (check-exn exn:fail? (thunk (bind #'x int)))
@@ -31,9 +30,8 @@
      (check-exn exn:fail? (thunk (lookup #'y))))))
 
 (define literal-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of literals"
-   #:before (lambda () (printf "Tests for typechecking of literals\n"))
    (parameterize ([current-env (env)])
      (check-type (typecheck #'#f) bool)
      (check-type (typecheck #'#t) bool)
@@ -42,9 +40,8 @@
      (check-type (typecheck #'"foo") char*))))
 
 (define declaration-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of declarations"
-   #:before (lambda () (printf "Tests for typechecking of declarations\n"))
    (parameterize ([current-env (env)])
      (check-not-exn (thunk (typecheck #'(: int x))))
      (check-type (typecheck #'x) int)
@@ -66,9 +63,8 @@
                 (thunk (typecheck #'(: int x)))))))
 
 (define operator-tests
-  (test-suite
+  (test-suite+
    "Tests for typechecking of operator expressions"
-   #:before (lambda () (printf "Tests for typechecking operator expressions\n"))
    (parameterize ([current-env (env)])
      (typecheck #'(: int a b c))
      (typecheck #'(: float x y z))
@@ -115,9 +111,8 @@
      )))
 
 (define expression-tests
-  (test-suite
+  (test-suite+
    "Tests for typechecking of expressions"
-   #:before (lambda () (printf "Tests for typechecking expressions\n"))
    (parameterize ([current-env (env)])
      (typecheck #'(: int a b c))
      (typecheck #'(: float x y z))
@@ -149,9 +144,8 @@
                 (thunk (typecheck #'(a 3 4)))))))
 
 (define assignment-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of assignments"
-   #:before (lambda () (printf "Tests for typechecking of assignments\n"))
    (parameterize ([current-env (env)])
      (typecheck #'(: int x))
      (typecheck #'(: int16 y))
@@ -218,9 +212,8 @@
      )))
 
 (define cast-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of casts"
-   #:before (lambda () (printf "Tests for typechecking of casts\n"))
    (parameterize ([current-env (env)])
      (typecheck #'(: int x))
      (typecheck #'(: int16 y))
@@ -249,9 +242,8 @@
                 (thunk (typecheck #'((int) z)))))))
 
 (define malloc-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of malloc"
-   #:before (lambda () (printf "Tests for typechecking of malloc\n"))
    (parameterize ([current-env (env)])
      (check-type (typecheck #'(malloc 3)) void*)
      (check-exn (fails-with? "malloc: no implicit conversion from int2 to int")
@@ -259,9 +251,8 @@
      
    
 (define assert-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of assertions"
-   #:before (lambda () (printf "Tests for typechecking of assertions\n"))
    (parameterize ([current-env (env)])
      (typecheck #'(: int x))
      (typecheck #'(: int16 y))
@@ -275,9 +266,8 @@
                 (thunk (typecheck #'(assert p)))))))
 
 (define builtins-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for typechecking of builtins"
-   #:before (lambda () (printf "Tests for typechecking of builtins\n"))
    (parameterize ([current-env (env)])
      (typecheck #'(: cl_kernel k))
      (typecheck #'(: cl_mem buff))
