@@ -5,7 +5,7 @@
 (require "../websynth.rkt")
 (require "../websynthlib.rkt")
 
-(define-runtime-path html (build-path "." "../html/imdb250.html"))
+(define-runtime-path html (build-path ".." "html/imdb250.html"))
 (define dom (read-DOMNode html))
 (define-tags (tags dom))
 (define max_zpath_depth (depth dom))
@@ -21,29 +21,34 @@
 
 ; Cross-record Mask
 (define-symbolic recordmask boolean? [max_zpath_depth])
-(current-log-handler (log-handler #:info any/c))
 (current-bitwidth 1)
 
-; Record 0 zpath asserts
-(assert (path? r0f0zpath dom "The Shawshank Redemption"))
+(define (demonstration)
 
-; Record 1 zpath asserts
-(assert (path? r1f0zpath dom "Fight Club"))
+	; Record 0 zpath asserts
+	(assert (path? r0f0zpath dom "The Shawshank Redemption"))
 
-; Record Mask and Solve
-(generate-mask r0f0zpath r1f0zpath recordmask max_zpath_depth)
-(define sol (solve #t))
+	; Record 1 zpath asserts
+	(assert (path? r1f0zpath dom "Fight Club"))
 
-; Record 0 zpaths
-; Record 1 zpaths
+	; Record Mask
+	(generate-mask r0f0zpath r1f0zpath recordmask max_zpath_depth))
 
-; Construct final zpaths
-(define r0f0zpath_list (map label (evaluate r0f0zpath)))
-(define generalizelized_r0f0zpath_list 
-   (apply-mask r0f0zpath_list (evaluate recordmask)))
-(define field0_zpath (synthsis_solution->zpath generalizelized_r0f0zpath_list))
+; Solve
+(define (scrape)
+	(define sol (solve (demonstration)))
 
-(printf "DOM stats:  size = ~a, depth = ~a, tags = ~a\n" (size dom) max_zpath_depth (enum-size tag?))
-(zip 
-(DOM-Flatten (DOM-XPath dom field0_zpath))
-)
+	; Record 0 zpaths
+	; Record 1 zpaths
+
+	; Construct final zpaths
+	(define r0f0zpath_list (map label (evaluate r0f0zpath)))
+	(define generalizelized_r0f0zpath_list 
+		(apply-mask r0f0zpath_list (evaluate recordmask)))
+	(define field0_zpath (synthsis_solution->zpath generalizelized_r0f0zpath_list))
+
+	(zip 
+		(DOM-Flatten (DOM-XPath dom field0_zpath))
+	))
+
+(scrape)
