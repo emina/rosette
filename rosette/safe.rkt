@@ -1,6 +1,6 @@
 #lang racket
 
-(require "solver/solver.rkt" 
+(require "solver/solver.rkt" "solver/kodkod/kodkod.rkt"
          "solver/solution.rkt" 
          "base/base.rkt"
          "query/query.rkt"
@@ -20,10 +20,12 @@
                  (exported 'rosette/query/query)))
 
 (define (clear-state!)
+  (current-bitwidth 5)
   (current-oracle (oracle))
   (current-solution (empty-solution))
   (clear-asserts)
-  (unsafe-clear-terms!))
+  (unsafe-clear-terms!)
+  (current-solver (new kodkod%)))
 
 (provide 
  (all-from-out 
