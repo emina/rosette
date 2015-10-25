@@ -1,15 +1,13 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui (only-in rosette/lib/util/roseunit test-suite+)
          rosette/query/eval rosette/base/form/define
-         rosette/solver/solution
+         rosette/solver/solution rosette/query/state
          rosette/base/core/term rosette/base/core/bool rosette/base/core/num 
          rosette/base/core/merge rosette/base/adt/procedure
          rosette/base/struct/enum rosette/base/core/equality)
 
 (provide run-tests-with)
-
-(define solver #f)
 
 (define-symbolic x @number?)
 (define-symbolic y @number?)
@@ -34,10 +32,10 @@
     (lambda (a b) (= (modulo a mask) (modulo b mask)))))
 
 (define (check-sat model-validator . formulas)
-  (send solver clear)
+  (send (current-solver) clear)
   (for ([f formulas])
-    (send solver assert f))
-  (let ([sol (send solver solve)])
+    (send (current-solver) assert f))
+  (let ([sol (send (current-solver) solve)])
     ;(printf "~s\n" formulas)
     (check-true (sat? sol) (format "no solution found for ~s" formulas))
     (model-validator formulas sol)))
@@ -63,9 +61,8 @@
                      (format "solution violates ~s: ~s" f sol))]))) 
 
 (define-syntax-rule (test-suite-for name expr ...)
-  (test-suite
-   (format "~a: ~a" (string-titlecase name) solver)
-   #:before (thunk (printf "Testing ~a with ~a\n" name solver))
+  (test-suite+
+   (format "~a: ~a" (string-titlecase name) (current-solver))
    expr ...))
 
 (define bool-tests
@@ -219,19 +216,15 @@
               (@> y 4))))
 
 (define (run-tests-with s)
-  (set! solver s)
-  (time (run-tests bool-tests))
-  (time (run-tests comparison-tests))
-  (time (run-tests unary-and-bitwise-tests))
-  (time (run-tests arithmetic-tests))
-  (time (run-tests div-tests))
-  (time (run-tests remainder-tests))
-  (time (run-tests precision-tests))
-  (time (run-tests enum-tests))
-  (time (run-tests merge-tests))
-  (time (run-tests type-tests))
-  (send solver shutdown))
-
-;(require rosette/solver/kodkod/kodkod)
-;(set! solver (new kodkod%))
-;(check-sat div-validator (@= x -16) (@= y -16) (@= (@/ y x) 1))
+  (parameterize ([current-solver s])
+    (time (run-tests bool-tests))
+    (time (run-tests comparison-tests))
+    (time (run-tests unary-and-bitwise-tests))
+    (time (run-tests arithmetic-tests))
+    (time (run-tests div-tests))
+    (time (run-tests remainder-tests))
+    (time (run-tests precision-tests))
+    (time (run-tests enum-tests))
+    (time (run-tests merge-tests))
+    (time (run-tests type-tests))
+    (send (current-solver) shutdown)))

@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/query/eval rosette/base/form/define
          rosette/base/core/num rosette/solver/solution
          rosette/base/core/term rosette/base/core/bool  
@@ -15,9 +15,8 @@
 (define max-bv (arithmetic-shift 1 (- bits 1)))
 
 (define-syntax-rule (test-suite-for name expr ...)
-  (test-suite
+  (test-suite+
    (format "~a: ~a and ~a" (string-titlecase name) kodkod z3)
-   #:before (thunk (printf "Testing ~a with ~a and ~a\n" name kodkod z3))
    expr ...))
 
 (define-symbolic x @number?)
