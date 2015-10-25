@@ -13,7 +13,8 @@
 
 (define (fails-with? msg)
   (lambda (e)
-    (and (exn:fail? e) (for/and ([c0 msg][c1 (exn-message e)]) (equal? c0 c1)))))
+    (and (exn:fail? e)
+         (regexp-match (regexp-quote msg) (exn-message e))))) 
 
 (define (check-type stx expected)
   (check-equal? (type-ref stx) expected))
