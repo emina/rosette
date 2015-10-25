@@ -10,7 +10,7 @@
 
 (provide verify synth expected? query-output-port)
 
-(current-solver (new z3%))
+(define solver (new z3%))
 
 (define expected? (make-parameter any/c))
 (define query-output-port (make-parameter (current-output-port)))
@@ -27,6 +27,7 @@
            #,(format "~a" #'verify)
            (expected?)
            (parameterize ([current-bitwidth 32]
+                          [current-solver solver]
                           [current-oracle (oracle (current-oracle))]
                           [current-output-port (query-output-port)]
                           [term-cache (hash-copy (term-cache))])
@@ -55,6 +56,7 @@
            #,(format "~a" #'synthesize)
            (expected?)
            (parameterize ([current-bitwidth bw]
+                          [current-solver solver]
                           [current-oracle (oracle (current-oracle))]
                           [current-output-port (query-output-port)]
                           [term-cache (hash-copy (term-cache))])
