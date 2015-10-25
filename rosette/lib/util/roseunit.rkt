@@ -7,7 +7,27 @@
                   current-bitwidth term-cache current-oracle oracle with-asserts-only
                   current-solution empty-solution solution? sat? unsat?))
 
-(provide run-all-tests test-suite+ test-sat test-unsat check-sat check-unsat)
+(provide run-all-tests test-groups test-suite+ test-sat test-unsat check-sat check-unsat)    
+
+; Groups tests into N modules with names id ..., each 
+; of which requires the specified modules and submodules.
+; For example, (test-groups [test fast] "a.rkt" (submod "b.rkt")) 
+; creates two module+ forms, test and fast, both of which require 
+; "a.rkt" and (submod "b.rkt" id).
+(define-syntax (test-groups stx)
+  (syntax-case stx ()
+    [(_ [id ...] mod ...)
+     (quasisyntax/loc stx
+       (begin
+         #,@(for/list ([i (syntax->list #'(id ...))])
+              (quasisyntax/loc i
+                (module+ #,i
+                  (run-all-tests
+                   #,@(for/list ([m (syntax->list #'(mod ...))])
+                        (syntax-case m ()
+                          [(submod name) (quasisyntax/loc m (submod name #,i))]
+                          [_ m]))))))))]))
+
 
 ; Given a set of relative paths containing modules with tests, 
 ; requires them all into the present environment, one by one, 
