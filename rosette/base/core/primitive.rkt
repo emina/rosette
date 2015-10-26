@@ -128,4 +128,4 @@
       (begin
         (assert (>= start 0))
         (assert (>= end start))
-        (bitwise-and (sub1 (<< 1 (- end start))) (>> n start)))))
+        (bitwise-and (@sub1 (<< 1 (- end start))) (>> n start)))))
