@@ -1,24 +1,22 @@
 #lang racket
 
 (provide 
- op?                          ; (-> any/c boolean?)
- op-name                      ; (-> op? symbol?)
- op-pre                       ; (unconstrained-domain-> @boolean?)
- ops                          ; (listof op?)
- define-op                    ; (define-op id (symbol? (-> (listof any/c) type?) (and/c op? (->* () () #:rest (listof any/c) any)))
- op-arg-type                  ; (-> op? exact-nonnegative-integer? type?)
- op-out-type                  ; (-> op? (listof any/c) type?)
- op/->)                       ; (-> (or/c contract? (listof contract?)) type? (->* ()() #:rest (listof any/c) (values (listof @boolean?) type?)) ))  
+ op? op-name 
+ 
+ ;; --- phasing in --- ;; 
+ define-operator lifted-op?
+ (rename-out 
+  [lifted-op-safe op-safe]
+  [lifted-op-unsafe op-unsafe])  
+
+ ;; --- phasing out --- ;;  
+ define-op typed-op? op/->                    
+ op-arg-type op-out-type   
+ (rename-out 
+  [typed-op-pre op-pre]))     
 
 (struct op 
-  (name   ; symbol?
-   arg    ; (-> exact-nonnegative-integer? type?)
-   out    ; (unconstrained-domain-> type?)
-   pre    ; (unconstrained-domain-> @boolean?)
-   proc   ; (unconstrained-domain-> any/c)
-   h1 h2)  
-  #:property prop:procedure 
-  (struct-field-index proc)
+  (name h1 h2)  
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "~a" (op-name self)))]
   #:methods gen:equal+hash
@@ -26,24 +24,50 @@
    (define (hash-proc op1 hash-proc) (op-h1 op1))
    (define (hash2-proc op2 hash-proc) (op-h2 op2))])
 
-(define ops (list))
+;; ------ Lifted ops (phasing in) ------ ;;
 
-(define (create-op id #:name [name (syntax->datum id)] #:type type #:pre [pre (const #t)] #:op proc) 
-  (let ([o  (op name (car type) (cdr type) pre proc 
-                (equal-hash-code (symbol->string name))
-                (equal-secondary-hash-code (symbol->string name))) ])
-    (set! ops (append ops (list o)))
-    o))
+; By default, op application uses the safe (lifted) version.  This version 
+; performs type checking on the arguments, and asserts the preconditions, if any, 
+; before calling the unsafe version of the operator.  The unsafe version is used 
+; internally by Rosette for efficiency.  It assumes that all of its arguments are 
+; properly typed and that all preconditions are met.
+(struct lifted-op op
+  (safe unsafe)  
+  #:property prop:procedure 
+  (struct-field-index safe)) 
+
+(define (make-lifted-op id #:name [name (syntax->datum id)] #:safe safe #:unsafe unsafe)
+  (let ([str-name (symbol->string name)])
+    (lifted-op 
+     name (equal-hash-code str-name) (equal-secondary-hash-code str-name)
+     safe unsafe)))
+
+(define-syntax-rule (define-operator id arg ...)
+  (define id (make-lifted-op #'id arg ...)))
+    
+
+;; ------ Typed ops (to be phased out) ------ ;;
+
+(struct typed-op op
+  (arg out pre proc)  
+  #:property prop:procedure 
+  (struct-field-index proc))
+
+(define (make-typed-op id #:name [name (syntax->datum id)] #:type type #:pre [pre (const #t)] #:op proc) 
+  (let ([str-name (symbol->string name)])
+    (typed-op 
+     name (equal-hash-code str-name) (equal-secondary-hash-code str-name)
+     (car type) (cdr type) pre proc)))
 
 (define-syntax (define-op stx)
   (syntax-case stx ()
-    [(_ id args ...) #`(define id (create-op #'id args ...))]))
+    [(_ id args ...) #`(define id (make-typed-op #'id args ...))]))
 
 (define (op-arg-type op idx)
-  ((op-arg op) idx))
+  ((typed-op-arg op) idx))
 
 (define (op-out-type op args) 
-  (apply (op-out op) args))
+  (apply (typed-op-out op) args))
 
 ; Creates an operator type specification using the given argument and result types.
 ; If arg-types is just one type, then the specification corresponds to an
