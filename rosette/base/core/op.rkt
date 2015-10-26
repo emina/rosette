@@ -1,7 +1,5 @@
 #lang racket
 
-(require (only-in "type.rkt" type-of type?))
-
 (provide 
  op? op-name 
  
@@ -38,7 +36,7 @@
   #:property prop:procedure 
   (struct-field-index safe)) 
 
-(define (make-lifted-op id #:name [name (syntax->datum id)] #:safe safe #:unsafe unsafe #:type [type #f])
+(define (make-lifted-op id #:name [name (syntax->datum id)] #:safe safe #:unsafe unsafe #:type type)
   (let ([str-name (symbol->string name)])
     (lifted-op 
      name (equal-hash-code str-name) (equal-secondary-hash-code str-name)
@@ -54,6 +52,7 @@
   (arg out pre proc)  
   #:property prop:procedure 
   (struct-field-index proc))
+
 
 (define (make-typed-op id #:name [name (syntax->datum id)] #:type type #:pre [pre (const #t)] #:op proc) 
   (let ([str-name (symbol->string name)])
@@ -71,9 +70,7 @@
 (define (op-out-type op args) 
   (match op
     [(typed-op _ _ _ _ t _ _) (apply t args)]
-    [(lifted-op _ _ _ _ _ #f) (type-of (car args))]
-    [(lifted-op _ _ _ _ _ (? type? t)) t]
-    [(lifted-op _ _ _ _ _ t) (apply t args)]))
+    [(lifted-op _ _ _ _ _ t)  (apply t args)]))
     
     
 
