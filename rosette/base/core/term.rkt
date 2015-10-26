@@ -5,14 +5,12 @@
 (provide
  term-cache
  term?             ; (-> any/c boolean?)
- (rename-out [a-term term])     ; pattern matching macro
+ (rename-out [a-term term] [an-expression expression] [a-constant constant])     ; pattern matching macro
  term-name         ; (-> term? (or/c syntax? false/c))
  term-index        ; (-> term? (or/c false/c number? list?))
  term-op           ; (-> term? (or/c op? false/c))
  term-child        ; (-> term? (listof any/c))  
  term-type         ; (-> term? type?)  
- constant          ; pattern-matching macro:  (constant name type) 
- expression        ; constructor + pattern-matching macro:  (expression operator arg ...) 
  constant?         ; (-> any/c boolean?)
  angelic?          ; (-> any/c boolean?)
  expression?       ; (case-> (-> any/c boolean?) (-> any/c op? boolean?))
@@ -27,37 +25,24 @@
  unsafe-clear-terms!
  (all-from-out "type.rkt"))
 
-
-(define constant?
-  (match-lambda [(constant _ _) #t]
-                [_ #f]))
-
 (define angelic?
-  (match-lambda [(constant (not (? identifier?)) _) #t]
+  (match-lambda [(a-constant (not (? identifier?)) _) #t]
                 [_ #f])) 
 
-(define expression? 
-  (case-lambda [(s) (match s
-                      [(expression _ _ ...) #t]
-                      [_ #f])]
-               [(s op) (match s 
-                         [(expression (== op) _ ...) #t]
-                         [_ #f])]))
-
 (define term-op 
-  (match-lambda [(expression op _ ...) op]
+  (match-lambda [(an-expression op _ ...) op]
                 [_ #f]))
 
 (define term-child 
-  (match-lambda [(expression _ child ...) child]
+  (match-lambda [(an-expression _ child ...) child]
                 [_ '()]))
 
 (define term-name 
-  (match-lambda [(constant name _) name]
+  (match-lambda [(a-constant name _) name]
                 [_ #f]))
 
 (define term-index
-  (match-lambda [(constant (cons _ idx) _) idx]
+  (match-lambda [(a-constant (cons _ idx) _) idx]
                 [_ #f]))
 
 (define term-cache (make-parameter (make-hash)))
@@ -72,38 +57,37 @@
 (define (unsafe-clear-terms!)
   (hash-clear! (term-cache)))
                 
-
-(define-syntax-rule (make-term args type) 
+(define-syntax-rule (make-term term-constructor args type) 
   (let ([val args]) 
     (or (hash-ref (term-cache) val #f)
-        (hash-ref! (term-cache) val (term val type (hash-count (term-cache)) #f)))))
+        (hash-ref! (term-cache) val (term-constructor val type (hash-count (term-cache)) #f)))))
    
-(define (make-var id-stx t [index #f])
+(define (make-const id-stx t [index #f])
   (unless (identifier? id-stx)
     (error 'constant "expected a syntactic identifier, given ~s" id-stx))
   (unless (type? t)
     (error 'constant "expected a symbolic type, given ~a" t))
-  (make-term (if index (cons id-stx index) id-stx)  t))
-
-(define-match-expander constant
-  (lambda (stx)
-    (syntax-case stx ()
-      [(_ id-pat type-pat)     #'(term (and (not (cons (? op?) _)) id-pat) type-pat _ _)]))
-  (lambda (stx)
-    (syntax-case stx ()
-      [(_ id-stx type)         #'(make-var id-stx type #f)]     
-      [(_ id-stx idx type)     #'(make-var id-stx type idx)])))
+  (make-term constant (if index (cons id-stx index) id-stx)  t))
 
 (define (make-expr op . vs)
-  (make-term (cons op vs) (op-out-type op vs)))
+  (make-term expression (cons op vs) (op-out-type op vs)))
 
-(define-match-expander expression
+(define-match-expander a-constant
   (lambda (stx)
     (syntax-case stx ()
-      [(_ op-pat elts-pat ...) #'(term (list op-pat elts-pat ...) _ _ _)]))
+      [(_ id-pat type-pat)     #'(constant id-pat type-pat _ _)]))
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ id-stx type)         #'(make-const id-stx type #f)]     
+      [(_ id-stx idx type)     #'(make-const id-stx type idx)])))
+
+(define-match-expander an-expression
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ op-pat elts-pat ...) #'(expression (list op-pat elts-pat ...) _ _ _)]))
   (syntax-id-rules ()
-    [(expression op elts ...) (make-expr op elts ...)]
-    [expression make-expr]))
+    [(_ op elts ...) (make-expr op elts ...)]
+    [_ make-expr]))
 
 (define-match-expander a-term
   (syntax-rules ()
@@ -130,7 +114,10 @@
   [(define (write-proc self port mode) 
      (if (expression? self)
          (fprintf port "~.a" (term->datum self))
-         (write (var-e self) port)))])
+         (write (const-e self) port)))])
+
+(struct constant term ())
+(struct expression term ())
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
@@ -156,10 +143,10 @@
 #|-----------------------------------------------------------------------------------|#
 
 (define (term->datum val) 
-  (convert val var-e op-e (make-hash)))
+  (convert val const-e op-e (make-hash)))
 
 (define (term-e val)
-  (cond [(constant? val) (var-e val)]
+  (cond [(constant? val) (const-e val)]
         [(expression? val) (expr-e val)]
         [else val]))
 
@@ -178,7 +165,7 @@
         (hash-set! cache val datum)
         datum)))
 
-(define (var-e var)
+(define (const-e var)
   (let ([n (term-name var)])
     (if (pair? n) 
         (format-symbol "~a$~a" (syntax-e (car n)) (cdr n))
