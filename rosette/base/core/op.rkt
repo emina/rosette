@@ -1,5 +1,7 @@
 #lang racket
 
+(require (only-in "type.rkt" type-of type?))
+
 (provide 
  op? op-name 
  
@@ -32,15 +34,15 @@
 ; internally by Rosette for efficiency.  It assumes that all of its arguments are 
 ; properly typed and that all preconditions are met.
 (struct lifted-op op
-  (safe unsafe)  
+  (safe unsafe type)  
   #:property prop:procedure 
   (struct-field-index safe)) 
 
-(define (make-lifted-op id #:name [name (syntax->datum id)] #:safe safe #:unsafe unsafe)
+(define (make-lifted-op id #:name [name (syntax->datum id)] #:safe safe #:unsafe unsafe #:type [type #f])
   (let ([str-name (symbol->string name)])
     (lifted-op 
      name (equal-hash-code str-name) (equal-secondary-hash-code str-name)
-     safe unsafe)))
+     safe unsafe type)))
 
 (define-syntax-rule (define-operator id arg ...)
   (define id (make-lifted-op #'id arg ...)))
@@ -67,7 +69,13 @@
   ((typed-op-arg op) idx))
 
 (define (op-out-type op args) 
-  (apply (typed-op-out op) args))
+  (match op
+    [(typed-op _ _ _ _ t _ _) (apply t args)]
+    [(lifted-op _ _ _ _ _ #f) (type-of (car args))]
+    [(lifted-op _ _ _ _ _ (? type? t)) t]
+    [(lifted-op _ _ _ _ _ t) (apply t args)]))
+    
+    
 
 ; Creates an operator type specification using the given argument and result types.
 ; If arg-types is just one type, then the specification corresponds to an
