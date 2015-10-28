@@ -5,7 +5,8 @@
 (provide 
  ite          ; (-> @boolean? any/c any/c any/c)
  =?           ; (-> anyc/ any/c @boolean?)
- generic-merge)
+ generic-merge
+ T*->T T*->boolean?)
 
 ; Polymorphic operators and procedures that are shared by 
 ; multiple primitive types.
@@ -67,17 +68,21 @@
                      x
                      (apply ⊕ (ite a x ∅) (map (curryr ite ∅) b y)))))]))
 
-(define simplify-ite
-  (case-lambda 
-    [(p) (let* ([g (car p)]
-                [v (cdr p)]
-                [w (simplify-ite g v)])
-           (if (equal? v w) p (cons g w)))]
-    [(g v) (match* (g v)
-             [(a (expression (== ite) a x _)) x]
-             [(a (expression (== ite) (expression (== !) a) _ x)) x]
-             [((expression (== !) a) (expression (== ite) a _ x)) x]
-             [(_ _) v])]))
+(define (simplify-ite p)
+  (match* ((car p) (cdr p))
+    [(a (expression (== ite) a x _)) (cons a x)]
+    [(a (expression (== ite) (expression (== !) a) _ x)) (cons a x)]
+    [((expression (== !) a) (expression (== ite) a _ x)) (cons a x)]
+    [(_ _) p]))
+
+; A generic typing procedure for a lifted operator that takes N > 0 arguments of type T
+; and returns a value of type T. See op.rkt.
+(define (T*->T x . xs) (type-of x))
+
+; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
+; and returns a @boolean?. See op.rkt.
+(define (T*->boolean? . xs) @boolean?)
+
       
       
       
