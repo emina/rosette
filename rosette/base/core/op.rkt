@@ -36,14 +36,14 @@
   #:property prop:procedure 
   (struct-field-index safe)) 
 
-(define (make-lifted-op id #:name [name (syntax->datum id)] #:safe safe #:unsafe unsafe #:type type)
+(define (make-lifted-op #:safe safe #:unsafe unsafe #:type type #:name [name (object-name unsafe)] )
   (let ([str-name (symbol->string name)])
     (lifted-op 
      name (equal-hash-code str-name) (equal-secondary-hash-code str-name)
      safe unsafe type)))
 
 (define-syntax-rule (define-operator id arg ...)
-  (define id (make-lifted-op #'id arg ...)))
+  (define id (make-lifted-op arg ...)))
     
 
 ;; ------ Typed ops (to be phased out) ------ ;;

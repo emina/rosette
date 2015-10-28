@@ -16,7 +16,9 @@
   (unless (exact-positive-integer? size)
     (raise-argument-error 'bitvector "exact-positive-integer?" size))
   (or (hash-ref bitvector-types size #f)
-      (hash-ref! bitvector-types size (bitvector size))))
+      (let ([t (bitvector size)]) 
+        (hash-set! bitvector-types size t)
+        t)))
 
 ; Represents a bitvector type.
 (struct bitvector (size)
@@ -200,5 +202,17 @@
   #:type T*->boolean? 
   #:unsafe bveq
   #:safe (curry safe-apply-2 bveq))
+
+(define (bvnot x)
+  (match x
+    [(bv v t) (bv (bitwise-not v) t)]
+    [(expression (== @bvnot) v) v]
+    [_ (expression @bvnot x)]))
+
+(define-operator @bvnot
+  #:name 'bvnot
+  #:type T*->T
+  #:unsafe bvnot
+  #:safe (curry safe-apply-1 bvnot))
 
 
