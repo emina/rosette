@@ -136,7 +136,7 @@
   (assert (and (typed? x) (typed? y)) (bitvector-type-error (object-name op) x y))
   (match* (x y)
     [((app get-type (? bitvector? tx)) _) 
-     (if (eq? tx (get-type y))
+     (if (equal? tx (get-type y))
          (op x y) 
          (op x (coerce y tx (object-name op))))]
     [(_ (app get-type (? bitvector? ty))) 
@@ -164,7 +164,7 @@
   (match xs
     [(list _ ... (app get-type (? bitvector? t)) _ ...)
      (apply op (for/list ([x xs]) 
-                 (if (eq? (get-type x) t) x (coerce x t (object-name op)))))]
+                 (if (equal? (get-type x) t) x (coerce x t (object-name op)))))]
     [(list (union vs _) (union ws _) ...)
      (apply merge*
             (assert-some
@@ -188,7 +188,7 @@
       (expression op x y)
       (expression op y x)))
 
-;; ----------------- Bitvector Operators ----------------- ;; 
+;; ----------------- Bitvector Comparison Operators ----------------- ;; 
 
 (define (bveq x y) 
   (match* (x y)
@@ -203,6 +203,8 @@
   #:unsafe bveq
   #:safe (curry safe-apply-2 bveq))
 
+;; ----------------- Bitvector Bitwise Operators ----------------- ;;
+
 (define (bvnot x)
   (match x
     [(bv v t) (bv (bitwise-not v) t)]
@@ -214,5 +216,118 @@
   #:type T*->T
   #:unsafe bvnot
   #:safe (curry safe-apply-1 bvnot))
+
+(define bvand (bitwise-connective bitwise-and @bvand @bvor -1 0))
+
+(define-operator @bvand
+  #:name 'bvand
+  #:type T*->T
+  #:unsafe bvand
+  #:safe (case-lambda [() (bvand)]
+                      [(x) (safe-apply-1 bvand x)]
+                      [(x y) (safe-apply-2 bvand x y)]
+                      [xs (safe-apply-n bvand xs)]))
+
+(define bvor (bitwise-connective bitwise-ior @bvor @bvand 0 -1))
+
+(define-operator @bvor
+  #:name 'bvor
+  #:type T*->T
+  #:unsafe bvand
+  #:safe (case-lambda [() (bvor)]
+                      [(x) (safe-apply-1 bvor x)]
+                      [(x y) (safe-apply-2 bvor x y)]
+                      [xs (safe-apply-n bvor xs)]))
+    
+; Partial evaluation rules for bvand and bvor.  The 
+; terms iden and !iden should be literals.
+(define-syntax-rule (bitwise-connective racket-op op co iden !iden)
+  (case-lambda 
+    [() (make-bv iden)]
+    [(x) x]
+    [(x y) 
+     (match* (x y)
+       [((bv u t) (bv v _)) (bv (racket-op u v) t)]
+       [((bv iden _) _) y]
+       [(_ (bv iden _)) x]
+       [((bv !iden _) _) x]
+       [(_ (bv !iden _)) y]
+       [(_ _)
+        (or
+         (simplify-connective op co (bv !iden (get-type x)) x y)
+         (cond [(bv? x) (expression op x y)]
+               [(bv? y) (expression op y x)]
+               [else    (sort/expression op x y)]))])] 
+    [xs 
+     (let*-values ([(lits terms) (partition bv? xs)]
+                   [(lit) (for/fold ([out iden]) ([lit lits])
+                            (racket-op out (bv-value lit)))]
+                   [(t) (get-type (car xs))])
+       (if (or (= lit !iden) (null? terms)) 
+           (bv lit t)
+           (match (simplify-connective* op co (bv !iden t) (remove-duplicates terms))
+             [(list (bv u _)) (bv (racket-op lit u) t)]
+             [ys (if (= lit iden)
+                     (apply expression op (sort ys term<?))
+                     (apply expression op (bv lit t) (sort ys term<?)))])))]))
+
+(define (simplify-connective op co !iden x y) 
+  (cond [(equal? x y) x]
+        [(expression? x)
+         (cond [(expression? y)
+                (or (simplify-connective:expr/term op co !iden x y)
+                    (simplify-connective:expr/term op co !iden y x)
+                    (match* (x y)
+                      [((expression (== op) xs ...) (expression (== op) ys ...))
+                       (for*/or ([a xs][b ys])
+                         (match* (a b)
+                           [(_ (expression (== @bvnot) (== a))) !iden]
+                           [((expression (== @bvnot) (== b)) _) !iden]
+                           [((bv x _) (bv y _)) (and (= x (bitwise-not y)) !iden)]
+                           [(_ _) #f]))]
+                      [(_ _) #f]))]
+               [(constant? y) (simplify-connective:expr/term op co !iden x y)]
+               [else (simplify-connective:expr/lit op co !iden x y)])]
+        [(expression? y)
+         (cond [(constant? x) (simplify-connective:expr/term op co !iden y x)]
+               [else (simplify-connective:expr/lit op co !iden y x)])]
+        [else #f]))
+
+(define (simplify-connective:expr/term op co !iden x y)
+  (match x 
+    [(expression (== @bvnot) (== y)) !iden]
+    [(expression (== co) _ ... (== y) _ ...) y]
+    [(expression (== op) _ ... (== y) _ ...) x]
+    [(expression (== op) _ ... (expression (== @bvnot) (== y)) _ ...) !iden]
+    [(expression (== @bvnot) (expression (== co) _ ... (== y) _ ...)) !iden]
+    [(expression (== @bvnot) (expression (== co) _ ... (expression (== @bvnot) (== y)) _ ...)) x]
+    [(expression (== @bvnot) (expression (== op) _ ... (expression (== @bvnot) (== y)) _ ...)) y]
+    [(expression (== @bvnot) a) 
+     (match y 
+       [(expression (== op) _ ... (== a) _ ...) !iden]
+       [_ #f])]
+    [_ #f]))
+
+(define (simplify-connective:expr/lit op co !iden x y)
+  (define !y (bvnot y))
+  (match x 
+    [(expression (== co) (== y) _ ...) y]
+    [(expression (== op) (== y) _ ...) x]
+    [(expression (== op) (== !y) _ ...) !iden]
+    [(expression (== @bvnot) (expression (== co) (== y) _ ...)) !iden]
+    [(expression (== @bvnot) (expression (== co) (== !y) _ ...)) x]
+    [(expression (== @bvnot) (expression (== op) (== !y) _ ...)) y]
+    [_ #f]))
+
+(define (simplify-connective* op co !iden xs) xs)
+
+(define (cancel? a b)
+  (match* (a b)
+    [(_ (expression (== @bvnot) (== a))) #t]
+    [((expression (== @bvnot) (== b)) _) #t]
+    [((bv x _) (bv y _)) (= x (bitwise-not y))]
+    [(_ _) #f]))
+
+;; ----------------- Bitvector Arithmetic Operators ----------------- ;;
 
 
