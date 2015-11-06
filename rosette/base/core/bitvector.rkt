@@ -2,9 +2,12 @@
 
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt" "safe.rkt")
 
-(provide current-bitwidth 
-         (rename-out [make-bv bv]) bv? 
-         (rename-out [bitvector-type bitvector]) @bveq)
+(provide 
+ current-bitwidth 
+ (rename-out [make-bv bv]) bv? 
+ (rename-out [bitvector-type bitvector])
+ ; lifted versions of the operators
+ @bveq @bvnot @bvor @bvand)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -50,7 +53,7 @@
       [_ (values #f v)]))
    (define (type-eq? self u v)        (@bveq u v))
    (define (type-equal? self u v)     (@bveq u v))
-   (define (type-compress self f? ps) ps)
+   (define (type-compress self f? ps) (generic-merge bvor (bv 0 self) ps))
    (define (type-construct self vs)   (car vs))
    (define (type-deconstruct self v)  (list v))]
   #:methods gen:custom-write
@@ -319,15 +322,30 @@
     [(expression (== @bvnot) (expression (== op) (== !y) _ ...)) y]
     [_ #f]))
 
-(define (simplify-connective* op co !iden xs) xs)
-
-(define (cancel? a b)
-  (match* (a b)
-    [(_ (expression (== @bvnot) (== a))) #t]
-    [((expression (== @bvnot) (== b)) _) #t]
-    [((bv x _) (bv y _)) (= x (bitwise-not y))]
-    [(_ _) #f]))
+(define (simplify-connective* op co !iden xs)
+  (or
+   (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
+                            (match x
+                              [(expression (== @bvnot) y) (values (cons y !ys) ys)]
+                              [_ (values !ys (cons x ys))]))])
+     (for/first ([!y !ys] #:when (member !y ys)) (list !iden)))
+   (and (> (length xs) 100) xs)
+   (let outer ([xs xs])
+     (match xs
+       [(list x rest ..1)
+        (let inner ([head rest] [tail '()])
+          (match head
+            [(list) (cons x (outer tail))]
+            [(list y ys ...)
+             (match (simplify-connective op co !iden x y)
+               [#f (inner ys (cons y tail))]
+               [(== !iden) (list !iden)]
+               [v (outer (cons v (append ys tail)))])]))]
+       [_ xs]))))
 
 ;; ----------------- Bitvector Arithmetic Operators ----------------- ;;
 
 
+;(require "../form/define.rkt")
+;(define bv4 (bitvector-type 4))
+;(define-symbolic x y z bv4)
