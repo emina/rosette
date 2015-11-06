@@ -178,36 +178,24 @@
     
 (define (simplify-fp op co !iden xs)
   (or 
-   (let-values ([(!ys ys) (partition negated? xs)])
-     (and (for/or ([!y !ys]) (member (car (term-child !y)) ys)) 
-          (list !iden)))
+   (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
+                            (match x
+                              [(expression (== !) y) (values (cons y !ys) ys)]
+                              [_ (values !ys (cons x ys))]))])
+     (for/first ([!y !ys] #:when (member !y ys)) (list !iden)))
    (and (> (length xs) 100) xs)
-   (let fp ([xs xs])
-     (let ([xsimp (simplify-pairwise op co !iden xs)])
-       (if (equal? xs xsimp)
-           xs
-           (fp xsimp))))))
-
-(define (negated? expr)
-  (match expr
-    [(expression (== !) _ ...) #t]
-    [_ #f]))
-
-(define (simplify-pairwise op co !iden args)
-  (match args
-    [(list x rest ..1)
-     (let loop ([xs rest] [simp '()] [simp? #f])
-       (match xs 
-         [(list) 
-          (if simp?
-              (simplify-pairwise op co !iden (reverse simp))
-              (cons x (simplify-pairwise op co !iden rest)))]
-         [(list y ys ...)
-          (match (simplify-connective op co !iden x y)
-            [(== ⊥) (loop ys (cons y simp) simp?)]
-            [(== !iden) (list !iden)]
-            [v (loop ys (cons v simp) #t)])]))]
-    [_ args]))
+   (let outer ([xs xs])
+     (match xs
+       [(list x rest ..1)
+        (let inner ([head rest] [tail '()])
+          (match head
+            [(list) (cons x (outer tail))]
+            [(list y ys ...)
+             (match (simplify-connective op co !iden x y)
+               [(== ⊥) (inner ys (cons y tail))]
+               [(== !iden) (list !iden)]
+               [v (outer (cons v (append ys tail)))])]))]
+       [_ xs]))))
             
 (define (cancel? a b)
   (match* (a b)
