@@ -3,7 +3,10 @@
 (require racket/syntax 
          (only-in "smtlib2.rkt" Int Bool BitVec declare-const define-const assert [< Int<] [<= Int<=]) 
          "../../base/core/term.rkt" 
-         "../../base/core/bool.rkt" "../../base/core/num.rkt" "../../base/struct/enum.rkt")
+         (only-in "../../base/core/bool.rkt" @boolean?)
+         (only-in "../../base/core/num.rkt" @number? current-bitwidth)
+         (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size)
+         (only-in "../../base/struct/enum.rkt" enum? enum-size))
 
 (provide (rename-out [make-env env] 
                      [env-decls decls]
@@ -37,6 +40,7 @@
   (match (type-of val)
     [(== @boolean?) Bool]
     [(== @number?) (BitVec (current-bitwidth))]
+    [(? bitvector? t) (BitVec (bitvector-size t))]
     [(? enum?) Int]
     [t (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
 

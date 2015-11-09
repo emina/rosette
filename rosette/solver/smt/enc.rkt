@@ -1,10 +1,18 @@
 #lang racket
 
-(require (prefix-in smt/ (only-in "smtlib2.rkt" not and or xor => <=> ite = <))
-         (except-in "smtlib2.rkt" not and or xor => <=> ite = <) "env.rkt" 
-         "../common/enc.rkt" "../../base/core/term.rkt" 
-         "../../base/core/polymorphic.rkt" "../../base/core/num.rkt" "../../base/core/bool.rkt"
-         "../../base/struct/enum.rkt")
+(require (prefix-in smt/ (only-in "smtlib2.rkt" bv not and or xor => <=> ite = <))
+         (except-in "smtlib2.rkt" bv not and or xor => <=> ite = <) 
+         "env.rkt" "../common/enc.rkt" 
+         (only-in "../../base/core/term.rkt" expression expression? constant?)
+         (only-in "../../base/core/polymorphic.rkt" ite =?)
+         (only-in "../../base/core/bool.rkt" ! && || => <=>)
+         (only-in "../../base/core/num.rkt" 
+                  current-bitwidth 
+                  @= @< @<= @> @>= @+ @* @*h @- @/ @abs @sgn @quotient @remainder @expt                   
+                  @<< @>> @>>> @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor)
+         (only-in "../../base/core/bitvector.rkt" 
+                  bitvector? bv bitvector-size @bveq @bvnot @bvor @bvand)
+         (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
 
@@ -48,26 +56,31 @@
   (match v 
     [#t true]
     [#f false]
-    [(? number?) (bv (finitize v) (current-bitwidth))]
+    [(? number?) (smt/bv (finitize v) (current-bitwidth))]
+    [(bv lit t) (smt/bv lit (bitvector-size t))]
     [(? enum-literal?) (ordinal v)]
     [_ (error 'enc-literal "expected a boolean?, number? or enum-literal?, given ~a" v)]))
 
 (define-encoder rosette->smt 
-  [#:== [! smt/not] [&& smt/and] [|| smt/or] [=> smt/=>] [<=> smt/<=>]  
+  [#:== ; bool 
+        [! smt/not] [&& smt/and] [|| smt/or] [=> smt/=>] [<=> smt/<=>]  
+        ; num
         [ite smt/ite] [=? smt/=] [@= smt/=] [@< bvslt] [@<= bvsle] 
         [@bitwise-ior bvor] [@bitwise-and bvand] 
         [@bitwise-not bvnot] [@bitwise-xor bvxor]
         [@<< bvshl] [@>>> bvlshr] [@>> bvashr]
         [@+ bvadd] [@* bvmul] [@quotient bvsdiv] [@remainder bvsrem]
-        [@abs smt/abs] [@sgn smt/sgn]]
+        [@abs smt/abs] [@sgn smt/sgn]
+        ; bitvector
+        [@bveq smt/=] [@bvnot bvnot] [@bvor bvor] [@bvand bvand]]
   [#:?  [enum-comparison-op? smt/<]])
 
 (define (smt/abs e)
-  (smt/ite (bvslt e (bv 0 (current-bitwidth))) (bvneg e) e))
+  (smt/ite (bvslt e (smt/bv 0 (current-bitwidth))) (bvneg e) e))
 
 (define (smt/sgn e)
-  (let ([zero (bv 0 (current-bitwidth))]) 
+  (let ([zero (smt/bv 0 (current-bitwidth))]) 
     (smt/ite (smt/= e zero) zero 
              (smt/ite (bvslt e zero) 
-                      (bv -1 (current-bitwidth))
-                      (bv  1 (current-bitwidth))))))
+                      (smt/bv -1 (current-bitwidth))
+                      (smt/bv  1 (current-bitwidth))))))

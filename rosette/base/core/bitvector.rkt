@@ -4,8 +4,8 @@
 
 (provide 
  current-bitwidth 
- (rename-out [make-bv bv]) bv? 
- (rename-out [bitvector-type bitvector])
+ (rename-out [@bv bv]) bv? 
+ (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
  @bveq @bvnot @bvor @bvand)
 
@@ -78,7 +78,7 @@
 ; not explicitly specified.
 (define current-bitwidth
   (make-parameter 
-   8 
+   5 
    (lambda (bw) 
      (unless (exact-positive-integer? bw)
        (raise-argument-error 'current-bitwidth "exact-positive-integer?" bw))
@@ -113,6 +113,14 @@
          (bv (sfinitize val (bitvector-size precision)) precision)]
         [else 
          (raise-arguments-error 'bv "exact-positive-integer? or bitvector? type" "precision" precision)]))
+
+; Pattern matching for bitvector literals.
+(define-match-expander @bv
+  (syntax-rules ()
+    [(_ val-pat type-pat) (bv val-pat type-pat)])
+  (syntax-id-rules (set!)
+    [(@bv v t) (make-bv v t)]
+    [@bv make-bv]))
 
 ;; ----------------- Lifting Procedures ----------------- ;;
 
