@@ -189,7 +189,9 @@
        [(list x rest ..1)
         (let inner ([head rest] [tail '()])
           (match head
-            [(list) (cons x (outer tail))]
+            [(list) (match (outer tail)
+                      [(and (list (== !iden)) t) t]
+                      [t (cons x t)])]
             [(list y ys ...)
              (match (simplify-connective op co !iden x y)
                [(== ⊥) (inner ys (cons y tail))]

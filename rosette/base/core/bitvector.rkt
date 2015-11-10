@@ -226,7 +226,7 @@
   #:name 'bvnot
   #:type T*->T
   #:unsafe bvnot
-  #:safe (curry safe-apply-1 bvnot))
+  #:safe (lambda (x) (safe-apply-1 bvnot x)))
 
 (define bvand (bitwise-connective bitwise-and @bvand @bvor -1 0))
 
@@ -278,6 +278,7 @@
            (bv lit t)
            (match (simplify-connective* op co (bv !iden t) (remove-duplicates terms))
              [(list (bv u _)) (bv (racket-op lit u) t)]
+             [(list y) (if (= lit iden) y (expression op lit y))]
              [ys (if (= lit iden)
                      (apply expression op (sort ys term<?))
                      (apply expression op (bv lit t) (sort ys term<?)))])))]))
@@ -343,7 +344,9 @@
        [(list x rest ..1)
         (let inner ([head rest] [tail '()])
           (match head
-            [(list) (cons x (outer tail))]
+            [(list) (match (outer tail)
+                      [(and (list (== !iden)) t) t]
+                      [t (cons x t)])]
             [(list y ys ...)
              (match (simplify-connective op co !iden x y)
                [#f (inner ys (cons y tail))]
@@ -354,6 +357,6 @@
 ;; ----------------- Bitvector Arithmetic Operators ----------------- ;;
 
 
-;(require "../form/define.rkt")
-;(define bv4 (bitvector-type 4))
-;(define-symbolic x y z bv4)
+(require "../form/define.rkt")
+(define bv4 (bitvector-type 4))
+(define-symbolic x y z bv4)
