@@ -120,6 +120,7 @@
     [(_ val-pat type-pat) (bv val-pat type-pat)])
   (syntax-id-rules (set!)
     [(@bv v t) (make-bv v t)]
+    [(@bv v) (make-bv v)]
     [@bv make-bv]))
 
 ;; ----------------- Lifting Procedures ----------------- ;;
@@ -141,7 +142,7 @@
                  [(list _ rest ...) (loop rest)]))
              #:unless (length xs)
              (bitvector-type-error (object-name op) x)))]
-    [_ (bitvector-type-error (object-name op) x)]))
+    [_ (assert #f (bitvector-type-error (object-name op) x))]))
 
 (define (safe-apply-2 op x y)
   (assert (and (typed? x) (typed? y)) (bitvector-type-error (object-name op) x y))
@@ -297,13 +298,29 @@
                            [((expression (== @bvnot) (== b)) _) !iden]
                            [((bv x _) (bv y _)) (and (= x (bitwise-not y)) !iden)]
                            [(_ _) #f]))]
-                      [(_ _) #f]))]
+                      [((expression (== co) xs ...) (expression (== co) ys ...))
+                       (cond [(sublist? xs ys) x]
+                             [(sublist? ys xs) y]
+                             [else #f])]                      
+                    [(_ _) #f]))]
                [(constant? y) (simplify-connective:expr/term op co !iden x y)]
                [else (simplify-connective:expr/lit op co !iden x y)])]
         [(expression? y)
          (cond [(constant? x) (simplify-connective:expr/term op co !iden y x)]
                [else (simplify-connective:expr/lit op co !iden y x)])]
         [else #f]))
+
+
+; Returns #t if ys contains all elements of xs, in the order 
+; in which they occur in xs. Otherwise returns #f.
+(define (sublist? xs ys)
+  (and (<= (length xs) (length ys))
+       (match xs
+         [(list) #t]
+         [(list x xs ...)
+          (match ys 
+            [(list _ ... (== x) ys ...) (sublist? xs ys)]
+            [_ #f])])))
 
 (define (simplify-connective:expr/term op co !iden x y)
   (match x 
