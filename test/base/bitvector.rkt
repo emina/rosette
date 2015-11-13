@@ -44,8 +44,8 @@
                  (@bveq z (op x y))) z))
        (check-equal? actual expected))]))
 
-(define (check-pe ops)
-  (for ([e (test-exprs 2 ops (list x y z))])
+(define (check-pe ops [consts '()])
+  (for ([e (test-exprs 2 ops (list* x y z consts))])
     (check-pred unsat? (solve (! (@bveq e (reduce e)))))))
  
 
@@ -54,11 +54,14 @@
   (check-equal? (op (bv 1) x) (op x (bv 1)))
   (check-equal? (op x (@bvnot x) ) (@bvnot id))
   (check-equal? (op x (@bvnot id)) (@bvnot id))
+  (check-equal? (op x (@bvnot id) y z id) (@bvnot id))
   (check-equal? (op (co x y) (@bvnot (co x y))) (@bvnot id))
   (check-equal? (op (op x y) (@bvnot (op x y))) (@bvnot id))
   (check-equal? (op x (@bvnot id)) (@bvnot id))
   (check-equal? (@bvnot (@bvnot (op x y))) (op x y))
   (check-equal? (op z y x x x x y x z z ) (op x y z))
+  (check-equal? (op (@bvnot (bv minval)) z y x x x x (bv minval)  y x z z )  (@bvnot id))
+  (check-equal? (op z y x x x x (bv minval)  y x z z (bv 2) )  (op (op (bv minval) (bv 2)) x y z))
   (check-equal? (op z y x x x x y x (@bvnot z) z ) (@bvnot id))
   (check-equal? (op z (co z x)  (co z y) x (co x y)) (op x z))
   (check-equal? (op (co x y) (co x y z)) (co x y))
@@ -98,11 +101,33 @@
    
    (check-pe (list (naive @bvnot) (naive* @bvand) (naive* @bvor)))))
 
+(define tests:bvxor
+  (test-suite+
+   "Tests for bvxor in rosette/base/bitvector.rkt"
+   (check-nary @bvxor (bv 0) x y z)
+   (check-semantics @bvxor)))
+
+(define tests:bvxor/bvnot
+  (test-suite+
+   "Tests for soundness of bvxor/bvnot PE rules in rosette/base/bitvector.rkt"
+   
+   (check-pe (list (naive @bvnot) (naive* @bvxor)) (list (bv 0) (bv 5)))))
+
 (time (run-tests tests:bvnot))
 (time (run-tests tests:bvor))
 (time (run-tests tests:bvand))
 (time (run-tests tests:bvand/bvor/bvnot))
+(time (run-tests tests:bvxor))
+(time (run-tests tests:bvxor/bvnot))
 
 (send solver shutdown)
 
        
+#|
+(require rosette/base/core/bitvector)
+(require rosette/base/form/define)
+(define BV (bitvector 4))
+(current-bitwidth 4)
+(define-symbolic x y z BV)
+
+|#

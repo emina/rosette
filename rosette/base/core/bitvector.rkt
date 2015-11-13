@@ -7,7 +7,7 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
- @bveq @bvnot @bvor @bvand)
+ @bveq @bvnot @bvor @bvand @bvxor)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -169,7 +169,7 @@
                   (loop rest)]))
              #:unless (length xs)
              (bitvector-type-error (object-name op) x y)))]
-    [(_ _) (bitvector-type-error (object-name op) x y)]))
+    [(_ _) (assert #f (bitvector-type-error (object-name op) x y))]))
 
 (define (safe-apply-n op xs)
   (assert (for/and ([x xs]) (typed? x)) (apply bitvector-type-error (object-name op) xs))
@@ -193,12 +193,21 @@
                   (loop rest)])))
             #:unless (length vs)
             (apply bitvector-type-error (object-name op) xs))]
-    [_ (apply bitvector-type-error (object-name op) xs)]))
+    [_ (assert #f (apply bitvector-type-error (object-name op) xs))]))
             
 (define-syntax-rule (sort/expression op x y) 
   (if (term<? x y) 
       (expression op x y)
       (expression op y x)))
+
+(define (lift-op op)
+  (case (procedure-arity op)
+    [(1)  (lambda (x) (safe-apply-1 op x))]
+    [(2)  (lambda (x y) (safe-apply-2 op x y))]
+    [else (case-lambda [() (op)]
+                       [(x) (safe-apply-1 op x)]
+                       [(x y) (safe-apply-2 op x y)]
+                       [xs (safe-apply-n op xs)])]))
 
 ;; ----------------- Bitvector Comparison Operators ----------------- ;; 
 
@@ -213,7 +222,7 @@
   #:name 'bveq 
   #:type T*->boolean? 
   #:unsafe bveq
-  #:safe (curry safe-apply-2 bveq))
+  #:safe (lift-op bveq))
 
 ;; ----------------- Bitvector Bitwise Operators ----------------- ;;
 
@@ -227,33 +236,59 @@
   #:name 'bvnot
   #:type T*->T
   #:unsafe bvnot
-  #:safe (lambda (x) (safe-apply-1 bvnot x)))
+  #:safe (lift-op bvnot))
 
-(define bvand (bitwise-connective bitwise-and @bvand @bvor -1 0))
+(define bvand (bitwise-connective bitwise-and bvand @bvand @bvor -1 0))
 
 (define-operator @bvand
   #:name 'bvand
   #:type T*->T
   #:unsafe bvand
-  #:safe (case-lambda [() (bvand)]
-                      [(x) (safe-apply-1 bvand x)]
-                      [(x y) (safe-apply-2 bvand x y)]
-                      [xs (safe-apply-n bvand xs)]))
+  #:safe (lift-op bvand))
 
-(define bvor (bitwise-connective bitwise-ior @bvor @bvand 0 -1))
+(define bvor (bitwise-connective bitwise-ior bvor @bvor @bvand 0 -1))
 
 (define-operator @bvor
   #:name 'bvor
   #:type T*->T
-  #:unsafe bvand
-  #:safe (case-lambda [() (bvor)]
-                      [(x) (safe-apply-1 bvor x)]
-                      [(x y) (safe-apply-2 bvor x y)]
-                      [xs (safe-apply-n bvor xs)]))
-    
+  #:unsafe bvor
+  #:safe (lift-op bvor))
+
+(define bvxor
+  (case-lambda 
+    [() (@bv 0)]
+    [(x) x]
+    [(x y) (match* (x y)
+             [((bv u t) (bv v _)) (bv (bitwise-xor u v) t)]
+             [(_ _)
+              (or (simplify-bvxor x y)
+                  (cond [(bv? x) (expression @bvxor x y)]
+                        [(bv? y) (expression @bvxor y x)]
+                        [else    (sort/expression @bvxor x y)]))])] 
+    [xs (let*-values ([(lits terms) (partition bv? xs)]
+                      [(lit) (for/fold ([out 0]) ([lit lits])
+                               (bitwise-xor out (bv-value lit)))]
+                      [(t) (get-type (car xs))])
+          (if (null? terms)
+              (bv lit t)
+              (match (simplify-bvxor* terms)
+                [(list (bv u _)) (bv (bitwise-xor lit u) t)]
+                [(list y) (bvxor (bv lit t) y)]
+                [ys (if (= lit 0)
+                        (apply expression @bvxor (sort ys term<?))
+                        (apply expression @bvxor (bv lit t) (sort ys term<?)))])))]))
+
+(define-operator @bvxor
+  #:name 'bvxor
+  #:type T*->T
+  #:unsafe bvxor
+  #:safe (lift-op bvxor))
+
+
+
 ; Partial evaluation rules for bvand and bvor.  The 
-; terms iden and !iden should be literals.
-(define-syntax-rule (bitwise-connective racket-op op co iden !iden)
+; terms iden and !iden should be numeric literals.
+(define-syntax-rule (bitwise-connective racket-op unsafe-op op co iden !iden)
   (case-lambda 
     [() (make-bv iden)]
     [(x) x]
@@ -279,11 +314,13 @@
            (bv lit t)
            (match (simplify-connective* op co (bv !iden t) (remove-duplicates terms))
              [(list (bv u _)) (bv (racket-op lit u) t)]
-             [(list y) (if (= lit iden) y (expression op lit y))]
+             [(list y) (unsafe-op (bv lit t) y)]
              [ys (if (= lit iden)
                      (apply expression op (sort ys term<?))
                      (apply expression op (bv lit t) (sort ys term<?)))])))]))
 
+; Simplification rules for bvand and bvor.  The 
+; terms iden and !iden should be bitvector literals.
 (define (simplify-connective op co !iden x y) 
   (cond [(equal? x y) x]
         [(expression? x)
@@ -371,9 +408,39 @@
                [v (outer (cons v (append ys tail)))])]))]
        [_ xs]))))
 
+; Simplification rules for bvxor.
+(define (simplify-bvxor x y)
+  (match* (x y)
+    [(_ (== x)) (bv 0 (get-type x))]
+    [(_ (bv 0 _)) x]
+    [((bv 0 _) _) y]
+    [(_ (bv -1 _)) (@bvnot x)]
+    [((bv -1 _) _) (@bvnot y)]
+    [(_ (expression (== @bvnot) (== x))) (bv -1 (get-type x))]
+    [((expression (== @bvnot) (== y)) _) (bv -1 (get-type x))]
+    [(_ _) #f]))
+
+(define (simplify-bvxor* xs)
+  (or
+   (and (> (length xs) 100) xs)
+   (let ([out (let outer ([xs xs])
+                (match xs
+                  [(list x rest ..1)
+                   (let inner ([head rest] [tail '()])
+                     (match head
+                       [(list) (cons x (outer tail))]
+                       [(list y ys ...)
+                        (match (simplify-bvxor x y)
+                          [#f (inner ys (cons y tail))]
+                          [v (outer (cons v (append ys tail)))])]))]
+                  [_ xs]))])
+     (if (= (length out) (length xs)) out (simplify-bvxor* out)))))
+  
+
+
 ;; ----------------- Bitvector Arithmetic Operators ----------------- ;;
 
 
-(require "../form/define.rkt")
-(define bv4 (bitvector-type 4))
-(define-symbolic x y z bv4)
+;(require "../form/define.rkt")
+;(define bv4 (bitvector-type 4))
+;(define-symbolic x y z bv4)
