@@ -54,7 +54,9 @@
 (define (default-binding const)
   (match (type-of const)
     [(== @boolean?) #f]
-    [_ 0]))
+    [(== @number?) 0]
+    [(? bitvector? t) (bv 0 t)]
+    [(? enum? t) (vector-ref (enum-members t) 0)]))
  
 (define (decode-binding const val)
   (match (type-of const)
