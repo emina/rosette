@@ -136,10 +136,11 @@
                        [(x y) (safe-apply-2 op x y)]
                        [xs (safe-apply-n op xs)])]))
 
-(define-syntax-rule (sort/expression op x y) 
-  (if (term<? x y) 
-      (expression op x y)
-      (expression op y x)))
+(define (sort/expression @bvop x y) 
+  (cond [(bv? x) (expression @bvop x y)]
+        [(bv? y) (expression @bvop y x)]
+        [(term<? x y) (expression @bvop x y)]
+        [else (expression @bvop y x)]))
 
 (define (bitvector-type-error name . args)
   (arguments-error name "expected bitvectors of same length" "arguments" args))
@@ -226,8 +227,6 @@
 (define (bveq x y) 
   (match* (x y)
     [((bv u _) (bv v _)) (= u v)]
-    [((? bv?) (? term?)) (expression @bveq x y)]
-    [((? term?) (? bv?)) (expression @bveq y x)]
     [(_ _) (sort/expression @bveq x y)]))
 
 (define-lifted-operator @bveq bveq T*->boolean?)
@@ -339,9 +338,7 @@
        [(_ _)
         (or
          (simplify-connective @bvop @bvco (bv !iden (get-type x)) x y)
-         (cond [(bv? x) (expression @bvop x y)]
-               [(bv? y) (expression @bvop y x)]
-               [else    (sort/expression @bvop x y)]))])] 
+         (sort/expression @bvop x y))])]
     [xs 
      (let*-values ([(lits terms) (partition bv? xs)]
                    [(lit) (for/fold ([out iden]) ([lit lits])
@@ -362,9 +359,7 @@
     [() (@bv 0)]
     [(x) x]
     [(x y) (or (simplify-bvop x y)
-               (cond [(bv? x) (expression @bvop x y)]
-                     [(bv? y) (expression @bvop y x)]
-                     [else    (sort/expression @bvop x y)]))]
+               (sort/expression @bvop x y))]
     [xs (let*-values ([(lits terms) (partition bv? xs)]
                       [(lit) (for/fold ([out 0]) ([lit lits]) (op out (bv-value lit)))]
                       [(t) (get-type (car xs))])
