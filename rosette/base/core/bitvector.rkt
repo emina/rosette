@@ -8,7 +8,7 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
- @bveq @bvnot @bvor @bvand @bvxor @bvneg @bvadd)
+ @bveq @bvnot @bvor @bvand @bvxor @bvneg @bvadd @bvsub)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -267,8 +267,15 @@
    (values (bitwise-negation - bvneg @bvneg)
            (bitwise-adder + bvadd @bvadd simplify-bvadd))))
 
+(define bvsub 
+  (case-lambda [(x) (bvneg x)]
+               [(x y) (bvadd x (bvneg y))]
+               [(x . xs) (apply bvadd x (map bvneg xs))]))
+
 (define-lifted-operator @bvneg bvneg T*->T)
 (define-lifted-operator @bvadd bvadd T*->T)
+(define-lifted-operator @bvsub bvsub T*->T)
+
 
 ; Simplification rules for bvadd.
 (define (simplify-bvadd x y)
@@ -359,12 +366,17 @@
                      [(bv? y) (expression @bvop y x)]
                      [else    (sort/expression @bvop x y)]))]
     [xs (let*-values ([(lits terms) (partition bv? xs)]
+                      [(lit) (for/fold ([out 0]) ([lit lits]) (op out (bv-value lit)))]
                       [(t) (get-type (car xs))])
           (if (null? terms)
-              (bv (finitize (for/fold ([out 0]) ([lit lits]) (op out (bv-value lit))) t) t)
-              (match (simplify-op* (if (null? lits) terms (append lits terms)) simplify-bvop)
+              (bv (finitize lit t) t)
+              (match (simplify-op* (if (null? lits) 
+                                       terms 
+                                       (cons (bv (finitize lit t) t) terms)) 
+                                   simplify-bvop)
                 [(list y) y]
-                [(list a (... ...) (? bv? b) c (... ...)) (apply expression @bvop b (sort (append a c) term<?))]
+                [(list a (... ...) (? bv? b) c (... ...)) 
+                 (apply expression @bvop b (sort (append a c) term<?))]
                 [ys (apply expression @bvop (sort ys term<?))])))]))
 
 ; Simplification rules for bvand and bvor.  The 

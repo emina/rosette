@@ -155,6 +155,12 @@
    (check-pe (list (naive @bvneg) (naive* @bvadd)) (list (bv 0) (bv 5)))
    ))
 
+(define tests:bvsub
+  (test-suite+
+   "Tests for bvsub in rosette/base/bitvector.rkt"
+   (check-semantics @bvsub)
+   ))
+
 (time (run-tests tests:bv))
 (time (run-tests tests:bvnot))
 (time (run-tests tests:bvor))
@@ -165,6 +171,7 @@
 (time (run-tests tests:bvneg))
 (time (run-tests tests:bvadd))
 (time (run-tests tests:bvadd/bvneg))
+(time (run-tests tests:bvsub))
 (send solver shutdown)
 
        
