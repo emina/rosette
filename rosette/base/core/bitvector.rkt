@@ -8,7 +8,7 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
- @bveq @bvnot @bvor @bvand @bvxor @bvneg @bvadd @bvsub)
+ @bveq @bvnot @bvor @bvand @bvxor @bvneg @bvadd @bvsub @bvmul)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -271,25 +271,47 @@
                [(x y) (bvadd x (bvneg y))]
                [(x . xs) (apply bvadd x (map bvneg xs))]))
 
+(define bvmul
+  (case-lambda 
+    [() (@bv 1)]
+    [(x) x]
+    [(x y) (or
+            (simplify-bvmul x y)
+            (sort/expression @bvmul x y))]
+    [xs 
+     (let*-values ([(lits terms) (partition bv? xs)]
+                   [(t) (get-type (car xs))]
+                   [(lit) (sfinitize
+                           (for/fold ([out 1]) ([lit lits])
+                            (* out (bv-value lit)))
+                           (bitvector-size t))])
+       (if (or (= lit 0) (null? terms)) 
+           (bv lit t)
+           (match (simplify-op* (if (null? lits)
+                                    terms 
+                                    (cons (bv lit t) terms)) 
+                                simplify-bvmul)
+             [(list x) x]
+             [(list a ... (? bv? b) c ...) 
+                 (apply expression @bvmul b (sort (append a c) term<?))]
+             [ys (apply expression @bvmul (sort ys term<?))])))]))
+
 (define-lifted-operator @bvneg bvneg T*->T)
 (define-lifted-operator @bvadd bvadd T*->T)
 (define-lifted-operator @bvsub bvsub T*->T)
-
+(define-lifted-operator @bvmul bvmul T*->T)
 
 ; Simplification rules for bvadd.
 (define (simplify-bvadd x y)
-  (cond [(and (bv? x) (bv? y)) 
-         (let ([t (get-type x)])
-           (bv (sfinitize (+ (bv-value x) (bv-value y)) (bitvector-size t)) t))]
-        [(and (bv? x) (zero? (bv-value x))) y]
-        [(and (bv? y) (zero? (bv-value y))) x]
-        [(expression? x)
-         (or (simplify-bvadd:expr/term x y)
-             (and (expression? y) 
-                  (simplify-bvadd:expr/term y x)))]
-        [(expression? y)
-         (simplify-bvadd:expr/term y x)]
-        [else #f]))
+  (match* (x y)
+    [((bv a t) (bv b _)) (bv (sfinitize (+ a b) (bitvector-size t)) t)]
+    [((bv 0 _) _) y]
+    [(_ (bv 0 _)) x]
+    [((? expression?) (? expression?)) (or (simplify-bvadd:expr/term x y)
+                                           (simplify-bvadd:expr/term y x))]
+    [((? expression?) _) (simplify-bvadd:expr/term x y)]
+    [(_ (? expression?)) (simplify-bvadd:expr/term y x)]
+    [(_ _) #f]))
                 
 (define (simplify-bvadd:expr/term x y)
   (match* (x y) 
@@ -304,12 +326,40 @@
     [((expression (== @bvadd) a ...) (expression (== @bvadd) b ...))
      (let ([alen (length a)] 
            [blen (length b)])
-       (and (<= (abs (- alen blen)) 1)
-            (let*-values ([(a b) (if (<= alen blen) (values a b) (values b a))])
-              (match (remove* (map bvneg a) b)
-                [(list) (bv 0 (get-type x))]
-                [(list c) c]
-                [_ #f]))))] 
+       (and (<= alen blen) (<= (- blen alen) 1)   
+            (match (remove* (map bvneg a) b)
+              [(list) (bv 0 (get-type x))]
+              [(list c) c]
+              [_ #f])))]
+    [((expression (== @bvmul) (? bv? a) b) (expression (== @bvmul) (? bv? c) b))
+     (bvmul (bvadd a c) b)]
+    [((expression (== @bvmul) a b) (expression (== @bvmul) c d))
+     (let-values ([(u v w) (cond [(equal? a c) (values a b d)]
+                                 [(equal? a d) (values a b c)]
+                                 [(equal? b c) (values b a d)]
+                                 [(equal? b d) (values b a c)]
+                                 [else (values #f #f #f)])])
+       (and u 
+            (match (simplify-bvadd v w)
+              [#f #f]
+              [z (bvmul z u)])))]
+    [(_ _) #f]))
+
+
+; Simplification rules for bvmul.
+(define (simplify-bvmul x y)
+  (match* (x y)
+    [((bv a t) (bv b _)) (bv (sfinitize (* a b) (bitvector-size t)) t)]
+    [((bv 0 _) _) x]
+    [((bv 1 _) _) y]
+    [((bv -1 _) _) (bvneg y)]
+    [(_ (bv 0 _)) y]
+    [(_ (bv 1 _)) x]
+    [(_ (bv -1 _)) (bvneg x)]
+    [((expression (== @bvmul) (? bv? a) b) (? bv? c))
+     (bvmul (bvmul a c) b)]
+    [((? bv? c) (expression (== @bvmul) (? bv? a) b))
+     (bvmul (bvmul a c) b)]
     [(_ _) #f]))
     
 ;; ----------------- Shared lifting procedures and templates ----------------- ;;

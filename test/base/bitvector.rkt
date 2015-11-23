@@ -90,7 +90,11 @@
   (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) y (@bvneg z))) y)
   (check-equal? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y))) z)
   (check-equal? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y)) (@bvneg z)) (bv 0))
-  (check-equal? (@bvadd x (bv 0) y (bv 1) z (bv 5)) (@bvadd (bv 6) x y z)))
+  (check-equal? (@bvadd x (bv 0) y (bv 1) z (bv 5)) (@bvadd (bv 6) x y z))
+  (check-equal? (@bvadd (@bvmul y x) (@bvmul x (@bvneg y))) (bv 0))
+  (check-equal? (@bvadd (@bvmul x (@bvneg y)) (@bvmul y x)) (bv 0))
+  (check-equal? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv -3))) (bv 0))
+  (check-equal? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv 2))) (@bvmul (bv 5) x)))
 
 (define tests:bv
   (test-suite+
