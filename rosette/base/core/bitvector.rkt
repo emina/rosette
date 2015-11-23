@@ -326,11 +326,15 @@
     [((expression (== @bvadd) a ...) (expression (== @bvadd) b ...))
      (let ([alen (length a)] 
            [blen (length b)])
-       (and (<= alen blen) (<= (- blen alen) 1)   
-            (match (remove* (map bvneg a) b)
-              [(list) (bv 0 (get-type x))]
-              [(list c) c]
-              [_ #f])))]
+       (and (<= alen blen) (<= (- blen alen) 1)
+            (let* ([-a (map bvneg a)]
+                   [-a (if (bv? (car -a)) 
+                           (cons (car -a) (sort (cdr -a) term<?))
+                           (sort -a term<?))])
+              (and (sublist? -a b)
+                   (if (= alen blen) 
+                       (bv 0 (get-type x))
+                       (car (remove* -a b)))))))]
     [((expression (== @bvmul) (? bv? a) b) (expression (== @bvmul) (? bv? c) b))
      (bvmul (bvadd a c) b)]
     [((expression (== @bvmul) a b) (expression (== @bvmul) c d))
@@ -344,6 +348,7 @@
               [#f #f]
               [z (bvmul z u)])))]
     [(_ _) #f]))
+
 
 
 ; Simplification rules for bvmul.
@@ -463,6 +468,7 @@
           (match ys 
             [(list _ ... (== x) ys ...) (sublist? xs ys)]
             [_ #f])])))
+
 
 (define (simplify-connective:expr/term op co !iden x y)
   (match x 

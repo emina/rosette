@@ -45,7 +45,10 @@
        (check-equal? actual expected))]))
 
 (define (check-pe ops [consts '()])
-  (for ([e (test-exprs 2 ops (list* x y z consts))])  
+  (define es (test-exprs 2 ops (list* x y z consts)))
+  ;(printf "exprs: ~a\n" (length es))
+  (for ([e es])
+   ;(printf "~e = ~e\n" e (reduce e))
     (check-pred unsat? (solve (! (@bveq e (reduce e)))))))
  
 
@@ -83,11 +86,11 @@
   (check-equal? (@bvadd (@bvadd (bv 5) y) (bv -5)) y)
   (check-equal? (@bvadd (@bvadd x y) (@bvneg x)) y)
   (check-equal? (@bvadd (@bvadd x y) (@bvneg y)) x)
-  (check-equal? (@bvadd (@bvadd x y z) (@bvadd (@bvneg x) (@bvneg y) z)) z)
+  (check-equal? (@bvadd (@bvadd x y) (@bvadd (@bvneg x) (@bvneg y) z)) z)
   (check-equal? (@bvadd (@bvadd x y z) (@bvadd (@bvneg x) (@bvneg y) (@bvneg z))) (bv 0))
-  (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv 1) (@bvneg y) (@bvneg z))) (bv 1))
+  (check-equal? (@bvadd (@bvadd y z) (@bvadd (bv 1) (@bvneg y) (@bvneg z))) (bv 1))
   (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) (@bvneg y) (@bvneg z))) (bv 0))
-  (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) y (@bvneg z))) y)
+  (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) (@bvneg z))) y)
   (check-equal? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y))) z)
   (check-equal? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y)) (@bvneg z)) (bv 0))
   (check-equal? (@bvadd x (bv 0) y (bv 1) z (bv 5)) (@bvadd (bv 6) x y z))
@@ -95,6 +98,15 @@
   (check-equal? (@bvadd (@bvmul x (@bvneg y)) (@bvmul y x)) (bv 0))
   (check-equal? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv -3))) (bv 0))
   (check-equal? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv 2))) (@bvmul (bv 5) x)))
+
+(define (check-bvmul-simplifications)
+  (check-nary @bvmul (bv 1) x y z)
+  (check-equal? (@bvmul (bv 3) x) (@bvmul x (bv 3)))
+  (check-equal? (@bvmul (bv 0) x) (bv 0))
+  (check-equal? (@bvmul x (bv 0)) (bv 0))
+  (check-equal? (@bvmul x (bv -1)) (@bvneg x))
+  (check-equal? (@bvmul (bv -1) x) (@bvneg x))
+  (check-equal? (@bvmul (@bvmul x (bv 2)) (bv 3)) (@bvmul (bv 6) x)))
 
 (define tests:bv
   (test-suite+
@@ -150,20 +162,25 @@
   (test-suite+
    "Tests for bvadd in rosette/base/bitvector.rkt"
    (check-bvadd-simplifications)
-   (check-semantics @bvadd)
-   ))
+   (check-semantics @bvadd)))
 
 (define tests:bvadd/bvneg
   (test-suite+
    "Tests for bvadd/bvneg in rosette/base/bitvector.rkt"
    (check-pe (list (naive @bvneg) (naive* @bvadd)) (list (bv 0) (bv 5)))
-   ))
+   (check-pe (list (naive* @bvadd)) (list (bv -1) (bv 2)))))
 
 (define tests:bvsub
   (test-suite+
    "Tests for bvsub in rosette/base/bitvector.rkt"
-   (check-semantics @bvsub)
-   ))
+   (check-semantics @bvsub)))
+
+(define tests:bvmul
+  (test-suite+
+   "Tests for bvmul in rosette/base/bitvector.rkt"
+   (check-bvmul-simplifications)
+   (check-semantics @bvmul)))
+
 
 (time (run-tests tests:bv))
 (time (run-tests tests:bvnot))
@@ -176,6 +193,7 @@
 (time (run-tests tests:bvadd))
 (time (run-tests tests:bvadd/bvneg))
 (time (run-tests tests:bvsub))
+(time (run-tests tests:bvmul))
 (send solver shutdown)
 
        
