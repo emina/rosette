@@ -8,7 +8,8 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
- @bveq @bvnot @bvor @bvand @bvxor @bvneg @bvadd @bvsub @bvmul)
+ @bveq @bvnot @bvor @bvand @bvxor 
+ @bvneg @bvadd @bvsub @bvmul @bvudiv)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -296,10 +297,26 @@
                  (apply expression @bvmul b (sort (append a c) term<?))]
              [ys (apply expression @bvmul (sort ys term<?))])))]))
 
+; bvudiv is a binary op in z3
+(define (bvudiv x y)
+  (match* (x y)
+    [(_ (bv 0 t)) (bv -1 t)]
+    [(_ (bv 1 _)) x]
+    [((bv a (and t (bitvector size))) (bv b _)) 
+     (bv (sfinitize (quotient (ufinitize a size) (ufinitize b size)) size) t)]
+    [((bv 0 t) _) (ite (bveq x y) (bv -1 t) x)]
+    [((app get-type t) (== x)) (ite (bveq y (bv 0 t)) (bv -1 t) (bv 1 t))]
+    [((expression (== ite) c (? bv? a) (? bv? b)) (? bv? d))
+     (ite c (bvudiv a d) (bvudiv b d))]
+    [((? bv? d) (expression (== ite) c (? bv? a) (? bv? b)))
+     (ite c (bvudiv d a) (bvudiv d b))]
+    [(_ _) (expression @bvudiv x y)]))
+    
 (define-lifted-operator @bvneg bvneg T*->T)
 (define-lifted-operator @bvadd bvadd T*->T)
 (define-lifted-operator @bvsub bvsub T*->T)
 (define-lifted-operator @bvmul bvmul T*->T)
+(define-lifted-operator @bvudiv bvudiv T*->T)
 
 ; Simplification rules for bvadd.
 (define (simplify-bvadd x y)

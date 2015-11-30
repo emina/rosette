@@ -7,6 +7,7 @@
          rosette/base/core/term
          rosette/base/core/bool
          rosette/base/core/bitvector
+         rosette/base/core/polymorphic
          (only-in rosette/base/form/define define-symbolic)
          "exprs.rkt" "common.rkt")
 
@@ -15,6 +16,7 @@
 (current-bitwidth 4)
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
+(define-symbolic b @boolean?)
 
 (define minval (- (expt 2 (sub1 (bitvector-size BV)))))
 (define maxval (expt 2 (sub1 (bitvector-size BV)))) 
@@ -50,63 +52,77 @@
   (for ([e es])
    ;(printf "~e = ~e\n" e (reduce e))
     (check-pred unsat? (solve (! (@bveq e (reduce e)))))))
- 
+
+(define-syntax-rule (check-valid? (op e ...) expected)
+  (let ([actual (op e ...)])
+    (check-equal? actual expected)
+    (check-pred unsat? (solve (! (@bveq (expression op e ...) expected))))))
 
 (define (check-bitwise-simplifications op co id)
   (check-nary op id x y z)
-  (check-equal? (op (bv 1) x) (op x (bv 1)))
-  (check-equal? (op x (@bvnot x) ) (@bvnot id))
-  (check-equal? (op x (@bvnot id)) (@bvnot id))
-  (check-equal? (op x (@bvnot id) y z id) (@bvnot id))
-  (check-equal? (op (co x y) (@bvnot (co x y))) (@bvnot id))
-  (check-equal? (op (op x y) (@bvnot (op x y))) (@bvnot id))
-  (check-equal? (op x (@bvnot id)) (@bvnot id))
-  (check-equal? (@bvnot (@bvnot (op x y))) (op x y))
-  (check-equal? (op z y x x x x y x z z ) (op x y z))
-  (check-equal? (op (@bvnot (bv minval)) z y x x x x (bv minval)  y x z z )  (@bvnot id))
-  (check-equal? (op z y x x x x (bv minval)  y x z z (bv 2) )  (op (op (bv minval) (bv 2)) x y z))
-  (check-equal? (op z y x x x x y x (@bvnot z) z ) (@bvnot id))
-  (check-equal? (op z (co z x)  (co z y) x (co x y)) (op x z))
-  (check-equal? (op (co x y) (co x y z)) (co x y))
-  (check-equal? (op (co x y z) (co x y)) (co x y))
-  (check-equal? (op (co x y) (co x y z) x)  x) 
-  (check-equal? (op (co x y z) (co x y) x)  x)
-  (check-equal? (op (op x (bv minval) z) (@bvnot (bv minval)))  (@bvnot id))
-  (check-equal? (op (op x (bv minval) z) (op y (@bvnot (bv minval))))  (@bvnot id)))
+  (check-valid? (op (bv 1) x) (op x (bv 1)))
+  (check-valid? (op x (@bvnot x) ) (@bvnot id))
+  (check-valid? (op x (@bvnot id)) (@bvnot id))
+  (check-valid? (op x (@bvnot id) y z id) (@bvnot id))
+  (check-valid? (op (co x y) (@bvnot (co x y))) (@bvnot id))
+  (check-valid? (op (op x y) (@bvnot (op x y))) (@bvnot id))
+  (check-valid? (op x (@bvnot id)) (@bvnot id))
+  (check-valid? (@bvnot (@bvnot (op x y))) (op x y))
+  (check-valid? (op z y x x x x y x z z ) (op x y z))
+  (check-valid? (op (@bvnot (bv minval)) z y x x x x (bv minval)  y x z z )  (@bvnot id))
+  (check-valid? (op z y x x x x (bv minval)  y x z z (bv 2) )  (op (op (bv minval) (bv 2)) x y z))
+  (check-valid? (op z y x x x x y x (@bvnot z) z ) (@bvnot id))
+  (check-valid? (op z (co z x)  (co z y) x (co x y)) (op x z))
+  (check-valid? (op (co x y) (co x y z)) (co x y))
+  (check-valid? (op (co x y z) (co x y)) (co x y))
+  (check-valid? (op (co x y) (co x y z) x)  x) 
+  (check-valid? (op (co x y z) (co x y) x)  x)
+  (check-valid? (op (op x (bv minval) z) (@bvnot (bv minval)))  (@bvnot id))
+  (check-valid? (op (op x (bv minval) z) (op y (@bvnot (bv minval))))  (@bvnot id)))
 
 (define (check-bvadd-simplifications)
   (check-nary @bvadd (bv 0) x y z)
-  (check-equal? (@bvadd (bv 1) x) (@bvadd x (bv 1)))
-  (check-equal? (@bvadd x (@bvneg x)) (bv 0))
-  (check-equal? (@bvadd (@bvneg x) x) (bv 0))
-  (check-equal? (@bvadd (@bvneg (@bvadd x y)) x) (@bvneg y))
-  (check-equal? (@bvadd (@bvneg (@bvadd x y)) y) (@bvneg x))
-  (check-equal? (@bvadd (@bvadd (@bvneg x) y) x) y)
-  (check-equal? (@bvadd (@bvadd x (@bvneg y)) y) x)
-  (check-equal? (@bvadd (@bvadd (bv 5) y) (bv -5)) y)
-  (check-equal? (@bvadd (@bvadd x y) (@bvneg x)) y)
-  (check-equal? (@bvadd (@bvadd x y) (@bvneg y)) x)
-  (check-equal? (@bvadd (@bvadd x y) (@bvadd (@bvneg x) (@bvneg y) z)) z)
-  (check-equal? (@bvadd (@bvadd x y z) (@bvadd (@bvneg x) (@bvneg y) (@bvneg z))) (bv 0))
-  (check-equal? (@bvadd (@bvadd y z) (@bvadd (bv 1) (@bvneg y) (@bvneg z))) (bv 1))
-  (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) (@bvneg y) (@bvneg z))) (bv 0))
-  (check-equal? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) (@bvneg z))) y)
-  (check-equal? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y))) z)
-  (check-equal? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y)) (@bvneg z)) (bv 0))
-  (check-equal? (@bvadd x (bv 0) y (bv 1) z (bv 5)) (@bvadd (bv 6) x y z))
-  (check-equal? (@bvadd (@bvmul y x) (@bvmul x (@bvneg y))) (bv 0))
-  (check-equal? (@bvadd (@bvmul x (@bvneg y)) (@bvmul y x)) (bv 0))
-  (check-equal? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv -3))) (bv 0))
-  (check-equal? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv 2))) (@bvmul (bv 5) x)))
+  (check-valid? (@bvadd (bv 1) x) (@bvadd x (bv 1)))
+  (check-valid? (@bvadd x (@bvneg x)) (bv 0))
+  (check-valid? (@bvadd (@bvneg x) x) (bv 0))
+  (check-valid? (@bvadd (@bvneg (@bvadd x y)) x) (@bvneg y))
+  (check-valid? (@bvadd (@bvneg (@bvadd x y)) y) (@bvneg x))
+  (check-valid? (@bvadd (@bvadd (@bvneg x) y) x) y)
+  (check-valid? (@bvadd (@bvadd x (@bvneg y)) y) x)
+  (check-valid? (@bvadd (@bvadd (bv 5) y) (bv -5)) y)
+  (check-valid? (@bvadd (@bvadd x y) (@bvneg x)) y)
+  (check-valid? (@bvadd (@bvadd x y) (@bvneg y)) x)
+  (check-valid? (@bvadd (@bvadd x y) (@bvadd (@bvneg x) (@bvneg y) z)) z)
+  (check-valid? (@bvadd (@bvadd x y z) (@bvadd (@bvneg x) (@bvneg y) (@bvneg z))) (bv 0))
+  (check-valid? (@bvadd (@bvadd y z) (@bvadd (bv 1) (@bvneg y) (@bvneg z))) (bv 1))
+  (check-valid? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) (@bvneg y) (@bvneg z))) (bv 0))
+  (check-valid? (@bvadd (@bvadd (bv 1) y z) (@bvadd (bv -1) (@bvneg z))) y)
+  (check-valid? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y))) z)
+  (check-valid? (@bvadd x y z (@bvadd (@bvneg x) (@bvneg y)) (@bvneg z)) (bv 0))
+  (check-valid? (@bvadd x (bv 0) y (bv 1) z (bv 5)) (@bvadd (bv 6) x y z))
+  (check-valid? (@bvadd (@bvmul y x) (@bvmul x (@bvneg y))) (bv 0))
+  (check-valid? (@bvadd (@bvmul x (@bvneg y)) (@bvmul y x)) (bv 0))
+  (check-valid? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv -3))) (bv 0))
+  (check-valid? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv 2))) (@bvmul (bv 5) x)))
 
 (define (check-bvmul-simplifications)
   (check-nary @bvmul (bv 1) x y z)
-  (check-equal? (@bvmul (bv 3) x) (@bvmul x (bv 3)))
-  (check-equal? (@bvmul (bv 0) x) (bv 0))
-  (check-equal? (@bvmul x (bv 0)) (bv 0))
-  (check-equal? (@bvmul x (bv -1)) (@bvneg x))
-  (check-equal? (@bvmul (bv -1) x) (@bvneg x))
-  (check-equal? (@bvmul (@bvmul x (bv 2)) (bv 3)) (@bvmul (bv 6) x)))
+  (check-valid? (@bvmul (bv 3) x) (@bvmul x (bv 3)))
+  (check-valid? (@bvmul (bv 0) x) (bv 0))
+  (check-valid? (@bvmul x (bv 0)) (bv 0))
+  (check-valid? (@bvmul x (bv -1)) (@bvneg x))
+  (check-valid? (@bvmul (bv -1) x) (@bvneg x))
+  (check-valid? (@bvmul (@bvmul x (bv 2)) (bv 3)) (@bvmul (bv 6) x)))
+
+(define (check-bvudiv-simplifications)
+  (check-valid? (@bvudiv (bv 3) (bv 0)) (bv -1))
+  (check-valid? (@bvudiv x (bv 0)) (bv -1))
+  (check-valid? (@bvudiv (bv 3) (bv 1)) (bv 3))
+  (check-valid? (@bvudiv x (bv 1)) x)
+  (check-valid? (@bvudiv (bv 0) x) (ite (@bveq x (bv 0)) (bv -1) (bv 0)))
+  (check-valid? (@bvudiv x x) (ite (@bveq x (bv 0)) (bv -1) (bv 1)))
+  (check-valid? (@bvudiv (ite b (bv 6) (bv 8)) (bv 2)) (ite b (bv 3) (bv 4)))
+  (check-valid? (@bvudiv (bv 6) (ite b (bv 2) (bv 3))) (ite b (bv 3) (bv 2))))
 
 (define tests:bv
   (test-suite+
@@ -137,7 +153,7 @@
 
 (define tests:bvand/bvor/bvnot
   (test-suite+
-   "Tests for soundness of bvand/bvor/bvnot PE rules in rosette/base/bitvector.rkt"   
+   "Tests for bvand/bvor/bvnot in rosette/base/bitvector.rkt"   
    (check-pe (list (naive @bvnot) (naive* @bvand) (naive* @bvor)))))
 
 (define tests:bvxor
@@ -148,7 +164,7 @@
 
 (define tests:bvxor/bvnot
   (test-suite+
-   "Tests for soundness of bvxor/bvnot PE rules in rosette/base/bitvector.rkt"   
+   "Tests for bvxor/bvnot rosette/base/bitvector.rkt"   
    (check-pe (list (naive @bvnot) (naive* @bvxor)) (list (bv 0) (bv 5)))))
 
 (define tests:bvneg
@@ -181,6 +197,11 @@
    (check-bvmul-simplifications)
    (check-semantics @bvmul)))
 
+(define tests:bvudiv
+  (test-suite+
+   "Tests for bvudiv rosette/base/bitvector.rkt"
+   (check-bvudiv-simplifications)
+   (check-semantics @bvudiv)))
 
 (time (run-tests tests:bv))
 (time (run-tests tests:bvnot))
@@ -194,14 +215,5 @@
 (time (run-tests tests:bvadd/bvneg))
 (time (run-tests tests:bvsub))
 (time (run-tests tests:bvmul))
+(time (run-tests tests:bvudiv))
 (send solver shutdown)
-
-       
-#|
-(require rosette/base/core/bitvector)
-(require rosette/base/form/define)
-(define BV (bitvector 4))
-(current-bitwidth 4)
-(define-symbolic x y z BV)
-
-|#
