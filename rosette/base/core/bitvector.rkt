@@ -8,7 +8,7 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
- @bveq @bvslt @bvsgt 
+ @bveq @bvslt @bvsgt @bvsle @bvsge
  @bvnot @bvor @bvand @bvxor 
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv)
 
@@ -64,9 +64,9 @@
      (fprintf port "(bitvector? ~a)" (bitvector-size self)))])
 
 (define (bvsmin t) (- (expt 2 (- (bitvector-size t) 1))))
-(define (bvsmin? b) (= (bv-value b) (bvsmin (bv-type b))))
+(define (bvsmin? b) (and (bv? b) (= (bv-value b) (bvsmin (bv-type b)))))
 (define (bvsmax t) (- (expt 2 (- (bitvector-size t) 1)) 1))
-(define (bvsmax? b) (= (bv-value b) (bvsmax (bv-type b))))
+(define (bvsmax? b) (and (bv? b) (= (bv-value b) (bvsmax (bv-type b)))))
 
 ;; ----------------- Bitvector Literals ----------------- ;; 
 
@@ -238,6 +238,10 @@
 (define (bvslt x y)
   (match* (x y)
     [((bv a _) (bv b _)) (< a b)]
+    [(_ (? bvsmax?)) (! (bveq x y))]
+    [((? bvsmax?) _) #f]
+    [(_ (? bvsmin?)) #f]
+    [((? bvsmin?) _) (! (bveq x y))]
     [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
      (|| (&& a (< b d)) (&& (! a) (< c d)))]
     [((bv d _) (expression (== ite) a (bv b _) (bv c _)))
@@ -252,10 +256,34 @@
     [(_ _) (expression @bvslt x y)]))
 
 (define (bvsgt x y) (bvslt y x))
+
+(define (bvsle x y)
+  (match* (x y)
+    [((bv a _) (bv b _)) (<= a b)]
+    [(_ (? bvsmax?)) #t]
+    [((? bvsmax?) _) (bveq x y)]
+    [(_ (? bvsmin?)) (bveq x y)]
+    [((? bvsmin?) _) #t]
+    [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
+     (|| (&& a (<= b d)) (&& (! a) (<= c d)))]
+    [((bv d _) (expression (== ite) a (bv b _) (bv c _)))
+     (|| (&& a (<= d b)) (&& (! a) (<= d c)))]
+    [((expression (== ite) a (bv b _) (bv c _)) (expression (== ite) d (bv e _) (bv f _)))
+     (let ([b<=e (<= b e)] 
+           [b<=f (<= b f)] 
+           [c<=e (<= c e)] 
+           [c<=f (<= c f)])
+       (or (and b<=e b<=f c<=e c<=f)
+           (|| (&& a d b<=e) (&& a (! d) b<=f) (&& (! a) d c<=e) (&& (! a) (! d) c<=f))))]
+    [(_ _) (expression @bvsle x y)]))
+
+(define (bvsge x y) (bvsle y x))
     
 (define-lifted-operator @bveq bveq T*->boolean?)
 (define-lifted-operator @bvslt bvslt T*->boolean?)
 (define-lifted-operator @bvsgt bvsgt T*->boolean?)
+(define-lifted-operator @bvsle bvsle T*->boolean?)
+(define-lifted-operator @bvsge bvsge T*->boolean?)
 
 ;; ----------------- Bitvector Bitwise Operators ----------------- ;;
 
