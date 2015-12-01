@@ -12,7 +12,8 @@
                   @<< @>> @>>> @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor)
          (only-in "../../base/core/bitvector.rkt" 
                   bitvector? bv bitvector-size 
-                  @bveq @bvnot @bvor @bvand @bvxor
+                  @bveq @bvslt  
+                  @bvnot @bvor @bvand @bvxor
                   @bvneg @bvadd @bvmul @bvudiv)
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
@@ -74,7 +75,8 @@
         [@+ bvadd] [@* bvmul] [@quotient bvsdiv] [@remainder bvsrem]
         [@abs smt/abs] [@sgn smt/sgn]
         ; bitvector
-        [@bveq smt/=] [@bvnot bvnot] [@bvor bvor] [@bvand bvand] [@bvxor bvxor]
+        [@bveq smt/=] [@bvslt bvslt] 
+        [@bvnot bvnot] [@bvor bvor] [@bvand bvand] [@bvxor bvxor]
         [@bvneg bvneg] [@bvadd bvadd] [@bvmul bvmul] [@bvudiv bvudiv]]
   [#:?  [enum-comparison-op? smt/<]])
 

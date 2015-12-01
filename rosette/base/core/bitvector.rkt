@@ -8,7 +8,8 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  ; lifted versions of the operators
- @bveq @bvnot @bvor @bvand @bvxor 
+ @bveq @bvslt @bvsgt 
+ @bvnot @bvor @bvand @bvxor 
  @bvneg @bvadd @bvsub @bvmul @bvudiv)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
@@ -62,6 +63,8 @@
   [(define (write-proc self port m) 
      (fprintf port "(bitvector? ~a)" (bitvector-size self)))])
 
+(define (bvsmin t) (- (expt 2 (- (bitvector-size t) 1))))
+(define (bvsmax t) (- (expt 2 (- (bitvector-size t) 1)) 1))
 
 ;; ----------------- Bitvector Literals ----------------- ;; 
 
@@ -230,7 +233,27 @@
     [((bv u _) (bv v _)) (= u v)]
     [(_ _) (sort/expression @bveq x y)]))
 
+(define (bvslt x y)
+  (match* (x y)
+    [((bv a _) (bv b _)) (< a b)]
+    [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
+     (|| (&& a (< b d)) (&& (! a) (< c d)))]
+    [((bv d _) (expression (== ite) a (bv b _) (bv c _)))
+     (|| (&& a (< d b)) (&& (! a) (< d c)))]
+    [((expression (== ite) a (bv b _) (bv c _)) (expression (== ite) d (bv e _) (bv f _)))
+     (let ([b<e (< b e)] 
+           [b<f (< b f)] 
+           [c<e (< c e)] 
+           [c<f (< c f)])
+       (or (and b<e b<f c<e c<f)
+           (|| (&& a d b<e) (&& a (! d) b<f) (&& (! a) d c<e) (&& (! a) (! d) c<f))))]
+    [(_ _) (expression @bvslt x y)]))
+
+(define (bvsgt x y) (bvslt y x))
+    
 (define-lifted-operator @bveq bveq T*->boolean?)
+(define-lifted-operator @bvslt bvslt T*->boolean?)
+(define-lifted-operator @bvsgt bvsgt T*->boolean?)
 
 ;; ----------------- Bitvector Bitwise Operators ----------------- ;;
 

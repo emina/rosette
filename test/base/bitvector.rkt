@@ -8,6 +8,7 @@
          rosette/base/core/bool
          rosette/base/core/bitvector
          rosette/base/core/polymorphic
+         (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic)
          "exprs.rkt" "common.rkt")
 
@@ -16,7 +17,7 @@
 (current-bitwidth 4)
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
-(define-symbolic b @boolean?)
+(define-symbolic a b @boolean?)
 
 (define minval (- (expt 2 (sub1 (bitvector-size BV)))))
 (define maxval (expt 2 (sub1 (bitvector-size BV)))) 
@@ -46,6 +47,16 @@
                  (@bveq z (op x y))) z))
        (check-equal? actual expected))]))
 
+(define (check-cmp-semantics op)
+  (for* ([i (in-range minval maxval)]
+            [j (in-range minval maxval)])
+       (define actual (op (bv i) (bv j)))
+       (define expected 
+         ((solve (@bveq (bv i) x)
+                 (@bveq (bv j) y)
+                 (@equal? a (op x y))) a))
+       (check-equal? actual expected)))
+
 (define (check-pe ops [consts '()])
   (define es (test-exprs 2 ops (list* x y z consts)))
   ;(printf "exprs: ~a\n" (length es))
@@ -56,7 +67,7 @@
 (define-syntax-rule (check-valid? (op e ...) expected)
   (let ([actual (op e ...)])
     (check-equal? actual expected)
-    (check-pred unsat? (solve (! (@bveq (expression op e ...) expected))))))
+    (check-pred unsat? (solve (! (@equal? (expression op e ...) expected))))))
 
 (define (check-bitwise-simplifications op co id)
   (check-nary op id x y z)
@@ -124,12 +135,35 @@
   (check-valid? (@bvudiv (ite b (bv 6) (bv 8)) (bv 2)) (ite b (bv 3) (bv 4)))
   (check-valid? (@bvudiv (bv 6) (ite b (bv 2) (bv 3))) (ite b (bv 3) (bv 2))))
 
+(define (check-bvslt-simplifications)
+  (check-equal? (@bvsgt x y) (@bvslt y x))
+  (check-valid? (@bvslt (ite b (bv 2) (bv -2)) (bv 0)) (! b))
+  (check-valid? (@bvslt (ite b (bv -2) (bv 3)) (bv 0)) b)
+  (check-valid? (@bvslt (ite b (bv 2) (bv 1)) (bv 3)) #t)
+  (check-valid? (@bvslt (ite b (bv 2) (bv 1)) (bv 0)) #f)
+  (check-valid? (@bvslt (bv 0) (ite b (bv 2) (bv -2))) b)
+  (check-valid? (@bvslt (bv 0) (ite b (bv -2) (bv 3))) (! b))
+  (check-valid? (@bvslt (bv 3) (ite b (bv 2) (bv 1))) #f)
+  (check-valid? (@bvslt (bv 0) (ite b (bv 2) (bv 1))) #t)
+  (check-valid? (@bvslt (ite a (bv 2) (bv 1)) (ite b (bv 3) (bv 4))) #t)
+  (check-valid? (@bvslt (ite b (bv 3) (bv 4)) (ite a (bv 2) (bv 1))) #f)
+  (check-valid? (@bvslt (ite a (bv 2) (bv 1)) (ite b (bv 0) (bv 2))) (&& (! a) (! b)))
+  (check-valid? (@bvslt (ite a (bv 1) (bv 2)) (ite b (bv 2) (bv 0))) (&& a b))
+  (check-valid? (@bvslt (ite a (bv 1) (bv 2)) (ite b (bv 0) (bv 2))) (&& a (! b)))
+  (check-valid? (@bvslt (ite a (bv 2) (bv 1)) (ite b (bv 2) (bv 0))) (&& (! a) b)))
+
 (define tests:bv
   (test-suite+
    "Tests for bv in rosette/base/bitvector.rkt"
    (check-equal? (bv minval) (bv maxval))
    (check-equal? (bv (sub1 minval)) (bv (sub1 maxval)))))
-   
+
+(define tests:bvslt
+  (test-suite+
+   "Tests for bvslt rosette/base/bitvector.rkt"
+   (check-bvslt-simplifications)
+   (check-cmp-semantics @bvslt)))
+
 (define tests:bvnot
   (test-suite+
    "Tests for bvnot in rosette/base/bitvector.rkt"   
@@ -204,6 +238,7 @@
    (check-semantics @bvudiv)))
 
 (time (run-tests tests:bv))
+(time (run-tests tests:bvslt))
 (time (run-tests tests:bvnot))
 (time (run-tests tests:bvor))
 (time (run-tests tests:bvand))
