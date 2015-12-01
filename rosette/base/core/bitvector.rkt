@@ -10,7 +10,7 @@
  ; lifted versions of the operators
  @bveq @bvslt @bvsgt 
  @bvnot @bvor @bvand @bvxor 
- @bvneg @bvadd @bvsub @bvmul @bvudiv)
+ @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -64,7 +64,9 @@
      (fprintf port "(bitvector? ~a)" (bitvector-size self)))])
 
 (define (bvsmin t) (- (expt 2 (- (bitvector-size t) 1))))
+(define (bvsmin? b) (= (bv-value b) (bvsmin (bv-type b))))
 (define (bvsmax t) (- (expt 2 (- (bitvector-size t) 1)) 1))
+(define (bvsmax? b) (= (bv-value b) (bvsmax (bv-type b))))
 
 ;; ----------------- Bitvector Literals ----------------- ;; 
 
@@ -320,7 +322,6 @@
                  (apply expression @bvmul b (sort (append a c) term<?))]
              [ys (apply expression @bvmul (sort ys term<?))])))]))
 
-; bvudiv is a binary op in z3
 (define (bvudiv x y)
   (match* (x y)
     [(_ (bv 0 t)) (bv -1 t)]
@@ -328,18 +329,38 @@
     [((bv a (and t (bitvector size))) (bv b _)) 
      (bv (sfinitize (quotient (ufinitize a size) (ufinitize b size)) size) t)]
     [((bv 0 t) _) (ite (bveq x y) (bv -1 t) x)]
+    [(_ (bv -1 t)) (ite (bveq x y) (bv 1 t) (bv 0 t))]
     [((app get-type t) (== x)) (ite (bveq y (bv 0 t)) (bv -1 t) (bv 1 t))]
     [((expression (== ite) c (? bv? a) (? bv? b)) (? bv? d))
      (ite c (bvudiv a d) (bvudiv b d))]
     [((? bv? d) (expression (== ite) c (? bv? a) (? bv? b)))
      (ite c (bvudiv d a) (bvudiv d b))]
     [(_ _) (expression @bvudiv x y)]))
+
+(define (bvsdiv x y)
+  (match* (x y)
+    [(_ (bv 1 _)) x]
+    [((bv a (and t (bitvector size))) (bv b _))
+     (if (= b 0) 
+         (if (< a 0) (bv 1 t) (bv -1 t))
+         (bv (sfinitize (quotient a b) size) t))]
+    [((bv 0 t) _) (ite (bveq x y) (bv -1 t) x)]
+    [(_ (bv 0 t)) (ite (@bvslt x y) (bv 1 t) (bv -1 t))]
+    [(_ (bv -1 t)) (bvneg x)]
+    [(_ (and (bv _ t) (? bvsmin?))) (ite (@bveq x y) (bv 1 t) (bv 0 t))]
+    [((app get-type t) (== x)) (ite (bveq y (bv 0 t)) (bv -1 t) (bv 1 t))]
+    [((expression (== ite) c (? bv? a) (? bv? b)) (? bv? d))
+     (ite c (bvsdiv a d) (bvsdiv b d))]
+    [((? bv? d) (expression (== ite) c (? bv? a) (? bv? b)))
+     (ite c (bvsdiv d a) (bvsdiv d b))]
+    [(_ _) (expression @bvsdiv x y)]))
     
 (define-lifted-operator @bvneg bvneg T*->T)
 (define-lifted-operator @bvadd bvadd T*->T)
 (define-lifted-operator @bvsub bvsub T*->T)
 (define-lifted-operator @bvmul bvmul T*->T)
 (define-lifted-operator @bvudiv bvudiv T*->T)
+(define-lifted-operator @bvsdiv bvsdiv T*->T)
 
 ; Simplification rules for bvadd.
 (define (simplify-bvadd x y)
