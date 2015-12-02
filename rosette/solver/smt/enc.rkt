@@ -14,7 +14,7 @@
                   bitvector? bv bitvector-size 
                   @bveq @bvslt @bvsle @bvult @bvule   
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
-                  @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem)
+                  @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod)
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
@@ -79,7 +79,7 @@
         [@bvnot bvnot] [@bvor bvor] [@bvand bvand] [@bvxor bvxor] 
         [@bvshl bvshl] [@bvlshr bvlshr] [@bvashr bvashr]
         [@bvneg bvneg] [@bvadd bvadd] [@bvmul bvmul] [@bvudiv bvudiv] [@bvsdiv bvsdiv]
-        [@bvurem bvurem] [@bvsrem bvsrem]]
+        [@bvurem bvurem] [@bvsrem bvsrem] [@bvsmod bvsmod]]
   [#:?  [enum-comparison-op? smt/<]])
 
 (define (smt/abs e)
