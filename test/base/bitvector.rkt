@@ -70,6 +70,20 @@
     (check-equal? actual expected)
     (check-pred unsat? (solve (! (@equal? (expression op e ...) expected))))))
 
+(define (check-bveq-simplifications)
+  (check-valid? (@bveq (ite b (bv 2) (bv 0)) (bv 2)) b)
+  (check-valid? (@bveq (ite b (bv 2) (bv 0)) (bv 0)) (! b))
+  (check-valid? (@bveq (ite b (bv 2) (bv 0)) (bv 1)) #f)
+  (check-valid? (@bveq (bv 2) (ite b (bv 2) (bv 0))) b)
+  (check-valid? (@bveq (bv 0) (ite b (bv 2) (bv 0))) (! b))
+  (check-valid? (@bveq (bv 1) (ite b (bv 2) (bv 0))) #f)
+  (check-valid? (@bveq (ite a (bv 2) (bv 2)) (ite b (bv 2) (bv 2))) #t)
+  (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 4) (bv 5))) #f)
+  (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 2) (bv 5))) (&& a b))
+  (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 5) (bv 2))) (&& a (! b)))
+  (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 3) (bv 5))) (&& (! a) b))
+  (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 5) (bv 3))) (&& (! a) (! b))))
+                
 (define (check-bvcmp-simplifications l* g*)
   (check-equal? (g* x y) (l* y x))
   (check-valid? (l* (ite b (bv 2) (bv 0)) (bv 1)) (! b))
@@ -202,6 +216,11 @@
    (check-equal? (bv minval) (bv maxval+1))
    (check-equal? (bv (sub1 minval)) (bv (sub1 maxval+1)))))
 
+(define tests:bveq
+  (test-suite+
+   "Tests for bveq rosette/base/bitvector.rkt"
+   (check-bveq-simplifications)))
+
 (define tests:bvslt
   (test-suite+
    "Tests for bvslt rosette/base/bitvector.rkt"
@@ -306,6 +325,7 @@
    (check-semantics @bvsdiv)))
 
 (time (run-tests tests:bv))
+(time (run-tests tests:bveq))
 (time (run-tests tests:bvslt))
 (time (run-tests tests:bvsle))
 (time (run-tests tests:bvult))

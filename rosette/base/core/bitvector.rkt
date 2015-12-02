@@ -252,16 +252,12 @@
    [(_ (? bvsmin?)) #f]
    [((? bvsmin?) _) (! (bveq x y))]))
 
-(define (bvsgt x y) (bvslt y x))
-
 (define bvsle
   (bitwise-comparator (x y) <= @bvsle
     [(_ (? bvsmax?)) #t]
     [((? bvsmax?) _) (bveq x y)]
     [(_ (? bvsmin?)) (bveq x y)]
     [((? bvsmin?) _) #t]))
-
-(define (bvsge x y) (bvsle y x))
 
 (define-values (bvult bvule) 
   (syntax-parameterize 
@@ -278,6 +274,8 @@
      [(_ (bv 0 _)) (bveq x y)]
      [((bv 0 _) _) #t]))))
 
+(define (bvsgt x y) (bvslt y x))
+(define (bvsge x y) (bvsle y x))
 (define (bvugt x y) (bvult y x))
 (define (bvuge x y) (bvule y x))
 
@@ -294,16 +292,16 @@
 ;; ----------------- Bitvector Bitwise Operators ----------------- ;;
 
 (define bvnot (bitwise-negation bitwise-not bvnot @bvnot))
-(define-lifted-operator @bvnot bvnot T*->T)
-
 (define bvand (bitwise-connective bitwise-and bvand @bvand @bvor -1 0))
-(define-lifted-operator @bvand bvand T*->T)
-
 (define bvor (bitwise-connective bitwise-ior bvor @bvor @bvand 0 -1))
-(define-lifted-operator @bvor bvor T*->T)
-
 (define bvxor (bitwise-adder bitwise-xor bvxor @bvxor simplify-bvxor))
+
+(define-lifted-operator @bvnot bvnot T*->T)
+(define-lifted-operator @bvand bvand T*->T)
+(define-lifted-operator @bvor bvor T*->T)
 (define-lifted-operator @bvxor bvxor T*->T)
+
+;; ----------------- Simplification ruules for bitwise operators ----------------- ;;
 
 ; Simplification rules for bvxor.
 (define (simplify-bvxor x y)
@@ -396,6 +394,8 @@
 (define-lifted-operator @bvudiv bvudiv T*->T)
 (define-lifted-operator @bvsdiv bvsdiv T*->T)
 
+;; ----------------- Simplification rules for arithmetic operators ----------------- ;;
+
 ; Simplification rules for bvadd.
 (define (simplify-bvadd x y)
   (match* (x y)
@@ -444,8 +444,6 @@
               [z (bvmul z u)])))]
     [(_ _) #f]))
 
-
-
 ; Simplification rules for bvmul.
 (define (simplify-bvmul x y)
   (match* (x y)
@@ -461,7 +459,9 @@
     [((? bv? c) (expression (== @bvmul) (? bv? a) b))
      (bvmul (bvmul a c) b)]
     [(_ _) #f]))
-    
+
+
+
 ;; ----------------- Shared lifting procedures and templates ----------------- ;;
 
 ; Partial rules for negators (bvnot and bvneg).
