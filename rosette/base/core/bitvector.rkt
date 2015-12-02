@@ -8,7 +8,7 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
- @bvnot @bvor @bvand @bvxor @bvshl
+ @bvnot @bvor @bvand @bvxor @bvshl @bvlshr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
@@ -308,12 +308,22 @@
     [((bv 0 _) _) x]
     [(_ (? max-shift?)) (bv 0 (get-type x))]
     [(_ _) (expression @bvshl x y)]))
+
+(define (bvlshr x y)
+  (match* (x y)
+    [((bv a (and (bitvector size) t)) (bv b _))
+     (bv (sfinitize (arithmetic-shift (ufinitize a size) (- (min (ufinitize b size) size))) size) t)]
+    [(_ (bv 0 _)) x]
+    [((bv 0 _) _) x]
+    [(_ (? max-shift?)) (bv 0 (get-type x))]
+    [(_ _) (expression @bvlshr x y)]))
     
 (define-lifted-operator @bvnot bvnot T*->T)
 (define-lifted-operator @bvand bvand T*->T)
 (define-lifted-operator @bvor bvor T*->T)
 (define-lifted-operator @bvxor bvxor T*->T)
 (define-lifted-operator @bvshl bvshl T*->T)
+(define-lifted-operator @bvlshr bvlshr T*->T)
 
 ;; ----------------- Simplification ruules for bitwise operators ----------------- ;;
 
