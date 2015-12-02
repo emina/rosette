@@ -70,14 +70,14 @@
     (check-equal? actual expected)
     (check-pred unsat? (solve (! (@equal? (expression op e ...) expected))))))
 
-(define (check-bvsl*-simplifications l* g*)
+(define (check-bvcmp-simplifications l* g*)
   (check-equal? (g* x y) (l* y x))
-  (check-valid? (l* (ite b (bv 2) (bv -2)) (bv 0)) (! b))
-  (check-valid? (l* (ite b (bv -2) (bv 3)) (bv 0)) b)
+  (check-valid? (l* (ite b (bv 2) (bv 0)) (bv 1)) (! b))
+  (check-valid? (l* (ite b (bv 1) (bv 3)) (bv 2)) b)
   (check-valid? (l* (ite b (bv 2) (bv 1)) (bv 3)) #t)
   (check-valid? (l* (ite b (bv 2) (bv 1)) (bv 0)) #f)
-  (check-valid? (l* (bv 0) (ite b (bv 2) (bv -2))) b)
-  (check-valid? (l* (bv 0) (ite b (bv -2) (bv 3))) (! b))
+  (check-valid? (l* (bv 1) (ite b (bv 2) (bv 0))) b)
+  (check-valid? (l* (bv 1) (ite b (bv 0) (bv 3))) (! b))
   (check-valid? (l* (bv 3) (ite b (bv 2) (bv 1))) #f)
   (check-valid? (l* (bv 0) (ite b (bv 2) (bv 1))) #t)
   (check-valid? (l* (ite a (bv 2) (bv 1)) (ite b (bv 3) (bv 4))) #t)
@@ -88,18 +88,32 @@
   (check-valid? (l* (ite a (bv 3) (bv 1)) (ite b (bv 2) (bv 0))) (&& (! a) b)))
 
 (define (check-bvslt-simplifications)
-  (check-bvsl*-simplifications @bvslt @bvsgt)
+  (check-bvcmp-simplifications @bvslt @bvsgt)
   (check-valid? (@bvslt x (bv maxval)) (! (@bveq x (bv maxval))))
   (check-valid? (@bvslt (bv maxval) x) #f)
   (check-valid? (@bvslt x (bv minval)) #f)
   (check-valid? (@bvslt (bv minval) x) (! (@bveq x (bv minval)))))
 
 (define (check-bvsle-simplifications)
-  (check-bvsl*-simplifications @bvsle @bvsge)
+  (check-bvcmp-simplifications @bvsle @bvsge)
   (check-valid? (@bvsle x (bv maxval)) #t)
   (check-valid? (@bvsle (bv maxval) x) (@bveq x (bv maxval)))
   (check-valid? (@bvsle x (bv minval)) (@bveq x (bv minval)))
   (check-valid? (@bvsle (bv minval) x) #t))
+
+(define (check-bvult-simplifications)
+  (check-bvcmp-simplifications @bvult @bvugt)
+  (check-valid? (@bvult x (bv -1)) (! (@bveq x (bv -1))))
+  (check-valid? (@bvult (bv -1) x) #f)
+  (check-valid? (@bvult x (bv 0)) #f)
+  (check-valid? (@bvult (bv 0) x) (! (@bveq x (bv 0)))))
+
+(define (check-bvule-simplifications)
+  (check-bvcmp-simplifications @bvule @bvuge)
+  (check-valid? (@bvule x (bv -1)) #t)
+  (check-valid? (@bvule (bv -1) x) (@bveq x (bv -1)))
+  (check-valid? (@bvule x (bv 0)) (@bveq x (bv 0)))
+  (check-valid? (@bvule (bv 0) x) #t))
 
 (define (check-bitwise-simplifications op co id)
   (check-nary op id x y z)
@@ -200,6 +214,18 @@
    (check-bvsle-simplifications)
    (check-cmp-semantics @bvsle)))
 
+(define tests:bvult
+  (test-suite+
+   "Tests for bvult rosette/base/bitvector.rkt"
+   (check-bvult-simplifications)
+   (check-cmp-semantics @bvult)))
+
+(define tests:bvule
+  (test-suite+
+   "Tests for bvule rosette/base/bitvector.rkt"
+   (check-bvule-simplifications)
+   (check-cmp-semantics @bvule)))
+
 (define tests:bvnot
   (test-suite+
    "Tests for bvnot in rosette/base/bitvector.rkt"   
@@ -282,6 +308,8 @@
 (time (run-tests tests:bv))
 (time (run-tests tests:bvslt))
 (time (run-tests tests:bvsle))
+(time (run-tests tests:bvult))
+(time (run-tests tests:bvule))
 (time (run-tests tests:bvnot))
 (time (run-tests tests:bvor))
 (time (run-tests tests:bvand))

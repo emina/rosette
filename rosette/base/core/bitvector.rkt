@@ -7,8 +7,7 @@
  current-bitwidth 
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
- ; lifted versions of the operators
- @bveq @bvslt @bvsgt @bvsle @bvsge
+ @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor 
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv)
 
@@ -233,57 +232,64 @@
 (define (bveq x y) 
   (match* (x y)
     [((bv u _) (bv v _)) (= u v)]
+    [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
+     (|| (&& a (= b d)) (&& (! a) (= c d)))]
+    [((bv d t) (expression (== ite) a (bv b _) (bv c _)))
+     (|| (&& a (= b d)) (&& (! a) (= c d)))]
+    [((expression (== ite) a (bv b t) (bv c _)) (expression (== ite) d (bv e _) (bv f _)))
+     (let ([b=e (= b e)] 
+           [b=f (= b f)] 
+           [c=e (= c e)] 
+           [c=f (= c f)])
+       (or (and b=e b=f c=e c=f)
+           (|| (&& a d b=e) (&& a (! d) b=f) (&& (! a) d c=e) (&& (! a) (! d) c=f))))]
     [(_ _) (sort/expression @bveq x y)]))
 
-(define (bvslt x y)
-  (match* (x y)
-    [((bv a _) (bv b _)) (< a b)]
-    [(_ (? bvsmax?)) (! (bveq x y))]
-    [((? bvsmax?) _) #f]
-    [(_ (? bvsmin?)) #f]
-    [((? bvsmin?) _) (! (bveq x y))]
-    [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
-     (|| (&& a (< b d)) (&& (! a) (< c d)))]
-    [((bv d _) (expression (== ite) a (bv b _) (bv c _)))
-     (|| (&& a (< d b)) (&& (! a) (< d c)))]
-    [((expression (== ite) a (bv b _) (bv c _)) (expression (== ite) d (bv e _) (bv f _)))
-     (let ([b<e (< b e)] 
-           [b<f (< b f)] 
-           [c<e (< c e)] 
-           [c<f (< c f)])
-       (or (and b<e b<f c<e c<f)
-           (|| (&& a d b<e) (&& a (! d) b<f) (&& (! a) d c<e) (&& (! a) (! d) c<f))))]
-    [(_ _) (expression @bvslt x y)]))
+(define bvslt
+  (bitwise-comparator (x y) < @bvslt 
+   [(_ (? bvsmax?)) (! (bveq x y))]
+   [((? bvsmax?) _) #f]
+   [(_ (? bvsmin?)) #f]
+   [((? bvsmin?) _) (! (bveq x y))]))
 
 (define (bvsgt x y) (bvslt y x))
 
-(define (bvsle x y)
-  (match* (x y)
-    [((bv a _) (bv b _)) (<= a b)]
+(define bvsle
+  (bitwise-comparator (x y) <= @bvsle
     [(_ (? bvsmax?)) #t]
     [((? bvsmax?) _) (bveq x y)]
     [(_ (? bvsmin?)) (bveq x y)]
-    [((? bvsmin?) _) #t]
-    [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
-     (|| (&& a (<= b d)) (&& (! a) (<= c d)))]
-    [((bv d _) (expression (== ite) a (bv b _) (bv c _)))
-     (|| (&& a (<= d b)) (&& (! a) (<= d c)))]
-    [((expression (== ite) a (bv b _) (bv c _)) (expression (== ite) d (bv e _) (bv f _)))
-     (let ([b<=e (<= b e)] 
-           [b<=f (<= b f)] 
-           [c<=e (<= c e)] 
-           [c<=f (<= c f)])
-       (or (and b<=e b<=f c<=e c<=f)
-           (|| (&& a d b<=e) (&& a (! d) b<=f) (&& (! a) d c<=e) (&& (! a) (! d) c<=f))))]
-    [(_ _) (expression @bvsle x y)]))
+    [((? bvsmin?) _) #t]))
 
 (define (bvsge x y) (bvsle y x))
-    
+
+(define-values (bvult bvule) 
+  (syntax-parameterize 
+   ([finitize (syntax-rules () [(_ e t) (ufinitize e (bitvector-size t))])])
+   (values
+    (bitwise-comparator (x y) < @bvult
+     [(_ (bv -1 _)) (! (bveq x y))]
+     [((bv -1 _) _) #f]
+     [(_ (bv 0 _)) #f]
+     [((bv 0 _) _) (! (bveq x y))])
+    (bitwise-comparator (x y) <= @bvule
+     [(_ (bv -1 _)) #t]
+     [((bv -1 _) _) (bveq x y)]
+     [(_ (bv 0 _)) (bveq x y)]
+     [((bv 0 _) _) #t]))))
+
+(define (bvugt x y) (bvult y x))
+(define (bvuge x y) (bvule y x))
+
 (define-lifted-operator @bveq bveq T*->boolean?)
 (define-lifted-operator @bvslt bvslt T*->boolean?)
 (define-lifted-operator @bvsgt bvsgt T*->boolean?)
 (define-lifted-operator @bvsle bvsle T*->boolean?)
 (define-lifted-operator @bvsge bvsge T*->boolean?)
+(define-lifted-operator @bvult bvult T*->boolean?)
+(define-lifted-operator @bvugt bvugt T*->boolean?)
+(define-lifted-operator @bvule bvule T*->boolean?)
+(define-lifted-operator @bvuge bvuge T*->boolean?)
 
 ;; ----------------- Bitvector Bitwise Operators ----------------- ;;
 
@@ -517,6 +523,26 @@
                 [(list a (... ...) (? bv? b) c (... ...)) 
                  (apply expression @bvop b (sort (append a c) term<?))]
                 [ys (apply expression @bvop (sort ys term<?))])))]))
+
+(define-syntax-rule (bitwise-comparator (x y) op @bvop expr ...)
+  (lambda (x y)
+    (match* (x y)
+      [((bv a t) (bv b _)) (op (finitize a t) (finitize b t))]
+      expr ...
+      [((expression (== ite) a (bv b t) (bv c _)) (bv d _))
+       (|| (&& a (op (finitize b t) (finitize d t))) 
+           (&& (! a) (op (finitize c t) (finitize d t))))]
+      [((bv d t) (expression (== ite) a (bv b _) (bv c _)))
+       (|| (&& a (op (finitize d t) (finitize b t))) 
+           (&& (! a) (op (finitize d t) (finitize c t))))]
+      [((expression (== ite) a (bv b t) (bv c _)) (expression (== ite) d (bv e _) (bv f _)))
+       (let ([b<e (op (finitize b t) (finitize e t))] 
+             [b<f (op (finitize b t) (finitize f t))] 
+             [c<e (op (finitize c t) (finitize e t))] 
+             [c<f (op (finitize c t) (finitize f t))])
+         (or (and b<e b<f c<e c<f)
+             (|| (&& a d b<e) (&& a (! d) b<f) (&& (! a) d c<e) (&& (! a) (! d) c<f))))]
+      [(_ _) (expression @bvop x y)])))
 
 ; Simplification rules for bvand and bvor.  The 
 ; terms iden and !iden should be bitvector literals.
