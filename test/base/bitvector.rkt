@@ -248,6 +248,32 @@
   (check-valid? (@bvurem (@bvneg x) (@bvneg x)) (bv 0))
   (check-valid? (@bvurem (ite b (bv 6) (bv 4)) (bv 3)) (ite b (bv 0) (bv 1)))
   (check-valid? (@bvurem (bv 6) (ite b (bv 4) (bv 5))) (ite b (bv 2) (bv 1))))
+
+(define (check-bvsrem-simplifications)
+  (check-valid? (@bvsrem (bv 3) (bv 1)) (bv 0))
+  (check-valid? (@bvsrem (bv 0) (bv 1)) (bv 0))
+  (check-valid? (@bvsrem (bv -3) (bv 1)) (bv 0))
+  (check-valid? (@bvsrem x (bv 1)) (bv 0))
+  (check-valid? (@bvsrem (@bvadd x y) (bv 1)) (bv 0))
+  (check-valid? (@bvsrem (bv 3) (bv -1)) (bv 0))
+  (check-valid? (@bvsrem (bv 0) (bv -1)) (bv 0))
+  (check-valid? (@bvsrem (bv -3) (bv -1)) (bv 0))
+  (check-valid? (@bvsrem x (bv -1)) (bv 0))
+  (check-valid? (@bvsrem (@bvadd x y) (bv -1)) (bv 0))
+  (check-valid? (@bvsrem (bv 3) (bv 0)) (bv 3))
+  (check-valid? (@bvsrem (bv 0) (bv 0)) (bv 0))
+  (check-valid? (@bvsrem (bv -3) (bv 0)) (bv -3))
+  (check-valid? (@bvsrem x (bv 0)) x)
+  (check-valid? (@bvsrem (@bvadd x y) (bv 0)) (@bvadd x y))
+  (check-valid? (@bvsrem (bv 0) (bv 3)) (bv 0))
+  (check-valid? (@bvsrem (bv 0) (bv -3)) (bv 0))
+  (check-valid? (@bvsrem (bv 0) x) (bv 0))
+  (check-valid? (@bvsrem (bv 0) (@bvadd x y)) (bv 0))
+  (check-valid? (@bvsrem x x) (bv 0))
+  (check-valid? (@bvsrem x (@bvneg x)) (bv 0))
+  (check-valid? (@bvsrem (@bvneg x) x) (bv 0))
+  (check-valid? (@bvsrem (ite b (bv 6) (bv 4)) (bv 3)) (ite b (bv 0) (bv 1)))
+  (check-valid? (@bvsrem (bv 6) (ite b (bv 4) (bv 5))) (ite b (bv 2) (bv 1))))
   
 (define tests:bv
   (test-suite+
@@ -387,6 +413,12 @@
    (check-bvurem-simplifications)
    (check-semantics @bvurem)))
 
+(define tests:bvsrem
+  (test-suite+
+   "Tests for bvsrem rosette/base/bitvector.rkt"
+   (check-bvsrem-simplifications)
+   (check-semantics @bvsrem)))
+
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
 (time (run-tests tests:bvslt))
@@ -410,4 +442,5 @@
 (time (run-tests tests:bvudiv))
 (time (run-tests tests:bvsdiv))
 (time (run-tests tests:bvurem))
+(time (run-tests tests:bvsrem))
 (send solver shutdown)

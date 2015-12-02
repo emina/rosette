@@ -9,7 +9,7 @@
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
- @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem)
+ @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -439,6 +439,23 @@
     [((? bv? d) (expression (== ite) c (? bv? a) (? bv? b)))
      (ite c (bvurem d a) (bvurem d b))]
     [(_ _) (expression @bvurem x y)]))
+
+(define (bvsrem x y)
+  (match* (x y)
+    [(_ (bv 1 t)) (bv 0 t)]
+    [(_ (bv -1 t)) (bv 0 t)]
+    [(_ (bv 0 t)) x]
+    [((bv 0 t) _) x]
+    [((bv a (and t (bitvector size))) (bv b _)) (bv (sfinitize (remainder a b) size) t)]
+    [(_ (and (bv _ t) (? bvsmin?))) (ite (bveq x y) (bv 0 t) x)]
+    [((app get-type t) (== x)) (bv 0 t)]
+    [((app get-type t) (expression (== @bvneg) (== x))) (bv 0 t)]
+    [((expression (== @bvneg) (== y)) (app get-type t)) (bv 0 t)]
+    [((expression (== ite) c (? bv? a) (? bv? b)) (? bv? d))
+     (ite c (bvsrem a d) (bvsrem b d))]
+    [((? bv? d) (expression (== ite) c (? bv? a) (? bv? b)))
+     (ite c (bvsrem d a) (bvsrem d b))]
+    [(_ _) (expression @bvsrem x y)]))
     
 (define-lifted-operator @bvneg bvneg T*->T)
 (define-lifted-operator @bvadd bvadd T*->T)
@@ -447,6 +464,7 @@
 (define-lifted-operator @bvudiv bvudiv T*->T)
 (define-lifted-operator @bvsdiv bvsdiv T*->T)
 (define-lifted-operator @bvurem bvurem T*->T)
+(define-lifted-operator @bvsrem bvsrem T*->T)
 
 ;; ----------------- Simplification rules for arithmetic operators ----------------- ;;
 
