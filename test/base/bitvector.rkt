@@ -227,7 +227,28 @@
   (check-valid? (@bvsdiv (ite b (bv -6) (bv 4)) (bv 2)) (ite b (bv -3) (bv 2)))
   (check-valid? (@bvsdiv (bv 6) (ite b (bv 2) (bv 3))) (ite b (bv 3) (bv 2))))
 
-
+(define (check-bvurem-simplifications)
+  (check-valid? (@bvurem (bv 3) (bv 0)) (bv 3))
+  (check-valid? (@bvurem (bv 0) (bv 0)) (bv 0))
+  (check-valid? (@bvurem (bv -3) (bv 0)) (bv -3))
+  (check-valid? (@bvurem x (bv 0)) x)
+  (check-valid? (@bvurem (@bvneg x) (bv 0))  (@bvneg x))
+  (check-valid? (@bvurem (bv 0) (bv 3)) (bv 0))
+  (check-valid? (@bvurem (bv 0) (bv 0)) (bv 0))
+  (check-valid? (@bvurem (bv 0) (bv -3)) (bv 0))
+  (check-valid? (@bvurem (bv 0) x) (bv 0))
+  (check-valid? (@bvurem (bv 0) (@bvneg x)) (bv 0))
+  (check-valid? (@bvurem (bv 3) (bv 1)) (bv 0))
+  (check-valid? (@bvurem (bv 0) (bv 1)) (bv 0))
+  (check-valid? (@bvurem (bv -3) (bv 1)) (bv 0))
+  (check-valid? (@bvurem x (bv 1)) (bv 0))
+  (check-valid? (@bvurem (@bvneg x) (bv 1)) (bv 0))
+  (check-valid? (@bvurem x (bv -1)) (ite (@bveq x (bv -1)) (bv 0) x))
+  (check-valid? (@bvurem x x) (bv 0))
+  (check-valid? (@bvurem (@bvneg x) (@bvneg x)) (bv 0))
+  (check-valid? (@bvurem (ite b (bv 6) (bv 4)) (bv 3)) (ite b (bv 0) (bv 1)))
+  (check-valid? (@bvurem (bv 6) (ite b (bv 4) (bv 5))) (ite b (bv 2) (bv 1))))
+  
 (define tests:bv
   (test-suite+
    "Tests for bv in rosette/base/bitvector.rkt"
@@ -360,6 +381,12 @@
    (check-bvsdiv-simplifications)
    (check-semantics @bvsdiv)))
 
+(define tests:bvurem
+  (test-suite+
+   "Tests for bvurem rosette/base/bitvector.rkt"
+   (check-bvurem-simplifications)
+   (check-semantics @bvurem)))
+
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
 (time (run-tests tests:bvslt))
@@ -382,4 +409,5 @@
 (time (run-tests tests:bvmul))
 (time (run-tests tests:bvudiv))
 (time (run-tests tests:bvsdiv))
+(time (run-tests tests:bvurem))
 (send solver shutdown)
