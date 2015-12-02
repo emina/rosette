@@ -159,6 +159,14 @@
   (check-valid? (op x (bv 5)) (bv 0))
   (check-valid? (op x (bv -1)) (bv 0)))
 
+(define (check-bvashr-simplifications)
+  (check-valid? (@bvashr x (bv 0)) x)
+  (check-valid? (@bvashr (bv 0) x) (bv 0))
+  (check-valid? (@bvashr (bv -1) x) (bv -1))
+  (check-valid? (@bvashr x (bv 4)) (ite (@bveq (bv 0) (@bvand x (bv minval))) (bv 0) (bv -1)))
+  (check-valid? (@bvashr x (bv 5)) (ite (@bveq (bv 0) (@bvand x (bv minval))) (bv 0) (bv -1)))
+  (check-valid? (@bvashr x (bv -1)) (ite (@bveq (bv 0) (@bvand x (bv minval))) (bv 0) (bv -1))))
+
 (define (check-bvadd-simplifications)
   (check-nary @bvadd (bv 0) x y z)
   (check-valid? (@bvadd (bv 1) x) (@bvadd x (bv 1)))
@@ -302,6 +310,12 @@
    (check-shift-simplifications @bvlshr)
    (check-semantics @bvlshr)))
 
+(define tests:bvashr
+  (test-suite+
+   "Tests for bvashr in rosette/base/bitvector.rkt"
+   (check-bvashr-simplifications)
+   (check-semantics @bvashr)))
+
 (define tests:bvneg
   (test-suite+
    "Tests for bvneg in rosette/base/bitvector.rkt"   
@@ -358,6 +372,7 @@
 (time (run-tests tests:bvxor/bvnot))
 (time (run-tests tests:bvshl))
 (time (run-tests tests:bvlshr))
+(time (run-tests tests:bvashr))
 (time (run-tests tests:bvneg))
 (time (run-tests tests:bvadd))
 (time (run-tests tests:bvadd/bvneg))
