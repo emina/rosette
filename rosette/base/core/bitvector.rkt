@@ -412,11 +412,13 @@
      (if (= b 0) 
          (if (< a 0) (bv 1 t) (bv -1 t))
          (bv (sfinitize (quotient a b) size) t))]
-    [((bv 0 t) _) (ite (bveq x y) (bv -1 t) x)]
-    [(_ (bv 0 t)) (ite (@bvslt x y) (bv 1 t) (bv -1 t))]
+    [(_ (bv 0 t)) (ite (bvslt x y) (bv 1 t) (bv -1 t))]
     [(_ (bv -1 t)) (bvneg x)]
-    [(_ (and (bv _ t) (? bvsmin?))) (ite (@bveq x y) (bv 1 t) (bv 0 t))]
+    [(_ (and (bv _ t) (? bvsmin?))) (ite (bveq x y) (bv 1 t) (bv 0 t))]
+    [((bv 0 t) _) (ite (bveq x y) (bv -1 t) x)]
     [((app get-type t) (== x)) (ite (bveq y (bv 0 t)) (bv -1 t) (bv 1 t))]
+    [((app get-type t) (expression (== @bvneg) (== x))) (ite (bveq x (bv (bvsmin t) t)) (bv 1 t) (bv -1 t))]
+    [((expression (== @bvneg) (== y)) (app get-type t)) (ite (bveq y (bv (bvsmin t) t)) (bv 1 t) (bv -1 t))]
     [((expression (== ite) c (? bv? a) (? bv? b)) (? bv? d))
      (ite c (bvsdiv a d) (bvsdiv b d))]
     [((? bv? d) (expression (== ite) c (? bv? a) (? bv? b)))

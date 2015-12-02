@@ -222,6 +222,8 @@
   (check-valid? (@bvsdiv (bv 0) x) (ite (@bveq x (bv 0)) (bv -1) (bv 0)))
   (check-valid? (@bvsdiv x (bv minval)) (ite (@bveq x (bv minval)) (bv 1) (bv 0)))
   (check-valid? (@bvsdiv x x) (ite (@bveq x (bv 0)) (bv -1) (bv 1)))
+  (check-valid? (@bvsdiv x (@bvneg x)) (ite (@bveq x (bv minval)) (bv 1) (bv -1)))
+  (check-valid? (@bvsdiv (@bvneg x) x) (ite (@bveq x (bv minval)) (bv 1) (bv -1)))
   (check-valid? (@bvsdiv (ite b (bv -6) (bv 4)) (bv 2)) (ite b (bv -3) (bv 2)))
   (check-valid? (@bvsdiv (bv 6) (ite b (bv 2) (bv 3))) (ite b (bv 3) (bv 2))))
 
