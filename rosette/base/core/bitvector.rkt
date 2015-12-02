@@ -8,7 +8,7 @@
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
- @bvnot @bvor @bvand @bvxor 
+ @bvnot @bvor @bvand @bvxor @bvshl
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
@@ -296,10 +296,24 @@
 (define bvor (bitwise-connective bitwise-ior bvor @bvor @bvand 0 -1))
 (define bvxor (bitwise-adder bitwise-xor bvxor @bvxor simplify-bvxor))
 
+(define/match (max-shift? b)
+  [((bv a (bitvector size))) (>= (ufinitize a size) size)]
+  [(_) #f])
+
+(define (bvshl x y)
+  (match* (x y)
+    [((bv a (and (bitvector size) t)) (bv b _))
+     (bv (sfinitize (arithmetic-shift a (min (ufinitize b size) size)) size) t)]
+    [(_ (bv 0 _)) x]
+    [((bv 0 _) _) x]
+    [(_ (? max-shift?)) (bv 0 (get-type x))]
+    [(_ _) (expression @bvshl x y)]))
+    
 (define-lifted-operator @bvnot bvnot T*->T)
 (define-lifted-operator @bvand bvand T*->T)
 (define-lifted-operator @bvor bvor T*->T)
 (define-lifted-operator @bvxor bvxor T*->T)
+(define-lifted-operator @bvshl bvshl T*->T)
 
 ;; ----------------- Simplification ruules for bitwise operators ----------------- ;;
 

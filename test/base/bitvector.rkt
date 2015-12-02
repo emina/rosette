@@ -42,6 +42,7 @@
      (for* ([i (in-range minval maxval+1)]
             [j (in-range minval maxval+1)])
        (define actual (op (bv i) (bv j)))
+       ;(printf "(~a ~a ~a) = ~a\n" op (bv i) (bv j) actual)
        (define expected 
          ((solve (@bveq (bv i) x)
                  (@bveq (bv j) y)
@@ -150,6 +151,13 @@
   (check-valid? (op (co x y z) (co x y) x)  x)
   (check-valid? (op (op x (bv minval) z) (@bvnot (bv minval)))  (@bvnot id))
   (check-valid? (op (op x (bv minval) z) (op y (@bvnot (bv minval))))  (@bvnot id)))
+
+(define (check-bvshl-simplifications)
+  (check-valid? (@bvshl x (bv 0)) x)
+  (check-valid? (@bvshl (bv 0) x) (bv 0))
+  (check-valid? (@bvshl x (bv 4)) (bv 0))
+  (check-valid? (@bvshl x (bv 5)) (bv 0))
+  (check-valid? (@bvshl x (bv -1)) (bv 0)))
 
 (define (check-bvadd-simplifications)
   (check-nary @bvadd (bv 0) x y z)
@@ -282,6 +290,12 @@
    "Tests for bvxor/bvnot rosette/base/bitvector.rkt"   
    (check-pe (list (naive @bvnot) (naive* @bvxor)) (list (bv 0) (bv 5)))))
 
+(define tests:bvshl
+  (test-suite+
+   "Tests for bvshl in rosette/base/bitvector.rkt"
+   (check-bvshl-simplifications)
+   (check-semantics @bvshl)))
+
 (define tests:bvneg
   (test-suite+
    "Tests for bvneg in rosette/base/bitvector.rkt"   
@@ -336,6 +350,7 @@
 (time (run-tests tests:bvand/bvor/bvnot))
 (time (run-tests tests:bvxor))
 (time (run-tests tests:bvxor/bvnot))
+(time (run-tests tests:bvshl))
 (time (run-tests tests:bvneg))
 (time (run-tests tests:bvadd))
 (time (run-tests tests:bvadd/bvneg))
