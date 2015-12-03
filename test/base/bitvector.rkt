@@ -9,7 +9,7 @@
          rosette/base/core/bitvector
          rosette/base/core/polymorphic
          (only-in rosette/base/core/equality @equal?)
-         (only-in rosette/base/form/define define-symbolic)
+         (only-in rosette/base/form/define define-symbolic define-symbolic*)
          "exprs.rkt" "common.rkt")
 
 (define solver (new z3%))
@@ -279,6 +279,23 @@
   (check-signed-remainder-simplifications @bvsrem)
   (check-valid? (@bvsrem x (bv minval)) (ite (@bveq x (bv minval)) (bv 0) x))
   (check-valid? (@bvsrem (@bvadd x y) (bv minval)) (ite (@bveq (@bvadd x y) (bv minval)) (bv 0) (@bvadd x y))))
+
+(define (check-concat-semantics)
+  (for* ([i (in-range minval maxval+1)]
+         [j (in-range minval maxval+1)])
+    (define BVi (bitvector (max 1 (integer-length i))))
+    (define BVj (bitvector (max 1 (integer-length j))))
+    (define BVo (bitvector (+ (bitvector-size BVi) (bitvector-size BVj))))
+    (define-symbolic* vi BVi)
+    (define-symbolic* vj BVj)
+    (define-symbolic* vo BVo)
+    (define actual (@concat (bv i BVi) (bv j BVj)))
+    ;(printf "(~a ~a ~a) = ~a\n" @concat (bv i BVi) (bv j BVj) actual)
+    (define expected 
+      ((solve (@bveq (bv i BVi) vi)
+              (@bveq (bv j BVj) vj)
+              (@bveq (@concat vi vj) vo)) vo))
+    (check-equal? actual expected)))
   
 (define tests:bv
   (test-suite+
@@ -430,6 +447,11 @@
    (check-signed-remainder-simplifications @bvsmod)
    (check-semantics @bvsmod)))
 
+(define tests:concat
+  (test-suite+
+   "Tests for concat rosette/base/bitvector.rkt"
+   (check-concat-semantics)))
+
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
 (time (run-tests tests:bvslt))
@@ -455,4 +477,5 @@
 (time (run-tests tests:bvurem))
 (time (run-tests tests:bvsrem))
 (time (run-tests tests:bvsmod))
+(time (run-tests tests:concat))
 (send solver shutdown)

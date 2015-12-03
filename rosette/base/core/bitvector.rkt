@@ -1,7 +1,7 @@
 #lang racket
 
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
-(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt" "safe.rkt")
+(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt" "safe.rkt" "lift.rkt")
 
 (provide 
  current-bitwidth 
@@ -9,7 +9,8 @@
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
- @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod)
+ @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
+ @concat)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -66,6 +67,7 @@
 (define (bvsmin? b) (and (bv? b) (= (bv-value b) (bvsmin (bv-type b)))))
 (define (bvsmax t) (- (expt 2 (- (bitvector-size t) 1)) 1))
 (define (bvsmax? b) (and (bv? b) (= (bv-value b) (bvsmax (bv-type b)))))
+(define (is-bitvector? v) (and (typed? v) (bitvector? (get-type v))))
 
 ;; ----------------- Bitvector Literals ----------------- ;; 
 
@@ -152,14 +154,14 @@
   
 (define (safe-apply-1 op x)
   (match x
-    [(and (? typed? vx) (app get-type (? bitvector?))) (op x)]
+    [(? is-bitvector?) (op x)]
     [(union xs _)
      (apply merge*
             (assert-some
              (let loop ([xs xs])
                (match xs
                  [(list) '()]
-                 [(list (cons gx (and (? typed? vx) (app get-type (? bitvector?)))) rest ...)
+                 [(list (cons gx (? is-bitvector? vx)) rest ...)
                   (cons (cons gx (op vx)) (loop rest))]
                  [(list _ rest ...) (loop rest)]))
              #:unless (length xs)
@@ -226,6 +228,7 @@
     #:type type
     #:unsafe bvop
     #:safe (lift-op bvop)))
+    
 
 ;; ----------------- Bitvector Comparison Operators ----------------- ;; 
 
@@ -328,7 +331,7 @@
     [((app get-type t) (? max-shift?)) 
      (ite (bveq (bv 0 t) (bvand x (bv (bvsmin t) t))) (bv 0 t) (bv -1 t))]
     [(_ _) (expression @bvashr x y)]))
-    
+
 (define-lifted-operator @bvnot bvnot T*->T)
 (define-lifted-operator @bvand bvand T*->T)
 (define-lifted-operator @bvor bvor T*->T)
@@ -521,6 +524,49 @@
     [((? bv? c) (expression (== @bvmul) (? bv? a) b))
      (bvmul (bvmul a c) b)]
     [(_ _) #f]))
+
+;; ----------------- Concatenation and Extraction ----------------- ;;
+
+(define (bvcoerce x [caller 'bvcoerce])
+  (assert (typed? x) (type-error caller bitvector? x))
+  (match x
+    [(app get-type (? bitvector?)) x]
+    [(union xs) (apply union
+                       (assert-some
+                        (for/list ([gx xs] #:when (is-bitvector? (cdr gx))) gx)
+                        #:unless (length xs)
+                        (type-error caller bitvector? x)))]
+    [_ (assert #f (type-error caller bitvector? x))]))
+  
+(define concat
+  (case-lambda
+    [(x) x]
+    [(x y)
+     (match* (x y)
+       [((bv a (bitvector size-a)) (bv b (bitvector size-b)))
+        (bv (bitwise-ior (arithmetic-shift a size-b) (ufinitize b size-b)) (bitvector-type (+ size-a size-b)))]
+       [(_ _) (expression @concat x y)])]
+    [(x . ys) (for/fold ([out x]) ([y ys]) (concat out y))]))
+
+(define-operator @concat
+  #:name 'concat
+  #:type (lambda xs (bitvector-type (for/sum ([x xs]) (bitvector-size (get-type x)))))
+  #:unsafe concat 
+  #:safe (case-lambda
+           [(x) (bvcoerce x 'concat)]
+           [(x y)
+            (match* ((bvcoerce x 'concat) (bvcoerce y 'concat))
+              [((union xs) (union ys))
+               (apply merge*
+                      (assert-some
+                       (for*/list ([gx xs] [gy ys] [g (in-value (&& (car gx) (car gy)))] #:when g)     
+                         (cons g (concat (cdr gx) (cdr gy))))
+                       #:unless (* (length xs) (length ys))
+                       (arguments-error 'concat "infeasible arguments" "x" x "y" y)))]
+              [((union xs) y) (merge** xs (concat _ y))]
+              [(x (union ys)) (merge** ys (concat x _))]
+              [(x y) (concat x y)])]
+           [(x . ys) (for/fold ([out x]) ([y ys]) (@concat out y))]))
 
 
 
