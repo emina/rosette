@@ -1,7 +1,7 @@
 #lang racket
 
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
-(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt" "safe.rkt" "lift.rkt")
+(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 (require (only-in "num.rkt" @>= @> @= @number?))
 
 (provide 
@@ -11,7 +11,7 @@
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
- @concat @extract)
+ @concat @extract @sign-extend @zero-extend)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -597,26 +597,73 @@
     (define i (coerce @i @number? 'extract))
     (define j (coerce @j @number? 'extract))
     (define x (bvcoerce @x 'extract))
+    (assert (or (integer? i) (term? i)) (arguments-error 'extract "expected an integer i" "i" i))
+    (assert (or (integer? j) (term? j)) (arguments-error 'extract "expected an integer j" "j" j))
     (assert (@>= i j) (arguments-error 'extract "expected i >= j" "i" i "j" j))
     (assert (@>= j 0) (arguments-error 'extract "expected j >= 0" "j" j))
     (match x
-      [(union xs) (some (merge** xs (@extract i j _)) (arguments-error 'extract "infeasible arguments"))]
+      [(? union? u) (for/all ([y u]) (@extract i j y))]
       [(app get-type (bitvector size))
        (assert (@> size i) (arguments-error 'extract "expected (size-of x) > i" "x" x "i" i))
-       (match* (i j)
-         [((? number?) (? number?)) (extract i j x)]
-         [(_ (? number?))  
-          (some (apply merge* (for/list ([n (in-range j size)])
-                                (cons (@= n i) (extract n j x))))
-                (arguments-error 'extract "expected i >= j" "i" i "j" j))]
-         [((? number?) _) 
-          (some (apply merge* (for*/list ([k (in-range i -1)])
-                                (cons (@= k j) (extract i k x))))
-                (arguments-error 'extract "expected i >= j" "i" i "j" j))]
-         [(_ _) 
-          (some (apply merge* (for*/list ([n size] [k (add1 n)])
-                                (cons (&& (@= n i) (@= k j)) (extract n k x))))
-                (arguments-error 'extract "expected i >= j" "i" i "j" j))])])))
+       (some 
+        (match* (i j)
+          [((? number?) (? number?)) (extract i j x)]
+          [(_ (? number?)) (apply merge* (for/list ([n (in-range j size)])
+                                           (cons (@= n i) (extract n j x))))]
+          [((? number?) _) (apply merge* (for*/list ([k (in-range i -1)])
+                                           (cons (@= k j) (extract i k x))))]
+          [(_ _) (apply merge* (for*/list ([n size] [k (add1 n)])
+                                 (cons (&& (@= n i) (@= k j)) (extract n k x))))])
+        (arguments-error 'extract "expected i >= j" "i" i "j" j))])))
+     
+
+;; ----------------- Extension and Coercion ----------------- ;;
+
+; Assumes that (bitvector-size t) >= (bitvector-size (get-type v))
+(define (extend v t finitize @bvop)
+  (match* (v t)
+    [((app get-type (== t)) _) v]
+    [((bv a (bitvector s)) _) (bv (finitize a s) t)]
+    [((expression (== @bvop) x _) _) (expression @bvop x t)]
+    [(_ _) (expression @bvop v t)]))
+
+(define-syntax-rule (@extend extend)
+  (lambda (@v @t)
+    (some 
+     (match* ((bvcoerce @v 'extend) @t)
+       [((union vs) (union ts))
+        (apply merge* (for*/list ([gt ts] #:when (bitvector? (cdr gt))
+                                  [gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) (bitvector-size (cdr gt))))
+                        (cons (&& (car gt) (car gv)) (extend (cdr gv) (cdr gt)))))]
+       [((union vs) (bitvector st))
+        (apply merge* (for/list ([gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) st))
+                        (cons (car gv) (extend (cdr gv) @t))))]
+       [((and (app get-type (bitvector sv)) v) (union ts))
+        (apply merge* (for/list ([gt ts] #:when (and (bitvector? (cdr gt)) (<= sv (bitvector-size (cdr gt)))))
+                        (cons (car gt) (extend v (cdr gt)))))]
+       [((and (app get-type (bitvector sv)) v) (bitvector st))
+        (if (<= sv st) (extend v @t) (union))]
+       [(_ _) (union)])
+     (arguments-error 'extend "expected (bitvector-size t) >= (bitvector-size (get-type v))" "v" @v "t" @t))))
+
+(define (extend-type v t) t)
+
+(define (sign-extend v t) (extend v t sfinitize @sign-extend))
+(define (zero-extend v t) (extend v t ufinitize @zero-extend))
+
+(define-operator @sign-extend
+  #:name 'sign-extend
+  #:type extend-type
+  #:unsafe sign-extend
+  #:safe (@extend sign-extend))
+       
+(define-operator @zero-extend
+  #:name 'zero-extend
+  #:type extend-type
+  #:unsafe zero-extend
+  #:safe (@extend zero-extend))
+
+    
 
 ;; ----------------- Shared lifting procedures and templates ----------------- ;;
 

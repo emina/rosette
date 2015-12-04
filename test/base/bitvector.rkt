@@ -323,6 +323,22 @@
   (check-valid? (@extract 0 0 (@concat x (bv 1 1))) (bv 1 1))
   (check-valid? (@extract 3 0 (@concat x y)) y)
   (check-valid? (@extract 7 4 (@concat x y)) x))
+
+(define (check-extend-simplifications op)
+  (check-valid? (op x BV) x)
+  (check-valid? (op (op x (bitvector 6)) (bitvector 8)) (op x (bitvector 8))))
+
+(define (check-extend-semantics op)
+  (for* ([t (in-range 4 8)]
+         [v (in-range minval maxval+1)])
+    (define BVo (bitvector t))
+    (define-symbolic* vo BVo)
+    (define actual (op (bv v BV) BVo))
+    (define expected
+      ((solve (@bveq x (bv v BV))
+              (@bveq vo (op x BVo))) vo))
+    (check-equal? actual expected)))
+    
   
 (define tests:bv
   (test-suite+
@@ -486,6 +502,18 @@
    (check-extract-simplifications)
    (check-extract-semantics)))
 
+(define tests:zero-extend
+  (test-suite+
+   "Tests for zero-extend rosette/base/bitvector.rkt"
+   (check-extend-simplifications @zero-extend)
+   (check-extend-semantics @zero-extend)))
+
+(define tests:sign-extend
+  (test-suite+
+   "Tests for sign-extend rosette/base/bitvector.rkt"
+   (check-extend-simplifications @sign-extend)
+   (check-extend-semantics @sign-extend)))
+
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
 (time (run-tests tests:bvslt))
@@ -513,4 +541,6 @@
 (time (run-tests tests:bvsmod))
 (time (run-tests tests:concat))
 (time (run-tests tests:extract))
+(time (run-tests tests:zero-extend))
+(time (run-tests tests:sign-extend))
 (send solver shutdown)

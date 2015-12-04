@@ -3,7 +3,7 @@
 (require (prefix-in smt/ (only-in "smtlib2.rkt" bv not and or xor => <=> ite = <))
          (except-in "smtlib2.rkt" bv not and or xor => <=> ite = <) 
          "env.rkt" "../common/enc.rkt" 
-         (only-in "../../base/core/term.rkt" expression expression? constant?)
+         (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
          (only-in "../../base/core/polymorphic.rkt" ite =?)
          (only-in "../../base/core/bool.rkt" ! && || => <=>)
          (only-in "../../base/core/num.rkt" 
@@ -15,7 +15,7 @@
                   @bveq @bvslt @bvsle @bvult @bvule   
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
-                  @concat @extract)
+                  @concat @extract @zero-extend @sign-extend)
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
@@ -48,6 +48,10 @@
      (apply smt/op (for/list ([e es]) (enc e env)))]
     [(expression (== @extract) i j e)
      (extract i j (enc e env))]
+    [(expression (== @zero-extend) v t)
+     (zero_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
+    [(expression (== @sign-extend) v t)
+     (sign_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
     [(expression (== @*h) x y)
      (extract (sub1 (* 2 (current-bitwidth))) 
               (current-bitwidth)

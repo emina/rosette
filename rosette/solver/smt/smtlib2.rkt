@@ -94,6 +94,12 @@
 (define (extract i j s)
   `((_ extract ,i ,j) ,s))
 
+(define (zero_extend i b)
+  `((_ zero_extend ,i) ,b))
+
+(define (sign_extend i b)
+  `((_ sign_extend ,i) ,b))
+
 ; Int theory
 (define Int 'Int)
 (define-ops < <=)
