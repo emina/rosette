@@ -15,7 +15,7 @@
                   @bveq @bvslt @bvsle @bvult @bvule   
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
-                  @concat)
+                  @concat @extract)
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
@@ -46,6 +46,8 @@
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...)
      (apply smt/op (for/list ([e es]) (enc e env)))]
+    [(expression (== @extract) i j e)
+     (extract i j (enc e env))]
     [(expression (== @*h) x y)
      (extract (sub1 (* 2 (current-bitwidth))) 
               (current-bitwidth)

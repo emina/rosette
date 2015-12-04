@@ -10,6 +10,7 @@
          rosette/base/core/polymorphic
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
+         (only-in rosette/base/core/num @= @number?)
          "exprs.rkt" "common.rkt")
 
 (define solver (new z3%))
@@ -58,6 +59,7 @@
                  (@bveq (bv j) y)
                  (@equal? a (op x y))) a))
        (check-equal? actual expected)))
+
 
 (define (check-pe ops [consts '()])
   (define es (test-exprs 2 ops (list* x y z consts)))
@@ -296,6 +298,31 @@
               (@bveq (bv j BVj) vj)
               (@bveq (@concat vi vj) vo)) vo))
     (check-equal? actual expected)))
+
+(define (check-extract-semantics)
+  (for* ([i 4]
+         [j (in-range 0 (add1 i))]
+         [x (in-range minval maxval+1)])
+    (define BVo (bitvector (add1 (- i j))))
+    (define-symbolic* vi vj @number?)
+    (define-symbolic* vo BVo)
+    (define actual (@extract i j (bv x)))
+    ;(printf "(~a ~a ~a) = ~a\n" @concat (bv i BVi) (bv j BVj) actual)
+    (define expected 
+      ((solve (@= i vi)
+              (@= j vj)
+              (@bveq (@extract vi vj (bv x)) vo)) vo))
+    (check-equal? actual expected)))
+
+(define (check-concat-simplifications)
+  (check-valid? (@concat (@extract 3 2 x) (@extract 1 1 x)) (@extract 3 1 x)))
+
+(define (check-extract-simplifications)
+  (check-valid? (@extract 3 0 x) x)
+  (check-valid? (@extract 3 0 (@bvadd x y)) (@bvadd x y))
+  (check-valid? (@extract 0 0 (@concat x (bv 1 1))) (bv 1 1))
+  (check-valid? (@extract 3 0 (@concat x y)) y)
+  (check-valid? (@extract 7 4 (@concat x y)) x))
   
 (define tests:bv
   (test-suite+
@@ -450,7 +477,14 @@
 (define tests:concat
   (test-suite+
    "Tests for concat rosette/base/bitvector.rkt"
+   (check-concat-simplifications)
    (check-concat-semantics)))
+
+(define tests:extract
+  (test-suite+
+   "Tests for extract rosette/base/bitvector.rkt"
+   (check-extract-simplifications)
+   (check-extract-semantics)))
 
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
@@ -478,4 +512,5 @@
 (time (run-tests tests:bvsrem))
 (time (run-tests tests:bvsmod))
 (time (run-tests tests:concat))
+(time (run-tests tests:extract))
 (send solver shutdown)

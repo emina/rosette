@@ -2,6 +2,7 @@
 
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" "merge.rkt" "safe.rkt" "lift.rkt")
+(require (only-in "num.rkt" @>= @> @= @number?))
 
 (provide 
  current-bitwidth 
@@ -10,7 +11,7 @@
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
- @concat)
+ @concat @extract)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -537,6 +538,11 @@
                         #:unless (length xs)
                         (type-error caller bitvector? x)))]
     [_ (assert #f (type-error caller bitvector? x))]))
+
+(define-syntax-rule (some u err)
+  (match u
+    [(union (list)) (assert #f err)]
+    [x x]))
   
 (define concat
   (case-lambda
@@ -545,6 +551,8 @@
      (match* (x y)
        [((bv a (bitvector size-a)) (bv b (bitvector size-b)))
         (bv (bitwise-ior (arithmetic-shift a size-b) (ufinitize b size-b)) (bitvector-type (+ size-a size-b)))]
+       [((expression (== @extract) i j e) (expression (== @extract) k n e))
+        (if (= j (add1 k)) (extract i n e) (expression @concat x y))]
        [(_ _) (expression @concat x y)])]
     [(x . ys) (for/fold ([out x]) ([y ys]) (concat out y))]))
 
@@ -568,7 +576,47 @@
               [(x y) (concat x y)])]
            [(x . ys) (for/fold ([out x]) ([y ys]) (@concat out y))]))
 
+; i and j must be integers with bw > i >= j > 0, where bw is the bitwidth of x
+(define (extract i j x) 
+  (define len (add1 (- i j)))
+  (match* (i j x)
+    [((== (sub1 (bitvector-size (get-type x)))) 0 _) x]
+    [(_ _ (bv b _)) 
+     (bv (sfinitize (bitwise-and (bitwise-not (arithmetic-shift -1 len)) (arithmetic-shift b (- j))) len) 
+         (bitvector-type len))]
+    [(_ 0 (expression (== @concat) _ (and (app get-type (bitvector (== len))) a))) a]
+    [(_ _ (expression (== @concat) (and (app get-type (bitvector (== len))) a) (app get-type (bitvector (== j))))) a]
+    [(_ _ _) (expression @extract i j x)]))
 
+(define-operator @extract
+  #:name 'extract
+  #:type (lambda (i j x) (bitvector-type (add1 (- i j))))
+  #:unsafe extract
+  #:safe 
+  (lambda (@i @j @x)
+    (define i (coerce @i @number? 'extract))
+    (define j (coerce @j @number? 'extract))
+    (define x (bvcoerce @x 'extract))
+    (assert (@>= i j) (arguments-error 'extract "expected i >= j" "i" i "j" j))
+    (assert (@>= j 0) (arguments-error 'extract "expected j >= 0" "j" j))
+    (match x
+      [(union xs) (some (merge** xs (@extract i j _)) (arguments-error 'extract "infeasible arguments"))]
+      [(app get-type (bitvector size))
+       (assert (@> size i) (arguments-error 'extract "expected (size-of x) > i" "x" x "i" i))
+       (match* (i j)
+         [((? number?) (? number?)) (extract i j x)]
+         [(_ (? number?))  
+          (some (apply merge* (for/list ([n (in-range j size)])
+                                (cons (@= n i) (extract n j x))))
+                (arguments-error 'extract "expected i >= j" "i" i "j" j))]
+         [((? number?) _) 
+          (some (apply merge* (for*/list ([k (in-range i -1)])
+                                (cons (@= k j) (extract i k x))))
+                (arguments-error 'extract "expected i >= j" "i" i "j" j))]
+         [(_ _) 
+          (some (apply merge* (for*/list ([n size] [k (add1 n)])
+                                (cons (&& (@= n i) (@= k j)) (extract n k x))))
+                (arguments-error 'extract "expected i >= j" "i" i "j" j))])])))
 
 ;; ----------------- Shared lifting procedures and templates ----------------- ;;
 
