@@ -5,13 +5,12 @@
 (require (only-in "num.rkt" @>= @> @= @number?))
 
 (provide 
- current-bitwidth 
  (rename-out [@bv bv]) bv? 
  (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
- @concat @extract @sign-extend @zero-extend)
+ @concat @extract @sign-extend @zero-extend @int->bv @bv->int @bv->nat)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -19,7 +18,7 @@
 (define bitvector-types (make-hash))
 
 ; Returns the bitvector type of the given size.
-(define (bitvector-type [size (current-bitwidth)])
+(define (bitvector-type size)
   (unless (exact-positive-integer? size)
     (raise-argument-error 'bitvector "exact-positive-integer?" size))
   (or (hash-ref bitvector-types size #f)
@@ -83,16 +82,6 @@
               (bv-value self)
               (bitvector-size (bv-type self))))])
 
-; Parameter that controls the bitwidth of all bitvector literals for which a precision is 
-; not explicitly specified.
-(define current-bitwidth
-  (make-parameter 
-   5 
-   (lambda (bw) 
-     (unless (exact-positive-integer? bw)
-       (raise-argument-error 'current-bitwidth "exact-positive-integer?" bw))
-     bw)))
-
 ; Returns a signed representation of the given number, using the specified bitwidth.
 ; Assumes that val is a real, non-infinite, non-NaN number.
 (define (sfinitize val bitwidth) 
@@ -113,7 +102,7 @@
 ; with respect to the given precision specifier.  The specifier may 
 ; be either an exact-positive-integer? or a bitvector type. 
 ; The number may be a real, non-infinite, non-NaN concrete value.  
-(define (make-bv val [precision (current-bitwidth)])
+(define (make-bv val precision)
   (unless (and (real? val) (not (infinite? val)) (not (nan? val)))
     (raise-arguments-error 'bv "expected a real, non-infinite, non-NaN number" "value" val))
   (cond [(exact-positive-integer? precision) 
@@ -129,7 +118,6 @@
     [(_ val-pat type-pat) (bv val-pat type-pat)])
   (syntax-id-rules (set!)
     [(@bv v t) (make-bv v t)]
-    [(@bv v) (make-bv v)]
     [@bv make-bv]))
 
 
@@ -139,10 +127,9 @@
   (case (procedure-arity op)
     [(1)  (lambda (x) (safe-apply-1 op x))]
     [(2)  (lambda (x y) (safe-apply-2 op x y))]
-    [else (case-lambda [() (op)]
-                       [(x) (safe-apply-1 op x)]
+    [else (case-lambda [(x) (safe-apply-1 op x)]
                        [(x y) (safe-apply-2 op x y)]
-                       [xs (safe-apply-n op xs)])]))
+                       [(x . xs) (safe-apply-n op (cons x xs))])]))
 
 (define (sort/expression @bvop x y) 
   (cond [(bv? x) (expression @bvop x y)]
@@ -371,14 +358,13 @@
 
 (define bvmul
   (case-lambda 
-    [() (@bv 1)]
     [(x) x]
     [(x y) (or
             (simplify-bvmul x y)
             (sort/expression @bvmul x y))]
-    [xs 
-     (let*-values ([(lits terms) (partition bv? xs)]
-                   [(t) (get-type (car xs))]
+    [(x . xs)
+     (let*-values ([(lits terms) (partition bv? (cons x xs))]
+                   [(t) (get-type x)]
                    [(lit) (sfinitize
                            (for/fold ([out 1]) ([lit lits])
                             (* out (bv-value lit)))
@@ -389,7 +375,7 @@
                                     terms 
                                     (cons (bv lit t) terms)) 
                                 simplify-bvmul)
-             [(list x) x]
+             [(list y) y]
              [(list a ... (? bv? b) c ...) 
                  (apply expression @bvmul b (sort (append a c) term<?))]
              [ys (apply expression @bvmul (sort ys term<?))])))]))
@@ -646,24 +632,69 @@
        [(_ _) (union)])
      (arguments-error 'extend "expected (bitvector-size t) >= (bitvector-size (get-type v))" "v" @v "t" @t))))
 
-(define (extend-type v t) t)
+(define (coercion-type v t) t)
 
 (define (sign-extend v t) (extend v t sfinitize @sign-extend))
 (define (zero-extend v t) (extend v t ufinitize @zero-extend))
 
 (define-operator @sign-extend
   #:name 'sign-extend
-  #:type extend-type
+  #:type coercion-type
   #:unsafe sign-extend
   #:safe (@extend sign-extend))
        
 (define-operator @zero-extend
   #:name 'zero-extend
-  #:type extend-type
+  #:type coercion-type
   #:unsafe zero-extend
   #:safe (@extend zero-extend))
 
-    
+(define (int->bv v t)
+  (match v
+    [(? number?) (@bv v t)]
+    [(expression (== @bv->int) (and (app get-type (== t)) x)) x]
+    [_ (expression @int->bv v t)]))
+
+(define (bv->int v)
+  (match v
+    [(bv a _) a]
+    [_ (expression @bv->int v)]))
+
+(define (bv->nat v)
+  (match v
+    [(bv a (bitvector sz)) (ufinitize a sz)]
+    [_ (expression @bv->nat v)]))
+
+(define-syntax-rule (@bv->* bvop)
+  (lambda (@v)
+    (match (bvcoerce @v 'bvop)
+      [(union vs) (merge** vs bvop)]
+      [v (bvop v)])))
+
+(define-operator @int->bv
+  #:name 'int->bv
+  #:type coercion-type
+  #:unsafe int->bv
+  #:safe 
+  (lambda (@v @t)
+    (match* ((coerce @v @number? 'int->bv) @t)
+      [(v (union ts))
+       (some (apply merge* (for/list ([gt ts] #:when (bitvector? (cdr gt)))
+                             (cons (car gt) (int->bv v (cdr gt)))))
+             (arguments-error "expected a bitvector type t" "t" @t))]
+      [(v t) (int->bv v t)])))
+
+(define-operator @bv->int
+  #:name 'bv->int
+  #:type (lambda (v) @number?)
+  #:unsafe bv->int
+  #:safe (@bv->* bv->int))
+             
+(define-operator @bv->nat
+  #:name 'bv->nat
+  #:type (lambda (v) @number?)
+  #:unsafe bv->nat
+  #:safe (@bv->* bv->nat))
 
 ;; ----------------- Shared lifting procedures and templates ----------------- ;;
 
@@ -679,7 +710,6 @@
 ; The terms iden and !iden should be numeric literals.
 (define-syntax-rule (bitwise-connective op bvop @bvop @bvco iden !iden)
   (case-lambda 
-    [() (make-bv iden)]
     [(x) x]
     [(x y) 
      (match* (x y)
@@ -692,11 +722,11 @@
         (or
          (simplify-connective @bvop @bvco (bv !iden (get-type x)) x y)
          (sort/expression @bvop x y))])]
-    [xs 
-     (let*-values ([(lits terms) (partition bv? xs)]
+    [(x . xs) 
+     (let*-values ([(lits terms) (partition bv? (cons x xs))]
                    [(lit) (for/fold ([out iden]) ([lit lits])
                             (op out (bv-value lit)))]
-                   [(t) (get-type (car xs))])
+                   [(t) (get-type x)])
        (if (or (= lit !iden) (null? terms)) 
            (bv lit t)
            (match (simplify-connective* @bvop @bvco (bv !iden t) (remove-duplicates terms))
@@ -709,23 +739,23 @@
 ; Partial evaluation rules for adders (bvxor and bvadd).
 (define-syntax-rule (bitwise-adder op bvop @bvop simplify-bvop)
   (case-lambda 
-    [() (@bv 0)]
     [(x) x]
     [(x y) (or (simplify-bvop x y)
                (sort/expression @bvop x y))]
-    [xs (let*-values ([(lits terms) (partition bv? xs)]
-                      [(lit) (for/fold ([out 0]) ([lit lits]) (op out (bv-value lit)))]
-                      [(t) (get-type (car xs))])
-          (if (null? terms)
-              (bv (finitize lit t) t)
-              (match (simplify-op* (if (null? lits) 
-                                       terms 
-                                       (cons (bv (finitize lit t) t) terms)) 
-                                   simplify-bvop)
-                [(list y) y]
-                [(list a (... ...) (? bv? b) c (... ...)) 
-                 (apply expression @bvop b (sort (append a c) term<?))]
-                [ys (apply expression @bvop (sort ys term<?))])))]))
+    [(x . xs)
+     (let*-values ([(lits terms) (partition bv? (cons x xs))]
+                   [(lit) (for/fold ([out 0]) ([lit lits]) (op out (bv-value lit)))]
+                   [(t) (get-type x)])
+       (if (null? terms)
+           (bv (finitize lit t) t)
+           (match (simplify-op* (if (null? lits) 
+                                    terms 
+                                    (cons (bv (finitize lit t) t) terms)) 
+                                simplify-bvop)
+             [(list y) y]
+             [(list a (... ...) (? bv? b) c (... ...)) 
+              (apply expression @bvop b (sort (append a c) term<?))]
+             [ys (apply expression @bvop (sort ys term<?))])))]))
 
 ; Partial evaluation rules for comparators (bvslt, bvsle, bvult, bule).
 (define-syntax-rule (bitwise-comparator (x y) op @bvop expr ...)

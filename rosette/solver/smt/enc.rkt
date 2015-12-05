@@ -15,7 +15,7 @@
                   @bveq @bvslt @bvsle @bvult @bvule   
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
-                  @concat @extract @zero-extend @sign-extend)
+                  @concat @extract @zero-extend @sign-extend @int->bv @bv->int @bv->nat)
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
@@ -46,6 +46,14 @@
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...)
      (apply smt/op (for/list ([e es]) (enc e env)))]
+    [(or (expression (and op (== @int->bv)) v (app bitvector-size sz))
+         (expression (and op (== @bv->int)) (and v (app get-type (app bitvector-size sz))))
+         (expression (and op (== @bv->nat)) (and v (app get-type (app bitvector-size sz)))))
+     (let-values ([(src tgt) (if (equal? op @int->bv) (values (current-bitwidth) sz) (values sz (current-bitwidth)))]
+                  [(extend)  (if (equal? op @bv->nat) zero_extend sign_extend)])
+       (cond [(= src tgt) (enc v env)]
+             [(> src tgt) (extract (- tgt 1) 0 (enc v env))]
+             [else        (extend (- tgt src) (enc v env))]))]
     [(expression (== @extract) i j e)
      (extract i j (enc e env))]
     [(expression (== @zero-extend) v t)

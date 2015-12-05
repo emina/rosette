@@ -6,16 +6,16 @@
          racket/fixnum 
          rosette/base/core/term
          rosette/base/core/bool
-         rosette/base/core/bitvector
+         (except-in rosette/base/core/bitvector bv)
+         (only-in rosette/base/core/bitvector [bv @bv])
          rosette/base/core/polymorphic
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
-         (only-in rosette/base/core/num @= @number?)
-         "exprs.rkt" "common.rkt")
+         (only-in rosette/base/core/num @= @number? current-bitwidth)
+         "exprs.rkt" )
 
 (define solver (new z3%))
 
-(current-bitwidth 4)
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
 (define-symbolic a b @boolean?)
@@ -23,12 +23,23 @@
 (define minval (- (expt 2 (sub1 (bitvector-size BV)))))
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
 (define maxval (sub1 maxval+1))
+(define (bv v [t BV]) (@bv v t))
 
 (define (solve  . asserts)
   (send/apply solver assert asserts)
   (begin0
     (send solver solve)
     (send solver clear)))
+
+(define (check-nary op id x y z)
+  (check-equal? (op id id) id)
+  (check-equal? (op id id id) id)
+  (check-equal? (op x) x)
+  (check-equal? (op id x) x)
+  (check-equal? (op x id) x)
+  (check-equal? (op x id y) (op x y))
+  (check-equal? (op x y) (op y x))
+)
 
 (define (check-semantics op)
   (case (procedure-arity op)
@@ -339,7 +350,9 @@
               (@bveq vo (op x BVo))) vo))
     (check-equal? actual expected)))
     
-  
+;(define (check-bv->*-semantics op)
+;  (parameterize ([current-bitwidth 8])
+    
 (define tests:bv
   (test-suite+
    "Tests for bv in rosette/base/bitvector.rkt"
