@@ -652,7 +652,8 @@
 (define (int->bv v t)
   (match v
     [(? number?) (@bv v t)]
-    [(expression (== @bv->int) (and (app get-type (== t)) x)) x]
+    ; This optimization is valid only when integer bitwidth >= (bitvector-size t).
+    ;[(expression (== @bv->int) (and (app get-type (== t)) x)) x]
     [_ (expression @int->bv v t)]))
 
 (define (bv->int v)

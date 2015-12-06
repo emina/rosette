@@ -350,9 +350,40 @@
               (@bveq vo (op x BVo))) vo))
     (check-equal? actual expected)))
     
-;(define (check-bv->*-semantics op)
-;  (parameterize ([current-bitwidth 8])
-    
+(define (check-bv->*-semantics op)
+  (parameterize ([current-bitwidth 8])
+    (for* ([v (in-range minval maxval+1)])
+      (define actual (op (bv v BV)))
+      (define-symbolic* out @number?)
+      (define expected
+        ((solve (@bveq x (bv v BV))
+                (@= out (op x))) out))
+      (check-equal? actual expected))))
+
+(define (check-int->bv-semantics)
+  (parameterize ([current-bitwidth 8])
+    (for* ([t (in-range 1 10)]
+           [v (in-range minval maxval+1)])
+      (define BVo (bitvector t))
+      (define actual (@int->bv v BVo))
+      (define-symbolic* out BVo)
+      (define-symbolic* in @number?)
+      (define expected
+        ((solve (@= in v)
+                (@bveq out (@int->bv in BVo))) out))
+      (check-equal? actual expected))))
+
+;(define (check-int->bv-simplifications)
+;  ; This optimization is valid only when current-bitwidth > BV.
+;  ; The following will fail:
+;  ;(parameterize ([current-bitwidth 3]) 
+;  ;  (check-valid? (@int->bv (@bv->int x) BV) x))
+;  ; But these two work:
+;  (parameterize ([current-bitwidth 4])
+;    (check-valid? (@int->bv (@bv->int x) BV) x))
+;  (parameterize ([current-bitwidth 5])
+;    (check-valid? (@int->bv (@bv->int x) BV) x)))
+
 (define tests:bv
   (test-suite+
    "Tests for bv in rosette/base/bitvector.rkt"
@@ -527,6 +558,22 @@
    (check-extend-simplifications @sign-extend)
    (check-extend-semantics @sign-extend)))
 
+(define tests:bv->int
+  (test-suite+
+   "Tests for bv->int rosette/base/bitvector.rkt"
+   (check-bv->*-semantics @bv->int)))
+
+(define tests:bv->nat
+  (test-suite+
+   "Tests for bv->nat rosette/base/bitvector.rkt"
+   (check-bv->*-semantics @bv->nat)))
+
+(define tests:int->bv
+  (test-suite+
+   "Tests for int->bv rosette/base/bitvector.rkt"
+   ;(check-int->bv-simplifications)
+   (check-int->bv-semantics)))
+
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
 (time (run-tests tests:bvslt))
@@ -556,4 +603,7 @@
 (time (run-tests tests:extract))
 (time (run-tests tests:zero-extend))
 (time (run-tests tests:sign-extend))
+(time (run-tests tests:bv->int))
+(time (run-tests tests:bv->nat))
+(time (run-tests tests:int->bv))
 (send solver shutdown)
