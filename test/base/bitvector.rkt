@@ -8,7 +8,7 @@
          rosette/base/core/bool
          (except-in rosette/base/core/bitvector bv)
          (only-in rosette/base/core/bitvector [bv @bv])
-         rosette/base/core/polymorphic
+         rosette/base/core/polymorphic rosette/base/core/merge rosette/base/core/assert
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/num @= @number? current-bitwidth)
@@ -18,7 +18,7 @@
 
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
-(define-symbolic a b @boolean?)
+(define-symbolic a b c d e f g @boolean?)
 
 (define minval (- (expt 2 (sub1 (bitvector-size BV)))))
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
@@ -384,6 +384,143 @@
 ;  (parameterize ([current-bitwidth 5])
 ;    (check-valid? (@int->bv (@bv->int x) BV) x)))
 
+(define (check-lifted-bv-type)
+  (define-symbolic* n @number?)
+  (check-exn #px"exact-positive-integer\\?" (thunk (bitvector 0)))
+  (check-exn #px"exact-positive-integer\\?" (thunk (bitvector -1)))
+  (check-exn #px"exact-positive-integer\\?" (thunk (bitvector n)))
+  (check-eq? (bitvector 3) (bitvector 3))
+  (check-exn #px"real, non-infinite, non-NaN number" (thunk (@bv +inf.0 BV)))
+  (check-exn #px"exact-positive-integer\\? or bitvector\\? type" (thunk (@bv 1 3.2)))
+  (check-exn #px"exact-positive-integer\\? or bitvector\\? type" (thunk (@bv 1 @number?))))
+
+(define (phi . xs) (apply merge* xs))
+
+(define-syntax-rule (check-state actual expected-value expected-asserts)
+  (let-values ([(v a) (with-asserts actual)])
+    (check-equal? v expected-value)
+    (check-equal? (apply set a) (apply set expected-asserts))))
+
+(define-syntax-rule (check-bv-exn expr)
+  (check-exn #px"expected bitvectors of same length" (thunk (with-asserts-only expr))))
+         
+(define (check-lifted-unary)
+  (define-symbolic* n @number?)
+  (check-not-exn (thunk (@bvnot (bv 1))))
+  (check-bv-exn (@bvnot n))
+  (check-bv-exn (@bvnot (phi (cons a 1) (cons b '()))))
+  (check-state (@bvnot (phi (cons a 1) (cons b (bv -1)))) (bv 0) (list b))
+  (check-state (@bvnot (phi (cons a 1) (cons b x) (cons c '()) (cons d (bv -1 2))))
+               (phi (cons b (@bvnot x)) (cons d (bv 0 2))) (list (|| b d)))
+  (check-state (@bvnot (phi (cons a 1) (cons b x) (cons c '()) (cons d (bv -1))))
+               (@bvnot (@bvor (ite b x (bv 0)) (ite d (bv -1 4) (bv 0)))) (list (|| b d)))
+  (check-state (@bvnot (phi (cons a (bv 0 2)) (cons b (bv -1))))
+               (phi (cons a (bv -1 2)) (cons b (bv 0))) (list)))
+
+
+(define (check-lifted-binary)
+  (define-symbolic* n @number?)
+  (check-not-exn (thunk (@bvsdiv x y)))
+  (check-bv-exn (@bvsdiv x 1))
+  (check-bv-exn (@bvsdiv 1 x))
+  (check-state (@bvsdiv x (phi (cons a 1) (cons b y) (cons c (bv 1 2)))) 
+               (@bvsdiv x y) (list b))
+  (check-state (@bvsdiv (phi (cons a 1) (cons b y) (cons c (bv 1 2))) x) 
+               (@bvsdiv y x) (list b))
+  (check-bv-exn (@bvsdiv (phi (cons a 1) (cons b #f)) (phi (cons c '()) (cons d 3))))
+  (check-bv-exn (@bvsdiv (phi (cons a 1) (cons b x)) (phi (cons c '()) (cons d 3))))
+  (check-bv-exn (@bvsdiv (phi (cons a 1) (cons b #f)) (phi (cons c '()) (cons d x))))
+  (check-bv-exn (@bvsdiv (phi (cons a 1) (cons b x)) 
+                         (phi (cons c '()) (cons d (bv 1 2)))))
+  (check-state (@bvsdiv (phi (cons a 1) (cons b x)) (phi (cons c y) (cons d '())))
+               (@bvsdiv x y) (list (&& b c)))
+  (check-state (@bvsdiv (phi (cons a (bv 1 2)) (cons b x)) 
+                        (phi (cons c y) (cons d '())))
+               (@bvsdiv x y) (list (&& b c)))
+  (check-state (@bvsdiv (phi (cons a (bv 1 2)) (cons b x) (cons e 'e)) 
+                        (phi (cons f "f") (cons c y) (cons d '())))
+               (@bvsdiv x y) (list (&& b c)))
+  (check-state (@bvsdiv (phi (cons a (bv 6 8)) (cons b x)) 
+                        (phi (cons c y) (cons d (bv 2 8))))
+               (phi (cons (&& b c) (@bvsdiv x y))
+                    (cons (&& a d) (bv 3 8))) 
+               (list ))
+  (check-state (@bvsdiv (phi (cons a (bv 6 8)) (cons b x)) 
+                        (phi (cons c y) (cons d (bv 2 8)) (cons e 'e)))
+               (phi (cons (&& b c) (@bvsdiv x y))
+                    (cons (&& a d) (bv 3 8))) 
+               (list (|| (&& b c) (&& a d))))
+  (check-state (@bvsdiv (phi (cons a (bv 6 8)) (cons b x) (cons e 'e)) 
+                        (phi (cons c y) (cons d (bv 2 8))))
+               (phi (cons (&& b c) (@bvsdiv x y))
+                    (cons (&& a d) (bv 3 8))) 
+               (list (|| (&& b c) (&& a d))))
+  )
+
+(define (check-@bvadd-exn bad-arg)
+  (check-exn exn:fail? (thunk (with-asserts-only (@bvadd bad-arg x y))))
+  (check-exn exn:fail? (thunk (with-asserts-only (@bvadd x bad-arg y))))
+  (check-exn exn:fail? (thunk (with-asserts-only (@bvadd x y bad-arg)))))
+
+(define (check-lifted-nary)
+  (define-symbolic* n @number?)
+  (check-not-exn (thunk (@bvadd x y z)))
+  (check-@bvadd-exn 1)
+  (check-@bvadd-exn n)
+  (check-@bvadd-exn (phi (cons a 1) (cons b (bv 2 2))))
+  (check-state (@bvadd z (phi (cons a 1) (cons b x)) (phi (cons c y) (cons d '())))
+               (@bvadd z x y) (list b c))
+  (check-state (@bvadd z (phi (cons a 1) (cons b x)) y)
+               (@bvadd z x y) (list b))
+  (check-bv-exn (@bvadd (phi (cons a 1) (cons b x)) 
+                        (phi (cons c 2) (cons d #f))
+                        (phi (cons e 'e) (cons f (bv 1 2)))))
+  (check-bv-exn (@bvadd (phi (cons a 1) (cons b x)) 
+                        (phi (cons c 2) (cons d #f))
+                        (phi (cons e y) (cons f (bv 1 2)))))
+  (check-bv-exn (@bvadd (phi (cons a 1) (cons b x)) 
+                        (phi (cons c y) (cons d #f))
+                        (phi (cons e 'e) (cons f (bv 1 2)))))
+  (check-state (@bvadd (phi (cons a x) (cons b (bv 1 8))) 
+                       (phi (cons c y) (cons d (bv 2 8)))
+                       (phi (cons e z) (cons f (bv 3 8))))
+               (phi (cons (&& a c e) (@bvadd x y z))
+                    (cons (&& b d f) (bv 6 8)))
+               (list))
+  (check-state (@bvadd (phi (cons a 1) (cons b (bv 1 8))) 
+                       (phi (cons c y) (cons d (bv 2 8)))
+                       (phi (cons e z) (cons f (bv 3 8))))
+               (bv 6 8)
+               (list (&& b d f)))
+  (check-state (@bvadd (phi (cons a x) (cons b (bv 1 8))) 
+                       (phi (cons c 1) (cons d (bv 2 8)))
+                       (phi (cons e z) (cons f (bv 3 8))))
+               (bv 6 8)
+               (list (&& b d f)))
+  (check-state (@bvadd (phi (cons a x) (cons b (bv 1 8))) 
+                       (phi (cons c y) (cons d (bv 2 8)))
+                       (phi (cons e 1) (cons f (bv 3 8))))
+               (bv 6 8)
+               (list (&& b d f)))
+  (check-state (@bvadd (phi (cons a x) (cons b (bv 1 8))) 
+                       (phi (cons c y) (cons d (bv 2 8)) (cons g 'g))
+                       (phi (cons e z) (cons f (bv 3 8))))
+               (phi (cons (&& a c e) (@bvadd x y z))
+                    (cons (&& b d f) (bv 6 8)))
+               (list (|| (&& a c e) (&& b d f))))
+  (check-state (@bvadd (phi (cons a x) (cons b (bv 1 8))) 
+                       (phi (cons c y) (cons d (bv 2 8)) )
+                       (phi (cons e z) (cons f (bv 3 8)) (cons g 'g)))
+               (phi (cons (&& a c e) (@bvadd x y z))
+                    (cons (&& b d f) (bv 6 8)))
+               (list (|| (&& a c e) (&& b d f))))
+  (check-state (@bvadd (phi (cons a x) (cons g 'g) (cons b (bv 1 8))) 
+                       (phi (cons c y) (cons d (bv 2 8)) )
+                       (phi (cons e z) (cons f (bv 3 8))))
+               (phi (cons (&& a c e) (@bvadd x y z))
+                    (cons (&& b d f) (bv 6 8)))
+               (list (|| (&& a c e) (&& b d f)))))
+
 (define tests:bv
   (test-suite+
    "Tests for bv in rosette/base/bitvector.rkt"
@@ -506,73 +643,81 @@
 
 (define tests:bvudiv
   (test-suite+
-   "Tests for bvudiv rosette/base/bitvector.rkt"
+   "Tests for bvudiv in rosette/base/bitvector.rkt"
    (check-bvudiv-simplifications)
    (check-semantics @bvudiv)))
 
 (define tests:bvsdiv
   (test-suite+
-   "Tests for bvsdiv rosette/base/bitvector.rkt"
+   "Tests for bvsdiv in rosette/base/bitvector.rkt"
    (check-bvsdiv-simplifications)
    (check-semantics @bvsdiv)))
 
 (define tests:bvurem
   (test-suite+
-   "Tests for bvurem rosette/base/bitvector.rkt"
+   "Tests for bvurem in rosette/base/bitvector.rkt"
    (check-bvurem-simplifications)
    (check-semantics @bvurem)))
 
 (define tests:bvsrem
   (test-suite+
-   "Tests for bvsrem rosette/base/bitvector.rkt"
+   "Tests for bvsrem in rosette/base/bitvector.rkt"
    (check-bvsrem-simplifications)
    (check-semantics @bvsrem)))
 
 (define tests:bvsmod
   (test-suite+
-   "Tests for bvsmod rosette/base/bitvector.rkt"
+   "Tests for bvsmod in rosette/base/bitvector.rkt"
    (check-signed-remainder-simplifications @bvsmod)
    (check-semantics @bvsmod)))
 
 (define tests:concat
   (test-suite+
-   "Tests for concat rosette/base/bitvector.rkt"
+   "Tests for concat in rosette/base/bitvector.rkt"
    (check-concat-simplifications)
    (check-concat-semantics)))
 
 (define tests:extract
   (test-suite+
-   "Tests for extract rosette/base/bitvector.rkt"
+   "Tests for extract in rosette/base/bitvector.rkt"
    (check-extract-simplifications)
    (check-extract-semantics)))
 
 (define tests:zero-extend
   (test-suite+
-   "Tests for zero-extend rosette/base/bitvector.rkt"
+   "Tests for zero-extend in rosette/base/bitvector.rkt"
    (check-extend-simplifications @zero-extend)
    (check-extend-semantics @zero-extend)))
 
 (define tests:sign-extend
   (test-suite+
-   "Tests for sign-extend rosette/base/bitvector.rkt"
+   "Tests for sign-extend in rosette/base/bitvector.rkt"
    (check-extend-simplifications @sign-extend)
    (check-extend-semantics @sign-extend)))
 
 (define tests:bv->int
   (test-suite+
-   "Tests for bv->int rosette/base/bitvector.rkt"
+   "Tests for bv->int in rosette/base/bitvector.rkt"
    (check-bv->*-semantics @bv->int)))
 
 (define tests:bv->nat
   (test-suite+
-   "Tests for bv->nat rosette/base/bitvector.rkt"
+   "Tests for bv->nat in rosette/base/bitvector.rkt"
    (check-bv->*-semantics @bv->nat)))
 
 (define tests:int->bv
   (test-suite+
-   "Tests for int->bv rosette/base/bitvector.rkt"
-   ;(check-int->bv-simplifications)
+   "Tests for int->bv in rosette/base/bitvector.rkt"
    (check-int->bv-semantics)))
+
+(define tests:lifted-operators
+  (test-suite+
+   "Tests for lifted operations in rosette/base/bitvector.rkt"
+   (check-lifted-bv-type)
+   (check-lifted-unary)
+   (check-lifted-binary)
+   (check-lifted-nary)
+   ))
 
 (time (run-tests tests:bv))
 (time (run-tests tests:bveq))
@@ -606,4 +751,6 @@
 (time (run-tests tests:bv->int))
 (time (run-tests tests:bv->nat))
 (time (run-tests tests:int->bv))
+(time (run-tests tests:lifted-operators))
+
 (send solver shutdown)

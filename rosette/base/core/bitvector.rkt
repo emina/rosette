@@ -176,10 +176,11 @@
                     [(list _ ... (cons gy (and (? typed? vy) (app get-type (== tx)))) _ ...)
                      (match (&& gx gy)
                        [#f (loop rest)]
-                       [g  (cons (cons g (op vx vy)) (loop rest))])])]
+                       [g  (cons (cons g (op vx vy)) (loop rest))])]
+                    [_ (loop rest)])]
                  [(list _ rest ...)
                   (loop rest)]))
-             #:unless (length xs)
+             #:unless (max (length xs) (length ys))
              (bitvector-type-error (object-name op) x y)))]
     [(_ _) (assert #f (bitvector-type-error (object-name op) x y))]))
 
@@ -189,7 +190,7 @@
     [(list _ ... (app get-type (? bitvector? t)) _ ...)
      (apply op (for/list ([x xs]) 
                  (if (equal? (get-type x) t) x (coerce x t (object-name op)))))]
-    [(list (union vs _) (union ws _) ...)
+    [(list (union vs _) (union ws _) ...)  
      (apply merge*
             (assert-some
              (let loop ([vs vs])
@@ -200,11 +201,12 @@
                     [(list (list _ ... (cons gy (and (? typed? vy) (app get-type (== tx)))) _ ...) ...)
                      (match (apply && gx gy)
                        [#f (loop rest)]
-                       [g  (cons (cons g (apply op vx vy)) (loop rest))])])]
+                       [g  (cons (cons g (apply op vx vy)) (loop rest))])]
+                    [_ (loop rest)])]
                  [(list _ rest ...)
-                  (loop rest)])))
-            #:unless (length vs)
-            (apply bitvector-type-error (object-name op) xs))]
+                  (loop rest)]))
+            #:unless (apply max (length vs) (map length ws))
+            (apply bitvector-type-error (object-name op) xs)))]
     [_ (assert #f (apply bitvector-type-error (object-name op) xs))]))
 
 (define-syntax-parameter finitize
