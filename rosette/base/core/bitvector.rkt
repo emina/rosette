@@ -149,16 +149,15 @@
   (match x
     [(? is-bitvector?) (op x)]
     [(union xs _)
-     (apply merge*
-            (assert-some
-             (let loop ([xs xs])
-               (match xs
-                 [(list) '()]
-                 [(list (cons gx (? is-bitvector? vx)) rest ...)
-                  (cons (cons gx (op vx)) (loop rest))]
-                 [(list _ rest ...) (loop rest)]))
-             #:unless (length xs)
-             (bitvector-type-error (object-name op) x)))]
+     (merge+ 
+      (let loop ([xs xs])
+        (match xs
+          [(list) '()]
+          [(list (cons gx (? is-bitvector? vx)) rest ...)
+           (cons (cons gx (op vx)) (loop rest))]
+          [(list _ rest ...) (loop rest)]))
+      #:unless (length xs) 
+      #:error (bitvector-type-error (object-name op) x))]
     [_ (assert #f (bitvector-type-error (object-name op) x))]))
 
 (define (safe-apply-2 op x y)
@@ -171,22 +170,21 @@
     [(_ (app get-type (? bitvector? ty))) 
      (op (coerce x ty (object-name op)) y)]
     [((union xs _) (union ys _))
-     (apply merge*
-            (assert-some
-             (let loop ([xs xs])
-               (match xs
-                 [(list) '()]
-                 [(list (cons gx (and (? typed? vx) (app get-type (? bitvector? tx)))) rest ...)
-                  (match ys
-                    [(list _ ... (cons gy (and (? typed? vy) (app get-type (== tx)))) _ ...)
-                     (match (&& gx gy)
-                       [#f (loop rest)]
-                       [g  (cons (cons g (op vx vy)) (loop rest))])]
-                    [_ (loop rest)])]
-                 [(list _ rest ...)
-                  (loop rest)]))
-             #:unless (max (length xs) (length ys))
-             (bitvector-type-error (object-name op) x y)))]
+     (merge+
+      (let loop ([xs xs])
+        (match xs
+          [(list) '()]
+          [(list (cons gx (and (? typed? vx) (app get-type (? bitvector? tx)))) rest ...)
+           (match ys
+             [(list _ ... (cons gy (and (? typed? vy) (app get-type (== tx)))) _ ...)
+              (match (&& gx gy)
+                [#f (loop rest)]
+                [g  (cons (cons g (op vx vy)) (loop rest))])]
+             [_ (loop rest)])]
+          [(list _ rest ...)
+           (loop rest)]))
+      #:unless (max (length xs) (length ys))
+      #:error (bitvector-type-error (object-name op) x y))]
     [(_ _) (assert #f (bitvector-type-error (object-name op) x y))]))
 
 (define (safe-apply-n op xs)
@@ -196,22 +194,21 @@
      (apply op (for/list ([x xs]) 
                  (if (equal? (get-type x) t) x (coerce x t (object-name op)))))]
     [(list (union vs _) (union ws _) ...)  
-     (apply merge*
-            (assert-some
-             (let loop ([vs vs])
-               (match vs
-                 [(list) '()]
-                 [(list (cons gx (and (? typed? vx) (app get-type (? bitvector? tx)))) rest ...)
-                  (match ws
-                    [(list (list _ ... (cons gy (and (? typed? vy) (app get-type (== tx)))) _ ...) ...)
-                     (match (apply && gx gy)
-                       [#f (loop rest)]
-                       [g  (cons (cons g (apply op vx vy)) (loop rest))])]
-                    [_ (loop rest)])]
-                 [(list _ rest ...)
-                  (loop rest)]))
-            #:unless (apply max (length vs) (map length ws))
-            (apply bitvector-type-error (object-name op) xs)))]
+     (merge+
+      (let loop ([vs vs])
+        (match vs
+          [(list) '()]
+          [(list (cons gx (and (? typed? vx) (app get-type (? bitvector? tx)))) rest ...)
+           (match ws
+             [(list (list _ ... (cons gy (and (? typed? vy) (app get-type (== tx)))) _ ...) ...)
+              (match (apply && gx gy)
+                [#f (loop rest)]
+                [g  (cons (cons g (apply op vx vy)) (loop rest))])]
+             [_ (loop rest)])]
+          [(list _ rest ...)
+           (loop rest)]))
+      #:unless (apply max (length vs) (map length ws))
+      #:error (apply bitvector-type-error (object-name op) xs))]
     [_ (assert #f (apply bitvector-type-error (object-name op) xs))]))
 
 (define-syntax-parameter finitize
@@ -525,11 +522,9 @@
   (assert (typed? x) (type-error caller bitvector? x))
   (match x
     [(app get-type (? bitvector?)) x]
-    [(union xs) (apply union
-                       (assert-some
-                        (for/list ([gx xs] #:when (is-bitvector? (cdr gx))) gx)
+    [(union xs) (merge+ (for/list ([gx xs] #:when (is-bitvector? (cdr gx))) gx)
                         #:unless (length xs)
-                        (type-error caller 'bitvector? x)))]
+                        #:error (type-error caller 'bitvector? x))]
     [_ (assert #f (type-error caller 'bitvector? x))]))
 
 (define concat
@@ -553,12 +548,10 @@
            [(x y)
             (match* ((bvcoerce x 'concat) (bvcoerce y 'concat))
               [((union xs) (union ys))
-               (apply merge*
-                      (assert-some
-                       (for*/list ([gx xs] [gy ys] [g (in-value (&& (car gx) (car gy)))] #:when g)     
+               (merge+ (for*/list ([gx xs] [gy ys] [g (in-value (&& (car gx) (car gy)))] #:when g)     
                          (cons g (concat (cdr gx) (cdr gy))))
                        #:unless (* (length xs) (length ys))
-                       (arguments-error 'concat "infeasible arguments" "x" x "y" y)))]
+                       #:error (arguments-error 'concat "infeasible arguments" "x" x "y" y))]
               [((union xs) y) (merge** xs (concat _ y))]
               [(x (union ys)) (merge** ys (concat x _))]
               [(x y) (concat x y)])]
