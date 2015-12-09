@@ -139,7 +139,12 @@
 
 (define (bitvector-type-error name . args)
   (arguments-error name "expected bitvectors of same length" "arguments" args))
-  
+
+(define-syntax merge+ 
+  (syntax-rules ()
+    [(_ expr #:error err) (apply merge* (assert-some expr err))]
+    [(_ expr #:unless size #:error err) (apply merge* (assert-some expr #:unless size err))]))
+ 
 (define (safe-apply-1 op x)
   (match x
     [(? is-bitvector?) (op x)]
@@ -524,14 +529,9 @@
                        (assert-some
                         (for/list ([gx xs] #:when (is-bitvector? (cdr gx))) gx)
                         #:unless (length xs)
-                        (type-error caller bitvector? x)))]
-    [_ (assert #f (type-error caller bitvector? x))]))
+                        (type-error caller 'bitvector? x)))]
+    [_ (assert #f (type-error caller 'bitvector? x))]))
 
-(define-syntax-rule (some u err)
-  (match u
-    [(union (list)) (assert #f err)]
-    [x x]))
-  
 (define concat
   (case-lambda
     [(x) x]
@@ -564,7 +564,7 @@
               [(x y) (concat x y)])]
            [(x . ys) (for/fold ([out x]) ([y ys]) (@concat out y))]))
 
-; i and j must be integers with bw > i >= j > 0, where bw is the bitwidth of x
+; i and j must be concrete integers with bw > i >= j > 0, where bw is the bitwidth of x
 (define (extract i j x) 
   (define len (add1 (- i j)))
   (match* (i j x)
@@ -575,34 +575,39 @@
     [(_ 0 (expression (== @concat) _ (and (app get-type (bitvector (== len))) a))) a]
     [(_ _ (expression (== @concat) (and (app get-type (bitvector (== len))) a) (app get-type (bitvector (== j))))) a]
     [(_ _ _) (expression @extract i j x)]))
-
+        
 (define-operator @extract
   #:name 'extract
   #:type (lambda (i j x) (bitvector-type (add1 (- i j))))
   #:unsafe extract
   #:safe 
-  (lambda (@i @j @x)
-    (define i (coerce @i @number? 'extract))
-    (define j (coerce @j @number? 'extract))
-    (define x (bvcoerce @x 'extract))
-    (assert (or (integer? i) (term? i)) (arguments-error 'extract "expected an integer i" "i" i))
-    (assert (or (integer? j) (term? j)) (arguments-error 'extract "expected an integer j" "j" j))
-    (assert (@>= i j) (arguments-error 'extract "expected i >= j" "i" i "j" j))
-    (assert (@>= j 0) (arguments-error 'extract "expected j >= 0" "j" j))
-    (match x
-      [(? union? u) (for/all ([y u]) (@extract i j y))]
-      [(app get-type (bitvector size))
-       (assert (@> size i) (arguments-error 'extract "expected (size-of x) > i" "x" x "i" i))
-       (some 
-        (match* (i j)
-          [((? number?) (? number?)) (extract i j x)]
-          [(_ (? number?)) (apply merge* (for/list ([n (in-range j size)])
-                                           (cons (@= n i) (extract n j x))))]
-          [((? number?) _) (apply merge* (for*/list ([k (in-range i -1)])
-                                           (cons (@= k j) (extract i k x))))]
-          [(_ _) (apply merge* (for*/list ([n size] [k (add1 n)])
-                                 (cons (&& (@= n i) (@= k j)) (extract n k x))))])
-        (arguments-error 'extract "expected i >= j" "i" i "j" j))])))
+  (local [(define-syntax-rule (extract*-err x i j) 
+            (arguments-error 'extract "expected (size-of x) > i >= j >= 0" "x" x "i" i "j" j))
+          (define (extract* i j x)
+            (define size (bitvector-size (get-type x)))
+            (assert (@> size i) (arguments-error 'extract "expected (size-of x) > i" "x" x "i" i))
+            (match* (i j)
+              [((? number?) (? number?)) (extract i j x)]
+              [(_ (? number?)) (merge+ (for/list ([n (in-range j size)])
+                                         (cons (@= n i) (extract n j x)))
+                                       #:unless (- size j) #:error (extract*-err x i j))]
+              [((? number?) _) (merge+ (for*/list ([k (in-range i -1 -1)])
+                                               (cons (@= k j) (extract i k x)))
+                                       #:unless (+ i 1) #:error (extract*-err x i j))]
+              [(_ _) (merge+ (for*/list ([n size] [k (add1 n)])
+                               (cons (&& (@= n i) (@= k j)) (extract n k x)))
+                             #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j))]))]
+    (lambda (@i @j @x)
+      (define i (coerce @i @number? 'extract))
+      (define j (coerce @j @number? 'extract))
+      (define x (bvcoerce @x 'extract))
+      (assert (or (integer? i) (term? i)) (arguments-error 'extract "expected an integer i" "i" i))
+      (assert (or (integer? j) (term? j)) (arguments-error 'extract "expected an integer j" "j" j))
+      (assert (@>= i j) (arguments-error 'extract "expected i >= j" "i" i "j" j))
+      (assert (@>= j 0) (arguments-error 'extract "expected j >= 0" "j" j))
+      (match x 
+        [(? union?) (for/all ([y x]) (extract* i j y))]
+        [_ (extract* i j x)]))))
      
 
 ;; ----------------- Extension and Coercion ----------------- ;;
@@ -615,24 +620,29 @@
     [((expression (== @bvop) x _) _) (expression @bvop x t)]
     [(_ _) (expression @bvop v t)]))
 
+(define-syntax-rule (@extend-err v t)
+   (arguments-error 'extend "expected (bitvector-size t) >= (bitvector-size (get-type v))" "v" v "t" t))
+
 (define-syntax-rule (@extend extend)
   (lambda (@v @t)
-    (some 
-     (match* ((bvcoerce @v 'extend) @t)
-       [((union vs) (union ts))
-        (apply merge* (for*/list ([gt ts] #:when (bitvector? (cdr gt))
-                                  [gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) (bitvector-size (cdr gt))))
-                        (cons (&& (car gt) (car gv)) (extend (cdr gv) (cdr gt)))))]
-       [((union vs) (bitvector st))
-        (apply merge* (for/list ([gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) st))
-                        (cons (car gv) (extend (cdr gv) @t))))]
-       [((and (app get-type (bitvector sv)) v) (union ts))
-        (apply merge* (for/list ([gt ts] #:when (and (bitvector? (cdr gt)) (<= sv (bitvector-size (cdr gt)))))
-                        (cons (car gt) (extend v (cdr gt)))))]
-       [((and (app get-type (bitvector sv)) v) (bitvector st))
-        (if (<= sv st) (extend v @t) (union))]
-       [(_ _) (union)])
-     (arguments-error 'extend "expected (bitvector-size t) >= (bitvector-size (get-type v))" "v" @v "t" @t))))
+    (match* ((bvcoerce @v 'extend) @t)
+      [((union vs) (union ts))
+       (merge+ (for*/list ([gt ts] #:when (bitvector? (cdr gt))
+                                   [gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) (bitvector-size (cdr gt))))
+                 (cons (&& (car gt) (car gv)) (extend (cdr gv) (cdr gt))))
+               #:error (@extend-err @v @t))]
+      [((union vs) (bitvector st))
+       (merge+ (for/list ([gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) st))
+                 (cons (car gv) (extend (cdr gv) @t)))
+               #:error (@extend-err @v @t))]
+      [((and (app get-type (bitvector sv)) v) (union ts))
+       (merge+ (for/list ([gt ts] #:when (and (bitvector? (cdr gt)) (<= sv (bitvector-size (cdr gt)))))
+                 (cons (car gt) (extend v (cdr gt))))
+               #:error (@extend-err @v @t))]
+      [((and (app get-type (bitvector sv)) v) (bitvector st))
+       (assert (<= sv st) (@extend-err @v @t))
+       (extend v @t)]
+      [(_ _) (assert #f (@extend-err @v @t))])))
 
 (define (coercion-type v t) t)
 
@@ -682,9 +692,9 @@
   (lambda (@v @t)
     (match* ((coerce @v @number? 'int->bv) @t)
       [(v (union ts))
-       (some (apply merge* (for/list ([gt ts] #:when (bitvector? (cdr gt)))
-                             (cons (car gt) (int->bv v (cdr gt)))))
-             (arguments-error "expected a bitvector type t" "t" @t))]
+       (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
+                 (cons (car gt) (int->bv v (cdr gt))))
+               #:error (arguments-error "expected a bitvector type t" "t" @t))]
       [(v t) (int->bv v t)])))
 
 (define-operator @bv->int
