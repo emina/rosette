@@ -13,7 +13,7 @@
      (identifier? #'var)
      (syntax/loc stx (define var (constant #'var type)))]
     [(_ var type [ k ... ])
-     (identifier? #'var)
+     (and (identifier? #'var) (implies (identifier? #'type) (identifier-binding #'type)))
      (define-array stx #'var #'type #'(k ...))]
     [(_ v ... type)
      (andmap identifier? (syntax->list #'(v ...)))
@@ -28,7 +28,7 @@
      (identifier? #'var)
      (syntax/loc stx (define-symbolic* [var (current-oracle)] type))]
     [(_ var type [ k ... ])
-     (identifier? #'var)
+     (and (identifier? #'var) (implies (identifier? #'type) (identifier-binding #'type)))
      (syntax/loc stx (define var (reshape (list k ...) (for/list ([i (in-range (* k ...))])
                                                          (define-symbolic* var type)
                                                          var))))]
