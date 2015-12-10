@@ -12,18 +12,19 @@
   (filtered-in add@ "bool.rkt")
   (only-in "merge.rkt" merge merge*)
   (only-in "union.rkt" union union?)
-  "num.rkt" )
+  "num.rkt" "bitvector.rkt")
              
 (provide 
  @boolean? @false? @number? @any/c
  (filtered-out with@ (all-defined-out))
+ (filtered-out with@ (all-from-out "bitvector.rkt"))
  (filtered-out add@ 
   (combine-out 
    ! || && => <=> 
    = < <= > >=
    + - * *h / quotient remainder expt abs sgn sqrt
    << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor 
-   current-bitwidth)))
+   current-bitwidth bv bv? bitvector bitvector-size bitvector?)))
 
 (define (impersonate-operator op origin)
   (impersonate-procedure 

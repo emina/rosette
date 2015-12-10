@@ -6,7 +6,7 @@
 
 (provide 
  (rename-out [@bv bv]) bv? 
- (rename-out [bitvector-type bitvector]) bitvector-size bitvector? 
+ (rename-out [@bitvector bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
@@ -62,6 +62,14 @@
   #:methods gen:custom-write
   [(define (write-proc self port m) 
      (fprintf port "(bitvector? ~a)" (bitvector-size self)))])
+
+; Pattern matching for bitvector types.
+(define-match-expander @bitvector
+  (syntax-rules ()
+    [(_ sz) (bitvector sz)])
+  (syntax-id-rules (set!)
+    [(@bitvector sz) (bitvector-type sz)]
+    [@bitvector bitvector-type]))
 
 (define (bvsmin t) (- (expt 2 (- (bitvector-size t) 1))))
 (define (bvsmin? b) (and (bv? b) (= (bv-value b) (bvsmin (bv-type b)))))
