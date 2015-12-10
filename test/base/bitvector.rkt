@@ -674,9 +674,26 @@
   (check-state (@sign-extend (phi (cons a x) (cons b (bv 8 8)))
                              (phi (cons c BV) (cons d (bitvector 1)) (cons e 'e)))
                x
-               (list (&& a c)))
-  )
+               (list (&& a c))))
   
+(define (check-lifted-int->bv)
+  (check-bv-exn exn:fail? (@int->bv "3" BV))
+  (check-bv-exn #px"expected a bitvector type" (@int->bv 3 3))
+  (check-bv-exn #px"expected a bitvector type" (@int->bv 3 (phi (cons a 1) (cons b "3"))))
+  (check-state (@int->bv 3 BV) (bv 3 4) (list))
+  (check-state (@int->bv (phi (cons a 3) (cons b "3")) BV) (bv 3 4) (list a))
+  (check-state (@int->bv 3 (phi (cons a BV) (cons b (bitvector 3))))
+               (phi (cons a (bv 3 4)) (cons b (bv 3 3))) (list))
+  (check-state (@int->bv 3 (phi (cons a BV) (cons b (bitvector 3)) (cons c '())))
+               (phi (cons a (bv 3 4)) (cons b (bv 3 3))) (list (|| a b))))
+
+(define (check-lifted-bv->*)
+  (check-bv-exn #px"expected: bitvector\\?" (@bv->int 3))
+  (check-state (@bv->int (bv 3 3)) 3 (list))
+  (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b (bv 3 3)))) 
+               (phi (cons a 3) (cons b 3)) (list))
+  (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b (bv 3 3)) (cons c '()))) 
+               (phi (cons a 3) (cons b 3)) (list (|| a b))))
   
 
 (define tests:bv
@@ -878,6 +895,8 @@
    (check-lifted-concat)
    (check-lifted-extract)
    (check-lifted-extend)
+   (check-lifted-int->bv)
+   (check-lifted-bv->*)
    ))
 
 (time (run-tests tests:bv))

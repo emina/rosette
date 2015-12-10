@@ -688,7 +688,8 @@
        (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
                  (cons (car gt) (int->bv v (cdr gt))))
                #:unless (length ts) #:error (arguments-error "expected a bitvector type t" "t" @t))]
-      [(v t) (int->bv v t)])))
+      [(v (? bitvector? t)) (int->bv v t)]
+      [(_ _) (assert #f (arguments-error "expected a bitvector type t" "t" @t))])))
 
 (define-operator @bv->int
   #:name 'bv->int
@@ -908,11 +909,3 @@
                           [v (outer (cons v (append ys tail)))])]))]
                   [_ xs]))])
      (if (= (length out) (length xs)) out (simplify-op* out simplify-op)))))            
-
-
-
-
-
-;(require "../form/define.rkt")
-;(define bv4 (bitvector-type 4))
-;(define-symbolic x y z bv4)
