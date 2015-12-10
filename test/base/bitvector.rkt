@@ -692,6 +692,8 @@
   (check-state (@bv->int (bv 3 3)) 3 (list))
   (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b (bv 3 3)))) 
                (phi (cons a 3) (cons b 3)) (list))
+  (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b 3)))
+               3 (list a))
   (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b (bv 3 3)) (cons c '()))) 
                (phi (cons a 3) (cons b 3)) (list (|| a b))))
   
