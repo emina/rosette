@@ -519,7 +519,7 @@
 ;; ----------------- Concatenation and Extraction ----------------- ;;
 
 (define (bvcoerce x [caller 'bvcoerce])
-  (assert (typed? x) (type-error caller bitvector? x))
+  (assert (typed? x) (type-error caller 'bitvector? x))
   (match x
     [(app get-type (? bitvector?)) x]
     [(union xs) (merge+ (for/list ([gx xs] #:when (is-bitvector? (cdr gx))) gx)
@@ -621,17 +621,17 @@
     (match* ((bvcoerce @v 'extend) @t)
       [((union vs) (union ts))
        (merge+ (for*/list ([gt ts] #:when (bitvector? (cdr gt))
-                                   [gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) (bitvector-size (cdr gt))))
+                           [gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) (bitvector-size (cdr gt))))
                  (cons (&& (car gt) (car gv)) (extend (cdr gv) (cdr gt))))
-               #:error (@extend-err @v @t))]
+               #:unless (* (length vs) (length ts)) #:error (@extend-err @v @t))]
       [((union vs) (bitvector st))
        (merge+ (for/list ([gv vs] #:when (<= (bitvector-size (get-type (cdr gv))) st))
                  (cons (car gv) (extend (cdr gv) @t)))
-               #:error (@extend-err @v @t))]
+               #:unless (length vs) #:error (@extend-err @v @t))]
       [((and (app get-type (bitvector sv)) v) (union ts))
        (merge+ (for/list ([gt ts] #:when (and (bitvector? (cdr gt)) (<= sv (bitvector-size (cdr gt)))))
                  (cons (car gt) (extend v (cdr gt))))
-               #:error (@extend-err @v @t))]
+               #:unless (length ts) #:error (@extend-err @v @t))]
       [((and (app get-type (bitvector sv)) v) (bitvector st))
        (assert (<= sv st) (@extend-err @v @t))
        (extend v @t)]
@@ -687,7 +687,7 @@
       [(v (union ts))
        (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
                  (cons (car gt) (int->bv v (cdr gt))))
-               #:error (arguments-error "expected a bitvector type t" "t" @t))]
+               #:unless (length ts) #:error (arguments-error "expected a bitvector type t" "t" @t))]
       [(v t) (int->bv v t)])))
 
 (define-operator @bv->int
