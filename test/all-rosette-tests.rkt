@@ -7,6 +7,7 @@
  "base/type.rkt" 
  "base/term.rkt"
  "base/bool.rkt"
+ "base/bitvector.rkt"
  "base/num.rkt"
  "base/list.rkt"
  "base/equality.rkt"
