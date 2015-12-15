@@ -6,7 +6,8 @@
  ite          ; (-> @boolean? any/c any/c any/c)
  =?           ; (-> anyc/ any/c @boolean?)
  generic-merge
- T*->T T*->boolean?)
+ T*->T T*->boolean?
+ sort/expression)
 
 ; Polymorphic operators and procedures that are shared by 
 ; multiple primitive types.
@@ -83,6 +84,11 @@
 ; and returns a @boolean?. See op.rkt.
 (define (T*->boolean? . xs) @boolean?)
 
-      
+; Sorts the arguments to the given binary operator and returns the resulting expression.
+(define (sort/expression @op x y) 
+  (cond [(not (term? x)) (expression @op x y)]
+        [(not (term? y)) (expression @op y x)]
+        [(term<? x y) (expression @op x y)]
+        [else (expression @op y x)]))
       
       

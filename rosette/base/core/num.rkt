@@ -47,11 +47,6 @@
 (define binary-type (op/-> (@number? @number?) @number?))
 (define unary-type (op/-> (@number?) @number?))
 
-(define-syntax-rule (sort/expression op x y) 
-  (if (term<? x y) 
-      (expression op x y)
-      (expression op y x)))
-
 (define-op @=  
   #:name '= 
   #:type binary-predicate-type

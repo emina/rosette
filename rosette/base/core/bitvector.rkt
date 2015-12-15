@@ -139,12 +139,6 @@
                        [(x y) (safe-apply-2 op x y)]
                        [(x . xs) (safe-apply-n op (cons x xs))])]))
 
-(define (sort/expression @bvop x y) 
-  (cond [(bv? x) (expression @bvop x y)]
-        [(bv? y) (expression @bvop y x)]
-        [(term<? x y) (expression @bvop x y)]
-        [else (expression @bvop y x)]))
-
 (define (bitvector-type-error name . args)
   (arguments-error name "expected bitvectors of same length" "arguments" args))
 
