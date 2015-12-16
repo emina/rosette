@@ -4,7 +4,7 @@
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 
-(provide @integer? @real? @= @< @<= @>= @> @+ @* @- @div @mod @abs @/
+(provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @abs
          @integer->real @real->integer)
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
@@ -241,13 +241,13 @@
 
 ;; ----------------- Int Operators ----------------- ;; 
 
-(define ($div a b) (quotient a b))
-(define ($mod a b) (remainder a b))
+(define ($quotient a b) (quotient a b))
+(define ($remainder a b) (remainder a b))
 (define ($abs a) (abs a))
 
-(define-lifted-operator @div void T*->T)
-(define-lifted-operator @mod void T*->T)
-(define-lifted-operator @abs void T*->T)
+(define-lifted-operator @quotient $quotient T*->T)
+(define-lifted-operator @remainder $remainder T*->T)
+(define-lifted-operator @abs $abs T*->T)
 
 ;; ----------------- Real Operators ----------------- ;; 
 
