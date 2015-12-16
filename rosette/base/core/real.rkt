@@ -4,6 +4,9 @@
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 
+(provide @integer? @real? @= @< @<= @>= @> @+ @* @- @div @mod @abs @/
+         @integer->real @real->integer)
+
 ;; ----------------- Integer and Real Types ----------------- ;; 
 
 (define (int? v)
@@ -26,20 +29,20 @@
   #:methods
   [(define (least-common-supertype self t)
      (if (or (equal? self t) (equal? @integer? t)) self @any/c))
-   (define (type-eq? self u v) (@= u v)) 
-   (define (type-equal? self u v) (@= u v))
+   (define (type-eq? self u v) ($= u v)) 
+   (define (type-equal? self u v) ($= u v))
    (define (cast self v)
      (match v
        [(? real?) (values #t v)]
        [(term _ (== self)) (values #t v)]
-       [(term _ (== @integer?)) (values #t (int->real v))]
+       [(term _ (== @integer?)) (values #t (integer->real v))]
        [(union xs (or (== @real?) (== @any/c)))
         (let-values ([(i r) (guarded-numbers xs)])
           (match* (i r)
-            [((cons g x) #f) (values g (int->real x))]
+            [((cons g x) #f) (values g (integer->real x))]
             [(#f (cons g x)) (values g x)]
             [((cons gi xi) (cons gr _)) 
-             (values (or (= (length xs) 2) (|| gi gr)) (merge* (cons gi (int->real xi)) r))]
+             (values (or (= (length xs) 2) (|| gi gr)) (merge* (cons gi (integer->real xi)) r))]
             [(_ _) (values #f v)]))]
        [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge @+ 0 ps))])
@@ -50,26 +53,26 @@
   #:methods 
   [(define (least-common-supertype self t)
      (if (or (equal? self t) (equal? @real? t)) t @any/c))
-   (define (type-eq? self u v) (@= u v)) 
-   (define (type-equal? self u v) (@= u v))
+   (define (type-eq? self u v) ($= u v)) 
+   (define (type-equal? self u v) ($= u v))
    (define (cast self v)
      (match v
        [(? integer?) (values #t v)]
        [(term _ (== self)) (values #t v)]
        [(term _ (== @real?)) 
         (let ([g (int? v)])
-          (if g (values g (real->int v)) (values #f v)))]
+          (if g (values g (real->integer v)) (values #f v)))]
        [(union xs (or (== @real?) (== @any/c)))
         (let-values ([(i r) (guarded-numbers xs)])
           (match* (i r)
             [((cons g x) #f) (values g x)]
             [(#f (cons g x)) 
              (let ([g (&& g (int? x))])
-               (if g (values g (real->int x)) (values #f v)))]
+               (if g (values g (real->integer x)) (values #f v)))]
             [((cons gi xi) (cons gr xr))
              (let ([gr (&& (int? xr) gr)])
                (if gr 
-                   (values (or (= (length xs) 2) (|| gi gr)) (merge* i (cons gr (real->int xr))))
+                   (values (or (= (length xs) 2) (|| gi gr)) (merge* i (cons gr (real->integer xr))))
                    (values gi xi)))]
             [(_ _) (values #f v)]))]
        [_ (values #f v)]))
@@ -125,13 +128,13 @@
     [(? int-primitive?)
      (match b
        [(? int-primitive?)  (op a b)]
-       [(? real-primitive?) (op (int->real a) b)]
+       [(? real-primitive?) (op (integer->real a) b)]
        [(union (list-no-order (cons gv (? int-primitive? v)) (cons gw w)))
-        (merge* (cons gv (op a v)) (cons gw (op (int->real a) w)))])]
+        (merge* (cons gv (op a v)) (cons gw (op (integer->real a) w)))])]
     [(? real-primitive?)   (op a (coerce b @real? caller))]
     [(union (list-no-order (cons gv (? int-primitive? v)) (cons gw w)))
      (match b
-       [(? int-primitive?)  (merge* (cons gv (op v b)) (cons gw (op w (int->real b))))]
+       [(? int-primitive?)  (merge* (cons gv (op v b)) (cons gw (op w (integer->real b))))]
        [(? real-primitive?) (op (coerce a @real? caller) b)]
        [(union (list-no-order (cons gc (? int-primitive? c)) (cons gd d)))
         (let* ([gi (&& gv gc)]
@@ -183,12 +186,12 @@
 
 (define-syntax-rule (define-lifted-operator @bvop bvop type)
   (define-operator @bvop
-    #:name (string->symbol (substring (symbol->string 'bvop) 1))
+    #:name (string->symbol (substring (symbol->string '@bvop) 1))
     #:type type
     #:unsafe bvop
     #:safe (lift-op bvop)))
     
-;; ----------------- Operators ----------------- ;; 
+;; ----------------- Predicates ----------------- ;; 
 
 (define-operator @int?
     #:name 'int?
@@ -196,29 +199,85 @@
     #:unsafe int?
     #:safe int?)
 
-(define (^= x y)
-  (match* (x y)
-    [((? real?) (? real?)) (= x y)]
-    [((expression (== ite) a (? real? b) (? real? c)) (? real? d))
-     (|| (&& a (= b d)) (&& (! a) (= c d)))]
-    [((? real? d) (expression (== ite) a (? real? b) (? real? c)))
-     (|| (&& a (= b d)) (&& (! a) (= c d)))]
-    [((expression (== ite) a (? real? b) (? real? c)) 
-      (expression (== ite) d (? real? e) (? real? f)))
-     (let ([b=e (= b e)] 
-           [b=f (= b f)] 
-           [c=e (= c e)] 
-           [c=f (= c f)])
-       (or (and b=e b=f c=e c=f)
-           (|| (&& a d b=e) (&& a (! d) b=f) (&& (! a) d c=e) (&& (! a) (! d) c=f))))]
-    [(_ _) (sort/expression @= x y)]))
-    
+(define $=  (compare @= = sort/expression))
+(define $<= (compare @<= <= expression))
+(define $<  (compare @< < expression))
+(define ($>= x y) ($<= y x))
+(define ($> x y) ($< y x)) 
 
-(define-lifted-operator @= ^= T*->boolean?)
+(define-syntax-rule (compare @op op expr)
+  (lambda (x y)
+    (match* (x y)
+      [((? real?) (? real?)) (op x y)]
+      [((expression (== ite) a (? real? b) (? real? c)) (? real? d)) (merge a (op b d) (op c d))]
+      [((? real? d) (expression (== ite) a (? real? b) (? real? c))) (merge a (op d b) (op d c))]
+      [((expression (== ite) a (? real? b) (? real? c)) 
+        (expression (== ite) d (? real? e) (? real? f)))
+       (let ([b~e (op b e)] 
+             [b~f (op b f)] 
+             [c~e (op c e)] 
+             [c~f (op c f)])
+         (or (and b~e b~f c~e c~f)
+             (|| (&& a d b~e) (&& a (! d) b~f) (&& (! a) d c~e) (&& (! a) (! d) c~f))))]
+      [(a (expression (== @+) (? real? r) a)) (op 0 r)]
+      [((expression (== @+) (? real? r) a) a) (op r 0)]
+      [(_ _) (expr @op x y)])))
 
-(define (@+ a b) (+ a b))
-(define (int->real n) n)
-(define (real->int n) n)
+(define-lifted-operator @=  $= T*->boolean?)
+(define-lifted-operator @<= $<= T*->boolean?)
+(define-lifted-operator @>= $>= T*->boolean?)
+(define-lifted-operator @<  $< T*->boolean?)
+(define-lifted-operator @>  $> T*->boolean?)
+
+;; ----------------- Int and Real Operators ----------------- ;; 
+
+(define ($+ a b) (+ a b))
+(define ($* a b) (* a b))
+(define ($- a b) (- a b))
+
+(define-lifted-operator @+ $+ T*->T)
+(define-lifted-operator @* $* T*->T)
+(define-lifted-operator @- $- T*->T)
+
+;; ----------------- Int Operators ----------------- ;; 
+
+(define ($div a b) (quotient a b))
+(define ($mod a b) (remainder a b))
+(define ($abs a) (abs a))
+
+(define-lifted-operator @div void T*->T)
+(define-lifted-operator @mod void T*->T)
+(define-lifted-operator @abs void T*->T)
+
+;; ----------------- Real Operators ----------------- ;; 
+
+(define ($/ a b) (/ a b))
+(define-lifted-operator @/ $/ T*->T)
+
+;; ----------------- Coercion Operators ----------------- ;; 
+
+(define (integer->real i)
+  (match i
+    [(? integer?) i]
+    [(? term?) (expression @integer->real i)]))
+
+(define (real->integer r)
+  (match r
+    [(? real?) (floor r)]
+    [(expression (== @integer->real) x) x]
+    [(? term?) (expression @real->integer r)]))
+
+(define-operator @integer->real 
+  #:name 'integer->real
+  #:type (lambda (i) @real?)
+  #:unsafe integer->real
+  #:safe (lambda (n) (integer->real (coerce n @integer? 'integer->real))))
+
+(define-operator @real->integer 
+  #:name 'real->integer 
+  #:type (lambda (r) @integer?)
+  #:unsafe real->integer 
+  #:safe (lambda (n) (real->integer (coerce n @real? 'real->integer))))
 
 
 (require "../form/define.rkt")
