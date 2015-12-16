@@ -231,8 +231,35 @@
 
 ;; ----------------- Int and Real Operators ----------------- ;; 
 
-(define ($+ a b) (+ a b))
-(define ($* a b) (* a b))
+(define $+
+  (case-lambda
+    [() 0]
+    [(x) x]
+    [(x y) (or (simplify-+ x y) (sort/expression @+ x y))]
+    [xs 
+     (let*-values ([(lits terms) (partition real? xs)]
+                   [(lit) (apply + lits)])
+       (if (null? terms)
+           lit
+           (match (simplify* (if (= 0 lit) terms (cons lit terms)) simplify-+)
+             [(list y) y]
+             [(list a ... (? real? b) c ...) (apply expression @+ b (sort (append a c) term<?))]
+             [ys (apply expression @+ (sort ys term<?))])))]))
+                   
+(define $*
+  (case-lambda
+    [() 1]
+    [(x) x]
+    [(x y) (or (simplify-* x y) (sort/expression @* x y))]
+    [xs 
+     (let*-values ([(lits terms) (partition real? xs)]
+                   [(lit) (apply * lits)])
+       (if (or (zero? lit) (null? terms))
+           lit
+           (match (simplify* (if (= 1 lit) terms (cons lit terms)) simplify-*)
+             [(list y) y]
+             [(list a ... (? real? b) c ...) (apply expression @* b (sort (append a c) term<?))]
+             [ys (apply expression @* (sort ys term<?))])))]))
 
 (define $- 
   (case-lambda 
@@ -287,6 +314,121 @@
   #:type (lambda (r) @integer?)
   #:unsafe real->integer 
   #:safe (lambda (n) (real->integer (coerce n @real? 'real->integer))))
+
+;; ----------------- Simplification rules for operators ----------------- ;;
+
+(define (simplify-+ x y)
+  (match* (x y)
+    [((? real?) (? real?)) (+ x y)]
+    [(_ 0) x]
+    [(0 _) y]
+    [((? expression?) (? expression?)) 
+     (or (simplify-+:expr/term x y) (simplify-+:expr/term y x))]
+    [((? expression?) _) (simplify-+:expr/term x y)]
+    [(_ (? expression?)) (simplify-+:expr/term y x)]
+    [(_ _) #f]))
+
+(define (simplify-+:expr/term x y)
+  (match* (x y)
+    [((expression (== @-) (== y)) _) 0]
+    [((expression (== @-) (expression (== @+) (== y) z)) _) ($- z)]
+    [((expression (== @-) (expression (== @+) z (== y))) _) ($- z)]
+    [((expression (== @+) (expression (== @-) (== y)) z) _) z]
+    [((expression (== @+) z (expression (== @-) (== y))) _) z]
+    [((expression (== @+) (? real? a) b) (? real?)) ($+ (+ a y) b)]
+    [((expression (== ite) a (? real? b) (? real? c)) (? real?)) (ite a (+ b y) (+ c y))]
+    [((expression (== @*) (? real? a) (== y)) _) ($* (+ a 1) y)]
+    [((expression (== @*) (? real? a) b) (expression (== @*) (? real? c) b)) ($* (+ a c) b)]
+    [((expression (== @+) a b) (expression (== @-) a)) b]
+    [((expression (== @+) a b) (expression (== @-) b)) a]
+    [((expression (== @+) as ...) (expression (== @+) bs ...))
+     (let ([alen (length as)] 
+           [blen (length bs)])
+       (and (<= alen blen) (<= (- blen alen) 1)
+            (match (cancel+ as bs)
+              [(list) 0]
+              [(list b) b]
+              [#f #f])))]
+    [(_ _) #f]))
+
+(define (cancel+ xs ys)
+  (and ys
+       (match xs
+         [(list) ys]
+         [(list x rest ...)
+          (cancel+ rest
+                   (match* (x ys)
+                     [((? real?) (list (? real? a) b ...)) (and (zero? (+ x a)) b)]
+                     [((? term?) (list a ... (expression (== @-) (== x)) b ...)) (append a b)]
+                     [((expression (== @-) y) (list a ... y b ...)) (append a b)]
+                     [((expression (== @*) (? real? a) b) 
+                       (list c ... (expression (== @*) (and (? real?) (app - a)) b) d ...))
+                      (append c d)]
+                     [(_ _) #f]))])))
+
+(define (simplify-* x y) 
+  (match* (x y)
+    [((? real?) (? real?)) (* x y)]
+    [(0 _) 0]
+    [(1 _) y]
+    [(-1 _) ($- y)]
+    [(_ 0) 0]
+    [(_ 1) x]
+    [(_ -1) ($- x)]
+    [((? expression?) (? expression?)) 
+     (or (simplify-*:expr/term x y) (simplify-*:expr/term y x))]
+    [((? expression?) _) (simplify-*:expr/term x y)]
+    [(_ (? expression?)) (simplify-*:expr/term y x)]
+    [(_ _) #f]))
+
+(define (simplify-*:expr/term x y)
+  (match* (x y)    
+    [((expression (== @/) a (== y)) _) a]
+    [((expression (== @/) a (expression (== @*) (== y) z)) _) ($/ a z)]
+    [((expression (== @/) a (expression (== @*) z (== y))) _) ($/ a z)]
+    [((expression (== @/) (? real? a) b) (? real?)) ($/ (* a y) b)]
+    [((expression (== @*) (expression (== @/) a (== y)) z) _) ($* a z)]
+    [((expression (== @*) z (expression (== @/) a (== y))) _) ($* a z)]
+    [((expression (== @*) (? real? a) b) (? real?)) ($* (* a y) b)]
+    [((expression (== ite) a (? real? b) (? real? c)) (? real?)) (ite a (* b y) (* c y))]
+    [((expression (== @*) a b) (expression (== @/) c a)) ($* b c)]
+    [((expression (== @*) a b) (expression (== @/) c b)) ($* a c)]    
+    [((expression (== @*) as ...) (expression (== @*) bs ...))
+     (let ([alen (length as)] 
+           [blen (length bs)])
+       (and (<= alen blen) (<= (- blen alen) 1)
+            (match (cancel* as bs)
+              [(list) 1]
+              [(list b) b]
+              [#f #f])))]
+    [(_ _) #f]))
+
+(define (cancel* xs ys)
+  (and ys
+       (match xs
+         [(list) ys]
+         [(list x rest ...)
+          (cancel* rest
+                   (match* (x ys)
+                     [((? real?) (list (? real? a) b ...)) (and (= 1 (* x a)) b)]
+                     [((? term?) (list a ... (expression (== @/) 1 (== x)) b ...)) (append a b)]
+                     [((expression (== @/) 1 y) (list a ... y b ...)) (append a b)]
+                     [((expression (== @*) (? real? a) b) 
+                       (list c ... (expression (== @*) (and (? real?) (app / a)) b) d ...))
+                      (append c d)]
+                     [(_ _) #f]))])))
+    
+    
+
+
+
+
+
+
+
+
+
+
 
 
 (require "../form/define.rkt")

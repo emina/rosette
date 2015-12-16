@@ -372,10 +372,10 @@
                            (bitvector-size t))])
        (if (or (= lit 0) (null? terms)) 
            (bv lit t)
-           (match (simplify-op* (if (null? lits)
-                                    terms 
-                                    (cons (bv lit t) terms)) 
-                                simplify-bvmul)
+           (match (simplify* (if (null? lits)
+                                 terms 
+                                 (cons (bv lit t) terms)) 
+                             simplify-bvmul)
              [(list y) y]
              [(list a ... (? bv? b) c ...) 
                  (apply expression @bvmul b (sort (append a c) term<?))]
@@ -752,10 +752,10 @@
                    [(t) (get-type x)])
        (if (null? terms)
            (bv (finitize lit t) t)
-           (match (simplify-op* (if (null? lits) 
-                                    terms 
-                                    (cons (bv (finitize lit t) t) terms)) 
-                                simplify-bvop)
+           (match (simplify* (if (null? lits) 
+                                 terms 
+                                 (cons (bv (finitize lit t) t) terms)) 
+                             simplify-bvop)
              [(list y) y]
              [(list a (... ...) (? bv? b) c (... ...)) 
               (apply expression @bvop b (sort (append a c) term<?))]
@@ -890,19 +890,4 @@
                [(== !iden) (list !iden)]
                [v (outer (cons v (append ys tail)))])]))]
        [_ xs]))))
-
-(define (simplify-op* xs simplify-op)
-  (or
-   (and (> (length xs) 100) xs)
-   (let ([out (let outer ([xs xs])
-                (match xs
-                  [(list x rest ..1)
-                   (let inner ([head rest] [tail '()])
-                     (match head
-                       [(list) (cons x (outer tail))]
-                       [(list y ys ...)
-                        (match (simplify-op x y)
-                          [#f (inner ys (cons y tail))]
-                          [v (outer (cons v (append ys tail)))])]))]
-                  [_ xs]))])
-     (if (= (length out) (length xs)) out (simplify-op* out simplify-op)))))            
+        

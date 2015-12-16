@@ -7,7 +7,8 @@
  =?           ; (-> anyc/ any/c @boolean?)
  generic-merge
  T*->T T*->boolean?
- sort/expression)
+ sort/expression
+ simplify*)
 
 ; Polymorphic operators and procedures that are shared by 
 ; multiple primitive types.
@@ -90,5 +91,27 @@
         [(not (term? y)) (expression @op y x)]
         [(term<? x y) (expression @op x y)]
         [else (expression @op y x)]))
-      
+
+; Applies the given simplification function to the given list until 
+; no more simplifications can be made.  The simplification function should 
+; take as input 2 values and return either #f (if no simplification is possible)
+; or the simplified result of applying f to those values.  The optional limit 
+; value determines when the list is too big for simplification---in which case, 
+; simplify* acts as the identity function on xs.  The limit is 100 by default.
+(define (simplify* xs f [limit 100])
+  (if (> (length xs) limit)
+      xs
+      (let ([out (let outer ([xs xs])
+                   (match xs
+                     [(list x rest ..1)
+                      (let inner ([head rest] [tail '()])
+                        (match head
+                          [(list) (cons x (outer tail))]
+                          [(list y ys ...)
+                           (match (f x y)
+                             [#f (inner ys (cons y tail))]
+                             [v (outer (cons v (append ys tail)))])]))]
+                     [_ xs]))])
+        (if (= (length out) (length xs)) out (simplify* out f)))))            
+
       
