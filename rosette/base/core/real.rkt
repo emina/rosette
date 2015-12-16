@@ -233,7 +233,16 @@
 
 (define ($+ a b) (+ a b))
 (define ($* a b) (* a b))
-(define ($- a b) (- a b))
+
+(define $- 
+  (case-lambda 
+    [(x) (match x
+           [(? real?) (- x)]
+           [(expression (== @-) a) a]
+           [(expression (== @*) (? real? c) a) ($* (- c) a)]
+           [_ (expression @- x)])]
+    [(x y) ($+ x ($- y))]
+    [(x . xs) (apply $+ x (map $- xs))]))
 
 (define-lifted-operator @+ $+ T*->T)
 (define-lifted-operator @* $* T*->T)
