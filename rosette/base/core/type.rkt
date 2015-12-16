@@ -49,7 +49,7 @@
 ; A given Racket type cannot be lifted more than once.  That is, multiple attempts to 
 ; call define-lifted-type with the same base type as argument will result in an error.
 ; Only these Racket types are expected to be lifted:
-; boolean?, number?, list?, pair?, procedure?, vector?, and box?.
+; boolean?, integer?, real?, number?, list?, pair?, procedure?, vector?, and box?.
 (define-syntax (define-lifted-type stx)
   (syntax-case stx ()
     [(_ id #:base base #:is-a? is-a? #:methods defs)       
@@ -125,4 +125,9 @@
 ; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
 (define type-of 
   (typechecker 
-   #:base boolean? number? list? pair? procedure? vector? box?))
+   #:base boolean? number? list? pair? procedure? vector? box?
+          ; integer? and real? will replace number?.
+          ; they are currently in the last position to ensure that they are 
+          ; not used until the replacement has been tested.
+          integer? real? 
+          ))

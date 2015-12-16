@@ -6,6 +6,20 @@
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
 
+(define (int? v)
+  (match v
+    [(? integer?) #t]
+    [(term _ (== @integer?)) #t]
+    [(term _ (== @real?)) (expression @int? v)]
+    [(union xs (or (== @real?) (== @any/c)))
+     (let-values ([(i r) (guarded-numbers xs)])
+       (match* (i r)
+         [((cons g _) #f) g]
+         [(#f (cons g x)) (&& g (int? x))]
+         [((cons gi _) (cons gr xr)) (|| gi (&& gr (int? xr)))]
+         [(_ _) #f]))]
+    [_ #f]))
+   
 (define-lifted-type @real?
   #:base real?
   #:is-a? (instance-of? real? @real?)
@@ -20,15 +34,13 @@
        [(term _ (== self)) (values #t v)]
        [(term _ (== @integer?)) (values #t (int->real v))]
        [(union xs (or (== @real?) (== @any/c)))
-        (let ([rs (for/list ([gx (in-union v self)])
-                    (match gx
-                      [(cons g (and (term _ (== @integer?)) x)) (cons g (int->real x))]
-                      [_ gx]))])
-          (match rs
-            [(list) (values #f v)]
-            [(list (cons g r)) (values g r)]
-            [(app length (== (length xs))) (values #t (apply merge* rs))]
-            [(list (cons g _) ...) (values (apply || g) (apply merge* rs))]))]
+        (let-values ([(i r) (guarded-numbers xs)])
+          (match* (i r)
+            [((cons g x) #f) (values g (int->real x))]
+            [(#f (cons g x)) (values g x)]
+            [((cons gi xi) (cons gr _)) 
+             (values (or (= (length xs) 2) (|| gi gr)) (merge* (cons gi (int->real xi)) r))]
+            [(_ _) (values #f v)]))]
        [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge @+ 0 ps))])
   
@@ -44,27 +56,172 @@
      (match v
        [(? integer?) (values #t v)]
        [(term _ (== self)) (values #t v)]
-       [(union : [g (and (or (? integer?) (term _ (== self))) u)] _ ...) (values g u)]
+       [(term _ (== @real?)) 
+        (let ([g (int? v)])
+          (if g (values g (real->int v)) (values #f v)))]
+       [(union xs (or (== @real?) (== @any/c)))
+        (let-values ([(i r) (guarded-numbers xs)])
+          (match* (i r)
+            [((cons g x) #f) (values g x)]
+            [(#f (cons g x)) 
+             (let ([g (&& g (int? x))])
+               (if g (values g (real->int x)) (values #f v)))]
+            [((cons gi xi) (cons gr xr))
+             (let ([gr (&& (int? xr) gr)])
+               (if gr 
+                   (values (or (= (length xs) 2) (|| gi gr)) (merge* i (cons gr (real->int xr))))
+                   (values gi xi)))]
+            [(_ _) (values #f v)]))]
        [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge @+ 0 ps))])
 
-(define (@= a b) #f)
-(define (@+ a b) #f)
-(define (int->real n) #f)
-(define (real->int n) #f)
+;; ----------------- Lifting Utilities ----------------- ;; 
+(define (guarded-numbers xs)
+  (for/fold ([i #f][r #f]) ([gx xs])
+    (match (cdr gx)
+      [(or (? integer?) (term _ (== @integer?))) (values gx r)]
+      [(or (? real?) (term _ (== @real?))) (values i gx)]
+      [_ (values i r)])))
 
-(define (int? v)
-  (match v
-    [(? integer?) #t]
-    [(term _ (== @integer?)) #t]
-    [(term _ (== @real?)) (expression @int? v)]
+(define (numeric-coerce v [caller 'numeric-coerce])
+  (match v 
+    [(? real?) v]
+    [(term _ (or (== @integer?) (== @real?))) v]
     [(union xs (or (== @real?) (== @any/c)))
-     (apply || (for/list ([gx xs]) (&& (car gx) (int? (cdr gx)))))]
-    [_ #f]))
-   
+     (let-values ([(i r) (guarded-numbers xs)])
+       (match* (i r)
+         [((cons g x) #f) 
+          (assert g (numeric-type-error caller @real? v)) 
+          x]
+         [(#f (cons g x)) 
+          (assert g (numeric-type-error caller @real? v)) 
+          x]
+         [((cons gi _) (cons gr _))
+          (cond [(= (length xs) 2) v]
+                [else (assert (|| gi gr) (numeric-type-error caller @real? v)) 
+                      (merge* i r)])]
+         [(_ _) (assert #f (numeric-type-error caller @real? v))]))]))
+
+(define (numeric-type-error name t . args)
+  (arguments-error name (format "expected ~a arguments" t) "arguments" args))
+ 
+(define (safe-apply-1 op x)
+  (match (numeric-coerce x (object-name op))
+    [(union (list (cons ga a) (cons gb b))) 
+     (merge* (cons ga (op a)) (cons gb (op b)))]
+    [a (op a)]))
+
+(define (int-primitive? v)
+  (or (integer? v) (and (term? v) (equal? (get-type v) @integer?))))
+
+(define (real-primitive? v)
+  (or (real? v) (and (term? v) (equal? (get-type v) @real?))))
+
+(define (safe-apply-2 op x y)
+  (define caller (object-name op))
+  (define a (numeric-coerce x caller))
+  (define b (numeric-coerce y caller))        
+  (match a 
+    [(? int-primitive?)
+     (match b
+       [(? int-primitive?)  (op a b)]
+       [(? real-primitive?) (op (int->real a) b)]
+       [(union (list-no-order (cons gv (? int-primitive? v)) (cons gw w)))
+        (merge* (cons gv (op a v)) (cons gw (op (int->real a) w)))])]
+    [(? real-primitive?)   (op a (coerce b @real? caller))]
+    [(union (list-no-order (cons gv (? int-primitive? v)) (cons gw w)))
+     (match b
+       [(? int-primitive?)  (merge* (cons gv (op v b)) (cons gw (op w (int->real b))))]
+       [(? real-primitive?) (op (coerce a @real? caller) b)]
+       [(union (list-no-order (cons gc (? int-primitive? c)) (cons gd d)))
+        (let* ([gi (&& gv gc)]
+               [!gi (! gi)])
+          (cond [(and (term? gi) (term? !gi))
+                 (merge* (cons gi (op v c)) 
+                         (cons !gi (op (coerce a @real? caller) (coerce b @real? caller))))]
+                [(false? !gi)
+                 (assert gi (numeric-type-error caller @real? x y))
+                 (op v c)]
+                [else ; (false? gi)
+                 (assert !gi (numeric-type-error caller @real? x y))
+                 (op (coerce a @real? caller) (coerce b @real? caller))]))])]))
+                            
+
+(define (safe-apply-n op xs)
+  (define caller (object-name op))
+  (define ys (for/list ([x xs]) (numeric-coerce x caller)))
+  (match ys
+    [(or (list (? int-primitive?) ...) (list (? real-primitive?) ...)) (apply op ys)]
+    [(list _ ... (and (not (? int-primitive?)) (? real-primitive?)) _ ...) 
+     (apply op (for/list ([y ys]) (coerce y @real? caller)))] 
+    [_ 
+     (define-values (g* i*)
+       (for/lists (g* i*) ([y ys])
+         (match y
+           [(? int-primitive?) (values #t y)]
+           [(union (list-no-order (cons g (? int-primitive? v))) _) (values g v)])))
+     (define g (apply && g*))
+     (define !g (! g))
+     (cond [(and (term? g) (term? !g))
+            (merge* (cons g (apply op i*)) 
+                    (cons !g (apply op (for/list ([y ys]) (coerce y @real? caller)))))]
+           [(false? !g)
+            (assert g (numeric-type-error caller @real? xs))
+            (apply op i*)]
+           [else ; (false? g)
+            (assert !g (numeric-type-error caller @real? xs))
+            (apply op (for/list ([y ys]) (coerce y @real? caller)))])]))
+     
+(define (lift-op op)
+  (case (procedure-arity op)
+    [(1)  (lambda (x) (safe-apply-1 op x))]
+    [(2)  (lambda (x y) (safe-apply-2 op x y))]
+    [else (case-lambda [() (op)]
+                       [(x) (safe-apply-1 op x)]
+                       [(x y) (safe-apply-2 op x y)]
+                       [xs (safe-apply-n op xs)])]))
+
+(define-syntax-rule (define-lifted-operator @bvop bvop type)
+  (define-operator @bvop
+    #:name (string->symbol (substring (symbol->string 'bvop) 1))
+    #:type type
+    #:unsafe bvop
+    #:safe (lift-op bvop)))
+    
+;; ----------------- Operators ----------------- ;; 
+
 (define-operator @int?
-    #:name int?
+    #:name 'int?
     #:type T*->boolean?
     #:unsafe int?
     #:safe int?)
-  
+
+(define (^= x y)
+  (match* (x y)
+    [((? real?) (? real?)) (= x y)]
+    [((expression (== ite) a (? real? b) (? real? c)) (? real? d))
+     (|| (&& a (= b d)) (&& (! a) (= c d)))]
+    [((? real? d) (expression (== ite) a (? real? b) (? real? c)))
+     (|| (&& a (= b d)) (&& (! a) (= c d)))]
+    [((expression (== ite) a (? real? b) (? real? c)) 
+      (expression (== ite) d (? real? e) (? real? f)))
+     (let ([b=e (= b e)] 
+           [b=f (= b f)] 
+           [c=e (= c e)] 
+           [c=f (= c f)])
+       (or (and b=e b=f c=e c=f)
+           (|| (&& a d b=e) (&& a (! d) b=f) (&& (! a) d c=e) (&& (! a) (! d) c=f))))]
+    [(_ _) (sort/expression @= x y)]))
+    
+
+(define-lifted-operator @= ^= T*->boolean?)
+
+(define (@+ a b) (+ a b))
+(define (int->real n) n)
+(define (real->int n) n)
+
+
+(require "../form/define.rkt")
+(define-symbolic a b @boolean?)
+(define-symbolic i j @integer?)
+(define-symbolic p q @real?)

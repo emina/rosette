@@ -6,7 +6,7 @@
          (only-in "union.rkt" union)
          "safe.rkt")
 
-(provide define/lift (for-syntax lift-id) merge** unsafe-merge** flat-pattern-contract
+(provide define/lift (for-syntax lift-id) merge+ merge** unsafe-merge** flat-pattern-contract
          with@ drop@ add@)
    
 (define (with@ name) 
@@ -42,7 +42,11 @@
     [(unsafe-merge** ps (proc arg ... _)) (distribute unsafe-merge* ps (proc arg ... _))]
     [(unsafe-merge** ps (proc _ arg ...)) (distribute unsafe-merge* ps (proc _ arg ...))]
     [(unsafe-merge** ps proc)             (distribute unsafe-merge* ps proc)])) 
-     
+
+(define-syntax merge+ 
+  (syntax-rules ()
+    [(_ expr #:error err) (apply merge* (assert-some expr err))]
+    [(_ expr #:unless size #:error err) (apply merge* (assert-some expr #:unless size err))]))
 
 (define-syntax (define/lift stx)
   (syntax-case stx (: :: ->)

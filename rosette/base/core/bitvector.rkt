@@ -141,11 +141,6 @@
 
 (define (bitvector-type-error name . args)
   (arguments-error name "expected bitvectors of same length" "arguments" args))
-
-(define-syntax merge+ 
-  (syntax-rules ()
-    [(_ expr #:error err) (apply merge* (assert-some expr err))]
-    [(_ expr #:unless size #:error err) (apply merge* (assert-some expr #:unless size err))]))
  
 (define (safe-apply-1 op x)
   (match x
