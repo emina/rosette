@@ -184,12 +184,12 @@
                        [(x y) (safe-apply-2 op x y)]
                        [xs (safe-apply-n op xs)])]))
 
-(define-syntax-rule (define-lifted-operator @bvop bvop type)
-  (define-operator @bvop
-    #:name (string->symbol (substring (symbol->string '@bvop) 1))
+(define-syntax-rule (define-lifted-operator @op $op type)
+  (define-operator @op
+    #:name (string->symbol (substring (symbol->string '@op) 1))
     #:type type
-    #:unsafe bvop
-    #:safe (lift-op bvop)))
+    #:unsafe $op
+    #:safe (lift-op $op)))
     
 ;; ----------------- Predicates ----------------- ;; 
 
@@ -271,25 +271,80 @@
     [(x y) ($+ x ($- y))]
     [(x . xs) (apply $+ x (map $- xs))]))
 
+(define ($abs x) 
+  (match x
+    [(? real?) (abs x)]
+    [(expression (== @abs) _) x]
+    [_ (expression @abs x)]))
+
 (define-lifted-operator @+ $+ T*->T)
 (define-lifted-operator @* $* T*->T)
 (define-lifted-operator @- $- T*->T)
+(define-lifted-operator @abs $abs T*->T)
 
 ;; ----------------- Int Operators ----------------- ;; 
 
 (define ($quotient a b) (quotient a b))
 (define ($remainder a b) (remainder a b))
-(define ($abs a) (abs a))
 
-(define-lifted-operator @quotient $quotient T*->T)
-(define-lifted-operator @remainder $remainder T*->T)
-(define-lifted-operator @abs $abs T*->T)
+(define T*-integer? (const @integer?))
+
+(define (undefined-for-zero-error name)
+  (thunk (raise-arguments-error name "undefined for 0")))
+  
+(define-syntax-rule (define-lifted-int-operator @op $op op)
+  (define-operator @op
+    #:name 'op
+    #:type T*-integer?
+    #:unsafe $op
+    #:safe (lambda (x y)
+             (let ([a (coerce x @integer? 'op)]
+                   [b (coerce y @integer? 'op)])
+               (assert (! ($= b 0)) (undefined-for-zero-error 'op))
+               ($op a b)))))
+
+(define-lifted-int-operator @quotient $quotient quotient)
+(define-lifted-int-operator @remainder $remainder remainder)
+
 
 ;; ----------------- Real Operators ----------------- ;; 
 
-(define ($/ a b) (/ a b))
-(define-lifted-operator @/ $/ T*->T)
+(define ($/ x y)
+  (match* (x y)
+    [((? real?) (? real?)) (/ x y)]
+    [(0 _) 0]
+    [(_ 1) x]
+    [(_ -1) ($- x)]
+    [(_ (== x)) 1]
+    [(_ (expression (== @-) (== x))) -1]
+    [((expression (== @-) (== y)) _) -1]
+    [((expression (== ite) a (? real? b) (? real? c)) (? real?))
+     (merge a (/ b y) (/ c y))]
+    [((? real?) (expression (== ite) a (? real? b) (? real? c)))
+     (merge a (/ x b) (/ x c))]
+    [((expression (== @/) a (? real? b)) (? real?)) ($/ a (* b y))]
+    [((expression (== @*) a ... (== y) b ...) _) (apply $* (append a b))]
+    ;[((expression (== @*) as ...) (expression (== @*) bs ...)) ]
+    [(_ _) (expression @/ x y)]))
 
+(define T*-real? (const @real?))
+
+(define-operator @/
+  #:name '/
+  #:type T*-real?
+  #:unsafe $/
+  #:safe (case-lambda 
+           [(x) (@/ 1 x)]
+           [(x y) (let ([a (coerce x @real? '/)]
+                        [b (coerce y @real? '/)])
+                    (assert (! ($= 0 b)) (undefined-for-zero-error '/))
+                    ($/ a b))]
+           [(x . ys) (let ([z (coerce x @real? '/)]
+                           [zs (for/list ([y ys]) (coerce y @real? '/))])
+                       (for ([z zs])
+                         (assert (! ($= z 0)) (undefined-for-zero-error '/)))
+                       ($/ x (apply $* zs)))]))
+                 
 ;; ----------------- Coercion Operators ----------------- ;; 
 
 (define (integer->real i)
@@ -305,13 +360,13 @@
 
 (define-operator @integer->real 
   #:name 'integer->real
-  #:type (lambda (i) @real?)
+  #:type T*-real?
   #:unsafe integer->real
   #:safe (lambda (n) (integer->real (coerce n @integer? 'integer->real))))
 
 (define-operator @real->integer 
   #:name 'real->integer 
-  #:type (lambda (r) @integer?)
+  #:type T*-integer?
   #:unsafe real->integer 
   #:safe (lambda (n) (real->integer (coerce n @real? 'real->integer))))
 
@@ -417,7 +472,8 @@
                        (list c ... (expression (== @*) (and (? real?) (app / a)) b) d ...))
                       (append c d)]
                      [(_ _) #f]))])))
-    
+
+
     
 
 
