@@ -286,8 +286,24 @@
 
 (define $quotient (div @quotient $quotient quotient))
 
-(define ($remainder a b) (remainder a b))
-
+(define ($remainder x y)
+  (match* (x y)
+    [((? integer?) (? integer?)) (remainder x y)]
+    [(_ 1) 0]
+    [(_ -1) 0]
+    [(0 _) 0]
+    [(_ (== x)) 0]
+    [(_ (expression (== @-) (== x))) 0]
+    [((expression (== @-) (== y)) _) 0]
+    [((expression (== @*) _ ... (== y) _ ...) _) 0]
+    [((expression (== ite) a (? real? b) (? real? c)) (? real?))
+     (merge a (remainder b y) (remainder c y))]
+    [((? real?) (expression (== ite) a 
+                            (and b (? real?) (not (? zero?))) 
+                            (and c (? real?) (not (? zero?)))))
+     (merge a (remainder x b) (remainder x c))]
+    [(_ _) (expression @remainder x y)]))
+    
 (define T*-integer? (const @integer?))
 
 (define (undefined-for-zero-error name)
@@ -470,7 +486,9 @@
       [((expression (== @-) (== y)) _) -1]
       [((expression (== ite) a (? real? b) (? real? c)) (? real?))
        (merge a (op b y) (op c y))]
-      [((? real?) (expression (== ite) a (? real? b) (? real? c)))
+      [((? real?) (expression (== ite) a 
+                              (and b (? real?) (not (? zero?))) 
+                              (and c (? real?) (not (? zero?)))))
        (merge a (op x b) (op x c))]
       [((expression (== @op) a (? real? b)) (? real?)) ($op a (* b y))]
       [((expression (== @*) a (... ...) (== y) b (... ...)) _) (apply $* (append a b))]
