@@ -406,7 +406,7 @@
               [#f #f])))]
     [(_ _) #f]))
 
-(define (cancel+ xs ys)
+(define (cancel+ xs ys) ; fix this
   (and ys
        (match xs
          [(list) ys]
@@ -458,7 +458,7 @@
               [#f #f])))]
     [(_ _) #f]))
 
-(define (cancel* xs ys)
+(define (cancel* xs ys)  ; fix this
   (and ys
        (match xs
          [(list) ys]
