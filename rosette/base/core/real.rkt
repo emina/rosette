@@ -284,7 +284,8 @@
 
 ;; ----------------- Int Operators ----------------- ;; 
 
-(define ($quotient a b) (quotient a b))
+(define $quotient (div @quotient $quotient quotient))
+
 (define ($remainder a b) (remainder a b))
 
 (define T*-integer? (const @integer?))
@@ -309,23 +310,7 @@
 
 ;; ----------------- Real Operators ----------------- ;; 
 
-(define ($/ x y)
-  (match* (x y)
-    [((? real?) (? real?)) (/ x y)]
-    [(0 _) 0]
-    [(_ 1) x]
-    [(_ -1) ($- x)]
-    [(_ (== x)) 1]
-    [(_ (expression (== @-) (== x))) -1]
-    [((expression (== @-) (== y)) _) -1]
-    [((expression (== ite) a (? real? b) (? real? c)) (? real?))
-     (merge a (/ b y) (/ c y))]
-    [((? real?) (expression (== ite) a (? real? b) (? real? c)))
-     (merge a (/ x b) (/ x c))]
-    [((expression (== @/) a (? real? b)) (? real?)) ($/ a (* b y))]
-    [((expression (== @*) a ... (== y) b ...) _) (apply $* (append a b))]
-    ;[((expression (== @*) as ...) (expression (== @*) bs ...)) ]
-    [(_ _) (expression @/ x y)]))
+(define $/ (div @/ $/ /))
 
 (define T*-real? (const @real?))
 
@@ -406,7 +391,7 @@
               [#f #f])))]
     [(_ _) #f]))
 
-(define (cancel+ xs ys) ; fix this
+(define (cancel+ xs ys) 
   (and ys
        (match xs
          [(list) ys]
@@ -458,7 +443,7 @@
               [#f #f])))]
     [(_ _) #f]))
 
-(define (cancel* xs ys)  ; fix this
+(define (cancel* xs ys)  
   (and ys
        (match xs
          [(list) ys]
@@ -473,8 +458,40 @@
                       (append c d)]
                      [(_ _) #f]))])))
 
+(define-syntax-rule (div @op $op op)
+  (lambda (x y)
+    (match* (x y)
+      [((? real?) (? real?)) (op x y)]
+      [(0 _) 0]
+      [(_ 1) x]
+      [(_ -1) ($- x)]
+      [(_ (== x)) 1]
+      [(_ (expression (== @-) (== x))) -1]
+      [((expression (== @-) (== y)) _) -1]
+      [((expression (== ite) a (? real? b) (? real? c)) (? real?))
+       (merge a (op b y) (op c y))]
+      [((? real?) (expression (== ite) a (? real? b) (? real? c)))
+       (merge a (op x b) (op x c))]
+      [((expression (== @op) a (? real? b)) (? real?)) ($op a (* b y))]
+      [((expression (== @*) a (... ...) (== y) b (... ...)) _) (apply $* (append a b))]
+      [((expression (== @*) as (... ...)) (expression (== @*) bs (... ...))) 
+       (or (and (<= (length bs) (length as))
+                (let ([cs (cancel-div bs as)])
+                  (and cs (apply $* cs))))
+           (expression @op x y))]
+      [(_ _) (expression @op x y)])))
 
-    
+(define (cancel-div xs ys)  
+  (and ys
+       (match xs
+         [(list) ys]
+         [(list x rest ...)
+          (cancel-div rest
+                      (match* (x ys)
+                        [((? real?) (list (== x) b ...)) b]
+                        [(_ (list a ... (== x) b ...)) (append a b)]
+                        [(_ _) #f]))])))
+
 
 
 
