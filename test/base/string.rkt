@@ -26,10 +26,14 @@
 (define (ex4 x z)
   (assert (and (> z 0) (= (str-to-int x) z))))
 
+(define (ex5 x z)
+  (assert (and (> z 0) (equal? (int-to-str z) x))))
+
 (show "Find an assignment for x, where x.\"ab\"=\"ba\".x and the length of x equals to 7:\n x = ~s\n" ex1 x)
 (show "Find assignments for x and y, where x and y are distinct and their lengths are equal:\n x = ~s, y = ~s\n" ex2 x y)
 (show "Find assignments for x and y, where x.y != y.x.\n x = ~s, y = ~s\n" ex3 x y)
 (show "Find a string and its numerical value, not equal to 0.\n x = ~s, z = ~s\n" ex4 x z)
+(show "Find a string and its numerical value, not equal to 0.\n x = ~s, z = ~s\n" ex5 x z)
 
      
 

@@ -104,4 +104,4 @@
 ; String theory
 (define String 'String)
 (define-ops
-  str.++ str.len str.substr str.to.int)
+  str.++ str.len str.substr str.to.int int.to.str)

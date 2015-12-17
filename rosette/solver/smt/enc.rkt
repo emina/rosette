@@ -38,6 +38,8 @@
      (nat2bv (str.len (enc str env)) (current-bitwidth))]
     [(expression (== @str-to-int) str) 
      (nat2bv (str.to.int (enc str env)) (current-bitwidth))]
+    [(expression (== @int-to-str) int) 
+     (int.to.str (bv2nat (enc int env)))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...)
      (apply smt/op (for/list ([e es]) (enc e env)))]
     [_ (error 'encode "cannot encode expression ~a" v)]))
