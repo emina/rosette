@@ -5,7 +5,7 @@
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 
 (provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @abs
-         @integer->real @real->integer)
+         @integer->real @real->integer @int?)
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
 
@@ -199,35 +199,39 @@
     #:unsafe int?
     #:safe int?)
 
-(define $=  (compare @= = sort/expression))
-(define $<= (compare @<= <= expression))
-(define $<  (compare @< < expression))
-(define ($>= x y) ($<= y x))
-(define ($> x y) ($< y x)) 
+(define $=  (compare @= $= = sort/expression))
+(define $<= (compare @<= $<= <= expression))
+(define $<  (compare @< $< < expression))
+(define $>= (case-lambda [(x y) ($<= y x)] [xs (apply $<= (reverse xs))]))
+(define $>  (case-lambda [(x y) ($< y x)] [xs (apply $< (reverse xs))]))
 
-(define-syntax-rule (compare @op op expr)
-  (lambda (x y)
-    (match* (x y)
-      [((? real?) (? real?)) (op x y)]
-      [((expression (== ite) a (? real? b) (? real? c)) (? real? d)) (merge a (op b d) (op c d))]
-      [((? real? d) (expression (== ite) a (? real? b) (? real? c))) (merge a (op d b) (op d c))]
-      [((expression (== ite) a (? real? b) (? real? c)) 
-        (expression (== ite) d (? real? e) (? real? f)))
-       (let ([b~e (op b e)] 
-             [b~f (op b f)] 
-             [c~e (op c e)] 
-             [c~f (op c f)])
-         (or (and b~e b~f c~e c~f)
-             (|| (&& a d b~e) (&& a (! d) b~f) (&& (! a) d c~e) (&& (! a) (! d) c~f))))]
-      [(a (expression (== @+) (? real? r) a)) (op 0 r)]
-      [((expression (== @+) (? real? r) a) a) (op r 0)]
-      [(_ _) (expr @op x y)])))
+(define-syntax-rule (compare @op $op op expr)
+  (case-lambda 
+    [(x y)
+     (match* (x y)
+       [((? real?) (? real?)) (op x y)]
+       [((expression (== ite) a (? real? b) (? real? c)) (? real? d)) (merge a (op b d) (op c d))]
+       [((? real? d) (expression (== ite) a (? real? b) (? real? c))) (merge a (op d b) (op d c))]
+       [((expression (== ite) a (? real? b) (? real? c)) 
+         (expression (== ite) d (? real? e) (? real? f)))
+        (let ([b~e (op b e)] 
+              [b~f (op b f)] 
+              [c~e (op c e)] 
+              [c~f (op c f)])
+          (or (and b~e b~f c~e c~f)
+              (|| (&& a d b~e) (&& a (! d) b~f) (&& (! a) d c~e) (&& (! a) (! d) c~f))))]
+       [(a (expression (== @+) (? real? r) a)) (op 0 r)]
+       [((expression (== @+) (? real? r) a) a) (op r 0)]
+       [(_ _) (expr @op x y)])]
+    [(x y . zs) 
+     (apply && ($op x y) (for/list ([a (in-sequences (in-value y) zs)][b zs]) ($op a b)))]))
 
 (define-lifted-operator @=  $= T*->boolean?)
 (define-lifted-operator @<= $<= T*->boolean?)
 (define-lifted-operator @>= $>= T*->boolean?)
 (define-lifted-operator @<  $< T*->boolean?)
 (define-lifted-operator @>  $> T*->boolean?)
+
 
 ;; ----------------- Int and Real Operators ----------------- ;; 
 

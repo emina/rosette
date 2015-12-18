@@ -100,6 +100,10 @@
 (define (sign_extend i b)
   `((_ sign_extend ,i) ,b))
 
-; Int theory
+; Int and Real theories
 (define Int 'Int)
-(define-ops < <=)
+(define Real 'Real)
+(define-ops
+  + - * / div mod abs 
+  < <= 
+  is_int to_int to_real )

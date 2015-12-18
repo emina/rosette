@@ -7,6 +7,7 @@
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/num.rkt" @number?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
+         (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/struct/enum.rkt" enum? enum-members)
          "../solution.rkt")
 
@@ -70,6 +71,16 @@
        [(? number?) (finitize val)]
        [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
         (finitize n)])]
+    [(== @integer?)
+     (match val
+       [(? integer?) val]
+       [(list '- v) (- v)])]
+    [(== @real?)
+     (match val 
+       [(? real?) val]
+       [(list '- v) (- v)]
+       [(list '/ a b) (/ a b)]
+       [(list '/ (list '- a) b) (/ (- a) b)])]
     [(? bitvector? t)
      (match val
        [(? number?) (bv val t)]

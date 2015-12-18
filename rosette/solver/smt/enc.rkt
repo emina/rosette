@@ -1,7 +1,8 @@
 #lang racket
 
-(require (prefix-in smt/ (only-in "smtlib2.rkt" bv not and or xor => <=> ite = <))
-         (except-in "smtlib2.rkt" bv not and or xor => <=> ite = <) 
+(require (prefix-in smt/ (only-in "smtlib2.rkt" bv not and or xor => <=> ite = < <= + - * /))
+         (only-in "smtlib2.rkt" [abs int_abs] div mod)
+         (except-in "smtlib2.rkt" bv not and or xor => <=> ite = < + - * / abs) 
          "env.rkt" "../common/enc.rkt" 
          (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
          (only-in "../../base/core/polymorphic.rkt" ite =?)
@@ -16,6 +17,8 @@
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
                   @concat @extract @zero-extend @sign-extend @int->bv @bv->int @bv->nat)
+         (prefix-in $ (only-in "../../base/core/real.rkt" @integer? @real? @= @< @<= @>= @> 
+                               @+ @* @- @/ @quotient @remainder @abs @integer->real @real->integer @int?))
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
@@ -65,6 +68,21 @@
               (current-bitwidth)
               (bvmul (concat (enc 0 env) (enc x env)) 
                      (concat (enc 0 env) (enc y env))))]
+    [(expression (== $@abs) e)
+     (let ([te (enc e env)])
+       (if (equal? (get-type v) $@integer?) 
+           (int_abs te) 
+           (smt/ite (smt/< 0) (smt/- te) te)))]
+    [(expression (== $@quotient) x y)
+     (let* ([tx (enc x env)]
+            [ty (enc y env)]
+            [tx/ty (div (int_abs tx) (int_abs ty))])
+       (smt/ite (smt/= (smt/< tx 0) (smt/< ty 0)) tx/ty (smt/- tx/ty)))]   
+    [(expression (== $@remainder) x y)
+     (let* ([tx (enc x env)]
+            [ty (enc y env)]
+            [tx%ty (mod (int_abs tx) (int_abs ty))])
+       (smt/ite (smt/= (smt/< tx 0)) (smt/- tx%ty) tx%ty))]   
     [_ (error 'encode "cannot encode expression ~a" v)]))
 
 (define (enc-const v env)
@@ -74,7 +92,13 @@
   (match v 
     [#t true]
     [#f false]
-    [(? number?) (smt/bv (finitize v) (current-bitwidth))]
+    [(? number?) ; Horrible hack to allow testing Int and Real theory before they are properly integrated. 
+     (let ([bw (current-bitwidth)])
+       (if (infinite? bw)
+           (cond [(integer? v) (inexact->exact v)]
+                 [(exact? v) (smt// (numerator v) (denominator v))]
+                 [else v])
+           (smt/bv (finitize v) (current-bitwidth))))]
     [(bv lit t) (smt/bv lit (bitvector-size t))]
     [(? enum-literal?) (ordinal v)]
     [_ (error 'enc-literal "expected a boolean?, number? or enum-literal?, given ~a" v)]))
@@ -94,7 +118,11 @@
         [@bvnot bvnot] [@bvor bvor] [@bvand bvand] [@bvxor bvxor] 
         [@bvshl bvshl] [@bvlshr bvlshr] [@bvashr bvashr]
         [@bvneg bvneg] [@bvadd bvadd] [@bvmul bvmul] [@bvudiv bvudiv] [@bvsdiv bvsdiv]
-        [@bvurem bvurem] [@bvsrem bvsrem] [@bvsmod bvsmod] [@concat concat]]
+        [@bvurem bvurem] [@bvsrem bvsrem] [@bvsmod bvsmod] [@concat concat]
+        ; int and real
+        [$@= smt/=] [$@< smt/<] [$@<= smt/<=] 
+        [$@+ smt/+] [$@* smt/*] [$@- smt/-] [$@/ smt//] 
+        [$@integer->real to_real] [$@real->integer to_int] [$@int? is_int]]
   [#:?  [enum-comparison-op? smt/<]])
 
 (define (smt/abs e)

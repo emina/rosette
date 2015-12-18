@@ -1,11 +1,12 @@
 #lang racket
 
 (require racket/syntax 
-         (only-in "smtlib2.rkt" Int Bool BitVec declare-const define-const assert [< Int<] [<= Int<=]) 
+         (only-in "smtlib2.rkt" Int Real Bool BitVec declare-const define-const assert [< smt/<] [<= smt/<=]) 
          "../../base/core/term.rkt" 
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/num.rkt" @number? current-bitwidth)
          (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size)
+         (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/struct/enum.rkt" enum? enum-size))
 
 (provide (rename-out [make-env env] 
@@ -36,10 +37,20 @@
 
 (define (smt-id base n) (format-symbol "~a~a" base n))
 
+; Horrible hack to allow testing Int and Real theory before they are properly integrated.
+(define (hacked-type-of val)
+  (cond [(typed? val) (get-type val)]
+        [(boolean? val) @boolean?]
+        [(integer? val) (if (infinite? (current-bitwidth)) @integer? @number?)]
+        [(real? val) (if (infinite? (current-bitwidth)) @real? @number?)]
+        [else (error 'hacked-type-of "value of untranslatable type" val)]))
+        
 (define (smt-type val)
-  (match (type-of val)
+  (match (hacked-type-of val)
     [(== @boolean?) Bool]
     [(== @number?) (BitVec (current-bitwidth))]
+    [(== @integer?) Int]
+    [(== @real?) Real]
     [(? bitvector? t) (BitVec (bitvector-size t))]
     [(? enum?) Int]
     [t (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
@@ -94,5 +105,5 @@
 (define (assert-invariant id v)
   (let ([t (type-of v)]) 
     (when (enum? t) 
-      (assert (Int<= 0 id))
-      (assert (Int< id (enum-size t))))))
+      (assert (smt/<= 0 id))
+      (assert (smt/< id (enum-size t))))))
