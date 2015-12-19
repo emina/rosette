@@ -35,7 +35,7 @@
                 [(? constant?)  (enc-const v env)]
                 [_             (enc-lit v env)])))
 
-(define (enc-expr v env)
+(define (enc-expr v env)  
   (match v
     [(expression (== @*) -1 e) 
      (bvneg (enc e env))]
@@ -48,11 +48,13 @@
     [(expression (== @expt) e (? integer? n)) 
      (let ([e^n (apply bvmul (make-list (abs n) (enc e env)))])
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
-    [(expression (app rosette->smt (? procedure? smt/op)) es ...)
+    [(expression (app rosette->smt (? procedure? smt/op)) es ...) 
      (apply smt/op (for/list ([e es]) (enc e env)))]
-    [(or (expression (and op (== @int->bv)) v (app bitvector-size sz))
-         (expression (and op (== @bv->int)) (and v (app get-type (app bitvector-size sz))))
-         (expression (and op (== @bv->nat)) (and v (app get-type (app bitvector-size sz)))))
+    [(or (expression (and op (== @int->bv)) v (? bitvector? (app bitvector-size sz)))
+         (expression (and op (== @bv->int)) 
+                     (and v (app get-type (? bitvector?  (app bitvector-size sz)))))
+         (expression (and op (== @bv->nat)) 
+                     (and v (app get-type (? bitvector? (app bitvector-size sz))))))
      (let-values ([(src tgt) (if (equal? op @int->bv) (values (current-bitwidth) sz) (values sz (current-bitwidth)))]
                   [(extend)  (if (equal? op @bv->nat) zero_extend sign_extend)])
        (cond [(= src tgt) (enc v env)]
@@ -74,16 +76,16 @@
        (if (equal? (get-type v) $@integer?) 
            (int_abs te) 
            (smt/ite (smt/< 0) (smt/- te) te)))]
-    [(expression (== $@quotient) x y)
+    [(expression (== $@quotient) x y) 
      (let* ([tx (enc x env)]
             [ty (enc y env)]
             [tx/ty (div (int_abs tx) (int_abs ty))])
        (smt/ite (smt/= (smt/< tx 0) (smt/< ty 0)) tx/ty (smt/- tx/ty)))]   
-    [(expression (== $@remainder) x y)
+    [(expression (== $@remainder) x y) 
      (let* ([tx (enc x env)]
             [ty (enc y env)]
             [tx%ty (mod (int_abs tx) (int_abs ty))])
-       (smt/ite (smt/= (smt/< tx 0)) (smt/- tx%ty) tx%ty))]   
+       (smt/ite (smt/< tx 0) (smt/- tx%ty) tx%ty))]   
     [_ (error 'encode "cannot encode expression ~a" v)]))
 
 (define (enc-const v env)

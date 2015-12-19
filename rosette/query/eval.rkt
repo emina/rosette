@@ -64,13 +64,15 @@
         (hash-set! cache expr result)
         result)))
 
-(define (finitize num) 
-  (match num
-    [(? number? v) 
-     (let* ([bitwidth (current-bitwidth)]
-              [mask (arithmetic-shift -1 bitwidth)]
-              [masked (bitwise-and (bitwise-not mask) (inexact->exact (truncate v)))])
-         (if (bitwise-bit-set? masked (- bitwidth 1))
-             (bitwise-ior mask masked)  
-             masked))]
-    [_ num]))
+(define (finitize num)
+  (if (finite-number-semantics?)
+      (match num
+        [(? number? v) 
+         (let* ([bitwidth (current-bitwidth)]
+                [mask (arithmetic-shift -1 bitwidth)]
+                [masked (bitwise-and (bitwise-not mask) (inexact->exact (truncate v)))])
+           (if (bitwise-bit-set? masked (- bitwidth 1))
+               (bitwise-ior mask masked)  
+               masked))]
+        [_ num])
+      num))

@@ -103,7 +103,8 @@
           (cond [(= (length xs) 2) v]
                 [else (assert (|| gi gr) (numeric-type-error caller @real? v)) 
                       (merge* i r)])]
-         [(_ _) (assert #f (numeric-type-error caller @real? v))]))]))
+         [(_ _) (assert #f (numeric-type-error caller @real? v))]))]
+    [_ (assert #f (numeric-type-error caller @real? v))]))
 
 (define (numeric-type-error name t . args)
   (arguments-error name (format "expected ~a arguments" t) "arguments" args))

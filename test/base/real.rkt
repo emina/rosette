@@ -8,7 +8,9 @@
          rosette/base/core/polymorphic rosette/base/core/merge 
          rosette/base/core/assert
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
-         (only-in rosette/base/core/equality @equal?))
+         (only-in rosette/base/core/equality @equal?)
+         (only-in rosette evaluate)
+         )
 
 (define solver (new z3%))
 (finite-number-semantics? #f)
@@ -34,6 +36,19 @@
     (define preconditions (asserts))
     (clear-asserts)
     (check-pred unsat? (apply solve (! (@equal? (expression op e ...) expected)) preconditions))))
+
+(define-syntax-rule (test-valid? ([var sym] ...) (op e ...) expected)
+  (let ([actual (op e ...)])
+    (check-equal? actual expected)
+    (define preconditions (asserts))
+    ;(printf "ASSERTS: ~a\n" (asserts))
+    (clear-asserts)
+    (for* ([var (in-range minval maxval+1)] ...)
+      (define sol (sat (make-immutable-hash (list (cons sym var) ...))))
+      (and (for/and ([pre preconditions]) (evaluate pre sol))
+           ;(printf "sol: ~a\n" sol)
+           (check-true (evaluate (@equal? (expression op e ...) expected) sol))))))
+
 
 (define-syntax-rule (check-cast (type val) (accepted? result))
   (let-values ([(actual-accepted? actual-result) (cast type val)])
@@ -221,6 +236,35 @@
   (check-valid? (div (@* 2 x y z) y) (@* 2 x z))
   (check-valid? (div (@* x y z) (@* y x)) z))
 
+(define (check-quotient-simplifications [x xi] [y yi] [z zi])
+  ; We can't use Z3 to check all simplifications for quotient because 
+  ; they are in the undecidable fragment and z3 either runs forever
+  ; or returns 'unknown.
+  (check-valid? (@quotient 0 x) 0)
+  (check-valid? (@quotient x 1) x)
+  (check-valid? (@quotient x -1) (@- x))
+  (check-valid? (@quotient x x) 1)
+  (check-valid? (@quotient x (@- x)) -1)
+  (check-valid? (@quotient (@- x) x) -1)
+  (check-valid? (@quotient (ite a 4 6) 2) 
+                (ite a (@quotient 4 2) (@quotient 6 2)))
+  (check-valid? (@quotient 12 (ite a 4 6)) 
+                (ite a (@quotient 12 4) (@quotient 12 6)))
+  (check-valid? (@quotient (@quotient x 4) 2) (@quotient x 8))
+  (test-valid?  ([i x][j y][k z]) (@quotient (@* x y z) y) (@* x z)))
+
+(define (check-remainder-simplifications [x xi] [y yi] [z zi])
+  (check-valid? (@remainder 0 x) 0)
+  (check-valid? (@remainder x 1) 0)
+  (check-valid? (@remainder x -1) 0)
+  (check-valid? (@remainder x x) 0)
+  (check-valid? (@remainder x (@- x)) 0)
+  (check-valid? (@remainder (@- x) x) 0)
+  (check-valid? (@remainder (ite a 4 6) 3) 
+                (ite a (@remainder 4 3) (@remainder 6 3)))
+  (check-valid? (@remainder 18 (ite a 4 6)) 
+                (ite a (@remainder 18 4) (@remainder 18 6))))
+
 (define tests:real?
   (test-suite+
    "Tests for real? in rosette/base/real.rkt"
@@ -256,7 +300,7 @@
 
 (define tests:+
   (test-suite+
-   "Tests for + in rosette/base/bitvector.rkt"
+   "Tests for + in rosette/base/real.rkt"
    (check-+-simplifications xi yi zi)
    (check-+-simplifications xr yr zr)
    (check-semantics @+ xi yi zi)
@@ -264,7 +308,7 @@
 
 (define tests:-
   (test-suite+
-   "Tests for - in rosette/base/bitvector.rkt"
+   "Tests for - in rosette/base/real.rkt"
    (check---simplifications xi yi zi)
    (check---simplifications xr yr zr)
    (check-semantics @- xi yi zi)
@@ -272,7 +316,7 @@
 
 (define tests:*
   (test-suite+
-   "Tests for * in rosette/base/bitvector.rkt"
+   "Tests for * in rosette/base/real.rkt"
    (check-*-simplifications xi yi zi)
    (check-*-simplifications xr yr zr)
    (check-*-real-simplifications)
@@ -281,10 +325,22 @@
 
 (define tests:/
   (test-suite+
-   "Tests for / in rosette/base/bitvector.rkt"
+   "Tests for / in rosette/base/real.rkt"
    (check-division-simplifications @/ xr yr zr (/ 2 10))
    (check-semantics @/ xr yr zr (lambda (x) (not (zero? x))))
    ))
+
+(define tests:quotient
+  (test-suite+
+   "Tests for quotient in rosette/base/real.rkt"
+   (check-quotient-simplifications)
+   (check-semantics @quotient xi yi zi (lambda (x) (not (zero? x))))))
+
+(define tests:remainder
+  (test-suite+
+   "Tests for remainder in rosette/base/real.rkt"
+   (check-remainder-simplifications)
+   (check-semantics @remainder xi yi zi (lambda (x) (not (zero? x))))))
 
 (time (run-tests tests:real?))
 (time (run-tests tests:integer?))
@@ -295,6 +351,8 @@
 (time (run-tests tests:-))
 (time (run-tests tests:*))
 (time (run-tests tests:/))
+(time (run-tests tests:quotient))
+(time (run-tests tests:remainder))
 
 (finite-number-semantics? #t)
 (send solver shutdown)
