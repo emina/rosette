@@ -367,5 +367,5 @@
 (time (run-tests tests:remainder))
 (time (run-tests tests:abs))
 
-;(finite-number-semantics? #t)
-;(send solver shutdown)
+(finite-number-semantics? #t)
+(send solver shutdown)
