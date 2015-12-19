@@ -265,6 +265,9 @@
   (check-valid? (@remainder 18 (ite a 4 6)) 
                 (ite a (@remainder 18 4) (@remainder 18 6))))
 
+(define (check-abs-simplifications x)
+  (check-valid? (@abs (@abs x)) (@abs x)))
+
 (define tests:real?
   (test-suite+
    "Tests for real? in rosette/base/real.rkt"
@@ -342,6 +345,15 @@
    (check-remainder-simplifications)
    (check-semantics @remainder xi yi zi (lambda (x) (not (zero? x))))))
 
+(define tests:abs
+  (test-suite+
+   "Tests for abs in rosette/base/real.rkt"
+   (check-abs-simplifications xi)
+   (check-abs-simplifications xr)
+   (check-semantics @abs xi yi zi)
+   (check-semantics @abs xr yr zr)
+   ))
+
 (time (run-tests tests:real?))
 (time (run-tests tests:integer?))
 (time (run-tests tests:=))
@@ -353,6 +365,7 @@
 (time (run-tests tests:/))
 (time (run-tests tests:quotient))
 (time (run-tests tests:remainder))
+(time (run-tests tests:abs))
 
-(finite-number-semantics? #t)
-(send solver shutdown)
+;(finite-number-semantics? #t)
+;(send solver shutdown)

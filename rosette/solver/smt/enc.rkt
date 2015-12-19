@@ -75,7 +75,7 @@
      (let ([te (enc e env)])
        (if (equal? (get-type v) $@integer?) 
            (int_abs te) 
-           (smt/ite (smt/< 0) (smt/- te) te)))]
+           (smt/ite (smt/< te 0) (smt/- te) te)))]
     [(expression (== $@quotient) x y) 
      (let* ([tx (enc x env)]
             [ty (enc y env)]
