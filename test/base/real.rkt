@@ -31,7 +31,9 @@
   (let ([actual (op e ...)])
     (check-equal? actual expected) 
     ;(printf "ASSERTS: ~a\n" (asserts))
-    (check-pred unsat? (apply solve (! (@equal? (expression op e ...) expected)) (asserts)))))
+    (define preconditions (asserts))
+    (clear-asserts)
+    (check-pred unsat? (apply solve (! (@equal? (expression op e ...) expected)) preconditions))))
 
 (define-syntax-rule (check-cast (type val) (accepted? result))
   (let-values ([(actual-accepted? actual-result) (cast type val)])
@@ -48,7 +50,7 @@
               (@equal? a (op x y))) a))
     (check-equal? actual expected)))
 
-(define (check-semantics op x y z)
+(define (check-semantics op x y z [right? (const #t)])
   (case (procedure-arity op)
     [(1) 
      (for ([i (in-range minval maxval+1)])
@@ -59,7 +61,7 @@
        (check-= actual expected 0))]
     [else
      (for* ([i (in-range minval maxval+1)]
-            [j (in-range minval maxval+1)])
+            [j (in-range minval maxval+1)] #:when (right? j))
        (define actual (op i j))
        ;(printf "(~a ~a ~a) = ~a\n" op i j actual)
        (define expected 
@@ -202,9 +204,23 @@
   ;
   (check-valid? (@* (@* x (@/ 1 y)) (@* (@/ 1 x) y z)) z)
   (check-valid? (@* (@* (@/ 1 x) (@/ 1 y)) (@* x y z)) z))
-  
-  
-  
+
+(define (check-division-simplifications div x y z [epsilon 0])
+  (check-valid? (div 0 x) 0)
+  (check-valid? (div x 1) x)
+  (check-valid? (div x -1) (@- x))
+  (check-valid? (div x x) 1)
+  (check-valid? (div x (@- x)) -1)
+  (check-valid? (div (@- x) x) -1)
+  (check-valid? (div (ite a (+ 4 epsilon) (+ 6 epsilon)) 2) 
+                (ite a (div (+ 4 epsilon) 2) (div (+ 6 epsilon) 2)))
+  (check-valid? (div 12 (ite a (+ 4 epsilon) (+ 6 epsilon))) 
+                (ite a (div 12 (+ 4 epsilon)) (div 12 (+ 6 epsilon))))
+  (check-valid? (div (div x 4) 2) (div x 8))
+  (check-valid? (div (@* x y z) y) (@* x z))
+  (check-valid? (div (@* 2 x y z) y) (@* 2 x z))
+  (check-valid? (div (@* x y z) (@* y x)) z))
+
 (define tests:real?
   (test-suite+
    "Tests for real? in rosette/base/real.rkt"
@@ -263,6 +279,13 @@
    (check-semantics @* xi yi zi)
    (check-semantics @* xr yr zr)))
 
+(define tests:/
+  (test-suite+
+   "Tests for / in rosette/base/bitvector.rkt"
+   (check-division-simplifications @/ xr yr zr (/ 2 10))
+   (check-semantics @/ xr yr zr (lambda (x) (not (zero? x))))
+   ))
+
 (time (run-tests tests:real?))
 (time (run-tests tests:integer?))
 (time (run-tests tests:=))
@@ -271,6 +294,7 @@
 (time (run-tests tests:+))
 (time (run-tests tests:-))
 (time (run-tests tests:*))
+(time (run-tests tests:/))
 
 (finite-number-semantics? #t)
 (send solver shutdown)
