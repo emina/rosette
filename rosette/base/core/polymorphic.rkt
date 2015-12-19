@@ -78,8 +78,13 @@
     [(_ _) p]))
 
 ; A generic typing procedure for a lifted operator that takes N > 0 arguments of type T
-; and returns a value of type T. See op.rkt.
-(define (T*->T x . xs) (type-of x))
+; and returns a value of type T. Specifically, it assumes that at least one value passed 
+; to it is typed, and it returns the type T of the first given typed value. See op.rkt.
+(define T*->T 
+  (case-lambda 
+    [(x) (get-type x)]
+    [(x y) (or (and (typed? x) (get-type x)) (get-type y))]
+    [xs (for/first ([x xs] #:when (typed? x)) (get-type x))]))
 
 ; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
 ; and returns a @boolean?. See op.rkt.

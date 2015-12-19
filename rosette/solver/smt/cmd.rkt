@@ -58,7 +58,9 @@
     [(== @number?) 0]
     [(? bitvector? t) (bv 0 t)]
     [(? enum? t) (vector-ref (enum-members t) 0)]))
- 
+
+(define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
+
 (define (decode-binding const val)
   (match (type-of const)
     [(== @boolean?)
@@ -71,16 +73,17 @@
        [(? number?) (finitize val)]
        [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
         (finitize n)])]
-    [(== @integer?)
+    [(== @integer?) 
      (match val
        [(? integer?) val]
        [(list '- v) (- v)])]
-    [(== @real?)
+    [(== @real?) 
      (match val 
        [(? real?) val]
+       [(list '- (list '/ a b)) (- (/ (to-exact-int a) (to-exact-int b)))]
        [(list '- v) (- v)]
-       [(list '/ a b) (/ a b)]
-       [(list '/ (list '- a) b) (/ (- a) b)])]
+       [(list '/ a b) (/ (to-exact-int a) (to-exact-int b))]
+       [(list '/ (list '- a) b) (/ (- (to-exact-int b)) (to-exact-int b))])]
     [(? bitvector? t)
      (match val
        [(? number?) (bv val t)]

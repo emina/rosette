@@ -463,19 +463,19 @@
               [#f #f])))]
     [(_ _) #f]))
 
-(define (cancel* xs ys)  
+(define (cancel* xs ys) ;(printf "cancel* ~a ~a\n" xs ys)
   (and ys
        (match xs
          [(list) ys]
          [(list x rest ...)
           (cancel* rest
-                   (match* (x ys)
-                     [((? real?) (list (? real? a) b ...)) (and (= 1 (* x a)) b)]
+                   ; Pattern matching broken in 6.1 when the first rule is in the third position.
+                   ; TODO: place the first rule in 3rd position and test with 6.2.
+                   (match* (x ys) 
+                     [((expression (== @/) 1 c) (list a ... c b ...))
+                      (append a b)]
                      [((? term?) (list a ... (expression (== @/) 1 (== x)) b ...)) (append a b)]
-                     [((expression (== @/) 1 y) (list a ... y b ...)) (append a b)]
-                     [((expression (== @*) (? real? a) b) 
-                       (list c ... (expression (== @*) (and (? real?) (app / a)) b) d ...))
-                      (append c d)]
+                     [((? real?) (list (? real? a) b ...)) (and (= 1 (* x a)) b)]  
                      [(_ _) #f]))])))
 
 (define-syntax-rule (div @op $op op)

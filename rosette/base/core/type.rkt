@@ -14,7 +14,7 @@
  least-common-supertype 
  cast subtype?
  
- type-of @any/c lifted-type define-lifted-type)
+ type-of @any/c lifted-type define-lifted-type finite-number-semantics?)
 
 #|-----------------------------------------------------------------------------------|#
 ; The type generic interface defines a symbolic type.  Each value has a type.  Structures that 
@@ -106,6 +106,36 @@
 ; Returns the lifted Rosette type corresponding to the given liftable Racket built-in predicate.
 (define (lifted-type pred) (hash-ref types pred))
 
+(define finite-number-semantics? (make-parameter #t))
+
+; This is a hacked type-of implementation to allow testing Int and Real theories 
+; before they are properly integrated.  The finite-number-semantics? parameter controls 
+; whether we are using the old int/real semantics (default) or not.
+(define-syntax-rule (typechecker #:numeric int real num #:other id ...)
+  (begin
+    (hash-set! types num @any/c)
+    (hash-set! types int @any/c)
+    (hash-set! types real @any/c)
+    (hash-set! types id @any/c) ...
+    (case-lambda
+      [(v) (cond [(typed? v) (get-type v)]
+                 [(int v) (hash-ref types (if (finite-number-semantics?) num int))]
+                 [(real v) (hash-ref types (if (finite-number-semantics?) num real))]
+                 [(num v)  (hash-ref types num)]
+                 [(id v) (hash-ref types id)] ...
+                 [else @any/c])]
+      [(v u) (least-common-supertype (type-of v) (type-of u))]
+      [vs    (for/fold ([t (type-of (car vs))]) ([v (cdr vs)] #:break (eq? t @any/c))
+               (least-common-supertype t (type-of v)))])))
+
+; The type-of procedure a type t that accepts the given values, and there is no t' 
+; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
+(define type-of 
+  (typechecker 
+   #:numeric integer? real? number?
+   #:other boolean? list? pair? procedure? vector? box?))
+
+#|
 ; This macro constructs the type-of procedure.  To allow additional lifted types, 
 ; add their Racket predicates to the #:base list of the type-of definition.  Note 
 ; that the order of the #:base types is important---if p is a subtype? of q, then 
@@ -130,4 +160,4 @@
           ; they are currently in the last position to ensure that they are 
           ; not used until the replacement has been tested.
           integer? real? 
-          ))
+          ))|#

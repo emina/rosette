@@ -37,16 +37,8 @@
 
 (define (smt-id base n) (format-symbol "~a~a" base n))
 
-; Horrible hack to allow testing Int and Real theory before they are properly integrated.
-(define (hacked-type-of val)
-  (cond [(typed? val) (get-type val)]
-        [(boolean? val) @boolean?]
-        [(integer? val) (if (infinite? (current-bitwidth)) @integer? @number?)]
-        [(real? val) (if (infinite? (current-bitwidth)) @real? @number?)]
-        [else (error 'hacked-type-of "value of untranslatable type" val)]))
-        
 (define (smt-type val)
-  (match (hacked-type-of val)
+  (match (type-of val)
     [(== @boolean?) Bool]
     [(== @number?) (BitVec (current-bitwidth))]
     [(== @integer?) Int]
