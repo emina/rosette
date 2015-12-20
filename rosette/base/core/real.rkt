@@ -124,57 +124,18 @@
 (define (safe-apply-2 op x y)
   (define caller (object-name op))
   (define a (numeric-coerce x caller))
-  (define b (numeric-coerce y caller))        
-  (match a 
-    [(? int-primitive?)
-     (match b
-       [(? int-primitive?)  (op a b)]
-       [(? real-primitive?) (op (integer->real a) b)]
-       [(union (list-no-order (cons gv (? int-primitive? v)) (cons gw w)))
-        (merge* (cons gv (op a v)) (cons gw (op (integer->real a) w)))])]
-    [(? real-primitive?)   (op a (coerce b @real? caller))]
-    [(union (list-no-order (cons gv (? int-primitive? v)) (cons gw w)))
-     (match b
-       [(? int-primitive?)  (merge* (cons gv (op v b)) (cons gw (op w (integer->real b))))]
-       [(? real-primitive?) (op (coerce a @real? caller) b)]
-       [(union (list-no-order (cons gc (? int-primitive? c)) (cons gd d)))
-        (let* ([gi (&& gv gc)]
-               [!gi (! gi)])
-          (cond [(and (term? gi) (term? !gi))
-                 (merge* (cons gi (op v c)) 
-                         (cons !gi (op (coerce a @real? caller) (coerce b @real? caller))))]
-                [(false? !gi)
-                 (assert gi (numeric-type-error caller @real? x y))
-                 (op v c)]
-                [else ; (false? gi)
-                 (assert !gi (numeric-type-error caller @real? x y))
-                 (op (coerce a @real? caller) (coerce b @real? caller))]))])]))
+  (define b (numeric-coerce y caller))  
+  (match* (a b)
+    [((? int-primitive?)(? int-primitive?)) (op a b)]
+    [((? real-primitive?)(? real-primitive?)) (op a b)]
+    [(_ _) (op (coerce a @real? caller) (coerce b @real? caller))]))
                             
-
-(define (safe-apply-n op xs)
+(define (safe-apply-n op xs) 
   (define caller (object-name op))
   (define ys (for/list ([x xs]) (numeric-coerce x caller)))
   (match ys
     [(or (list (? int-primitive?) ...) (list (? real-primitive?) ...)) (apply op ys)]
-    [(list _ ... (and (not (? int-primitive?)) (? real-primitive?)) _ ...) 
-     (apply op (for/list ([y ys]) (coerce y @real? caller)))] 
-    [_ 
-     (define-values (g* i*)
-       (for/lists (g* i*) ([y ys])
-         (match y
-           [(? int-primitive?) (values #t y)]
-           [(union (list-no-order (cons g (? int-primitive? v))) _) (values g v)])))
-     (define g (apply && g*))
-     (define !g (! g))
-     (cond [(and (term? g) (term? !g))
-            (merge* (cons g (apply op i*)) 
-                    (cons !g (apply op (for/list ([y ys]) (coerce y @real? caller)))))]
-           [(false? !g)
-            (assert g (numeric-type-error caller @real? xs))
-            (apply op i*)]
-           [else ; (false? g)
-            (assert !g (numeric-type-error caller @real? xs))
-            (apply op (for/list ([y ys]) (coerce y @real? caller)))])]))
+    [_ (apply op (for/list ([y ys]) (coerce y @real? caller)))]))
      
 (define (lift-op op)
   (case (procedure-arity op)

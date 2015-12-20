@@ -342,6 +342,130 @@
                (list (|| a b)))
   )
 
+(define (check-lifted-unary)
+  (check-num-exn (@abs 'a))
+  (check-num-exn (@abs (merge a "3" '())))
+  (check-state (@abs -3) 3 (list))
+  (check-state (@abs -3.6) 3.6 (list))
+  (check-state (@abs xi) (@abs xi) (list))
+  (check-state (@abs xr) (@abs xr) (list))
+  (check-state (@abs (merge a xi "3")) (@abs xi) (list a))
+  (check-state (@abs (merge a xr "3")) (@abs xr) (list a))
+  (check-state (@abs (merge a xi xr)) (merge a (@abs xi) (@abs xr)) (list))
+  (check-state (@abs (merge* (cons a xi) (cons b xr) (cons c ""))) 
+               (merge* (cons a (@abs xi)) (cons b (@abs xr))) (list (|| a b))))
+
+(define (check-lifted-binary)
+  (check-num-exn (@+ 1 'a))
+  (check-num-exn (@+ 'a 1))
+  (check-num-exn (@+ 1 (ite a 'a 'b)))
+  ; int/int
+  (check-state (@+ xi yi) (@+ xi yi) (list))
+  (check-state (@+ (merge a xi #f) yi) (@+ xi yi) (list a))
+  (check-state (@+ xi (merge a yi #f)) (@+ xi yi) (list a))
+  (check-state (@+ (merge a xi #f) (merge b yi #f)) (@+ xi yi) (list a b))
+  ; int/real
+  (check-state (@+ xi yr) (@+ (@integer->real xi) yr) (list))
+  (check-state (@+ (merge a xi #f) yr) (@+ (@integer->real xi) yr) (list a))
+  (check-state (@+ xi (merge a yr #f)) (@+ (@integer->real xi) yr) (list a))
+  (check-state (@+ (merge a xi #f) (merge b yr #f)) (@+ (@integer->real xi) yr) (list a b))
+  ; int/union
+  (check-state (@+ xi (merge a yi yr)) (@+ (@integer->real xi) (merge a (@integer->real yi) yr)) (list))
+  (check-state (@+ (merge b xi #f) (merge a yi yr))
+               (@+ (@integer->real xi) (merge a (@integer->real yi) yr))
+               (list b))
+  (check-state (@+ xi (merge* (cons a yi) (cons b yr) (cons c #f)))
+               (@+ (@integer->real xi) (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list (|| a b)))
+  (check-state (@+ (merge d xi #f)  (merge* (cons a yi) (cons b yr) (cons c #f)))
+               (@+ (@integer->real xi) (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list d (|| a b)))
+  ; real/int
+  (check-state (@+ xr yi) (@+ xr (@integer->real yi)) (list))
+  (check-state (@+ (merge a xr #f) yi) (@+ xr (@integer->real yi)) (list a))
+  (check-state (@+ xr (merge a yi #f)) (@+ xr (@integer->real yi)) (list a))
+  (check-state (@+ (merge a xr #f) (merge b yi #f)) (@+ xr (@integer->real yi)) (list a b))
+  ; real/real
+  (check-state (@+ xr yr) (@+ xr yr) (list))
+  (check-state (@+ (merge a xr #f) yr) (@+ xr yr) (list a))
+  (check-state (@+ xr (merge a yr #f)) (@+ xr yr) (list a))
+  (check-state (@+ (merge a xr #f) (merge b yr #f)) (@+ xr yr) (list a b))
+  ; real/union
+  (check-state (@+ xr (merge a yi yr)) 
+               (@+ xr (merge a (@integer->real yi) yr))
+               (list))
+  (check-state (@+ (merge b xr #f) (merge a yi yr)) 
+               (@+ xr (merge a (@integer->real yi) yr))
+               (list b))
+  (check-state (@+ xr (merge* (cons a yi) (cons b yr) (cons c #f))) 
+               (@+ xr (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list (|| a b)))
+  (check-state (@+ (merge c xr #f) (merge* (cons a yi) (cons b yr) (cons d #f))) 
+               (@+ xr (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list c (|| a b)))
+  ; union/int
+  (check-state (@+ (merge a yi yr) xi) (@+ (@integer->real xi) (merge a (@integer->real yi) yr)) (list))
+  (check-state (@+ (merge a yi yr) (merge b xi #f))
+               (@+ (@integer->real xi) (merge a (@integer->real yi) yr))
+               (list b))
+  (check-state (@+ (merge* (cons a yi) (cons b yr) (cons c #f)) xi)
+               (@+ (@integer->real xi) (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list (|| a b)))
+  (check-state (@+ (merge* (cons a yi) (cons b yr) (cons c #f)) (merge d xi #f))
+               (@+ (@integer->real xi) (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list d (|| a b)))
+  ; union/real
+  (check-state (@+ (merge a yi yr) xr) 
+               (@+ xr (merge a (@integer->real yi) yr))
+               (list))
+  (check-state (@+ (merge a yi yr) (merge b xr #f)) 
+               (@+ xr (merge a (@integer->real yi) yr))
+               (list b))
+  (check-state (@+ (merge* (cons a yi) (cons b yr) (cons c #f)) xr) 
+               (@+ xr (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list (|| a b)))
+  (check-state (@+ (merge* (cons a yi) (cons b yr) (cons d #f)) (merge c xr #f)) 
+               (@+ xr (merge* (cons a (@integer->real yi)) (cons b yr)))
+               (list c (|| a b)))
+  ; union/union 1
+  (check-state (@+ (merge* (cons a xi) (cons b xr)) 
+                   (merge* (cons c yi) (cons d yr)))
+               (@+ (merge* (cons a (@integer->real xi)) (cons b xr))
+                   (merge* (cons c (@integer->real yi)) (cons d yr)))
+               (list))
+  (check-state (@+ (merge* (cons a xi) (cons b xr) (cons e #f)) 
+                   (merge* (cons c yi) (cons d yr)))
+               (@+ (merge* (cons a (@integer->real xi)) (cons b xr))
+                   (merge* (cons c (@integer->real yi)) (cons d yr)))
+               (list (|| a b)))
+  (check-state (@+ (merge* (cons a xi) (cons b xr)) 
+                   (merge* (cons c yi) (cons d yr) (cons e #f)))
+               (@+ (merge* (cons a (@integer->real xi)) (cons b xr))
+                   (merge* (cons c (@integer->real yi)) (cons d yr)))
+               (list (|| c d)))
+  (check-state (@+ (merge* (cons a xi) (cons b xr) (cons e #f)) 
+                   (merge* (cons c yi) (cons d yr) (cons f #f)))
+               (@+ (merge* (cons a (@integer->real xi)) (cons b xr))
+                   (merge* (cons c (@integer->real yi)) (cons d yr)))
+               (list (|| a b) (|| c d))))
+
+(define (check-lifted-nary)
+  (check-num-exn (@+ 1 2 'a))
+  ; ints
+  (check-state (@+ xi 2 yi 1) (@+ 3 xi yi) (list))
+  ; reals
+  (check-state (@+ xr 2 yr 1) (@+ 3 xr yr) (list))
+  ; at least one real primitive
+  (check-state (@+ xi 2 yi 1 xr) (@+ 3 xr (@integer->real xi) (@integer->real yi)) (list))
+  (check-state (@+ xi 2 yi 1.1) (@+ 3.1 (@integer->real xi) (@integer->real yi)) (list))
+  (check-state (@+ 3 zr (merge a xi yr)) (@+ 3 zr (merge a (@integer->real xi) yr))
+               (list))
+  ; no real primitives
+  (check-state (@+ xi 1 (merge a yi yr)) 
+               (@+ (@integer->real xi) 1 (merge a (@integer->real yi) yr))
+               (list))
+  )
+
 (define tests:real?
   (test-suite+
    "Tests for real? in rosette/base/real.rkt"
@@ -425,8 +549,7 @@
    (check-abs-simplifications xi)
    (check-abs-simplifications xr)
    (check-semantics @abs xi yi zi)
-   (check-semantics @abs xr yr zr)
-   ))
+   (check-semantics @abs xr yr zr)))
 
 (define tests:int?
   (test-suite+
@@ -443,6 +566,14 @@
    "Tests for real->integer in rosette/base/real.rkt"
    (check-real->integer-semantics)))
 
+(define tests:lifted
+  (test-suite+
+   "Tests for lifted operators in rosette/base/real.rkt"
+   (check-lifted-unary)
+   (check-lifted-binary)
+   (check-lifted-nary)
+   ))
+
 (time (run-tests tests:real?))
 (time (run-tests tests:integer?))
 (time (run-tests tests:=))
@@ -458,6 +589,7 @@
 (time (run-tests tests:int?))
 (time (run-tests tests:integer->real))
 (time (run-tests tests:real->integer))
+(time (run-tests tests:lifted))
 
-;(finite-number-semantics? #t)
+(finite-number-semantics? #t)
 (send solver shutdown)
