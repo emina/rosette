@@ -355,13 +355,18 @@
 
 (define (integer->real i)
   (match i
-    [(? integer?) i]
+    [(? integer?) i]  
     [(? term?) (expression @integer->real i)]))
 
 (define (real->integer r)
   (match r
     [(? real?) (floor r)]
     [(expression (== @integer->real) x) x]
+    [(expression (== ite) a 
+                 (expression (== @integer->real) x) 
+                 (expression (== @integer->real) y)) (ite a x y)]
+    [(expression (== ite) a (expression (== @integer->real) x) y) (ite a x (real->integer y))]
+    [(expression (== ite) a x (expression (== @integer->real) y)) (ite a (real->integer x) y)] 
     [(? term?) (expression @real->integer r)]))
 
 (define-operator @integer->real 

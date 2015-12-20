@@ -9,8 +9,7 @@
          rosette/base/core/assert
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/equality @equal?)
-         (only-in rosette evaluate)
-         )
+         (only-in rosette evaluate))
 
 (define solver (new z3%))
 (finite-number-semantics? #f)
@@ -84,6 +83,18 @@
                  (@= j y)
                  (@= z (op x y))) z))
        (check-= actual expected 0))]))
+
+(define-syntax check-num-exn
+  (syntax-rules ()
+    [(_ expr)
+     (check-exn exn:fail? (thunk (with-asserts-only expr)))]
+    [(_ pred expr)
+     (check-exn pred (thunk (with-asserts-only expr)))]))
+
+(define-syntax-rule (check-state actual expected-value expected-asserts)
+  (let-values ([(v a) (with-asserts actual)])
+    (check-equal? v expected-value)
+    (check-equal? (apply set a) (apply set expected-asserts))))
 
 (define (check-real?)
   (check-equal? (@real? 1) #t)
@@ -268,6 +279,69 @@
 (define (check-abs-simplifications x)
   (check-valid? (@abs (@abs x)) (@abs x)))
 
+(define (check-int?-semantics) 
+  (check-pred unsat? (solve (@= xr 1) (! (@int? xr))))
+  (check-pred unsat? (solve (@= xr 1.0) (! (@int? xr))))
+  (check-pred unsat? (solve (@= xr 1.2) (@int? xr)))
+  (check-pred unsat? (solve (@= yr 4) (@= xr 2) 
+                            (! (@int? (@/ yr xr)))))
+  (check-pred unsat? (solve (@= yr 4) (@= xr 2) 
+                            (@int? (@/ xr yr)))))
+
+(define (check-integer->real-semantics)
+  (check-pred unsat? (solve (@= xi 2) (@= 2.3 (@integer->real xi))))
+  (check-pred unsat? (solve (@= xr 2) (! (@= 2.0 (@integer->real xr)))))
+  (clear-asserts)
+  (check-num-exn #px"expected: integer?" (@integer->real 2.3))
+  (check-num-exn #px"expected: integer?" (@integer->real 'a))
+  (check-num-exn #px"expected: integer?" (@integer->real (merge a "3" '())))
+  (check-state (@integer->real 1) 1 (list))
+  (check-state (@integer->real xi) (@integer->real xi) (list))
+  (check-state (@integer->real (@+ xi yi)) (@integer->real (@+ xi yi)) (list))
+  (check-state (@integer->real xr) (@integer->real (@real->integer xr)) (list (@int? xr)))
+  (check-state (@integer->real (merge a 1 'a)) 1 (list a))
+  (check-state (@integer->real (merge a xr 'a)) 
+               (@integer->real (@real->integer xr))
+               (list (&& a (@int? xr))))
+  (check-state (@integer->real (merge a xi xr)) 
+               (@integer->real (merge* (cons a xi)
+                                       (cons (&& (! a) (@int? xr)) 
+                                             (@real->integer xr))))
+               (list))
+  (check-state (@integer->real (merge* (cons a xi) (cons b xr) (cons c 'a))) 
+               (@integer->real (merge* (cons a xi)
+                                       (cons (&& b (@int? xr)) 
+                                             (@real->integer xr))))
+               (list (|| a (&& b (@int? xr))))))
+
+(define (check-real->integer-semantics) 
+  (check-valid? (@real->integer (@integer->real xi)) xi)
+  (check-valid? (@real->integer (ite a (@integer->real xi) (@integer->real yi))) 
+                (merge a xi yi))
+  (check-valid? (@real->integer (ite a xr (@integer->real yi))) 
+                (merge a (@real->integer xr) yi))
+  (check-valid? (@real->integer (ite a (@integer->real xi) yr)) 
+                (merge a xi (@real->integer yr)))
+  (check-pred unsat? (solve (@= xr 2.3) (@= xr (@real->integer xr))))
+  (check-pred unsat? (solve (@= xr 2.0) (! (@= xr (@real->integer xr)))))
+  (clear-asserts)
+  (check-num-exn #px"expected: real?" (@real->integer 'a))
+  (check-num-exn #px"expected: real?" (@real->integer (merge a "3" '())))  
+  (check-state (@real->integer 1) 1 (list))
+  (check-state (@real->integer xi) xi (list))
+  (check-state (@real->integer (@+ xi yi)) (@+ xi yi) (list))
+  (check-state (@real->integer xr) (@real->integer xr) (list))  
+  (check-state (@real->integer (merge a 1 'a)) 1 (list a))
+  (check-state (@real->integer (merge a xr 'a)) 
+               (@real->integer xr) (list a))
+  (check-state (@real->integer (merge a xi xr)) 
+               (@real->integer (merge a xi (@real->integer xr)))
+               (list))
+  (check-state (@real->integer (merge* (cons a xi) (cons b xr) (cons c 'a))) 
+               (@real->integer (merge* (cons a (@integer->real xi)) (cons b xr)))
+               (list (|| a b)))
+  )
+
 (define tests:real?
   (test-suite+
    "Tests for real? in rosette/base/real.rkt"
@@ -354,6 +428,21 @@
    (check-semantics @abs xr yr zr)
    ))
 
+(define tests:int?
+  (test-suite+
+   "Tests for int? in rosette/base/real.rkt"
+   (check-int?-semantics)))
+
+(define tests:integer->real
+  (test-suite+
+   "Tests for integer->real in rosette/base/real.rkt"
+   (check-integer->real-semantics)))
+
+(define tests:real->integer
+  (test-suite+
+   "Tests for real->integer in rosette/base/real.rkt"
+   (check-real->integer-semantics)))
+
 (time (run-tests tests:real?))
 (time (run-tests tests:integer?))
 (time (run-tests tests:=))
@@ -366,6 +455,9 @@
 (time (run-tests tests:quotient))
 (time (run-tests tests:remainder))
 (time (run-tests tests:abs))
+(time (run-tests tests:int?))
+(time (run-tests tests:integer->real))
+(time (run-tests tests:real->integer))
 
-(finite-number-semantics? #t)
+;(finite-number-semantics? #t)
 (send solver shutdown)
