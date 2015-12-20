@@ -9,7 +9,6 @@
          rosette/base/util/log 
          rosette/solver/solver 
          rosette/solver/solution
-         rosette/solver/kodkod/kodkod
          rosette/solver/smt/z3
          "location.rkt" "instruction.rkt" "fragment.rkt")
 
@@ -17,11 +16,8 @@
 
 (define trial (make-parameter #f))
 
-(define verifier (new kodkod%))
-(define synthesizer (new kodkod-incremental%))
-
-;(define verifier (new z3%))
-;(define synthesizer (new z3%))
+(define verifier (new z3%))
+(define synthesizer (new z3%))
 
 (define (cleanup) 
   (send synthesizer shutdown)

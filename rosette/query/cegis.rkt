@@ -9,7 +9,6 @@
          "../base/util/log.rkt"
          "../solver/solver.rkt"  
          "../solver/solution.rkt"
-         "../solver/kodkod/kodkod.rkt"
          "../solver/smt/z3.rkt")
 
 (provide exists-forall)
@@ -25,10 +24,7 @@
   
   (set! inits (check-initial-bindings inputs (if (list? inits) inits (list inits))))
 
-  (define-values (synthesizer verifier)
-    (if (is-a? (current-solver) z3%)
-        (values (new z3%) (new z3%))
-        (values (new kodkod-incremental%) (new kodkod%))))
+  (define-values (synthesizer verifier) (values (new z3%) (new z3%)))
   
   (define (cleanup) 
     (send synthesizer shutdown)

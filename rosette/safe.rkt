@@ -1,6 +1,6 @@
 #lang racket
 
-(require "solver/solver.rkt" "solver/kodkod/kodkod.rkt"
+(require "solver/solver.rkt" "solver/smt/z3.rkt"
          "solver/solution.rkt" 
          "base/base.rkt"
          "query/query.rkt"
@@ -25,7 +25,7 @@
   (current-solution (empty-solution))
   (clear-asserts)
   (unsafe-clear-terms!)
-  (current-solver (new kodkod%)))
+  (current-solver (new z3%)))
 
 (provide 
  (all-from-out 

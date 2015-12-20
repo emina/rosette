@@ -4,7 +4,7 @@
 (require (for-syntax racket/syntax)
          racket/stxparam racket/stxparam-exptime
          "../solver/solver.rkt"  "../solver/solution.rkt"  
-          "../solver/kodkod/kodkod.rkt")
+          "../solver/smt/z3.rkt")
 
 (provide current-solution
          current-solver)
@@ -19,7 +19,7 @@
                     sol)))
 
 (define current-solver
-  (make-parameter (new kodkod%)
+  (make-parameter (new z3%)
                   (lambda (solver)
                     (unless (is-a? solver solver<%>)
                       (error 'current-solver "expected a solver<%>, given ~s" solver))

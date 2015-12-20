@@ -14,9 +14,7 @@
  "base/merge.rkt"
  "base/vector.rkt"
  "query/verify.rkt"
- "solver/kodkod.rkt"
  "solver/z3.rkt"
- "solver/bvsemantics.rkt"
  )
 
 #|
