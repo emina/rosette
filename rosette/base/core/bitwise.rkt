@@ -1,9 +1,92 @@
 #lang racket
 
-(require "term.rkt" "op.rkt" 
-         racket/performance-hint)
+(require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
+(require "term.rkt" "op.rkt")
 
-(provide define-not define-and define-or cancel?)
+(provide define-not define-and define-or cancel?
+         simplify-connective simplify-connective* sublist?)
+
+
+; Simplification rules for bitwise and/or. Assumes that 
+; neither x nor y are iden or !iden.
+(define (simplify-connective op co no literal? !iden x y) 
+  (cond [(equal? x y) x]
+        [(expression? x)
+         (cond [(expression? y)
+                (or (simplify-connective:expr/term op co no !iden x y)
+                    (simplify-connective:expr/term op co no !iden y x)
+                    (match* (x y)
+                      [((expression (== op) xs ...) (expression (== op) ys ...))
+                       (for*/or ([a xs][b ys])
+                         (match* (a b)
+                           [(_ (expression (== no) (== a))) !iden]
+                           [((expression (== no) (== b)) _) !iden]
+                           [((? literal?) (? literal?)) (and (equal? a ((op-unsafe no) b)) !iden)]
+                           [(_ _) #f]))]
+                      [((expression (== co) xs ...) (expression (== co) ys ...))
+                       (cond [(sublist? xs ys) x]
+                             [(sublist? ys xs) y]
+                             [else #f])]                      
+                    [(_ _) #f]))]
+               [(constant? y) (simplify-connective:expr/term op co no !iden x y)]
+               [else (simplify-connective:expr/lit op co no !iden x y)])]
+        [(expression? y)
+         (cond [(constant? x) (simplify-connective:expr/term op co no !iden y x)]
+               [else (simplify-connective:expr/lit op co no !iden y x)])]
+        [else #f]))
+
+(define (simplify-connective:expr/term op co no !iden x y)
+  (match x 
+    [(expression (== no) (== y)) !iden]
+    [(expression (== co) _ ... (== y) _ ...) y]
+    [(expression (== op) _ ... (== y) _ ...) x]
+    [(expression (== op) _ ... (expression (== no) (== y)) _ ...) !iden]
+    [(expression (== no) (expression (== co) _ ... (== y) _ ...)) !iden]
+    [(expression (== no) (expression (== co) _ ... (expression (== no) (== y)) _ ...)) x]
+    [(expression (== no) (expression (== op) _ ... (expression (== no) (== y)) _ ...)) y]
+    [(expression (== no) a) 
+     (match y 
+       [(expression (== op) _ ... (== a) _ ...) !iden]
+       [_ #f])]
+    [_ #f]))
+
+(define (simplify-connective:expr/lit op co no !iden x y)
+  (define !y ((op-unsafe no) y))
+  (match x 
+    [(expression (== co) (== y) _ ...) y]
+    [(expression (== op) (== y) _ ...) x]
+    [(expression (== op) (== !y) _ ...) !iden]
+    [(expression (== no) (expression (== co) (== y) _ ...)) !iden]
+    [(expression (== no) (expression (== co) (== !y) _ ...)) x]
+    [(expression (== no) (expression (== op) (== !y) _ ...)) y]
+    [_ #f]))
+
+; Simplification rules for bitwise and/or, applied to fix point. 
+; Assumes that the xs list contains no literals, only terms.
+(define (simplify-connective* op co no literal? !iden xs)
+  (or
+   (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
+                            (match x
+                              [(expression (== no) y) (values (cons y !ys) ys)]
+                              [_ (values !ys (cons x ys))]))])
+     (for/first ([!y !ys] #:when (member !y ys)) (list !iden)))
+   (and (> (length xs) 100) xs)
+   (let outer ([xs xs])
+     (match xs
+       [(list x rest ..1)
+        (let inner ([head rest] [tail '()])
+          (match head
+            [(list) (match (outer tail)
+                      [(and (list (== !iden)) t) t]
+                      [t (cons x t)])]
+            [(list y ys ...)
+             (match (simplify-connective op co no literal? !iden x y)
+               [#f (inner ys (cons y tail))]
+               [(== !iden) (list !iden)]
+               [v (outer (cons v (append ys tail)))])]))]
+       [_ xs]))))   
+
+
 
 (define-syntax-rule (define-not not-op not-symbol term-type racket-type racket-op)
   (define-op not-op 
@@ -183,65 +266,3 @@
                         (begin-value e ...)
                         v))]))
 
-#|
-
-; Applies basic logic laws (commutativity, identity, annihilation, absorption).
-; Returns NaV if none of the rules applicable; otherwise returns the simplified result.
-(define (simplify:and/or:basic op co not-op identity annihilator a b)
-  (let basic-laws ([a a][b b][try-again #t])
-    (match b
-      [(== a) a]
-      [(== identity) a]
-      [(== annihilator) annihilator]
-      [(expression (== not-op) (== a)) annihilator]
-      [(expression (== co) _ ... (== a) _ ...) a]
-      [(expression (== op) _ ... (== a) _ ...) b]
-      [(expression (== op) _ ... (? (curry cancel? not-op a)) _ ...) annihilator]
-      [(expression (== not-op) (expression (== co) _ ... (== a) _ ...)) annihilator]
-      [(expression (== not-op) (expression (== co) _ ... (? (curry cancel? not-op a)) _ ...)) b]
-      [(expression (== not-op) (expression (== op) _ ... (? (curry cancel? not-op a)) _ ...)) a]
-      [_ (if try-again (basic-laws b a #f) NaV)])))
-
-; Applies the following simplification rules symmetrically:
-; (1) (op (op a1 ... an) (op ai ... aj)) ==> (op a1 ... an)
-; (2) (op (op a1 ... ai ... an) (op b1 ... (not-op ai) ... bn) ==> not-op identity
-; Returns #f if none of the rules applicable; otherwise returns a list containing the simplified result.
-(define (simplify:and/or:op op not-op identity a b)
-  (and (term? a) (term? b) (equal? op (term-op a)) (equal? op (term-op b))
-       (let* ([x (term-child a)] 
-              [xs (apply set x)] 
-              [y (term-child b)] 
-              [ys (apply set y)])
-         (cond [(subset? xs ys) (list b)]                          ; (1)
-               [(subset? ys xs) (list a)]                          ; (1)
-               [else (let ([xrest (set-subtract xs ys)])
-                       (and (ormap (curry set-member? ys) (set-map xrest not-op)) 
-                            (list (not-op identity))))]))))        ; (2)
-
-; Applies the following simplification rule symmetrically:
-; (1) (op (co a1 ... an) (co ai ... aj)) ==> (co ai ... aj)
-; Returns #f if the rule is not applicable; otherwise returns a list containing the simplified result.
-(define (simplify:and/or:complement op co identity a b)
-  (and (term? a) (term? b) (equal? co (term-op a)) (equal? co (term-op b))
-       (let* ([x (term-child a)] 
-              [xs (apply set x)] 
-              [y (term-child b)] 
-              [ys (apply set y)])
-         (cond [(subset? xs ys) (list a)]                           
-               [(subset? ys xs) (list b)]                          
-               [else #f]))))
-
-(define (nary:and/or op co not-op racket-op identity args)
-  
-  (define (simplify args)
-    (let ([simplified (simplify:and/or:pairwise op co not-op identity (not-op identity) args)])
-      (if (equal? simplified args) args (simplify simplified))))
-  (let*-values ([(syms vals) (partition term? (remove-duplicates args))]
-                [(val) (apply racket-op vals)])
-    (if (not (equal? val (not-op identity)))
-        (let ([out (simplify syms)])
-          (cond [(empty? out) val]
-                [(empty? (cdr out)) (op (car out) val)]
-                [else (apply expression op (if (equal? identity val) (sort out term<?) (cons val (sort out term<?))))]))
-        (not-op identity))))
-|#

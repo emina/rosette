@@ -5,7 +5,8 @@
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 
 (provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @abs
-         @integer->real @real->integer @int?)
+         @integer->real @real->integer @int?
+         lift-op numeric-coerce T*->integer? T*->real?)
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
 
@@ -270,7 +271,7 @@
      (merge a (remainder x b) (remainder x c))]
     [(_ _) (expression @remainder x y)]))
     
-(define T*-integer? (const @integer?))
+(define T*->integer? (const @integer?))
 
 (define (undefined-for-zero-error name)
   (thunk (raise-arguments-error name "undefined for 0")))
@@ -278,7 +279,7 @@
 (define-syntax-rule (define-lifted-int-operator @op $op op)
   (define-operator @op
     #:name 'op
-    #:type T*-integer?
+    #:type T*->integer?
     #:unsafe $op
     #:safe (lambda (x y)
              (let ([a (coerce x @integer? 'op)]
@@ -294,11 +295,11 @@
 
 (define $/ (div @/ $/ /))
 
-(define T*-real? (const @real?))
+(define T*->real? (const @real?))
 
 (define-operator @/
   #:name '/
-  #:type T*-real?
+  #:type T*->real?
   #:unsafe $/
   #:safe (case-lambda 
            [(x) (@/ 1 x)]
@@ -332,13 +333,13 @@
 
 (define-operator @integer->real 
   #:name 'integer->real
-  #:type T*-real?
+  #:type T*->real?
   #:unsafe integer->real
   #:safe (lambda (n) (integer->real (coerce n @integer? 'integer->real))))
 
 (define-operator @real->integer 
   #:name 'real->integer 
-  #:type T*-integer?
+  #:type T*->integer?
   #:unsafe real->integer 
   #:safe (lambda (n) (real->integer (coerce n @real? 'real->integer))))
 
@@ -481,19 +482,3 @@
                         [(_ (list a ... (== x) b ...)) (append a b)]
                         [(_ _) #f]))])))
 
-
-
-
-
-
-
-
-
-
-
-
-
-(require "../form/define.rkt")
-(define-symbolic a b @boolean?)
-(define-symbolic i j @integer?)
-(define-symbolic p q @real?)
