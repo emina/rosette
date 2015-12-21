@@ -6,7 +6,7 @@
 
 (provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @abs
          @integer->real @real->integer @int?
-         lift-op numeric-coerce T*->integer? T*->real?)
+         lift-op numeric-coerce T*->integer? T*->real? current-bitwidth)
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
 

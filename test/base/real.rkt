@@ -12,7 +12,7 @@
          (only-in rosette evaluate))
 
 (define solver (new z3%))
-(finite-number-semantics? #f)
+(current-bitwidth #f)
 
 (define-symbolic a b c d e f g @boolean?)
 (define-symbolic xi yi zi @integer?)
@@ -123,6 +123,7 @@
   (check-equal? (@integer? -1.0001) #f)
   (check-equal? (@integer? xi) #t)
   (check-equal? (@integer? xr) (@int? xr))
+  (check-equal? (@integer? (@real->integer xr)) #t)
   (check-equal? (@integer? (merge a xi '())) a)
   (check-equal? (@integer? (merge a xr '())) (&& a (@int? xr)))
   (check-equal? (@integer? (merge a xr xi)) (|| (! a) (&& a (@int? xr))))
@@ -591,5 +592,5 @@
 (time (run-tests tests:real->integer))
 (time (run-tests tests:lifted))
 
-(finite-number-semantics? #t)
+(current-bitwidth 5)
 (send solver shutdown)

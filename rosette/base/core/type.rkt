@@ -14,7 +14,7 @@
  least-common-supertype 
  cast subtype?
  
- type-of @any/c lifted-type define-lifted-type finite-number-semantics?)
+ type-of @any/c lifted-type define-lifted-type current-bitwidth)
 
 #|-----------------------------------------------------------------------------------|#
 ; The type generic interface defines a symbolic type.  Each value has a type.  Structures that 
@@ -106,10 +106,17 @@
 ; Returns the lifted Rosette type corresponding to the given liftable Racket built-in predicate.
 (define (lifted-type pred) (hash-ref types pred))
 
-(define finite-number-semantics? (make-parameter #t))
+; **** Temporary hack :  this will be moved to real.rkt when the new semantics is in place **** 
+(define current-bitwidth
+  (make-parameter 5 
+                  (lambda (bw) 
+                    (unless (or (false? bw) (and (integer? bw) (positive? bw)))
+                      (raise-argument-error 'current-bitwidth "positive integer or #f" bw))
+                    bw)))
+
 
 ; This is a hacked type-of implementation to allow testing Int and Real theories 
-; before they are properly integrated.  The finite-number-semantics? parameter controls 
+; before they are properly integrated.  The current-bitwidth parameter controls 
 ; whether we are using the old int/real semantics (default) or not.
 (define-syntax-rule (typechecker #:numeric int real num #:other id ...)
   (begin
@@ -119,8 +126,8 @@
     (hash-set! types id @any/c) ...
     (case-lambda
       [(v) (cond [(typed? v) (get-type v)]
-                 [(int v) (hash-ref types (if (finite-number-semantics?) num int))]
-                 [(real v) (hash-ref types (if (finite-number-semantics?) num real))]
+                 [(int v) (hash-ref types (if (current-bitwidth) num int))]
+                 [(real v) (hash-ref types (if (current-bitwidth) num real))]
                  [(num v)  (hash-ref types num)]
                  [(id v) (hash-ref types id)] ...
                  [else @any/c])]

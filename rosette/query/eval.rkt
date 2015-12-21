@@ -65,7 +65,7 @@
         result)))
 
 (define (finitize num)
-  (if (finite-number-semantics?)
+  (if (current-bitwidth)
       (match num
         [(? number? v) 
          (let* ([bitwidth (current-bitwidth)]

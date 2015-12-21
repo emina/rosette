@@ -5,7 +5,6 @@
          (except-in "smtlib2.rkt" bv not and or xor => <=> ite = < + - * / abs) 
          "env.rkt" "../common/enc.rkt" 
          (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
-         (only-in "../../base/core/type.rkt" finite-number-semantics?)
          (only-in "../../base/core/polymorphic.rkt" ite =?)
          (only-in "../../base/core/bool.rkt" ! && || => <=>)
          (only-in "../../base/core/num.rkt" 
@@ -96,7 +95,7 @@
     [#t true]
     [#f false]
     [(? number?) ; Horrible hack to allow testing Int and Real theory before they are properly integrated. 
-     (cond [(finite-number-semantics?) (smt/bv (finitize v) (current-bitwidth))]
+     (cond [(current-bitwidth) (smt/bv (finitize v) (current-bitwidth))]
            [(integer? v) (inexact->exact v)]
            [(exact? v) (smt// (numerator v) (denominator v))]
            [else v])]

@@ -21,12 +21,7 @@
 (define ignore-division-by-0
   (make-parameter #f))
 
-(define current-bitwidth
-  (make-parameter 5 
-                  (lambda (bw) 
-                    (unless (and (integer? bw) (positive? bw))
-                      (raise-argument-error 'current-bitwidth "positive integer" bw))
-                    bw)))
+
 
 (define-lifted-type @number? 
   #:base number?
