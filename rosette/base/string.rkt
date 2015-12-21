@@ -2,7 +2,7 @@
 
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "num.rkt" "any.rkt" "generic.rkt" "merge.rkt")
 
-(provide @string? @string-length @str-to-int @int-to-str @string-append @substring @string-set! @string-copy! @string-fill!)
+(provide @string? @string-length @str-to-int @int-to-str @string-append @substring @string-set! @string-copy! @string-fill! @string-replace @string-contains? @string-prefix? @string-suffix?)
          
 (define (string/cast v)
   (match v
@@ -101,7 +101,44 @@
     (if (and (string? s) (number? i) (number? j)) 
         (substring s i j)
         (expression @substring s i j))))
-      
+
+(define-op @string-contains?
+  #:name 'string-contains?
+  #:type (op/-> (@string? @string?) @boolean?)
+  #:op
+  (lambda (s p)
+    (if (and (string? s) (string? p))
+	(string-contains? s p)
+	(expression @string-contains? s p))))
+
+(define-op @string-replace
+  #:name 'string-replace
+  #:type (op/-> (@string? @string? @string?) @string?)
+  #:op
+  (lambda (s from to)
+    (if (and (string? s) (string? from) (string? to))
+	(string-replace s from to)
+	(expression @string-replace s from to))))
+
+(define-op @string-prefix?
+  #:name 'string-prefix?
+  #:type (op/-> (@string? @string?) @boolean?)
+  #:op
+  (lambda (x y)
+    (match* (x y)
+      [((? string?) (? string?)) (string-prefix? x y)]
+      [(_ _) (expression @string-prefix? x y)])))
+              
+(define-op @string-suffix?
+  #:name 'string-suffix?
+  #:type (op/-> (@string? @string?) @boolean?)
+  #:op
+  (lambda (s p)
+    (if (and (string? s) (string? p))
+	(string-suffix? s p)
+	(expression @string-suffix? s p))))
+
+
 ; We are going to disable all mutation operations on strings.
 
 (define disable-mutation (lambda xs (error 'string-set! "string mutation not supported")))
