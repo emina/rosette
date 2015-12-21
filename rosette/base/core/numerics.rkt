@@ -8,7 +8,7 @@
          @add1 @sub1 @sgn @truncate @floor @ceiling @min @max
          @exact->inexact @inexact->exact @expt @sqrt
          @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor
-         @<< @>> @>>> @bitwise-bit-set? @bitwise-bit-field)
+         @<< @>> @bitwise-bit-set? @bitwise-bit-field)
 
 (define (@number? v)   (or (number? v) (@real? v)))
 (define (@positive? x) (@> x 0))
@@ -170,17 +170,6 @@
            [else -1])]
     [(_ _) (expression @>> x y)]))
 
-(define ($>>> x y)
-  (match* (x y)
-    [(_ 0) x]
-    [(0 _) 0]
-    [((? integer?) (? integer?)) 
-     (if (< y 0) 
-         0 
-         (arithmetic-shift 
-          (bitwise-and x (bitwise-not (arithmetic-shift -1 (+ 1 (integer-length x))))) 
-          (- y)))]
-    [(_ _) (expression @>>> x y)]))
 
 (define-lifted-bitwise-operator @bitwise-not $bitwise-not bitwise-not)
 (define-lifted-bitwise-operator @bitwise-and $bitwise-and bitwise-and)
@@ -188,7 +177,6 @@
 (define-lifted-bitwise-operator @bitwise-xor $bitwise-xor bitwise-xor)
 (define-lifted-bitwise-operator @<< $<< <<)
 (define-lifted-bitwise-operator @>> $>> >>)
-(define-lifted-bitwise-operator @>>> $>>> >>>)
 
 (define (@bitwise-bit-set? n m)
   (if (and (integer? n) (integer? m))
