@@ -360,29 +360,29 @@
                 (@= out (op x))) out))
       (check-equal? actual expected))))
 
-(define (check-int->bv-semantics)
+(define (check-integer->bitvector-semantics)
   (parameterize ([current-bitwidth 8])
     (for* ([t (in-range 1 10)]
            [v (in-range minval maxval+1)])
       (define BVo (bitvector t))
-      (define actual (@int->bv v BVo))
+      (define actual (@integer->bitvector v BVo))
       (define-symbolic* out BVo)
       (define-symbolic* in @number?)
       (define expected
         ((solve (@= in v)
-                (@bveq out (@int->bv in BVo))) out))
+                (@bveq out (@integer->bitvector in BVo))) out))
       (check-equal? actual expected))))
 
-;(define (check-int->bv-simplifications)
+;(define (check-integer->bitvector-simplifications)
 ;  ; This optimization is valid only when current-bitwidth > BV.
 ;  ; The following will fail:
 ;  ;(parameterize ([current-bitwidth 3]) 
-;  ;  (check-valid? (@int->bv (@bv->int x) BV) x))
+;  ;  (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x))
 ;  ; But these two work:
 ;  (parameterize ([current-bitwidth 4])
-;    (check-valid? (@int->bv (@bv->int x) BV) x))
+;    (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x))
 ;  (parameterize ([current-bitwidth 5])
-;    (check-valid? (@int->bv (@bv->int x) BV) x)))
+;    (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x)))
 
 (define (check-lifted-bv-type)
   (define-symbolic* n @number?)
@@ -676,25 +676,25 @@
                x
                (list (&& a c))))
   
-(define (check-lifted-int->bv)
-  (check-bv-exn exn:fail? (@int->bv "3" BV))
-  (check-bv-exn #px"expected a bitvector type" (@int->bv 3 3))
-  (check-bv-exn #px"expected a bitvector type" (@int->bv 3 (phi (cons a 1) (cons b "3"))))
-  (check-state (@int->bv 3 BV) (bv 3 4) (list))
-  (check-state (@int->bv (phi (cons a 3) (cons b "3")) BV) (bv 3 4) (list a))
-  (check-state (@int->bv 3 (phi (cons a BV) (cons b (bitvector 3))))
+(define (check-lifted-integer->bitvector)
+  (check-bv-exn exn:fail? (@integer->bitvector "3" BV))
+  (check-bv-exn #px"expected a bitvector type" (@integer->bitvector 3 3))
+  (check-bv-exn #px"expected a bitvector type" (@integer->bitvector 3 (phi (cons a 1) (cons b "3"))))
+  (check-state (@integer->bitvector 3 BV) (bv 3 4) (list))
+  (check-state (@integer->bitvector (phi (cons a 3) (cons b "3")) BV) (bv 3 4) (list a))
+  (check-state (@integer->bitvector 3 (phi (cons a BV) (cons b (bitvector 3))))
                (phi (cons a (bv 3 4)) (cons b (bv 3 3))) (list))
-  (check-state (@int->bv 3 (phi (cons a BV) (cons b (bitvector 3)) (cons c '())))
+  (check-state (@integer->bitvector 3 (phi (cons a BV) (cons b (bitvector 3)) (cons c '())))
                (phi (cons a (bv 3 4)) (cons b (bv 3 3))) (list (|| a b))))
 
 (define (check-lifted-bv->*)
-  (check-bv-exn #px"expected: bitvector\\?" (@bv->int 3))
-  (check-state (@bv->int (bv 3 3)) 3 (list))
-  (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b (bv 3 3)))) 
+  (check-bv-exn #px"expected: bitvector\\?" (@bitvector->integer 3))
+  (check-state (@bitvector->integer (bv 3 3)) 3 (list))
+  (check-state (@bitvector->integer (phi (cons a (bv 3 4)) (cons b (bv 3 3)))) 
                (phi (cons a 3) (cons b 3)) (list))
-  (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b 3)))
+  (check-state (@bitvector->integer (phi (cons a (bv 3 4)) (cons b 3)))
                3 (list a))
-  (check-state (@bv->int (phi (cons a (bv 3 4)) (cons b (bv 3 3)) (cons c '()))) 
+  (check-state (@bitvector->integer (phi (cons a (bv 3 4)) (cons b (bv 3 3)) (cons c '()))) 
                (phi (cons a 3) (cons b 3)) (list (|| a b))))
   
 
@@ -872,20 +872,20 @@
    (check-extend-simplifications @sign-extend)
    (check-extend-semantics @sign-extend)))
 
-(define tests:bv->int
+(define tests:bitvector->integer
   (test-suite+
-   "Tests for bv->int in rosette/base/bitvector.rkt"
-   (check-bv->*-semantics @bv->int)))
+   "Tests for bitvector->integer in rosette/base/bitvector.rkt"
+   (check-bv->*-semantics @bitvector->integer)))
 
-(define tests:bv->nat
+(define tests:bitvector->natural
   (test-suite+
-   "Tests for bv->nat in rosette/base/bitvector.rkt"
-   (check-bv->*-semantics @bv->nat)))
+   "Tests for bitvector->natural in rosette/base/bitvector.rkt"
+   (check-bv->*-semantics @bitvector->natural)))
 
-(define tests:int->bv
+(define tests:integer->bitvector
   (test-suite+
-   "Tests for int->bv in rosette/base/bitvector.rkt"
-   (check-int->bv-semantics)))
+   "Tests for integer->bitvector in rosette/base/bitvector.rkt"
+   (check-integer->bitvector-semantics)))
 
 (define tests:lifted-operators
   (test-suite+
@@ -897,7 +897,7 @@
    (check-lifted-concat)
    (check-lifted-extract)
    (check-lifted-extend)
-   (check-lifted-int->bv)
+   (check-lifted-integer->bitvector)
    (check-lifted-bv->*)
    ))
 
@@ -930,9 +930,9 @@
 (time (run-tests tests:extract))
 (time (run-tests tests:zero-extend))
 (time (run-tests tests:sign-extend))
-(time (run-tests tests:bv->int))
-(time (run-tests tests:bv->nat))
-(time (run-tests tests:int->bv))
+(time (run-tests tests:bitvector->integer))
+(time (run-tests tests:bitvector->natural))
+(time (run-tests tests:integer->bitvector))
 (time (run-tests tests:lifted-operators))
 
 (send solver shutdown)

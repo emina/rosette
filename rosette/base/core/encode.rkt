@@ -33,46 +33,48 @@
                    [(? constant?)   (enc-const v env)]
                    [_               (enc-lit v env)]))))
 
-; TODO:  copy term properties, use unsafe ops for encoding.
+; TODO:  use unsafe ops for encoding.
 (define (enc-expr v env)
-  (match v
-    [(expression (== @=) x y)         (@bveq (enc x env) (enc y env))]
-    [(expression (== @<) x y)         (@bvslt (enc x env) (enc y env))]
-    [(expression (== @<=) x y)        (@bvsle (enc x env) (enc y env))]
-    [(expression (== @-) x)           (@bvneg (enc x env))]
-    [(expression (== @+) xs ...)      (apply @bvadd (for/list ([x xs]) (enc x env)))]
-    [(expression (== @*) xs ...)      (apply @bvmul (for/list ([x xs]) (enc x env)))]
-    [(expression (== @/) x y)         (@bvsdiv (enc x env) (enc y env))]
-    [(expression (== @quotient) x y)  (@bvsdiv (enc x env) (enc y env))]
-    [(expression (== @remainder) x y) (@bvsrem (enc x env) (enc y env))]
-    [(expression (== @modulo) x y)    (@bvsmod (enc x env) (enc y env))]
-    [(expression (== @int?) _)        #t]
-    [(expression (== @abs) x) 
-     (let ([e (enc x env)])
-       (merge (@bvslt e (bv 0 (get-type e))) (@bvneg e) e))]
-    [(expression (or (== @integer->real) (== @real->integer)) x _) 
-     (enc x env)]
-    [(expression (== @int->bv) v (bitvector sz))
-     (convert (enc v env) (current-bitwidth) sz @sign-extend)]
-    [(expression (== @bv->nat) (and v (app get-type (bitvector sz))))
-     (convert (enc v env) sz (current-bitwidth) @zero-extend)]
-    [(expression (== @bv->int) (and v (app get-type (bitvector sz))))
-     (convert (enc v env) sz (current-bitwidth) @sign-extend)]
-    [(expression (== ite) a b c)
-     (merge (enc a env) (enc b env) (enc c env))]
-    [(expression op x)     
-     (op (enc x env))]
-    [(expression op x y)   
-     (op (enc x env) (enc y env))]
-    [(expression op xs ...) 
-     (apply op (for/list ([x xs]) (enc x env)))]))
+  (term-properties v 
+   (match v
+     [(expression (== @=) x y)         (@bveq (enc x env) (enc y env))]
+     [(expression (== @<) x y)         (@bvslt (enc x env) (enc y env))]
+     [(expression (== @<=) x y)        (@bvsle (enc x env) (enc y env))]
+     [(expression (== @-) x)           (@bvneg (enc x env))]
+     [(expression (== @+) xs ...)      (apply @bvadd (for/list ([x xs]) (enc x env)))]
+     [(expression (== @*) xs ...)      (apply @bvmul (for/list ([x xs]) (enc x env)))]
+     [(expression (== @/) x y)         (@bvsdiv (enc x env) (enc y env))]
+     [(expression (== @quotient) x y)  (@bvsdiv (enc x env) (enc y env))]
+     [(expression (== @remainder) x y) (@bvsrem (enc x env) (enc y env))]
+     [(expression (== @modulo) x y)    (@bvsmod (enc x env) (enc y env))]
+     [(expression (== @int?) _)        #t]
+     [(expression (== @abs) x) 
+      (let ([e (enc x env)])
+        (merge (@bvslt e (bv 0 (get-type e))) (@bvneg e) e))]
+     [(expression (or (== @integer->real) (== @real->integer)) x _) 
+      (enc x env)]
+     [(expression (== @integer->bitvector) v (bitvector sz))
+      (convert (enc v env) (current-bitwidth) sz @sign-extend)]
+     [(expression (== @bitvector->natural) (and v (app get-type (bitvector sz))))
+      (convert (enc v env) sz (current-bitwidth) @zero-extend)]
+     [(expression (== @bitvector->integer) (and v (app get-type (bitvector sz))))
+      (convert (enc v env) sz (current-bitwidth) @sign-extend)]
+     [(expression (== ite) a b c)
+      (merge (enc a env) (enc b env) (enc c env))]
+     [(expression op x)     
+      (op (enc x env))]
+     [(expression op x y)   
+      (op (enc x env) (enc y env))]
+     [(expression op xs ...) 
+      (apply op (for/list ([x xs]) (enc x env)))])))
     
 (define (enc-const v env)
   (match v
     [(constant (or id (cons id _)) (or (== @integer?) (== @real?)))
      (term-property 
-      (constant (format-id id "~a" (gensym (term-e v)) #:source id)
-                (bitvector (current-bitwidth)))
+      (term-properties v 
+       (constant (format-id id "~a" (gensym (term-e v)) #:source id)
+                 (bitvector (current-bitwidth))))
       'source v)]
     [_ v]))
                               

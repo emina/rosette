@@ -248,3 +248,19 @@
 ;    [(_ (expression (== @bitwise-not) (== x))) -1]
 ;    [((expression (== @bitwise-not) (== y)) _) -1]
 ;    [(_ _) #f]))
+;
+;;; ----------------- Finitization utility ----------------- ;;
+;
+;; Returns a signed representation of the given number using current-bitwidth,   
+;; when it is not set to #f. Assumes that val is either symbolic or a real, non-infinite, non-NaN number.
+;(define (finitize val) 
+;  (if (number? val)
+;      (let ([bitwidth (current-bitwidth)])
+;        (if bitwidth
+;            (let* ([mask (arithmetic-shift -1 bitwidth)]
+;                   [masked (bitwise-and (bitwise-not mask) (exact-truncate val))])
+;              (if (bitwise-bit-set? masked (- bitwidth 1))
+;                  (bitwise-ior mask masked)  
+;                  masked))
+;            val))
+;      val))

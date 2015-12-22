@@ -11,7 +11,7 @@
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
- @concat @extract @sign-extend @zero-extend @int->bv @bv->int @bv->nat)
+ @concat @extract @sign-extend @zero-extend @integer->bitvector @bitvector->integer @bitvector->natural)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -652,22 +652,22 @@
   #:unsafe zero-extend
   #:safe (@extend zero-extend))
 
-(define (int->bv v t)
+(define (integer->bitvector v t)
   (match v
     [(? number?) (@bv v t)]
     ; This optimization is valid only when integer bitwidth >= (bitvector-size t).
-    ;[(expression (== @bv->int) (and (app get-type (== t)) x)) x]
-    [_ (expression @int->bv v t)]))
+    ;[(expression (== @bitvector->integer) (and (app get-type (== t)) x)) x]
+    [_ (expression @integer->bitvector v t)]))
 
-(define (bv->int v)
+(define (bitvector->integer v)
   (match v
     [(bv a _) a]
-    [_ (expression @bv->int v)]))
+    [_ (expression @bitvector->integer v)]))
 
-(define (bv->nat v)
+(define (bitvector->natural v)
   (match v
     [(bv a (bitvector sz)) (ufinitize a sz)]
-    [_ (expression @bv->nat v)]))
+    [_ (expression @bitvector->natural v)]))
 
 (define-syntax-rule (@bv->* bvop)
   (lambda (@v)
@@ -675,31 +675,31 @@
       [(union vs) (merge** vs bvop)]
       [v (bvop v)])))
 
-(define-operator @int->bv
-  #:name 'int->bv
+(define-operator @integer->bitvector
+  #:name 'integer->bitvector
   #:type coercion-type
-  #:unsafe int->bv
+  #:unsafe integer->bitvector
   #:safe 
   (lambda (@v @t)
-    (match* ((coerce @v @number? 'int->bv) @t)
+    (match* ((coerce @v @number? 'integer->bitvector) @t)
       [(v (union ts))
        (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
-                 (cons (car gt) (int->bv v (cdr gt))))
+                 (cons (car gt) (integer->bitvector v (cdr gt))))
                #:unless (length ts) #:error (arguments-error "expected a bitvector type t" "t" @t))]
-      [(v (? bitvector? t)) (int->bv v t)]
+      [(v (? bitvector? t)) (integer->bitvector v t)]
       [(_ _) (assert #f (arguments-error "expected a bitvector type t" "t" @t))])))
 
-(define-operator @bv->int
-  #:name 'bv->int
+(define-operator @bitvector->integer
+  #:name 'bitvector->integer
   #:type (lambda (v) @number?)
-  #:unsafe bv->int
-  #:safe (@bv->* bv->int))
+  #:unsafe bitvector->integer
+  #:safe (@bv->* bitvector->integer))
              
-(define-operator @bv->nat
-  #:name 'bv->nat
+(define-operator @bitvector->natural
+  #:name 'bitvector->natural
   #:type (lambda (v) @number?)
-  #:unsafe bv->nat
-  #:safe (@bv->* bv->nat))
+  #:unsafe bitvector->natural
+  #:safe (@bv->* bitvector->natural))
 
 ;; ----------------- Shared lifting procedures and templates ----------------- ;;
 
