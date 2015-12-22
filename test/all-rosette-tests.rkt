@@ -8,6 +8,7 @@
  "base/term.rkt"
  "base/bool.rkt"
  "base/bitvector.rkt"
+ "base/real.rkt"
  "base/num.rkt"
  "base/list.rkt"
  "base/equality.rkt"

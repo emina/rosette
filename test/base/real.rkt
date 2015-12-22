@@ -599,5 +599,4 @@
 (time (run-tests tests:real->integer))
 (time (run-tests tests:lifted))
 
-(current-bitwidth 5)
 (send solver shutdown)
