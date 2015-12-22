@@ -18,7 +18,8 @@
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
                   @concat @extract @zero-extend @sign-extend @int->bv @bv->int @bv->nat)
          (prefix-in $ (only-in "../../base/core/real.rkt" @integer? @real? @= @< @<= @>= @> 
-                               @+ @* @- @/ @quotient @remainder @abs @integer->real @real->integer @int?))
+                               @+ @* @- @/ @quotient @remainder @modulo 
+                               @abs @integer->real @real->integer @int?))
          (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
 
 (provide enc finitize)
@@ -84,7 +85,11 @@
      (let* ([tx (enc x env)]
             [ty (enc y env)]
             [tx%ty (mod (int_abs tx) (int_abs ty))])
-       (smt/ite (smt/< tx 0) (smt/- tx%ty) tx%ty))]   
+       (smt/ite (smt/< tx 0) (smt/- tx%ty) tx%ty))]
+    [(expression (== $@modulo) x y) 
+     (let* ([tx (enc x env)]
+            [ty (enc y env)])
+       (smt/ite (smt/< 0 ty) (mod tx ty) (smt/- (mod (smt/- tx) ty))))]
     [_ (error 'encode "cannot encode expression ~a" v)]))
 
 (define (enc-const v env)

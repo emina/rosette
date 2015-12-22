@@ -4,9 +4,9 @@
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 
-(provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @abs
+(provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @modulo @abs
          @integer->real @real->integer @int?
-         lift-op numeric-coerce T*->integer? T*->real? current-bitwidth)
+         lift-op numeric-coerce T*->integer? T*->real? current-bitwidth finitize)
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
 
@@ -253,23 +253,28 @@
 
 (define $quotient (div @quotient $quotient quotient))
 
-(define ($remainder x y)
-  (match* (x y)
-    [((? integer?) (? integer?)) (remainder x y)]
-    [(_ 1) 0]
-    [(_ -1) 0]
-    [(0 _) 0]
-    [(_ (== x)) 0]
-    [(_ (expression (== @-) (== x))) 0]
-    [((expression (== @-) (== y)) _) 0]
-    [((expression (== @*) _ ... (== y) _ ...) _) 0]
-    [((expression (== ite) a (? real? b) (? real? c)) (? real?))
-     (merge a (remainder b y) (remainder c y))]
-    [((? real?) (expression (== ite) a 
-                            (and b (? real?) (not (? zero?))) 
-                            (and c (? real?) (not (? zero?)))))
-     (merge a (remainder x b) (remainder x c))]
-    [(_ _) (expression @remainder x y)]))
+(define-syntax-rule (define-remainder $op op @op)
+  (define ($op x y)
+    (match* (x y)
+      [((? integer?) (? integer?)) (op x y)]
+      [(_ 1) 0]
+      [(_ -1) 0]
+      [(0 _) 0]
+      [(_ (== x)) 0]
+      [(_ (expression (== @-) (== x))) 0]
+      [((expression (== @-) (== y)) _) 0]
+      [((expression (== @*) _ (... ...) (== y) _ (... ...)) _) 0]
+      [((expression (== ite) a (? real? b) (? real? c)) (? real?))
+       (merge a (op b y) (op c y))]
+      [((? real?) (expression (== ite) a 
+                              (and b (? real?) (not (? zero?))) 
+                              (and c (? real?) (not (? zero?)))))
+       (merge a (op x b) (op x c))]
+      [(_ _) (expression @op x y)])))
+  
+
+(define-remainder $remainder remainder @remainder)
+(define-remainder $modulo modulo @modulo)
     
 (define T*->integer? (const @integer?))
 
@@ -289,7 +294,7 @@
 
 (define-lifted-int-operator @quotient $quotient quotient)
 (define-lifted-int-operator @remainder $remainder remainder)
-
+(define-lifted-int-operator @modulo $modulo modulo)
 
 ;; ----------------- Real Operators ----------------- ;; 
 
@@ -346,16 +351,18 @@
 ;; ----------------- Finitization utility ----------------- ;;
 
 ; Returns a signed representation of the given number using current-bitwidth,   
-; when it is not set to #f. Assumes that val is a real, non-infinite, non-NaN number.
+; when it is not set to #f. Assumes that val is either symbolic or a real, non-infinite, non-NaN number.
 (define (finitize val) 
-  (let ([bitwidth (current-bitwidth)])
-    (if bitwidth
-        (let* ([mask (arithmetic-shift -1 bitwidth)]
-               [masked (bitwise-and (bitwise-not mask) (exact-truncate val))])
-          (if (bitwise-bit-set? masked (- bitwidth 1))
-              (bitwise-ior mask masked)  
-              masked))
-        val)))
+  (if (number? val)
+      (let ([bitwidth (current-bitwidth)])
+        (if bitwidth
+            (let* ([mask (arithmetic-shift -1 bitwidth)]
+                   [masked (bitwise-and (bitwise-not mask) (exact-truncate val))])
+              (if (bitwise-bit-set? masked (- bitwidth 1))
+                  (bitwise-ior mask masked)  
+                  masked))
+            val))
+      val))
 
 ;; ----------------- Simplification rules for operators ----------------- ;;
 

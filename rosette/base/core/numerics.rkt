@@ -152,23 +152,23 @@
                 [ys (apply expression @bitwise-xor (sort ys term<?))])))]))
 
 (define ($<< x y)
-  (match* (x y)
-    [(_ 0) x]
+  (match* ((finitize x) (finitize y))
+    [(x 0) x]
     [(0 _) 0]
-    [((? integer?) (? integer?)) 
-     (if (> y 0) (arithmetic-shift x y) 0)]
-    [(_ _) (expression @<< x y)]))
+    [((? integer? x) (? integer? y)) 
+     (if (> y 0) (finitize (arithmetic-shift x y)) 0)]
+    [(x y) (expression @<< x y)]))
  
 (define ($>> x y)
-  (match* (x y)    
-    [(_ 0) x]
+  (match* ((finitize x) (finitize y))    
+    [(x 0) x]
     [(0 _) 0]
     [(-1 _) -1]
-    [((? integer?) (? integer?)) 
-     (cond [(> y 0) (arithmetic-shift x (- y))]
+    [((? integer? x) (? integer? y)) 
+     (cond [(> y 0) (finitize (arithmetic-shift x (- y)))]
            [(> x 0) 0]
            [else -1])]
-    [(_ _) (expression @>> x y)]))
+    [(x y) (expression @>> x y)]))
 
 
 (define-lifted-bitwise-operator @bitwise-not $bitwise-not bitwise-not)

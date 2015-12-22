@@ -265,17 +265,17 @@
   (check-valid? (@quotient (@quotient x 4) 2) (@quotient x 8))
   (test-valid?  ([i x][j y][k z]) (@quotient (@* x y z) y) (@* x z)))
 
-(define (check-remainder-simplifications [x xi] [y yi] [z zi])
-  (check-valid? (@remainder 0 x) 0)
-  (check-valid? (@remainder x 1) 0)
-  (check-valid? (@remainder x -1) 0)
-  (check-valid? (@remainder x x) 0)
-  (check-valid? (@remainder x (@- x)) 0)
-  (check-valid? (@remainder (@- x) x) 0)
-  (check-valid? (@remainder (ite a 4 6) 3) 
-                (ite a (@remainder 4 3) (@remainder 6 3)))
-  (check-valid? (@remainder 18 (ite a 4 6)) 
-                (ite a (@remainder 18 4) (@remainder 18 6))))
+(define (check-remainder-simplifications op [x xi] [y yi] [z zi])
+  (check-valid? (op 0 x) 0)
+  (check-valid? (op x 1) 0)
+  (check-valid? (op x -1) 0)
+  (check-valid? (op x x) 0)
+  (check-valid? (op x (@- x)) 0)
+  (check-valid? (op (@- x) x) 0)
+  (check-valid? (op (ite a 4 6) 3) 
+                (ite a (op 4 3) (op 6 3)))
+  (check-valid? (op 18 (ite a 4 6)) 
+                (ite a (op 18 4) (op 18 6))))
 
 (define (check-abs-simplifications x)
   (check-valid? (@abs (@abs x)) (@abs x)))
@@ -541,8 +541,14 @@
 (define tests:remainder
   (test-suite+
    "Tests for remainder in rosette/base/real.rkt"
-   (check-remainder-simplifications)
+   (check-remainder-simplifications @remainder)
    (check-semantics @remainder xi yi zi (lambda (x) (not (zero? x))))))
+
+(define tests:modulo
+  (test-suite+
+   "Tests for modulo in rosette/base/real.rkt"
+   (check-remainder-simplifications @modulo)
+   (check-semantics @modulo xi yi zi (lambda (x) (not (zero? x))))))
 
 (define tests:abs
   (test-suite+
@@ -586,6 +592,7 @@
 (time (run-tests tests:/))
 (time (run-tests tests:quotient))
 (time (run-tests tests:remainder))
+(time (run-tests tests:modulo))
 (time (run-tests tests:abs))
 (time (run-tests tests:int?))
 (time (run-tests tests:integer->real))
