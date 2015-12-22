@@ -51,16 +51,9 @@
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...) 
      (apply smt/op (for/list ([e es]) (enc e env)))]
-    [(or (expression (and op (== @integer->bitvector)) v (? bitvector? (app bitvector-size sz)))
-         (expression (and op (== @bitvector->integer)) 
-                     (and v (app get-type (? bitvector?  (app bitvector-size sz)))))
-         (expression (and op (== @bitvector->natural)) 
-                     (and v (app get-type (? bitvector? (app bitvector-size sz))))))
-     (let-values ([(src tgt) (if (equal? op @integer->bitvector) (values (current-bitwidth) sz) (values sz (current-bitwidth)))]
-                  [(extend)  (if (equal? op @bitvector->natural) zero_extend sign_extend)])
-       (cond [(= src tgt) (enc v env)]
-             [(> src tgt) (extract (- tgt 1) 0 (enc v env))]
-             [else        (extend (- tgt src) (enc v env))]))]
+    [(expression (== @bitvector->natural) v) (bv->nat (enc v env) (bitvector-size (get-type v)))]
+    [(expression (== @bitvector->integer) v) (bv->int (enc v env) (bitvector-size (get-type v)))]  
+    [(expression (== @integer->bitvector) v t) (int->bv (enc v env) (bitvector-size t))]
     [(expression (== @extract) i j e)
      (extract i j (enc e env))]
     [(expression (== @zero-extend) v t)
@@ -140,3 +133,27 @@
              (smt/ite (bvslt e zero) 
                       (smt/bv -1 (current-bitwidth))
                       (smt/bv  1 (current-bitwidth))))))
+
+(define (bv->nat v n) 
+  (apply smt/+ (for/list ([i n]) (bv-bit v i n))))
+
+(define (bv->int v n)
+  (apply smt/+ (smt/- (bv-bit v (- n 1) n)) 
+         (for/list ([i (- n 1)]) (bv-bit v i n))))
+
+(define (bv-bit v i n)
+  (define bv0 (smt/bv 0 n))
+  (define b (expt 2 i))
+  (smt/ite (smt/= bv0 (bvand v (smt/bv b n))) 0 b)) 
+  
+(define (int->bv i n)
+  (define bv0 (smt/bv 0 n))
+  (apply 
+   bvor 
+   (let loop ([b (- n 1)] [m (mod i (expt 2 n))])
+     (if (< b 0)
+         (list)
+         (let* ([2^b (expt 2 b)]
+                [1? (smt/<= 2^b m)])          
+           (cons (smt/ite 1? (smt/bv 2^b n) bv0) 
+                 (loop (- b 1) (smt/- m (smt/ite 1? 2^b 0)))))))))

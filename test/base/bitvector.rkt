@@ -11,10 +11,11 @@
          rosette/base/core/polymorphic rosette/base/core/merge rosette/base/core/assert
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
-         (only-in rosette/base/core/num @= @< @<= @number? current-bitwidth)
+         (only-in rosette/base/core/real @= @< @<= @integer? current-bitwidth)
          "exprs.rkt" )
 
 (define solver (new z3%))
+(current-bitwidth #f)
 
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
@@ -315,7 +316,7 @@
          [j (in-range 0 (add1 i))]
          [x (in-range minval maxval+1)])
     (define BVo (bitvector (add1 (- i j))))
-    (define-symbolic* vi vj @number?)
+    (define-symbolic* vi vj @integer?)
     (define-symbolic* vo BVo)
     (define actual (@extract i j (bv x)))
     ;(printf "(~a ~a ~a) = ~a\n" @concat (bv i BVi) (bv j BVj) actual)
@@ -351,27 +352,35 @@
     (check-equal? actual expected)))
     
 (define (check-bv->*-semantics op)
-  (parameterize ([current-bitwidth 8])
-    (for* ([v (in-range minval maxval+1)])
-      (define actual (op (bv v BV)))
-      (define-symbolic* out @number?)
-      (define expected
-        ((solve (@bveq x (bv v BV))
-                (@= out (op x))) out))
-      (check-equal? actual expected))))
+  (for* ([v (in-range minval maxval+1)])
+    (define actual (op (bv v BV)))
+    (define-symbolic* out @integer?)
+    (define expected
+      ((solve (@bveq x (bv v BV))
+              (@= out (op x))) out))
+    (check-equal? actual expected)))
 
 (define (check-integer->bitvector-semantics)
-  (parameterize ([current-bitwidth 8])
-    (for* ([t (in-range 1 10)]
-           [v (in-range minval maxval+1)])
-      (define BVo (bitvector t))
-      (define actual (@integer->bitvector v BVo))
-      (define-symbolic* out BVo)
-      (define-symbolic* in @number?)
-      (define expected
-        ((solve (@= in v)
-                (@bveq out (@integer->bitvector in BVo))) out))
-      (check-equal? actual expected))))
+  (for* ([v (in-range (* 2 minval) (* 2 maxval+1))])
+    (define actual (@integer->bitvector v BV))
+    (define-symbolic* out BV)
+    (define-symbolic* in @integer?)
+    (define expected
+      ((solve (@= in v)
+              (@bveq out (@integer->bitvector in BV))) out))
+    (check-equal? actual expected)))
+;  (parameterize ([current-bitwidth 8])
+;    (for* ([t (in-range 1 10)]
+;           [v (in-range minval maxval+1)])
+;      (define BVo (bitvector t))
+;      (define actual (@integer->bitvector v BVo))
+;      (define-symbolic* out BVo)
+;      (define-symbolic* in @integer?)
+;      (define expected
+;        ((solve (@= in v)
+;                (@bveq out (@integer->bitvector in BVo))) out))
+;      (check-equal? actual expected)))
+ 
 
 ;(define (check-integer->bitvector-simplifications)
 ;  ; This optimization is valid only when current-bitwidth > BV.
@@ -385,14 +394,14 @@
 ;    (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x)))
 
 (define (check-lifted-bv-type)
-  (define-symbolic* n @number?)
+  (define-symbolic* n @integer?)
   (check-exn #px"exact-positive-integer\\?" (thunk (bitvector 0)))
   (check-exn #px"exact-positive-integer\\?" (thunk (bitvector -1)))
   (check-exn #px"exact-positive-integer\\?" (thunk (bitvector n)))
   (check-eq? (bitvector 3) (bitvector 3))
   (check-exn #px"real, non-infinite, non-NaN number" (thunk (@bv +inf.0 BV)))
   (check-exn #px"exact-positive-integer\\? or bitvector\\? type" (thunk (@bv 1 3.2)))
-  (check-exn #px"exact-positive-integer\\? or bitvector\\? type" (thunk (@bv 1 @number?))))
+  (check-exn #px"exact-positive-integer\\? or bitvector\\? type" (thunk (@bv 1 @integer?))))
 
 (define (phi . xs) (apply merge* xs))
 
@@ -409,7 +418,7 @@
      (check-exn pred (thunk (with-asserts-only expr)))]))
          
 (define (check-lifted-unary)
-  (define-symbolic* n @number?)
+  (define-symbolic* n @integer?)
   (check-not-exn (thunk (@bvnot (bv 1))))
   (check-bv-exn (@bvnot n))
   (check-bv-exn (@bvnot (phi (cons a 1) (cons b '()))))
@@ -423,7 +432,7 @@
 
 
 (define (check-lifted-binary)
-  (define-symbolic* n @number?)
+  (define-symbolic* n @integer?)
   (check-not-exn (thunk (@bvsdiv x y)))
   (check-bv-exn (@bvsdiv x 1))
   (check-bv-exn (@bvsdiv 1 x))
@@ -467,7 +476,7 @@
   (check-bv-exn exn:fail? (@bvadd x y bad-arg)))
 
 (define (check-lifted-nary)
-  (define-symbolic* n @number?)
+  (define-symbolic* n @integer?)
   (check-not-exn (thunk (@bvadd x y z)))
   (check-@bvadd-exn 1)
   (check-@bvadd-exn n)
@@ -526,7 +535,7 @@
                (list (|| (&& a c e) (&& b d f)))))
 
 (define (check-lifted-concat)
-  (define-symbolic* n @number?)
+  (define-symbolic* n @integer?)
   (check-not-exn (thunk (@concat x)))
   (check-not-exn (thunk (@concat x y)))
   (check-not-exn (thunk (@concat x y z)))
@@ -570,12 +579,12 @@
                (list a (|| c d)) ))
 
 (define (check-lifted-extract)
-  (define-symbolic* i j @number?)
-  (check-bv-exn #px"expected: number\\?" (@extract "1" 2 x))
-  (check-bv-exn #px"expected: number\\?" (@extract 1 "2" x))
+  (define-symbolic* i j @integer?)
+  (check-bv-exn #px"expected: integer\\?" (@extract "1" 2 x))
+  (check-bv-exn #px"expected: integer\\?" (@extract 1 "2" x))
   (check-bv-exn #px"expected: bitvector\\?" (@extract 2 1 (phi (cons a 3) (cons b '()))))
-  (check-bv-exn #px"expected an integer i" (@extract 2.3 2 x))  
-  (check-bv-exn #px"expected an integer j" (@extract 2 1.9 x))  
+  (check-bv-exn #px"expected: integer\\?" (@extract 2.3 2 x))  
+  (check-bv-exn #px"expected: integer\\?" (@extract 2 1.9 x))  
   (check-bv-exn #px"expected i >= j" (@extract 2 3 x))  
   (check-bv-exn #px"expected j >= 0" (@extract 2 -1 x))
   (check-bv-exn #px"expected \\(size-of x\\) > i" (@extract 4 1 x))

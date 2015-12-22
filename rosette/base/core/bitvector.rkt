@@ -3,7 +3,7 @@
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt" "bitwise.rkt")
-(require (only-in "num.rkt" @>= @> @= @number?))
+(require (only-in "real.rkt" @>= @> @= @integer? T*->integer?))
 
 (provide 
  (rename-out [@bv bv]) bv? 
@@ -589,8 +589,8 @@
                                (cons (&& (@= n i) (@= k j)) (extract n k x)))
                              #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j))]))]
     (lambda (@i @j @x)
-      (define i (coerce @i @number? 'extract))
-      (define j (coerce @j @number? 'extract))
+      (define i (coerce @i @integer? 'extract))
+      (define j (coerce @j @integer? 'extract))
       (define x (bvcoerce @x 'extract))
       (assert (or (integer? i) (term? i)) (arguments-error 'extract "expected an integer i" "i" i))
       (assert (or (integer? j) (term? j)) (arguments-error 'extract "expected an integer j" "j" j))
@@ -654,7 +654,7 @@
 
 (define (integer->bitvector v t)
   (match v
-    [(? number?) (@bv v t)]
+    [(? integer?) (@bv v t)]
     ; This optimization is valid only when integer bitwidth >= (bitvector-size t).
     ;[(expression (== @bitvector->integer) (and (app get-type (== t)) x)) x]
     [_ (expression @integer->bitvector v t)]))
@@ -681,7 +681,7 @@
   #:unsafe integer->bitvector
   #:safe 
   (lambda (@v @t)
-    (match* ((coerce @v @number? 'integer->bitvector) @t)
+    (match* ((coerce @v @integer? 'integer->bitvector) @t)
       [(v (union ts))
        (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
                  (cons (car gt) (integer->bitvector v (cdr gt))))
@@ -691,13 +691,13 @@
 
 (define-operator @bitvector->integer
   #:name 'bitvector->integer
-  #:type (lambda (v) @number?)
+  #:type T*->integer?
   #:unsafe bitvector->integer
   #:safe (@bv->* bitvector->integer))
              
 (define-operator @bitvector->natural
   #:name 'bitvector->natural
-  #:type (lambda (v) @number?)
+  #:type T*->integer?
   #:unsafe bitvector->natural
   #:safe (@bv->* bitvector->natural))
 
