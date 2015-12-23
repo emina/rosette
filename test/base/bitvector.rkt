@@ -369,19 +369,7 @@
       ((solve (@= in v)
               (@bveq out (@integer->bitvector in BV))) out))
     (check-equal? actual expected)))
-;  (parameterize ([current-bitwidth 8])
-;    (for* ([t (in-range 1 10)]
-;           [v (in-range minval maxval+1)])
-;      (define BVo (bitvector t))
-;      (define actual (@integer->bitvector v BVo))
-;      (define-symbolic* out BVo)
-;      (define-symbolic* in @integer?)
-;      (define expected
-;        ((solve (@= in v)
-;                (@bveq out (@integer->bitvector in BVo))) out))
-;      (check-equal? actual expected)))
  
-
 ;(define (check-integer->bitvector-simplifications)
 ;  ; This optimization is valid only when current-bitwidth > BV.
 ;  ; The following will fail:
@@ -426,7 +414,7 @@
   (check-state (@bvnot (phi (cons a 1) (cons b x) (cons c '()) (cons d (bv -1 2))))
                (phi (cons b (@bvnot x)) (cons d (bv 0 2))) (list (|| b d)))
   (check-state (@bvnot (phi (cons a 1) (cons b x) (cons c '()) (cons d (bv -1))))
-               (@bvnot (@bvor (ite b x (bv 0)) (ite d (bv -1 4) (bv 0)))) (list (|| b d)))
+               (@bvnot (phi (cons b x) (cons d (bv -1 4)))) (list (|| b d)))
   (check-state (@bvnot (phi (cons a (bv 0 2)) (cons b (bv -1))))
                (phi (cons a (bv -1 2)) (cons b (bv 0))) (list)))
 

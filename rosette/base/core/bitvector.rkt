@@ -57,7 +57,7 @@
       [_ (values #f v)]))
    (define (type-eq? self u v)        (@bveq u v))
    (define (type-equal? self u v)     (@bveq u v))
-   (define (type-compress self f? ps) (generic-merge bvor (bv 0 self) ps))
+   (define (type-compress self f? ps) (generic-merge* ps))
    (define (type-construct self vs)   (car vs))
    (define (type-deconstruct self v)  (list v))]
   #:methods gen:custom-write

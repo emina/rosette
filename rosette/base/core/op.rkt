@@ -36,7 +36,7 @@
   #:property prop:procedure 
   (struct-field-index safe)) 
 
-(define (make-lifted-op #:safe safe #:unsafe unsafe #:type type #:name [name (object-name unsafe)] )
+(define (make-lifted-op #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
   (let ([str-name (symbol->string name)])
     (lifted-op 
      name (equal-hash-code str-name) (equal-secondary-hash-code str-name)

@@ -5,7 +5,7 @@
          (except-in "smtlib2.rkt" bv not and or xor => <=> ite = < + - * / abs) 
          "env.rkt" "../common/enc.rkt" 
          (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
-         (only-in "../../base/core/polymorphic.rkt" ite =?)
+         (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
          (only-in "../../base/core/bool.rkt" ! && || => <=>)
          (only-in "../../base/core/num.rkt" 
                   current-bitwidth 
@@ -51,6 +51,11 @@
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...) 
      (apply smt/op (for/list ([e es]) (enc e env)))]
+    [(and (expression (== ite*) gvs ...) (app get-type t))
+     (let-values ([(zero op) (if (bitvector? t) 
+                                 (values (enc (bv 0 (bitvector-size t)) env) bvor) 
+                                 (values 0 smt/+))])
+       (apply op (for/list ([gv gvs]) (smt/ite (enc (guarded-test gv) env) (enc (guarded-value gv) env) zero))))]
     [(expression (== @bitvector->natural) v) (bv->nat (enc v env) (bitvector-size (get-type v)))]
     [(expression (== @bitvector->integer) v) (bv->int (enc v env) (bitvector-size (get-type v)))]  
     [(expression (== @integer->bitvector) v t) (int->bv (enc v env) (bitvector-size t))]

@@ -61,6 +61,10 @@
       (convert (enc v env) sz (current-bitwidth) @sign-extend)]
      [(expression (== ite) a b c)
       (merge (enc a env) (enc b env) (enc c env))]
+     ((expression (== ite*) gvs ...)
+      (apply merge* 
+       (for/list ([gv gvs]) 
+         (cons (enc (guarded-test gv) env) (enc (guarded-value gv) env)))))                  
      [(expression op x)     
       (op (enc x env))]
      [(expression op x y)   

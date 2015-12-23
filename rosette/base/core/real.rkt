@@ -46,7 +46,7 @@
              (values (or (= (length xs) 2) (|| gi gr)) (merge* (cons gi (integer->real xi)) r))]
             [(_ _) (values #f v)]))]
        [_ (values #f v)]))
-   (define (type-compress self force? ps) (generic-merge @+ 0 ps))])
+   (define (type-compress self force? ps) (generic-merge* ps))])
   
 (define-lifted-type @integer?
   #:base integer?
@@ -77,7 +77,7 @@
                    (values gi xi)))]
             [(_ _) (values #f v)]))]
        [_ (values #f v)]))
-   (define (type-compress self force? ps) (generic-merge @+ 0 ps))])
+   (define (type-compress self force? ps) (generic-merge* ps))])
 
 ;; ----------------- Lifting Utilities ----------------- ;; 
 (define (guarded-numbers xs)

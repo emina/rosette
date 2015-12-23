@@ -3,9 +3,8 @@
 (require "term.rkt" "union.rkt" "op.rkt" "bool.rkt")
 
 (provide 
- ite          ; (-> @boolean? any/c any/c any/c)
- =?           ; (-> anyc/ any/c @boolean?)
- generic-merge
+ ite ite* guarded guarded-test guarded-value =?    
+ generic-merge generic-merge*
  T*->T T*->boolean?
  sort/expression
  simplify*)
@@ -27,20 +26,77 @@
                                           (expression =? x y)
                                           (expression =? y x)))])))
 
-(define-op ite 
-  #:name 'ite  
-  #:type (op/-> #:arg-type (lambda (i) (if (= i 0) @boolean? @any/c)) 
-                #:out-type (lambda (b t f) (type-of t f)))
-  #:pre  (lambda (b t f) (equal? (type-of t) (type-of f)))
-  #:op   (lambda (b t f)
-           (match* (b t f)
-             [((? boolean?) _ _) (if b t f)]
-             [(_ _ (== t)) t]
-             [(_ (expression (== ite) (== b) x _) _) (ite b x f)]
-             [(_ (expression (== ite) (== (! b)) _ y) _) (ite b y f)]
-             [(_ _ (expression (== ite) (== b) _ y)) (ite b t y)]
-             [(_ _ (expression (== ite) (== (! b)) x _)) (ite b t x)]
-             [(_ _ _) (expression ite b t f)])))
+; A generic ite operator that takes a boolean condition and 
+; two values v1 and v2. The values v1 and vn must be of the same 
+; primitive type T.  That is, (type-of v1 v2) = T for some pritimive 
+; type T. This operator is intended only for internal use and should not 
+; be called by client code. 
+(define-operator ite 
+  #:name   'ite  
+  #:type   (lambda (b t f) (type-of t f))
+  #:unsafe (lambda (b t f)
+             (match* (b t f)
+               [((? boolean?) _ _) (if b t f)]
+               [(_ _ (== t)) t]
+               [(_ (expression (== ite) (== b) x _) _) (ite b x f)]
+               [(_ (expression (== ite) (== (! b)) _ y) _) (ite b y f)]
+               [(_ _ (expression (== ite) (== b) _ y)) (ite b t y)]
+               [(_ _ (expression (== ite) (== (! b)) x _)) (ite b t x)]
+               [(_ _ _) (expression ite b t f)])))
+
+(struct guarded (test value) 
+  #:transparent
+  #:methods gen:typed
+  [(define (get-type self) (type-of (guarded-value self)))]
+  #:methods gen:custom-write
+  [(define (write-proc self port mode)
+     (fprintf port "(guarded ~a ~a)" 
+              (guarded-test self)
+              (guarded-value self)))])
+  
+
+; A generic ite* operator that takes one or more guard-value pairs, 
+; (g1 . v1) ... (gn . vn), and merges them into a single value 
+; of the form (ite* (guarded g1 v1) ...(guarded g1 v1)). All guards must be 
+; symbolic @boolean? terms.  All values v1 ... vn must be of the same 
+; primitive type T.  That is, (type-of v1 ... vn) = T for some pritimive 
+; type T. This operator is intended only for internal use and should not 
+; be called by client code. The operator simply sorts its arguments by 
+; guard and wraps the resulting list into an expression with ite* as the 
+; operator.
+(define-operator ite*
+  #:name   'ite*
+  #:type   (lambda gvs (apply type-of gvs))
+  #:unsafe (lambda gvs 
+             (match gvs
+               [(list (cons _ a)) a]
+               [(list (cons a b) (cons (expression (== !) a) c)) (ite a b c)]
+               [(list (cons (expression (== !) a) c) (cons a b)) (ite a b c)]
+               [(list (app simplify-ite (cons a b)) (app simplify-ite (cons c d)))
+                (cond [(equal? b d) b]
+                      [(term<? a c) (expression ite* (guarded a b) (guarded c d))]
+                      [else (expression ite* (guarded c d) (guarded a b) )])]
+               [(list (app simplify-ite (cons a b)) (app simplify-ite cs) ...)
+                (cond [(for/and ([c cs]) (equal? b (cdr c))) b]
+                      [else (apply 
+                             expression 
+                             ite* 
+                             (sort (cons (guarded a b) (for/list ([c cs]) (guarded (car c) (cdr c))))
+                                   term<? 
+                                   #:key guarded-test))])])))
+    
+
+; A generic eager merging procedure that takes a list of guard-value pairs, 
+; ps = '((g1 . v1) ... (gn . vn)), and merges them into a single value 
+; of the form (ite* (guarded g1 v1) ... (guarded g1 v1)). All guards must be 
+; symbolic @boolean? terms.  All values v1 ... vn must be of the same 
+; type T.  That is, (type-of v1 ... vn ∅) = T for some primitive type T.
+(define (generic-merge* ps)
+  (match ps
+    [(list _) ps]
+    [(list (cons a _) (cons b _)) (list (cons (|| a b) (apply ite* ps)))]
+    [(list (cons a _) ...) (list (cons (apply || a) (apply ite* ps)))]))
+
 
 ; A generic eager merging procedure that takes a list of guard-value pairs, 
 ; ps = '((g1 . v1) ... (gn . vn)), and merges them into a single value 
