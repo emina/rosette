@@ -563,8 +563,10 @@
     [(_ _ (bv b _)) 
      (bv (sfinitize (bitwise-and (bitwise-not (arithmetic-shift -1 len)) (arithmetic-shift b (- j))) len) 
          (bitvector-type len))]
-    [(_ 0 (expression (== @concat) _ (and (app get-type (bitvector (== len))) a))) a]
-    [(_ _ (expression (== @concat) (and (app get-type (bitvector (== len))) a) (app get-type (bitvector (== j))))) a]
+    [(_ 0 (expression (== @concat) _ (and (? typed? (app get-type (bitvector (== len)))) a))) a]
+    [(_ _ (expression (== @concat) 
+                      (and (? typed? (app get-type (bitvector (== len)))) a) 
+                      (? typed? (app get-type (bitvector (== j)))))) a]
     [(_ _ _) (expression @extract i j x)]))
         
 (define-operator @extract
