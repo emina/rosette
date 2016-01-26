@@ -9,17 +9,18 @@
 
 ; The finitize procedure takes as input a list of terms, in any combination of theories, 
 ; and encodes those terms in the theory of bitvectors (BV), representing integers and reals 
-; as bitvectors of length current-bitwidth.  This procedure assumes that current-bitwidth 
+; as bitvectors of length bw (or current-bitwidth by defualt).  This procedure assumes that bw 
 ; is not #f.
 ;
 ; The procedure produces a map from input terms, and their subterms, to 
 ; their corresponding BV finitizations.  Terms that are already in BV 
 ; finitize to themselves.
-(define (finitize terms)
-  (let ([env (make-hash)])
-    (for ([t terms])
-      (enc t env))
-    env))
+(define (finitize terms [bw (current-bitwidth)])
+  (parameterize ([current-bitwidth bw])
+    (let ([env (make-hash)])
+      (for ([t terms])
+        (enc t env))
+      env)))
 
 ; The enc procedure takes a value (a term or a literal), 
 ; and an environment (a hash-map from terms to their QF_BV encoding), and returns  
@@ -59,12 +60,16 @@
      (convert (enc v env) (bitvector-size (get-type v)) (current-bitwidth) @zero-extend)]
     [(expression (== @bitvector->integer) v)
      (convert (enc v env) (bitvector-size (get-type v)) (current-bitwidth) @sign-extend)]
+    [(expression (== @extract) i j x) ; i and j must be ints
+     ((unsafe @extract) i j (enc x env))]
+    [(expression (and op (or (== @sign-extend) (== @zero-extend))) x t) ; t must be bitvector? type
+     ((unsafe op) (enc x env) t)]
     [(expression (== ite) a b c)
      (merge (enc a env) (enc b env) (enc c env))]
     ((expression (== ite*) gvs ...)
      (apply merge* 
             (for/list ([gv gvs]) 
-              (cons (enc (guarded-test gv) env) (enc (guarded-value gv) env)))))                  
+              (cons (enc (guarded-test gv) env) (enc (guarded-value gv) env)))))
     [(expression op x)     
      ((unsafe op) (enc x env))]
     [(expression op x y)   
