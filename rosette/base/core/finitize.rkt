@@ -2,20 +2,20 @@
 
 (require racket/syntax 
          "term.rkt" "real.rkt" "bitvector.rkt" "bool.rkt" 
-         "polymorphic.rkt" "merge.rkt")
+         "polymorphic.rkt" "merge.rkt" 
+         (only-in "op.rkt" [op-unsafe unsafe]))
 
 (provide finitize)
 
 ; The finitize procedure takes as input a list of terms, in any combination of theories, 
 ; and encodes those terms in the theory of bitvectors (BV), representing integers and reals 
-; as bitvectors of length bw. The optional bw argument, if provided, specifies 
-; the bitwidth to be used for finitization of integer and real operation 
-; (current-bitwidth by default).
+; as bitvectors of length current-bitwidth.  This procedure assumes that current-bitwidth 
+; is not #f.
 ;
 ; The procedure produces a map from input terms, and their subterms, to 
 ; their corresponding BV finitizations.  Terms that are already in BV 
 ; finitize to themselves.
-(define (finitize terms [bw (current-bitwidth)])
+(define (finitize terms)
   (let ([env (make-hash)])
     (for ([t terms])
       (enc t env))
@@ -35,31 +35,30 @@
                    [(? constant?)   (enc-const v env)]
                    [_               (enc-lit v env)]))))
 
-; TODO:  use unsafe ops for encoding.
 (define (enc-expr v env)
   (match v
-    [(expression (== @=) x y)         (@bveq (enc x env) (enc y env))]
-    [(expression (== @<) x y)         (@bvslt (enc x env) (enc y env))]
-    [(expression (== @<=) x y)        (@bvsle (enc x env) (enc y env))]
-    [(expression (== @-) x)           (@bvneg (enc x env))]
-    [(expression (== @+) xs ...)      (apply @bvadd (for/list ([x xs]) (enc x env)))]
-    [(expression (== @*) xs ...)      (apply @bvmul (for/list ([x xs]) (enc x env)))]
-    [(expression (== @/) x y)         (@bvsdiv (enc x env) (enc y env))]
-    [(expression (== @quotient) x y)  (@bvsdiv (enc x env) (enc y env))]
-    [(expression (== @remainder) x y) (@bvsrem (enc x env) (enc y env))]
-    [(expression (== @modulo) x y)    (@bvsmod (enc x env) (enc y env))]
+    [(expression (== @=) x y)         ((unsafe @bveq) (enc x env) (enc y env))]
+    [(expression (== @<) x y)         ((unsafe @bvslt) (enc x env) (enc y env))]
+    [(expression (== @<=) x y)        ((unsafe @bvsle) (enc x env) (enc y env))]
+    [(expression (== @-) x)           ((unsafe @bvneg) (enc x env))]
+    [(expression (== @+) xs ...)      (apply (unsafe @bvadd) (for/list ([x xs]) (enc x env)))]
+    [(expression (== @*) xs ...)      (apply (unsafe @bvmul) (for/list ([x xs]) (enc x env)))]
+    [(expression (== @/) x y)         ((unsafe @bvsdiv) (enc x env) (enc y env))]
+    [(expression (== @quotient) x y)  ((unsafe @bvsdiv) (enc x env) (enc y env))]
+    [(expression (== @remainder) x y) ((unsafe @bvsrem) (enc x env) (enc y env))]
+    [(expression (== @modulo) x y)    ((unsafe @bvsmod) (enc x env) (enc y env))]
     [(expression (== @int?) _)        #t]
     [(expression (== @abs) x) 
      (let ([e (enc x env)])
-       (merge (@bvslt e (bv 0 (get-type e))) (@bvneg e) e))]
+       (merge ((unsafe @bvslt) e (bv 0 (get-type e))) ((unsafe @bvneg) e) e))]
     [(expression (or (== @integer->real) (== @real->integer)) x _) 
      (enc x env)]
     [(expression (== @integer->bitvector) v (bitvector sz))
      (convert (enc v env) (current-bitwidth) sz @sign-extend)]
-    [(expression (== @bitvector->natural) (and v (app get-type (bitvector sz))))
-     (convert (enc v env) sz (current-bitwidth) @zero-extend)]
-    [(expression (== @bitvector->integer) (and v (app get-type (bitvector sz))))
-     (convert (enc v env) sz (current-bitwidth) @sign-extend)]
+    [(expression (== @bitvector->natural) v)
+     (convert (enc v env) (bitvector-size (get-type v)) (current-bitwidth) @zero-extend)]
+    [(expression (== @bitvector->integer) v)
+     (convert (enc v env) (bitvector-size (get-type v)) (current-bitwidth) @sign-extend)]
     [(expression (== ite) a b c)
      (merge (enc a env) (enc b env) (enc c env))]
     ((expression (== ite*) gvs ...)
@@ -67,11 +66,11 @@
             (for/list ([gv gvs]) 
               (cons (enc (guarded-test gv) env) (enc (guarded-value gv) env)))))                  
     [(expression op x)     
-     (op (enc x env))]
+     ((unsafe op) (enc x env))]
     [(expression op x y)   
-     (op (enc x env) (enc y env))]
+     ((unsafe op) (enc x env) (enc y env))]
     [(expression op xs ...) 
-     (apply op (for/list ([x xs]) (enc x env)))]))
+     (apply (unsafe op) (for/list ([x xs]) (enc x env)))]))
     
 (define (enc-const v env)
   (match v
@@ -87,6 +86,6 @@
 
 (define (convert v src tgt @extend)
   (cond [(= src tgt) v]
-        [(> src tgt) (@extract (- tgt 1) 0 v)]
-        [else        (@extend v (bitvector tgt))]))
+        [(> src tgt) ((unsafe @extract) (- tgt 1) 0 v)]
+        [else        ((unsafe @extend) v (bitvector tgt))]))
 
