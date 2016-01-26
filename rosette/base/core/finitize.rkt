@@ -52,7 +52,7 @@
     [(expression (== @abs) x) 
      (let ([e (enc x env)])
        (merge ((unsafe @bvslt) e (bv 0 (get-type e))) ((unsafe @bvneg) e) e))]
-    [(expression (or (== @integer->real) (== @real->integer)) x _) 
+    [(expression (or (== @integer->real) (== @real->integer)) x) 
      (enc x env)]
     [(expression (== @integer->bitvector) v (bitvector sz))
      (convert (enc v env) (current-bitwidth) sz @sign-extend)]
