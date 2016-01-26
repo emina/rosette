@@ -18,7 +18,6 @@
  term-origin       ; (-> term? any/c)
  term-track-origin ; (-> term? any/c term?)
  term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
- term-properties   ; (-> term? term? term?)
  term-e            ; (-> any/c any/c)
  term->datum       ; (-> any/c any/c)
  term->list        ; (-> any/c any/c)
@@ -132,14 +131,6 @@
      (and prop-val (term? v) (set-term-props! v (hash-set (or (term-props v) (hash)) prop prop-val)))
      v)))
          
-
-; Destructively copies properties of src to target.
-(define (term-properties src tgt)
-  (and (term? tgt) (term? src)
-       (let ([tgt-props (term-props tgt)])
-         (for ([(k v) (in-hash (term-props src))]) (hash-set! tgt-props k v)))
-       tgt))
-
 (define (term-origin v) (term-property v 'origin))
 
 (define (term-track-origin v origin) (term-property v 'origin origin))
