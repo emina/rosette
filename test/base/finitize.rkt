@@ -37,7 +37,9 @@
 
 (define (lift-solution finitized-solution finitization-map)
   (sat (for/hash ([(k v) finitization-map] #:when (constant? k))
-                  (values k (@bitvector->integer (finitized-solution v))))))
+                  (values k (if (equal? @integer? (get-type k))
+                                (@bitvector->integer (finitized-solution v))
+                                (finitized-solution v))))))
 
 (define (terms t) ; produces a hashmap from each typed? subterm in t to itself
   (define env (make-hash))
@@ -80,7 +82,17 @@
     (define fsol (apply solve (map (curry hash-ref fmap) terms)))
     (define sol (lift-solution fsol fmap))
     (check-equal? (sol y) expected)))
-  
+
+(define (check-integer->bitvector x y bw start end)
+  (for ([i (in-range start (add1 end))])
+    (define expected (@integer->bitvector i (get-type y)))
+    (define terms (with-asserts-only 
+                   (begin (@assert (@bveq (@integer->bitvector x (get-type y)) y))
+                          (@assert (@= x i)))))
+    (define fmap (finitize terms bw))
+    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
+    (define sol (lift-solution fsol fmap))
+    (check-equal? (sol y) expected)))
        
 (define tests:pure-bitvector-terms
   (test-suite+
@@ -109,20 +121,23 @@
    (check-equal? (finitize (list (@int? xr))) (make-hash (list (cons (@int? xr) #t))))
    (check-equal? (finitize (list (@int? (@+ xr 3)))) (make-hash (list (cons (@int? (@+ xr 3)) #t))))))
 
-(define tests:bitvector-casts
+(define tests:casts
   (test-suite+
-   "Tests for finitization of bitvector casts."
+   "Tests for finitization of bitvector->* and integer->bitvector casts."
    (check-bitvector->* @bitvector->integer xb yi bw minval maxval)
    (check-bitvector->* @bitvector->integer xb yi (+ bw 1) minval maxval)
    (check-bitvector->* @bitvector->integer xb yi (- bw 1) (- (expt 2 (- bw 2))) (sub1 (expt 2 (- bw 2))))
    (check-bitvector->* @bitvector->natural xb yi bw 0 maxval)
    (check-bitvector->* @bitvector->natural xb yi (+ bw 1) minval maxval)
    (check-bitvector->* @bitvector->natural xb yi (- bw 1) 0 (sub1 (expt 2 (- bw 2))))
+   (check-integer->bitvector xi yb bw minval maxval)
+   (check-integer->bitvector xi yb (+ bw 1) minval maxval)
+   (check-integer->bitvector xi yb (- bw 1) (- (expt 2 (- bw 2))) (sub1 (expt 2 (- bw 2))))
    )) 
 
 (time (run-tests tests:pure-bitvector-terms))
 (time (run-tests tests:real-unary-terms))
-(time (run-tests tests:bitvector-casts))
+(time (run-tests tests:casts))
 (send solver shutdown)
 
 
