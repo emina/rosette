@@ -58,16 +58,29 @@
   ;(printf "expected: ~a\nactual: ~a\n" expected actual)
   (check-equal? actual expected))
 
-(define (check-pure-finitization-1 op x y)
+(define (check-finitization-1 op x y)
   (for ([i (in-range minval maxval+1)] #:when (< (integer-length (op i)) bw))
-    (define actual (op i))
+    (define expected (op i))
     (define terms (with-asserts-only 
                    (begin (@assert (@= (op x) y))
                           (@assert (@= x i)))))
     (define fmap (finitize terms bw))
     (define fsol (apply solve (map (curry hash-ref fmap) terms)))
     (define sol (lift-solution fsol fmap))
-    (check-equal? actual (sol y))))
+    (check-equal? (sol y) expected)))
+
+(define (check-bitvector->* op x y bw start end)
+  (for ([v (in-range start (add1 end))])
+    (define i (bv v))
+    (define expected (op i))
+    (define terms (with-asserts-only 
+                   (begin (@assert (@= (op x) y))
+                          (@assert (@bveq x i)))))
+    (define fmap (finitize terms bw))
+    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
+    (define sol (lift-solution fsol fmap))
+    (check-equal? (sol y) expected)))
+  
        
 (define tests:pure-bitvector-terms
   (test-suite+
@@ -84,20 +97,32 @@
    (check-pure-bitvector-term (@sign-extend (@bvxor xb (@bvand zb yb)) (bitvector 8)))
    ))
 
-(define tests:pure-real-unary-terms
+(define tests:real-unary-terms
   (test-suite+
    "Tests for finitization of pure Int/Real unary terms."
-   (check-pure-finitization-1 @abs xi yi)
-   (check-pure-finitization-1 @abs xr yr)
-   (check-pure-finitization-1 @- xi yi)
-   (check-pure-finitization-1 @- xr yr)
-   (check-pure-finitization-1 @integer->real xi yr)
-   (check-pure-finitization-1 @real->integer xr yi)
+   (check-finitization-1 @abs xi yi)
+   (check-finitization-1 @abs xr yr)
+   (check-finitization-1 @- xi yi)
+   (check-finitization-1 @- xr yr)
+   (check-finitization-1 @integer->real xi yr)
+   (check-finitization-1 @real->integer xr yi)
    (check-equal? (finitize (list (@int? xr))) (make-hash (list (cons (@int? xr) #t))))
    (check-equal? (finitize (list (@int? (@+ xr 3)))) (make-hash (list (cons (@int? (@+ xr 3)) #t))))))
 
-;(time (run-tests tests:pure-bitvector-terms))
-(time (run-tests tests:pure-real-unary-terms))
+(define tests:bitvector-casts
+  (test-suite+
+   "Tests for finitization of bitvector casts."
+   (check-bitvector->* @bitvector->integer xb yi bw minval maxval)
+   (check-bitvector->* @bitvector->integer xb yi (+ bw 1) minval maxval)
+   (check-bitvector->* @bitvector->integer xb yi (- bw 1) (- (expt 2 (- bw 2))) (sub1 (expt 2 (- bw 2))))
+   (check-bitvector->* @bitvector->natural xb yi bw 0 maxval)
+   (check-bitvector->* @bitvector->natural xb yi (+ bw 1) minval maxval)
+   (check-bitvector->* @bitvector->natural xb yi (- bw 1) 0 (sub1 (expt 2 (- bw 2))))
+   )) 
+
+(time (run-tests tests:pure-bitvector-terms))
+(time (run-tests tests:real-unary-terms))
+(time (run-tests tests:bitvector-casts))
 (send solver shutdown)
 
 
