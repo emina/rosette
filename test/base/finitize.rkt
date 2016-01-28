@@ -37,7 +37,7 @@
 
 (define (lift-solution finitized-solution finitization-map)
   (sat (for/hash ([(k v) finitization-map] #:when (constant? k))
-                  (values k (if (equal? @integer? (get-type k))
+                  (values k (if (or (equal? @real? (get-type k)) (equal? @integer? (get-type k)))
                                 (@bitvector->integer (finitized-solution v))
                                 (finitized-solution v))))))
 
@@ -93,7 +93,20 @@
     (define fsol (apply solve (map (curry hash-ref fmap) terms)))
     (define sol (lift-solution fsol fmap))
     (check-equal? (sol y) expected)))
-       
+
+(define (check-comparison op x y [start minval] [end maxval])
+  (for* ([i (in-range start (add1 end))]
+         [j (in-range start (add1 end))])
+    (define expected (op i j))
+    (define terms (with-asserts-only 
+                   (begin (@assert (@equal? (op x y) a))
+                          (@assert (@= x i))
+                          (@assert (@= y j)))))
+    (define fmap (finitize terms bw))
+    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
+    (define sol (lift-solution fsol fmap))
+    (check-equal? (sol a) expected)))
+
 (define tests:pure-bitvector-terms
   (test-suite+
    "Tests for finitization of pure BV terms."
@@ -109,18 +122,6 @@
    (check-pure-bitvector-term (@sign-extend (@bvxor xb (@bvand zb yb)) (bitvector 8)))
    ))
 
-(define tests:real-unary-terms
-  (test-suite+
-   "Tests for finitization of pure Int/Real unary terms."
-   (check-finitization-1 @abs xi yi)
-   (check-finitization-1 @abs xr yr)
-   (check-finitization-1 @- xi yi)
-   (check-finitization-1 @- xr yr)
-   (check-finitization-1 @integer->real xi yr)
-   (check-finitization-1 @real->integer xr yi)
-   (check-equal? (finitize (list (@int? xr))) (make-hash (list (cons (@int? xr) #t))))
-   (check-equal? (finitize (list (@int? (@+ xr 3)))) (make-hash (list (cons (@int? (@+ xr 3)) #t))))))
-
 (define tests:casts
   (test-suite+
    "Tests for finitization of bitvector->* and integer->bitvector casts."
@@ -133,11 +134,35 @@
    (check-integer->bitvector xi yb bw minval maxval)
    (check-integer->bitvector xi yb (+ bw 1) minval maxval)
    (check-integer->bitvector xi yb (- bw 1) (- (expt 2 (- bw 2))) (sub1 (expt 2 (- bw 2))))
-   )) 
+   ))
+
+(define tests:real-unary-terms
+  (test-suite+
+   "Tests for finitization of pure Int/Real unary terms."
+   (check-finitization-1 @abs xi yi)
+   (check-finitization-1 @abs xr yr)
+   (check-finitization-1 @- xi yi)
+   (check-finitization-1 @- xr yr)
+   (check-finitization-1 @integer->real xi yr)
+   (check-finitization-1 @real->integer xr yi)
+   (check-equal? (finitize (list (@int? xr))) (make-hash (list (cons (@int? xr) #t))))
+   (check-equal? (finitize (list (@int? (@+ xr 3)))) (make-hash (list (cons (@int? (@+ xr 3)) #t))))))
+
+(define tests:real-comparison-terms
+  (test-suite+
+   "Tests for finitization of pure Int/Real comparison terms."
+   (check-comparison @= xi yi)
+   (check-comparison @< xi yi) 
+   (check-comparison @<= xi yi)
+   (check-comparison @= xr yr)
+   (check-comparison @< xr yr) 
+   (check-comparison @<= xr yr))) 
+ 
 
 (time (run-tests tests:pure-bitvector-terms))
-(time (run-tests tests:real-unary-terms))
 (time (run-tests tests:casts))
+(time (run-tests tests:real-unary-terms))
+(time (run-tests tests:real-comparison-terms))
 (send solver shutdown)
 
 
