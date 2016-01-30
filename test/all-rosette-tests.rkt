@@ -14,6 +14,7 @@
  "base/equality.rkt"
  "base/merge.rkt"
  "base/vector.rkt"
+ "base/finitize.rkt"
  "query/verify.rkt"
  "solver/z3.rkt"
  )
