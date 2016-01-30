@@ -41,6 +41,13 @@
                                 (@bitvector->integer (finitized-solution v))
                                 (finitized-solution v))))))
 
+(define-syntax-rule (finitize/solve bw constraint ...)
+  (let* ([terms (with-asserts-only 
+                 (begin (@assert constraint) ...))]
+         [fmap (finitize terms bw)]
+         [fsol (apply solve (map (curry hash-ref fmap) terms))])
+    (lift-solution fsol fmap)))
+
 (define (terms t) ; produces a hashmap from each typed? subterm in t to itself
   (define env (make-hash))
   (define (rec v)
@@ -63,53 +70,47 @@
 (define (check-finitization-1 op x y)
   (for ([i (in-range minval maxval+1)] #:when (< (integer-length (op i)) bw))
     (define expected (op i))
-    (define terms (with-asserts-only 
-                   (begin (@assert (@= (op x) y))
-                          (@assert (@= x i)))))
-    (define fmap (finitize terms bw))
-    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
-    (define sol (lift-solution fsol fmap))
+    (define sol (finitize/solve bw (@= (op x) y) (@= x i)))
     (check-equal? (sol y) expected)))
 
 (define (check-bitvector->* op x y bw start end)
   (for ([v (in-range start (add1 end))])
     (define i (bv v))
     (define expected (op i))
-    (define terms (with-asserts-only 
-                   (begin (@assert (@= (op x) y))
-                          (@assert (@bveq x i)))))
-    (define fmap (finitize terms bw))
-    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
-    (define sol (lift-solution fsol fmap))
+    (define sol (finitize/solve bw (@= (op x) y) (@bveq x i)))
     (check-equal? (sol y) expected)))
 
 (define (check-integer->bitvector x y bw start end)
   (for ([i (in-range start (add1 end))])
     (define expected (@integer->bitvector i (get-type y)))
-    (define terms (with-asserts-only 
-                   (begin (@assert (@bveq (@integer->bitvector x (get-type y)) y))
-                          (@assert (@= x i)))))
-    (define fmap (finitize terms bw))
-    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
-    (define sol (lift-solution fsol fmap))
+    (define sol (finitize/solve bw 
+                                (@bveq (@integer->bitvector x (get-type y)) y)
+                                (@= x i)))
     (check-equal? (sol y) expected)))
 
 (define (check-comparison op x y [start minval] [end maxval])
   (for* ([i (in-range start (add1 end))]
          [j (in-range start (add1 end))])
     (define expected (op i j))
-    (define terms (with-asserts-only 
-                   (begin (@assert (@equal? (op x y) a))
-                          (@assert (@= x i))
-                          (@assert (@= y j)))))
-    (define fmap (finitize terms bw))
-    (define fsol (apply solve (map (curry hash-ref fmap) terms)))
-    (define sol (lift-solution fsol fmap))
+    (define sol (finitize/solve bw 
+                                (@equal? (op x y) a)
+                                (@= x i)
+                                (@= y j)))
     (check-equal? (sol a) expected)))
+
+(define (check-binary-op op x y z [skip-zero? #f])
+  (for* ([i (in-range minval maxval+1)]
+         [j (in-range minval maxval+1)]
+         #:unless (and (= j 0) skip-zero?)
+         #:when (integer? (op i j))
+         #:when (<= minval (op i j) maxval))
+    (define expected (op i j))
+    (define sol (finitize/solve bw (@= (op x y) z) (@= x i) (@= y j)))
+    (check-equal? (sol z) expected)))
 
 (define tests:pure-bitvector-terms
   (test-suite+
-   "Tests for finitization of pure BV terms."
+   "Tests for finitization of BV terms."
    (check-pure-bitvector-term (bv 0))
    (check-pure-bitvector-term xb)
    (check-pure-bitvector-term (@bvneg xb))
@@ -138,7 +139,7 @@
 
 (define tests:real-unary-terms
   (test-suite+
-   "Tests for finitization of pure Int/Real unary terms."
+   "Tests for finitization of Int/Real unary terms."
    (check-finitization-1 @abs xi yi)
    (check-finitization-1 @abs xr yr)
    (check-finitization-1 @- xi yi)
@@ -150,7 +151,7 @@
 
 (define tests:real-comparison-terms
   (test-suite+
-   "Tests for finitization of pure Int/Real comparison terms."
+   "Tests for finitization of Int/Real comparison terms."
    (check-comparison @= xi yi)
    (check-comparison @< xi yi) 
    (check-comparison @<= xi yi)
@@ -158,11 +159,30 @@
    (check-comparison @< xr yr) 
    (check-comparison @<= xr yr))) 
  
+(define tests:real-binary-terms
+  (test-suite+
+   "Tests for finitization of Int/Real binary terms."
+   (check-binary-op @+ xi yi zi)
+   (check-binary-op @- xi yi zi)
+   (check-binary-op @* xi yi zi)
+   (check-binary-op @+ xr yr zr)
+   (check-binary-op @- xr yr zr)
+   (check-binary-op @* xr yr zr)
+   (check-binary-op @quotient xi yi zi #t)
+   (check-binary-op @modulo xi yi zi #t)
+   (check-binary-op @remainder xi yi zi #t)
+   (check-binary-op @/ xr yr zr #t)
+   ))
 
+   
 (time (run-tests tests:pure-bitvector-terms))
 (time (run-tests tests:casts))
 (time (run-tests tests:real-unary-terms))
 (time (run-tests tests:real-comparison-terms))
+(time (run-tests tests:real-binary-terms))
+
 (send solver shutdown)
+
+
 
 

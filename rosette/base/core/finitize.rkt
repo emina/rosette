@@ -2,7 +2,7 @@
 
 (require racket/syntax 
          "term.rkt" "real.rkt" "bitvector.rkt" "bool.rkt" 
-         "polymorphic.rkt" "merge.rkt" 
+         "polymorphic.rkt" "merge.rkt" "union.rkt"
          (only-in "op.rkt" lifted-op? op-unsafe))
          ;(only-in "op.rkt" [op-unsafe unsafe]))
 
@@ -68,9 +68,12 @@
     [(expression (== ite) a b c)
      (merge (enc a env) (enc b env) (enc c env))]
     ((expression (== ite*) gvs ...)
-     (apply merge* 
-            (for/list ([gv gvs]) 
-              (cons (enc (guarded-test gv) env) (enc (guarded-value gv) env)))))
+     (let ([e (apply merge* 
+                     (for/list ([gv gvs]) 
+                       (cons (enc (guarded-test gv) env) (enc (guarded-value gv) env))))])
+       (match e 
+         [(union) (error 'finitize "all finitizations infeasible: ~a" v)]
+         [_ e])))
     [(expression op x)     
      ((unsafe op) (enc x env))]
     [(expression op x y)   
