@@ -1,7 +1,6 @@
 #lang racket
 
-(require "assert.rkt"
-         (only-in "type.rkt" cast)
+(require (only-in "type.rkt" cast)
          "bool.rkt"
          racket/performance-hint)
 

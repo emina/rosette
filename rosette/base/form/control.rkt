@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../core/effects.rkt" "../core/assert.rkt" 
+(require "../core/effects.rkt"  
          "../core/term.rkt" "../core/equality.rkt" 
          "../core/merge.rkt" "../core/bool.rkt")
 

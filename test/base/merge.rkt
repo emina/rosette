@@ -8,7 +8,6 @@
          rosette/base/adt/procedure
          rosette/base/core/merge
          rosette/base/struct/struct
-         rosette/base/core/assert
          (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 

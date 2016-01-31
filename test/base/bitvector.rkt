@@ -8,7 +8,7 @@
          rosette/base/core/bool
          (except-in rosette/base/core/bitvector bv)
          (only-in rosette/base/core/bitvector [bv @bv])
-         rosette/base/core/polymorphic rosette/base/core/merge rosette/base/core/assert
+         rosette/base/core/polymorphic rosette/base/core/merge 
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/real @= @< @<= @integer? current-bitwidth)

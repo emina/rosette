@@ -1,7 +1,8 @@
 #lang racket
 
-(require (for-syntax racket "compile.rkt" "identifiers.rkt" rosette/base/core/assert)
-         "compile.rkt" "identifiers.rkt" rosette/base/core/assert)
+(require (for-syntax (except-in racket =>) "compile.rkt" "identifiers.rkt"
+                     rosette/base/core/bool)
+         "compile.rkt" "identifiers.rkt" rosette/base/core/bool)
 
 (provide define-synthesis-rule procedure->syntax)
     

@@ -5,7 +5,7 @@
          (only-in rosette/base/core/bool && ! ||)
          (only-in rosette/base/core/num @<= current-bitwidth)
          (only-in rosette/base/core/term term? [angelic? angelic?] term-e)
-         (only-in rosette/base/core/assert with-asserts with-asserts-only clear-asserts)
+         (only-in rosette/base/core/bool with-asserts with-asserts-only clear-asserts)
          rosette/base/util/log 
          rosette/solver/solver 
          rosette/solver/solution

@@ -1,7 +1,7 @@
 #lang racket
 
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
-         rosette/base/form/define rosette/base/core/assert
+         rosette/base/form/define
          rosette/solver/solution rosette/base/core/bool rosette/base/core/num
          rosette/query/tools rosette/base/form/control)
 

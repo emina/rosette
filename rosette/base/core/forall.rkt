@@ -3,10 +3,9 @@
 (require racket/splicing (for-syntax racket/syntax) 
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          (only-in "merge.rkt" merge merge*)
-         (only-in "bool.rkt" ! ||)
+         (only-in "bool.rkt" ! || pc)
          (only-in "union.rkt" union)
          (only-in "effects.rkt" speculate* location=? location-final-value)
-         (only-in "assert.rkt" pc)
          "safe.rkt")
 
 (provide for/all for*/all guard-apply)

@@ -5,7 +5,7 @@
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
   "core/primitive.rkt"  
-  "core/assert.rkt" 
+  "core/bool.rkt" 
   "core/equality.rkt" 
   "core/reflect.rkt" 
   "adt/list.rkt" 
@@ -28,12 +28,14 @@
   (combine-out
    (except-out (all-from-out "core/primitive.rkt") @||)
    (all-from-out 
-    "core/equality.rkt" "core/reflect.rkt" "core/assert.rkt"
+    "core/equality.rkt" "core/reflect.rkt" 
     "adt/list.rkt" "adt/box.rkt" "adt/vector.rkt" "adt/procedure.rkt"
     "struct/struct.rkt" "struct/enum.rkt" "struct/generics.rkt"    
     "form/state.rkt" "form/module.rkt" "form/define.rkt"
     "form/app.rkt" "form/control.rkt" "util/log.rkt")))
- (rename-out [@|| ||]))
+ pc with-asserts with-asserts-only relax asserts clear-asserts
+ (rename-out [@|| ||]
+             [@assert assert]))
 
 (require racket/local)
 

@@ -6,7 +6,6 @@
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real
          rosette/base/core/polymorphic rosette/base/core/merge 
-         rosette/base/core/assert
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette evaluate))
