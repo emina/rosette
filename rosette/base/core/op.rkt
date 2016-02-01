@@ -18,7 +18,7 @@
 (struct op 
   (name h1 h2)  
   #:methods gen:custom-write
-  [(define (write-proc self port mode) (fprintf port "~a" (op-name self)))]
+  [(define (write-proc self port mode) (fprintf port "~s" (op-name self)))]
   #:methods gen:equal+hash
   [(define (equal-proc op1 op2 eq-proc) (eq? op1 op2))
    (define (hash-proc op1 hash-proc) (op-h1 op1))
@@ -37,9 +37,11 @@
   (struct-field-index safe)) 
 
 (define (make-lifted-op #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
-  (let ([str-name (symbol->string name)])
+  (let ([str-name (format "~s" name)]) 
     (lifted-op 
-     name (equal-hash-code str-name) (equal-secondary-hash-code str-name)
+     (string->symbol str-name) 
+     (equal-hash-code str-name) 
+     (equal-secondary-hash-code str-name)
      safe unsafe type)))
 
 (define-syntax-rule (define-operator id arg ...)

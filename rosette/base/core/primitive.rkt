@@ -9,18 +9,17 @@
   "op.rkt"
   (only-in "type.rkt" cast @any/c)
   (only-in "term.rkt" expression term)
-  (filtered-in add@ "bool.rkt")
   (only-in "merge.rkt" merge merge*)
   (only-in "union.rkt" union union?)
-  "num.rkt" "bitvector.rkt")
+  "bool.rkt" "num.rkt" "bitvector.rkt")
              
 (provide 
  @boolean? @false? @number? @any/c
  (filtered-out with@ (all-defined-out))
+ (filtered-out with@ (all-from-out "bool.rkt"))
  (filtered-out with@ (all-from-out "bitvector.rkt"))
  (filtered-out add@ 
   (combine-out 
-   ! || && => <=> 
    = < <= > >=
    + - * *h / quotient remainder expt abs sgn sqrt
    << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor 
@@ -68,7 +67,6 @@
   (begin (define-impersonator id op) ...))
 
 (define-impersonators 
-  [! @!] [&& @&&] [|| @||] [=> @=>] [<=> @<=>] 
   [= @=] [> @>] [>= @>=] [< @<] [<= @<=]
   [+ @+] [- @-] [* @*] [/ @/]
   [quotient @quotient] [remainder @remainder] [expt @expt] [*h @*h]
@@ -77,7 +75,7 @@
   [bitwise-not @bitwise-not] [bitwise-and @bitwise-and] 
   [bitwise-ior @bitwise-ior] [bitwise-xor @bitwise-xor])
 
-(define @boolean=? <=>)
+(define @boolean=? @<=>)
 (define (@add1 x) (+ x 1))
 (define (@sub1 x) (- x 1))
 

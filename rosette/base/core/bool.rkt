@@ -2,13 +2,15 @@
 
 (require (for-syntax racket/syntax)
          racket/stxparam racket/stxparam-exptime
-         "../util/log.rkt" "term.rkt" "union.rkt" "op.rkt" )
+         "../util/log.rkt" "term.rkt" "union.rkt" "op.rkt")
 
-(provide @boolean? @false? ! && || => <=>  and-&& or-|| instance-of?
+(provide @boolean? @false? 
+         ! && || => <=> @! @&& @|| @=> @<=> 
+         and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only relax 
-         (rename-out [export-asserts asserts])
-         clear-asserts)
+         (rename-out [export-asserts asserts]) clear-asserts)
 
+;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
   #:base boolean?
   #:is-a? (instance-of? boolean? @boolean?)
@@ -28,39 +30,57 @@
        [_ (list (cons (apply || (map car ps)) 
                       (apply || (for/list ([p ps]) (&& (car p) (cdr p))))))]))])
 
-(define binary-type (op/-> (@boolean? @boolean?) @boolean?)) 
-(define nary-type (op/-> (#:rest @boolean?) @boolean?)) 
+;; ----------------- Lifting utilities ----------------- ;; 
 
-(define-op !
-  #:type (op/-> (@boolean?) @boolean?)
-  #:op   (lambda (x)
-           (match x
-             [(? boolean?) (not x)]
-             [(expression (== !) y) y]
-             [_ (expression ! x)])))
+(define (boolean-coerce v [caller 'boolean-coerce])
+  (let-values ([(g b) (cast @boolean? v)])
+    (@assert g (thunk (raise-argument-error caller "expected a boolean?" v)))
+    b))
 
-(define-op &&
-  #:type nary-type
-  #:op   (logical-connective && || #t #f)) 
+(define (lift-op op)
+  (define caller (object-name op))
+  (case (procedure-arity op)
+    [(1)  (lambda (x) (op (boolean-coerce x caller)))]
+    [(2)  (lambda (x y) (op (boolean-coerce x caller) (boolean-coerce y caller)))]
+    [else (case-lambda [() (op)]
+                       [(x) (op (boolean-coerce x caller))]
+                       [(x y) (op (boolean-coerce x caller) (boolean-coerce y caller))]
+                       [xs (apply op (for/list ([x xs]) (boolean-coerce x caller)))])]))
 
-(define-op ||
-  #:name '\|\|
-  #:type nary-type
-  #:op   (logical-connective || && #f #t)) 
-             
-(define-op => 
-  #:type binary-type
-  #:op   (lambda (x y) (|| (! x) y)))
+(define boolean?*->boolean? (const @boolean?))
 
-(define-op <=> 
-  #:type binary-type
-  #:op   (lambda (x y) ;(|| (&& x y) (&& (! x) (! y))))))
-           (cond [(equal? x y) #t]
-                 [(boolean? x) (if x y (! y))]
-                 [(boolean? y) (if y x (! x))]
-                 [(cancel? x y) #f]
-                 [(term<? x y) (expression <=> x y)]
-                 [else         (expression <=> y x)])))
+(define-syntax-rule (define-lifted-operator @op $op)
+  (define-operator @op
+    #:name '$op
+    #:type boolean?*->boolean?
+    #:unsafe $op
+    #:safe (lift-op $op)))
+
+;; ----------------- Basic boolean operators ----------------- ;; 
+(define (! x)
+  (match x
+    [(? boolean?) (not x)]
+    [(expression (== @!) y) y]
+    [_ (expression @! x)]))
+
+(define && (logical-connective @&& @|| #t #f))
+(define || (logical-connective @|| @&& #f #t))
+
+(define (=> x y) (|| (! x) y))
+
+(define (<=> x y) ;(|| (&& x y) (&& (! x) (! y))))))
+  (cond [(equal? x y) #t]
+        [(boolean? x) (if x y (! y))]
+        [(boolean? y) (if y x (! x))]
+        [(cancel? x y) #f]
+        [(term<? x y) (expression @<=> x y)]
+        [else         (expression @<=> y x)]))
+
+(define-lifted-operator @! !)
+(define-lifted-operator @&& &&)
+(define-lifted-operator @|| ||)
+(define-lifted-operator @=> =>)
+(define-lifted-operator @<=> <=>)
 
 (define (@false? v) 
   (or (false? v)  
@@ -68,11 +88,12 @@
            (let-values ([(g b) (cast @boolean? v)])
              (and g (&& g (! b)))))))
 
+;; ----------------- Additional operators ----------------- ;; 
 (define-syntax and-&&
   (syntax-rules ()
     [(_) #t]
     [(_ v0) v0]
-    [(_ v0 #:rest (r ...)) (let ([t0 v0]) (and t0 (&& r ... t0)))]
+    [(_ v0 #:rest (r ...)) (let ([t0 v0]) (and t0 (@&& r ... t0)))]
     [(_ v0 v ... #:rest (r ...)) (let ([t0 v0]) (and t0 (and-&& v ... #:rest (r ... t0))))]
     [(_ v0 v ...) (let ([t0 v0]) (and t0 (and-&& v ... #:rest (t0))))]))
 
@@ -80,7 +101,7 @@
   (syntax-rules ()
     [(_) #f]
     [(_ v0) v0]
-    [(_ v0 #:rest (r ...)) (let ([t0 v0]) (or (equal? #t t0) (|| r ... t0)))]
+    [(_ v0 #:rest (r ...)) (let ([t0 v0]) (or (equal? #t t0) (@|| r ... t0)))]
     [(_ v0 v ... #:rest (r ...)) (let ([t0 v0]) (or (equal? #t t0) (or-|| v ... #:rest (r ... t0))))]
     [(_ v0 v ...) (let ([t0 v0]) (or (equal? #t t0) (or-|| v ... #:rest (t0))))]))
 
@@ -91,7 +112,7 @@
                      (and (union? v) (apply || (for/list ([g (in-union-guards v symbolic-type)]) g))))]
                 [_ #f]))
 
-;; Partial evaluation rules for && and ||.
+;; ----------------- Partial evaluation rules for && and || ----------------- ;; 
 (define-syntax-rule (logical-connective op co iden !iden)
   (case-lambda 
     [() iden]
@@ -139,14 +160,14 @@
       
 (define (simplify-connective:expr/any op co !iden x y)
   (match x 
-    [(expression (== !) (== y)) !iden]
+    [(expression (== @!) (== y)) !iden]
     [(expression (== co) _ ... (== y) _ ...) y]
     [(expression (== op) _ ... (== y) _ ...) x]
-    [(expression (== op) _ ... (expression (== !) (== y)) _ ...) !iden]
-    [(expression (== !) (expression (== co) _ ... (== y) _ ...)) !iden]
-    [(expression (== !) (expression (== co) _ ... (expression (== !) (== y)) _ ...)) x]
-    [(expression (== !) (expression (== op) _ ... (expression (== !) (== y)) _ ...)) y]
-    [(expression (== !) a) 
+    [(expression (== op) _ ... (expression (== @!) (== y)) _ ...) !iden]
+    [(expression (== @!) (expression (== co) _ ... (== y) _ ...)) !iden]
+    [(expression (== @!) (expression (== co) _ ... (expression (== @!) (== y)) _ ...)) x]
+    [(expression (== @!) (expression (== op) _ ... (expression (== @!) (== y)) _ ...)) y]
+    [(expression (== @!) a) 
      (match y 
        [(expression (== op) _ ... (== a) _ ...) !iden]
        [_ ⊥])]
@@ -185,7 +206,7 @@
   (or 
    (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
                             (match x
-                              [(expression (== !) y) (values (cons y !ys) ys)]
+                              [(expression (== @!) y) (values (cons y !ys) ys)]
                               [_ (values !ys (cons x ys))]))])
      (for/first ([!y !ys] #:when (member !y ys)) (list !iden)))
    (and (> (length xs) 100) xs)
@@ -206,17 +227,16 @@
             
 (define (cancel? a b)
   (match* (a b)
-    [(_ (expression (== !) (== a))) #t]
-    [((expression (== !) (== b)) _) #t]
+    [(_ (expression (== @!) (== a))) #t]
+    [((expression (== @!) (== b)) _) #t]
     [(_ _) #f]))
 
   
-
+;; ----------------- Assertions and path condition ----------------- ;; 
 (define (export-asserts) (remove-duplicates (asserts)))
 
 (define (clear-asserts)  (asserts '()))
     
-
 (define asserts 
   (make-parameter 
    '()

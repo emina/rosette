@@ -70,8 +70,8 @@
   #:unsafe (lambda gvs 
              (match gvs
                [(list (cons _ a)) a]
-               [(list (cons a b) (cons (expression (== !) a) c)) (ite a b c)]
-               [(list (cons (expression (== !) a) c) (cons a b)) (ite a b c)]
+               [(list (cons a b) (cons (expression (== @!) a) c)) (ite a b c)]
+               [(list (cons (expression (== @!) a) c) (cons a b)) (ite a b c)]
                [(list (app simplify-ite (cons a b)) (app simplify-ite (cons c d)))
                 (cond [(equal? b d) b]
                       [(term<? a c) (expression ite* (guarded a b) (guarded c d))]
@@ -108,15 +108,15 @@
 (define (generic-merge ⊕ ∅ ps)
   (match ps
     [(list _) ps]
-    [(list (cons g a) (cons (expression (== !) g) b)) (list (cons #t (ite g a b)))]
-    [(list (cons (expression (== !) g) b) (cons g a)) (list (cons #t (ite g a b)))]
-    [(or (list (cons (expression (== &&) g h) x) (cons (expression (== &&) g f) y)) 
-         (list (cons (expression (== &&) g h) x) (cons (expression (== &&) f g) y)) 
-         (list (cons (expression (== &&) h g) x) (cons (expression (== &&) g f) y)) 
-         (list (cons (expression (== &&) h g) x) (cons (expression (== &&) f g) y)))
+    [(list (cons g a) (cons (expression (== @!) g) b)) (list (cons #t (ite g a b)))]
+    [(list (cons (expression (== @!) g) b) (cons g a)) (list (cons #t (ite g a b)))]
+    [(or (list (cons (expression (== @&&) g h) x) (cons (expression (== @&&) g f) y)) 
+         (list (cons (expression (== @&&) g h) x) (cons (expression (== @&&) f g) y)) 
+         (list (cons (expression (== @&&) h g) x) (cons (expression (== @&&) g f) y)) 
+         (list (cons (expression (== @&&) h g) x) (cons (expression (== @&&) f g) y)))
      (list (cons g (match* (h f)
-                     [(_ (expression (== !) h)) (ite h x y)]
-                     [((expression (== !) f) _) (ite f y x)]
+                     [(_ (expression (== @!) h)) (ite h x y)]
+                     [((expression (== @!) f) _) (ite f y x)]
                      [(_ _) (⊕ (ite h x ∅) (ite f y ∅))])))]
     [(list (app simplify-ite (cons g x)) (app simplify-ite (cons h y))) 
      (list (cons (|| g h) (if (equal? x y) x (⊕ (ite g x ∅) (ite h y ∅)))))]
@@ -129,8 +129,8 @@
 (define (simplify-ite p)
   (match* ((car p) (cdr p))
     [(a (expression (== ite) a x _)) (cons a x)]
-    [(a (expression (== ite) (expression (== !) a) _ x)) (cons a x)]
-    [((expression (== !) a) (expression (== ite) a _ x)) (cons a x)]
+    [(a (expression (== ite) (expression (== @!) a) _ x)) (cons a x)]
+    [((expression (== @!) a) (expression (== ite) a _ x)) (cons a x)]
     [(_ _) p]))
 
 ; A generic typing procedure for a lifted operator that takes N > 0 arguments of type T

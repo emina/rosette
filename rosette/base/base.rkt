@@ -26,9 +26,8 @@
  (filtered-out
   drop@
   (combine-out
-   (except-out (all-from-out "core/primitive.rkt") @||)
    (all-from-out 
-    "core/equality.rkt" "core/reflect.rkt" 
+    "core/equality.rkt" "core/reflect.rkt" "core/primitive.rkt"
     "adt/list.rkt" "adt/box.rkt" "adt/vector.rkt" "adt/procedure.rkt"
     "struct/struct.rkt" "struct/enum.rkt" "struct/generics.rkt"    
     "form/state.rkt" "form/module.rkt" "form/define.rkt"

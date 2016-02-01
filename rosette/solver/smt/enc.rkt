@@ -6,7 +6,7 @@
          "env.rkt" "../common/enc.rkt" 
          (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
-         (only-in "../../base/core/bool.rkt" ! && || => <=>)
+         (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=>)
          (only-in "../../base/core/num.rkt" 
                   current-bitwidth 
                   @= @< @<= @> @>= @+ @* @*h @- @/ @abs @sgn @quotient @remainder @expt                   
@@ -109,7 +109,7 @@
 
 (define-encoder rosette->smt 
   [#:== ; bool 
-        [! smt/not] [&& smt/and] [|| smt/or] [=> smt/=>] [<=> smt/<=>]  
+        [@! smt/not] [@&& smt/and] [@|| smt/or] [@=> smt/=>] [@<=> smt/<=>]  
         ; num
         [ite smt/ite] [=? smt/=] [@= smt/=] [@< bvslt] [@<= bvsle] 
         [@bitwise-ior bvor] [@bitwise-and bvand] 

@@ -39,7 +39,7 @@
 
 (define (guard-&& a b)
   (match b  
-    [(expression (== &&) c ...) (apply && a c)]
+    [(expression (== @&&) c ...) (apply && a c)]
     [_ (&& a b)])) 
 
 (define (guard g vs)
