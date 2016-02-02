@@ -1,7 +1,7 @@
 #lang racket
 
 (require "op.rkt" "term.rkt" "polymorphic.rkt" 
-         "real.rkt" "bool.rkt" "bitwise.rkt"
+         "real.rkt" "bool.rkt"  
          "merge.rkt" "safe.rkt")
 
 (provide @number? @positive? @negative? @zero? @even? @odd?

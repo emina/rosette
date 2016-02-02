@@ -4,8 +4,7 @@
 (require "state.rkt" "../base/util/log.rkt"
          "../base/core/term.rkt" "../base/core/op.rkt" "../base/core/bool.rkt" 
          "../base/core/polymorphic.rkt" "../base/core/union.rkt"
-         "../base/core/merge.rkt" "../solver/solution.rkt" 
-         )
+         "../base/core/merge.rkt" "../solver/solution.rkt")
 
 (provide evaluate time/evaluate)
 

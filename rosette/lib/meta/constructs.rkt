@@ -31,7 +31,7 @@
                      [else #f])))
 
 (define-synthesis-rule (choose-number low high)
-  #:declare [v number?]
+  #:declare [v integer?]
   #:compile (begin (assert (<= low v))
                    (assert (<= v high))
                    v)
@@ -41,7 +41,7 @@
                       (gen #`#,val)))))
 
 (define-synthesis-rule (??)
-  #:declare [v number?]
+  #:declare [v integer?]
   #:compile v
   #:generate (lambda (gen)
                (let ([val (evaluate v)])

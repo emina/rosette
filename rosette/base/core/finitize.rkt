@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/syntax 
-         "term.rkt" "real.rkt" "bitvector.rkt" "bool.rkt" 
+         "term.rkt" "real.rkt" "bitvector.rkt"  
          "polymorphic.rkt" "merge.rkt" "union.rkt"
          (only-in "op.rkt" [op-unsafe unsafe]))
 
