@@ -3,7 +3,8 @@
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/core/term
          rosette/base/core/bool
-         rosette/base/core/num
+         rosette/base/core/real 
+         rosette/base/core/polymorphic
          (only-in rosette/base/adt/list @list?)
          rosette/base/adt/procedure
          rosette/base/core/merge
@@ -11,14 +12,9 @@
          (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
-(define-symbolic x @number?)
-(define-symbolic y @number?)
-(define-symbolic z @number?)
-(define-symbolic w @number?)
+(define-symbolic x y z w @integer?)
 
-(define-symbolic a @boolean?)
-(define-symbolic b @boolean?)
-(define-symbolic c @boolean?)
+(define-symbolic a b c @boolean?)
 
 (define (basic-merge-tests)
   (check-equal? (merge #t x y) x)
@@ -41,7 +37,7 @@
   
   (check-equal? (merge* (cons a b) (cons #f x) (cons b y) (cons #t z) (cons c w)) z)
   (check-union? (merge* (cons a b) (cons #f x) (cons b y) (cons c w))
-              { [a b] [(|| b c) (@bitwise-ior (merge c w 0) (merge b y 0))] }))
+              { [a b] [(|| b c) (ite* (cons c w) (cons b y))] }))
 
 (define (list-merge-tests)
   (check-equal? (merge a (list) (list)) (list)) 
@@ -90,7 +86,7 @@
   (define f (merge b + 'f))
   (define g (merge c s* f))
   (check-equal? 
-   (length (with-asserts-only (check-equal? (g) (merge (|| (&& a c) (&& c (! a))) 1 0)))) 
+   (length (with-asserts-only (check-equal? (g) (ite* (cons (&& b (! c)) 0) (cons (|| (&& c (! a)) (&& a c)) 1)))))
    1)
   
   (define h (merge c kw f))

@@ -32,7 +32,7 @@
    "Tests for vector-copy!"
    
    (local [(define-symbolic b0 b1 b2 b3 boolean?)
-           (define-symbolic dest-start src-start src-end number?)
+           (define-symbolic dest-start src-start src-end integer?)
            (define len (- src-end src-start))]
      
      (let ([x (vector 1 2 3 4 5)])

@@ -4,7 +4,7 @@
          rosette/base/core/equality 
          rosette/base/core/term
          rosette/base/core/bool
-         rosette/base/core/num 
+         rosette/base/core/real
          rosette/base/adt/box
          rosette/base/adt/procedure
          rosette/base/struct/enum
@@ -14,13 +14,9 @@
          rosette/base/core/merge
          (only-in rosette/base/form/define define-symbolic))
 
-(define-symbolic x @number?)
-(define-symbolic y @number?)
-(define-symbolic z @number?)
+(define-symbolic x y z @integer?)
 
-(define-symbolic a @boolean?)
-(define-symbolic b @boolean?)
-(define-symbolic c @boolean?)
+(define-symbolic a b c @boolean?)
 
 ; transparent immutable structs 
 (struct i0 (x) #:transparent)

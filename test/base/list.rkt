@@ -5,19 +5,16 @@
          rosette/base/core/term
          rosette/base/adt/list
          rosette/base/core/bool
-         rosette/base/core/num
+         rosette/base/core/real
          rosette/base/core/merge
          rosette/base/core/union
          (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
-(define-symbolic x @number?)
-(define-symbolic y @number?)
-(define-symbolic z @number?)
+(define-symbolic x y z @integer?)
 
-(define-symbolic a @boolean?)
-(define-symbolic b @boolean?)
-(define-symbolic c @boolean?)
+(define-symbolic a b c @boolean?)
+
 
 (define l0 (merge a (list 1 2 3) (list 4 5 6)))
 (define l1 (merge b (list 1) (list 2 3 4 5)))

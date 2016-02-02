@@ -2,11 +2,11 @@
 
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/form/define
-         rosette/solver/solution rosette/base/core/bool rosette/base/core/num
+         rosette/solver/solution rosette/base/core/bool rosette/base/core/real
          rosette/query/tools rosette/base/form/control)
 
 (define-symbolic x @boolean?)
-(define-symbolic n @number?)
+(define-symbolic n @integer?)
 
 (define-syntax-rule (check-verify pred test)
   (let ([sol (with-handlers ([exn:fail? (const (unsat))])

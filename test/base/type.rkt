@@ -1,18 +1,11 @@
 #lang racket
 
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
-         rosette/base/core/type
-         rosette/base/core/equality 
          rosette/base/core/term
          rosette/base/adt/procedure
-         rosette/base/core/bool
-         rosette/base/adt/box
-         rosette/base/core/num 
          rosette/base/struct/enum
          rosette/base/adt/list
-         rosette/base/adt/vector
          rosette/base/struct/struct
-         rosette/base/core/merge
          (only-in rosette/base/form/define define-symbolic))
 
 ; transparent immutable structs 
@@ -48,7 +41,7 @@
 ; enums
 (define-enum e (list 1 #t #f 4 identity "foo" 'bar))
 
-(define types (map lifted-type (list boolean? number? list? pair? procedure? vector? box?)))
+(define types (map lifted-type (list boolean? integer? real? list? pair? procedure? vector? box?)))
 
 (define (least-common-supertype-tests)
   (for ([t types])
