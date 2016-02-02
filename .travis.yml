@@ -22,6 +22,7 @@ install:
       make -j2;
       cd $TRAVIS_BUILD_DIR;
     else echo "using z3 from cache"; fi
+  - mkdir bin/
   - cp $Z3_DIR/build/z3 bin/
   - bin/z3 --version
   - cd $Z3_DIR && git rev-parse HEAD && cd $TRAVIS_BUILD_DIR
