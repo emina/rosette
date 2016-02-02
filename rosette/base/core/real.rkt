@@ -6,7 +6,7 @@
 
 (provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @modulo @abs
          @integer->real @real->integer @int?
-         lift-op numeric-coerce T*->integer? T*->real? current-bitwidth)
+         lift-op numeric-coerce T*->integer? T*->real?)
 
 ;; ----------------- Integer and Real Types ----------------- ;; 
 
@@ -78,13 +78,6 @@
             [(_ _) (values #f v)]))]
        [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge* ps))])
-
-(define current-bitwidth
-  (make-parameter 5 
-                  (lambda (bw) 
-                    (unless (or (false? bw) (and (integer? bw) (positive? bw)))
-                      (raise-argument-error 'current-bitwidth "positive integer or #f" bw))
-                    bw)))
 
 ;; ----------------- Lifting Utilities ----------------- ;; 
 (define (guarded-numbers xs)

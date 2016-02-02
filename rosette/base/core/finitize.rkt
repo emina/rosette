@@ -5,7 +5,15 @@
          "polymorphic.rkt" "merge.rkt" "union.rkt"
          (only-in "op.rkt" [op-unsafe unsafe]))
 
-(provide finitize)
+(provide finitize current-bitwidth)
+
+; The current bitwidth parameter controls the finitization of real / integer terms.
+(define current-bitwidth
+  (make-parameter 5 
+                  (lambda (bw) 
+                    (unless (or (false? bw) (and (integer? bw) (positive? bw)))
+                      (raise-argument-error 'current-bitwidth "positive integer or #f" bw))
+                    bw)))
 
 ; The finitize procedure takes as input a list of terms, in any combination of theories, 
 ; and encodes those terms in the theory of bitvectors (BV), representing integers and reals 

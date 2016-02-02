@@ -18,10 +18,9 @@
      pc with-asserts with-asserts-only relax asserts clear-asserts
      @assert @boolean? @false? @! @&& @|| @=> @<=> 
      ; core/real.rkt
-     current-bitwidth 
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs
-     @integer->real @real->integer @int?
+     @integer->real @real->integer @int? 
      ; core/bitvector.rkt
      bv bv? bitvector bitvector-size bitvector? 
      @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
@@ -32,7 +31,7 @@
      ; core/equality.rkt
      @eq? @equal?
      ; core/finitize.rkt
-     finitize
+     finitize current-bitwidth 
      ; core/reflect.rkt
      symbolics type? type-of coerce for/all for*/all
      term? constant? expression? angelic?

@@ -11,11 +11,10 @@
          rosette/base/core/polymorphic rosette/base/core/merge 
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
-         (only-in rosette/base/core/real @= @< @<= @integer? current-bitwidth)
+         (only-in rosette/base/core/real @= @< @<= @integer?)
          "exprs.rkt" )
 
 (define solver (new z3%))
-(current-bitwidth #f)
 
 (define BV (bitvector 4))
 (define-symbolic x y z BV)

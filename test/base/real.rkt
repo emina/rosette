@@ -11,7 +11,6 @@
          (only-in rosette evaluate))
 
 (define solver (new z3%))
-(current-bitwidth #f)
 
 (define-symbolic a b c d e f g @boolean?)
 (define-symbolic xi yi zi @integer?)
