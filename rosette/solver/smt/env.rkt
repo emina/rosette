@@ -4,7 +4,6 @@
          (only-in "smtlib2.rkt" Int Real Bool BitVec declare-const define-const assert [< smt/<] [<= smt/<=]) 
          "../../base/core/term.rkt" 
          (only-in "../../base/core/bool.rkt" @boolean?)
-         (only-in "../../base/core/num.rkt" @number? current-bitwidth)
          (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size)
          (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/struct/enum.rkt" enum? enum-size))
@@ -40,7 +39,6 @@
 (define (smt-type val)
   (match (type-of val)
     [(== @boolean?) Bool]
-    [(== @number?) (BitVec (current-bitwidth))]
     [(== @integer?) Int]
     [(== @real?) Real]
     [(? bitvector? t) (BitVec (bitvector-size t))]

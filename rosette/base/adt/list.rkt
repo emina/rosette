@@ -7,7 +7,7 @@
          (only-in "../core/term.rkt" term? define-lifted-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? and-&& && || =>)
-         (only-in "../core/num.rkt" @number? @<= @< @= @> @+)
+         (only-in "../core/real.rkt" @integer? @<= @< @= @> @+)
          (only-in "../core/union.rkt" union union?)
          (only-in "../core/merge.rkt" merge merge*)
          (only-in "../core/type.rkt" subtype?))
@@ -260,7 +260,7 @@
                                 (@+ rank (@if (ranked>? (key-of x) i (key-of y) j) 1 0))))])
                 (for/list ([i len])
                   (for/fold ([v 0]) ([x xs] [r ranks]) (merge (@= i r) x v))))]))
-              #|(define vars (for/list ([i (in-range len)]) (define-symbolic* rank @number?) rank))
+              #|(define vars (for/list ([i (in-range len)]) (define-symbolic* rank @integer?) rank))
               (for ([v vars])
                 (assert (@<= 0 v))
                 (assert (@< v len)))
@@ -370,7 +370,7 @@
     [(_ proc)
      #`(define (#,(lift-id #'proc) xs pos)
          (define name (object-name proc))
-         (match* (xs (coerce pos @number? name))
+         (match* (xs (coerce pos @integer? name))
            [((union vs) (? number? idx))
             (assert-bound [0 <= idx] name)
             (apply merge* (assert-some 
@@ -459,13 +459,13 @@
        (assert-arity-includes f 1 name)
        (assert (@pair? xs) (argument-error name "(and/c list? (not/c empty?))" xs))
        
-       (let ([init-min-var (coerce (f (car xs)) @number? name)])
+       (let ([init-min-var (coerce (f (car xs)) @integer? name)])
          (let loop ([min (car xs)]
                     [min-var init-min-var]
                     [xs (cdr xs)])
            (@if (null? xs) 
                    min 
-                   (let ([new-min (coerce (f (car xs)) @number? name)])
+                   (let ([new-min (coerce (f (car xs)) @integer? name)])
                      (@if (cmp new-min min-var)
                              (loop (car xs) new-min (cdr xs))
                              (loop min min-var (cdr xs))))))))
@@ -484,7 +484,7 @@
                      (cons (@= i idx) (insert xs idx v)))))]
   (define (@insert xs i v)
     (or (and (list? xs) (number? i) (insert xs i v))
-        (match* ((coerce xs @list? 'insert) (coerce i @number? 'insert))
+        (match* ((coerce xs @list? 'insert) (coerce i @integer? 'insert))
           [((? list? xs) (? number? i)) (insert xs i v)]
           [((? list? xs) i) 
            (assert-bound [0 @<= i @<= (length xs)] 'insert)
@@ -509,7 +509,7 @@
                      (cons (@= i idx) (replace xs idx v)))))]
   (define (@replace xs i v)
     (or (and (list? xs) (number? i) (replace xs i v))
-        (match* ((coerce xs @list? 'replace) (coerce i @number? 'replace))
+        (match* ((coerce xs @list? 'replace) (coerce i @integer? 'replace))
           [((? list? xs) (? number? i)) (replace xs i v)]
           [((? list? xs) i) 
            (assert-bound [0 @<= i @< (length xs)] 'replace)
@@ -528,12 +528,12 @@
 
 #|
 (define (test iterator size)
-  (define-symbolic* n @number?)
+  (define-symbolic* n @integer?)
   (define r (@if (@= n 3) (build-list size identity) (build-list (* 2 size) add1)))
   (define p (@if (@= n 2) (build-list size add1) (build-list (* 2 size) identity)))
   (time (iterator r p)))
 
-(define-symbolic* n @number?)
+(define-symbolic* n @integer?)
 (@andmap identity (list (@= 3 n) 4 (@= 5 n) 6))
 
 (require (only-in "bool.rkt" @boolean?))
@@ -545,7 +545,7 @@
 (require rosette/base/define) 
 (require (only-in "bool.rkt" @boolean?))
 (define-symbolic b @boolean?)
-(define-symbolic i @number?)
+(define-symbolic i @integer?)
 (define xs '(a b c d e f g h i j k l))
 (define ys '(n q))
 (define v 'm)

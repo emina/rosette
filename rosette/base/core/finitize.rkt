@@ -3,8 +3,7 @@
 (require racket/syntax 
          "term.rkt" "real.rkt" "bitvector.rkt" "bool.rkt" 
          "polymorphic.rkt" "merge.rkt" "union.rkt"
-         (only-in "op.rkt" lifted-op? op-unsafe))
-         ;(only-in "op.rkt" [op-unsafe unsafe]))
+         (only-in "op.rkt" [op-unsafe unsafe]))
 
 (provide finitize)
 
@@ -97,7 +96,3 @@
   (cond [(= src tgt) v]
         [(> src tgt) ((unsafe @extract) (- tgt 1) 0 v)]
         [else        ((unsafe @extend) v (bitvector tgt))]))
-
-;; This will go away once all operators are converted to the new form.
-(define (unsafe op)
-  (if (lifted-op? op) (op-unsafe op) op))

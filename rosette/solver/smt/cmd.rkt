@@ -5,7 +5,6 @@
          "env.rkt" "enc.rkt"
          "../../base/core/term.rkt" 
          (only-in "../../base/core/bool.rkt" @boolean?)
-         (only-in "../../base/core/num.rkt" @number?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/struct/enum.rkt" enum? enum-members)
@@ -55,7 +54,7 @@
 (define (default-binding const)
   (match (type-of const)
     [(== @boolean?) #f]
-    [(== @number?) 0]
+    [(or (== @integer?) (== @real?)) 0]
     [(? bitvector? t) (bv 0 t)]
     [(? enum? t) (vector-ref (enum-members t) 0)]))
 
@@ -68,11 +67,6 @@
        [(== true) #t]
        [(== false) #f]
        [_ (error 'decode-binding "expected 'true or 'false binding for ~a, given ~a" const val)])]
-    [(== @number?) 
-     (match val
-       [(? number?) (finitize val)]
-       [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
-        (finitize n)])]
     [(== @integer?) 
      (match val
        [(? integer?) val]

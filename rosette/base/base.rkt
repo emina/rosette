@@ -1,40 +1,106 @@
 #lang racket
 
-;; Rosette (lifted) syntax and procedures
+;; ------ Rosette (lifted) syntax and  procedures ------ ;; 
 (require 
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
-  "core/primitive.rkt"  
-  "core/bool.rkt" 
-  "core/equality.rkt" 
-  "core/reflect.rkt" 
-  "adt/list.rkt" 
-  "adt/box.rkt" 
-  "adt/vector.rkt" 
-  "adt/procedure.rkt" 
-  "struct/struct.rkt" 
-  "struct/enum.rkt"
-  "struct/generics.rkt" 
-  "form/state.rkt"
-  "form/module.rkt"  
-  "form/define.rkt" 
-  "form/app.rkt"
-  "form/control.rkt"
+  "core/bool.rkt" "core/real.rkt" "core/bitvector.rkt" 
+  "core/equality.rkt" "core/finitize.rkt" "core/reflect.rkt" 
+  "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/procedure.rkt" 
+  "struct/struct.rkt" "struct/generics.rkt" "struct/enum.rkt"
+  "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt" 
   "util/log.rkt") 
 
-(provide 
- (filtered-out
-  drop@
-  (combine-out
-   (all-from-out 
-    "core/equality.rkt" "core/reflect.rkt" "core/primitive.rkt"
-    "adt/list.rkt" "adt/box.rkt" "adt/vector.rkt" "adt/procedure.rkt"
-    "struct/struct.rkt" "struct/enum.rkt" "struct/generics.rkt"    
-    "form/state.rkt" "form/module.rkt" "form/define.rkt"
-    "form/app.rkt" "form/control.rkt" "util/log.rkt")))
- pc with-asserts with-asserts-only relax asserts clear-asserts
- (rename-out [@|| ||]
-             [@assert assert]))
+(provide
+  (filtered-out drop@ 
+    (combine-out   
+     ; core/bool.rkt
+     pc with-asserts with-asserts-only relax asserts clear-asserts
+     @assert @boolean? @false? @! @&& @|| @=> @<=> 
+     ; core/real.rkt
+     current-bitwidth 
+     @integer? @real? @= @< @<= @>= @> 
+     @+ @* @- @/ @quotient @remainder @modulo @abs
+     @integer->real @real->integer @int?
+     ; core/bitvector.rkt
+     bv bv? bitvector bitvector-size bitvector? 
+     @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
+     @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
+     @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
+     @concat @extract @sign-extend @zero-extend 
+     @integer->bitvector @bitvector->integer @bitvector->natural
+     ; core/equality.rkt
+     @eq? @equal?
+     ; core/finitize.rkt
+     finitize
+     ; core/reflect.rkt
+     symbolics type? type-of coerce for/all for*/all
+     term? constant? expression? angelic?
+     term expression constant
+     term-name term-index term-op term-child  
+     term=? term-origin term-track-origin
+     term-e term->datum term->list clear-terms! unsafe-clear-terms! term-cache
+     union? union union-contents union-guards union-values
+     union-filter in-union in-union* in-union-guards in-union-values
+     ; adt/box.rkt
+     @box @box-immutable @box? @unbox @set-box!
+     ; adt/list.rkt : Pair Constructors and Selectors
+     @pair? @null? @cons @car @cdr @null @list? @list 
+     ; adt/list.rkt : List Operations
+     @length @list-ref @list-tail @append @reverse
+     ; adt/list.rkt : List Iteration
+     @map @andmap @ormap @for-each @foldl @foldr
+     ; adt/list.rkt : List Filtering
+     @filter @remove @remq @remove* @remq* @sort 
+     ; adt/list.rkt : List Searching 
+     @member @memq @memf @findf @assoc @assq @assf 
+     ; adt/list.rkt : Pair Accessor Shorthands
+     @caar @cadr @cdar @cddr
+     @caaar @caadr @cadar @caddr @cdaar @cdadr @cddar @cdddr 
+     @caaaar @caaadr @caadar @caaddr @cadaar @cadadr @caddar @cadddr 
+     @cdaaar @cdaadr @cdadar @cdaddr @cddaar @cddadr @cdddar @cddddr
+     ; adt/list.rkt : Additional List Functions and Synonyms
+     @cons? @empty? @first @rest @second @third @fourth @fifth @sixth @seventh @eighth @ninth @tenth 
+     @last @last-pair 
+     @take @drop @split-at @take-right @drop-right @split-at-right
+     @add-between @append* @flatten @remove-duplicates 
+     @filter-map @count @partition @append-map @filter-not @shuffle 
+     @argmin @argmax 
+     ; adt/list.rkt : Non-Standard Functions
+     @insert @replace
+     ; adt/vector.rkt : Basic Functions
+     @vector? @vector @vector-immutable 
+     @vector-length @vector-ref @vector-set! @vector->list @vector->immutable-vector 
+     @vector-fill! @vector-copy! 
+     ; adt/vector.rkt : Additional Vector Functions
+     @vector-append
+     ; adt/procedure.rkt
+     @procedure? @apply @procedure-rename @negate @void? 
+     ; struct/struct.rkt
+     struct struct-field-index define/generic define-struct
+     ; struct/generics.rkt
+     @define-generics @make-struct-type-property
+     ; struct/enum.rkt
+     define-enum enums enum? enum-size enum-members enum-<? label ordinal
+     enum-first enum-last enum-value enum-literal? 
+     ; form/state.rkt
+     current-oracle oracle oracle? 
+     ; form/define.rkt
+     define-symbolic define-symbolic*
+     ; form/control.rkt
+     @if @and @or @not @nand @nor @xor @implies
+     @unless @when @cond @case else
+     ; form/module.rkt
+     @#%module-begin @#%top-interaction @module @module @module+
+     ; form/app.rkt
+     #%app #%plain-app 
+     ; util/log.rkt
+     current-log-source current-log-handler
+     define-log log-handler 
+     log-fatal log-error log-warning log-info log-debug log-time
+     )))
+
+;; ------ Racket syntax and procedures that can be used without being lifted ------ ;; 
 
 (require racket/local)
 

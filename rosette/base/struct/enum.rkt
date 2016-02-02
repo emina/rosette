@@ -5,12 +5,11 @@
          (only-in "../core/lift.rkt" merge**)
          "../core/term.rkt" "../core/op.rkt" 
          (only-in "../core/bool.rkt" @boolean? || and-&&)
-         (only-in "../core/num.rkt" @number?)
          (only-in "../core/type.rkt" @any/c)
          (only-in "../core/merge.rkt" merge*)
          (only-in "../core/union.rkt" union union? in-union* in-union-guards union-filter union-guards)
          (only-in "../core/equality.rkt" @equal?)
-         (only-in "../core/polymorphic.rkt" =?))
+         (only-in "../core/polymorphic.rkt" =? T*->boolean?))
 
 (provide define-enum enums enum? enum-size enum-members enum-<? label ordinal
          enum-first enum-last enum-value [rename-out (atom? enum-literal?)])
@@ -188,10 +187,10 @@
 ; operator that compares atoms according to their index.  
 ; Returns the initialized type.
 (define (make<? id t)
-  (define-op enum<?
+  (define-operator enum<?
     #:name id
-    #:type (op/-> (t t) @boolean?)
-    #:op   
+    #:type T*->boolean?
+    #:unsafe  
     (lambda (x y)
       (match* ((coerce x t id) (coerce y t id))
         [((atom i _ _) (atom j _ _)) (< i j)]

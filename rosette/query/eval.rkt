@@ -1,9 +1,11 @@
+
 #lang racket
 
 (require "state.rkt" "../base/util/log.rkt"
-         "../base/core/term.rkt" "../base/core/bool.rkt"  "../base/core/num.rkt"
+         "../base/core/term.rkt" "../base/core/op.rkt" "../base/core/bool.rkt" 
          "../base/core/polymorphic.rkt" "../base/core/union.rkt"
-         "../base/core/merge.rkt" "../solver/solution.rkt" )
+         "../base/core/merge.rkt" "../solver/solution.rkt" 
+         )
 
 (provide evaluate time/evaluate)
 
@@ -29,25 +31,14 @@
       (hash-ref cache expr)
       (let ([result
              (match expr
-               [(? constant?)            
-                (sol expr)]
+               [(? constant?) (sol expr)]
                [(expression (== ite) b t f) 
                 (match (eval-rec b sol cache)
                   [#t (eval-rec t sol cache)]
                   [#f (eval-rec f sol cache)]
                   [g (ite g (eval-rec t sol cache) (eval-rec f sol cache))])]
-               [(expression (== @*) y (expression (== @expt) x -1))
-                (finitize (@/ (finitize (eval-rec y sol cache)) (finitize (eval-rec x sol cache))))] 
-               [(expression op child ...)  
-                (finitize (apply op (for/list ([e child]) (finitize (eval-rec e sol cache)))))]
-               [(? list?)                
-                (for/list ([e expr]) (eval-rec e sol cache))]
-               [(cons x y)               
-                (cons (eval-rec x sol cache) (eval-rec y sol cache))]
-               [(? vector?)              
-                (for/vector #:length (vector-length expr) ([e expr]) (eval-rec e sol cache))]
-               [(union vs)                 
-                (let loop ([vs vs] [out '()])
+               [(or (expression (== ite*) gvs ...) (union gvs))
+                (let loop ([vs gvs] [out '()])
                   (if (null? vs) 
                       (apply merge* out)
                       (let ([gv (car vs)])
@@ -55,6 +46,16 @@
                           [#t (eval-rec (cdr gv) sol cache)]
                           [#f (loop (cdr vs) out)]
                           [g  (loop (cdr vs) (cons (cons g (eval-rec (cdr gv) sol cache)) out))]))))]
+               [(expression op child ...)  
+                (apply (op-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
+               [(? list?)                
+                (for/list ([e expr]) (eval-rec e sol cache))]
+               [(cons x y)               
+                (cons (eval-rec x sol cache) (eval-rec y sol cache))]
+               [(? vector?)              
+                (for/vector #:length (vector-length expr) ([e expr]) (eval-rec e sol cache))]
+               [(? box?)
+                ((if (immutable? expr) box-immutable box) (eval-rec (unbox expr) sol cache))]
                [(? typed?)              
                 (let ([t (get-type expr)])
                   (match (type-deconstruct t expr)
@@ -63,16 +64,3 @@
                [_ expr])])
         (hash-set! cache expr result)
         result)))
-
-(define (finitize num)
-  (if (current-bitwidth)
-      (match num
-        [(? number? v) 
-         (let* ([bitwidth (current-bitwidth)]
-                [mask (arithmetic-shift -1 bitwidth)]
-                [masked (bitwise-and (bitwise-not mask) (inexact->exact (truncate v)))])
-           (if (bitwise-bit-set? masked (- bitwidth 1))
-               (bitwise-ior mask masked)  
-               masked))]
-        [_ num])
-      num))

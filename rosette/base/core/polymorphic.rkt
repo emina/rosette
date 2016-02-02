@@ -9,22 +9,34 @@
  sort/expression
  simplify*)
 
+
+; A generic typing procedure for a lifted operator that takes N > 0 arguments of type T
+; and returns a value of type T. Specifically, it assumes that at least one value passed 
+; to it is typed, and it returns the type T of the first given typed value. See op.rkt.
+(define T*->T 
+  (case-lambda 
+    [(x) (get-type x)]
+    [(x y) (or (and (typed? x) (get-type x)) (get-type y))]
+    [xs (for/first ([x xs] #:when (typed? x)) (get-type x))]))
+
+; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
+; and returns a @boolean?. See op.rkt.
+(define (T*->boolean? . xs) @boolean?)
+
 ; Polymorphic operators and procedures that are shared by 
 ; multiple primitive types.
-
-(define-op =? 
+(define-operator =? 
   #:name '=? 
-  #:type (op/-> (@any/c @any/c) @boolean?)
-  #:pre  (lambda (x y) (equal? (type-of x) (type-of y)))
-  #:op   (lambda (x y)
-           (match* (x y)
-             [((not (? term?)) (not (? term?))) (eq? x y)] 
-             [((not (? term?)) (? term?)) (expression =? x y)]
-             [((? term?) (not (? term?))) (expression =? y x)]
-             [((? term?) (? term?)) (or (equal? x y)
-                                      (if (term<? x y)
-                                          (expression =? x y)
-                                          (expression =? y x)))])))
+  #:type T*->boolean?
+  #:unsafe (lambda (x y)
+             (match* (x y)
+               [((not (? term?)) (not (? term?))) (eq? x y)] 
+               [((not (? term?)) (? term?)) (expression =? x y)]
+               [((? term?) (not (? term?))) (expression =? y x)]
+               [((? term?) (? term?)) (or (equal? x y)
+                                          (if (term<? x y)
+                                              (expression =? x y)
+                                              (expression =? y x)))])))
 
 ; A generic ite operator that takes a boolean condition and 
 ; two values v1 and v2. The values v1 and vn must be of the same 
@@ -133,18 +145,7 @@
     [((expression (== @!) a) (expression (== ite) a _ x)) (cons a x)]
     [(_ _) p]))
 
-; A generic typing procedure for a lifted operator that takes N > 0 arguments of type T
-; and returns a value of type T. Specifically, it assumes that at least one value passed 
-; to it is typed, and it returns the type T of the first given typed value. See op.rkt.
-(define T*->T 
-  (case-lambda 
-    [(x) (get-type x)]
-    [(x y) (or (and (typed? x) (get-type x)) (get-type y))]
-    [xs (for/first ([x xs] #:when (typed? x)) (get-type x))]))
 
-; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
-; and returns a @boolean?. See op.rkt.
-(define (T*->boolean? . xs) @boolean?)
 
 ; Sorts the arguments to the given binary operator and returns the resulting expression.
 (define (sort/expression @op x y) 

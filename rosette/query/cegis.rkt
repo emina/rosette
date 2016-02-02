@@ -4,7 +4,7 @@
          "state.rkt" 
          (only-in "../base/core/term.rkt" constant) 
          (only-in "../base/core/bool.rkt" @boolean? ! ||) 
-         (only-in "../base/core/num.rkt" @number? ignore-division-by-0)
+         (only-in "../base/core/real.rkt" @real? @integer?)
          (only-in "../base/struct/enum.rkt" enum? enum-first)
          "../base/util/log.rkt"
          "../solver/solver.rkt"  
@@ -33,14 +33,13 @@
   (define (input? var) (member var inputs))
   
   (log-cegis-info [0] "searching for an initial solution over ~s" (map (curryr map inputs) inits))
-  (parameterize ([ignore-division-by-0 #t])
-    (for ([init inits])
-      (cond [(zero? (dict-count (model init)))
-             (send/apply synthesizer assert assumes)
-             (send/apply synthesizer assert asserts)]
-            [else 
-             (send/apply synthesizer assert (evaluate assumes init))
-             (send/apply synthesizer assert (evaluate asserts init))])))
+  (for ([init inits])
+    (cond [(zero? (dict-count (model init)))
+           (send/apply synthesizer assert assumes)
+           (send/apply synthesizer assert asserts)]
+          [else 
+           (send/apply synthesizer assert (evaluate assumes init))
+           (send/apply synthesizer assert (evaluate asserts init))]))
   
   ;(log-cegis-info [0] "assumes: ~a\n" (pretty-format assumes))
   ;(log-cegis-info [0] "asserts: ~a\n" (pretty-format asserts))
@@ -62,9 +61,8 @@
     (if (sat? cex)        
         (let ([witness (cex->witness cex inputs)])
           (log-cegis-info [trial] "solution falsified by ~s; searching for a new candidate ..." (map witness inputs))
-          (parameterize ([ignore-division-by-0 #t])
-            (send/apply synthesizer assert (evaluate assumes witness))
-            (send/apply synthesizer assert (evaluate asserts witness)))
+          (send/apply synthesizer assert (evaluate assumes witness))
+          (send/apply synthesizer assert (evaluate asserts witness))
           (loop (solve/unbind synthesizer input? cleanup) (+ 1 trial)))
         (begin            
           (log-cegis-info [trial] "solution verified!")
@@ -103,7 +101,7 @@
 (define (cex->witness cex inputs)  
   (sat (for/hash ([in inputs]) 
          (match (cex in)
-           [(constant _ (== @number?))
+           [(constant _ (or (== @integer?) (== @real?)))
             (values in 0)]
            [(constant _ (== @boolean?))
             (values in #f)]

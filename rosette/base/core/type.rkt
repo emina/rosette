@@ -14,7 +14,7 @@
  least-common-supertype 
  cast subtype?
  
- type-of @any/c lifted-type define-lifted-type current-bitwidth)
+ type-of @any/c lifted-type define-lifted-type)
 
 #|-----------------------------------------------------------------------------------|#
 ; The type generic interface defines a symbolic type.  Each value has a type.  Structures that 
@@ -49,7 +49,7 @@
 ; A given Racket type cannot be lifted more than once.  That is, multiple attempts to 
 ; call define-lifted-type with the same base type as argument will result in an error.
 ; Only these Racket types are expected to be lifted:
-; boolean?, integer?, real?, number?, list?, pair?, procedure?, vector?, and box?.
+; boolean?, integer?, real?, list?, pair?, procedure?, vector?, and box?.
 (define-syntax (define-lifted-type stx)
   (syntax-case stx ()
     [(_ id #:base base #:is-a? is-a? #:methods defs)       
@@ -106,29 +106,14 @@
 ; Returns the lifted Rosette type corresponding to the given liftable Racket built-in predicate.
 (define (lifted-type pred) (hash-ref types pred))
 
-; **** Temporary hack :  this will be moved to real.rkt when the new semantics is in place **** 
-(define current-bitwidth
-  (make-parameter 5 
-                  (lambda (bw) 
-                    (unless (or (false? bw) (and (integer? bw) (positive? bw)))
-                      (raise-argument-error 'current-bitwidth "positive integer or #f" bw))
-                    bw)))
-
-
 ; This is a hacked type-of implementation to allow testing Int and Real theories 
 ; before they are properly integrated.  The current-bitwidth parameter controls 
 ; whether we are using the old int/real semantics (default) or not.
-(define-syntax-rule (typechecker #:numeric int real num #:other id ...)
+(define-syntax-rule (typechecker #:base id ...)
   (begin
-    (hash-set! types num @any/c)
-    (hash-set! types int @any/c)
-    (hash-set! types real @any/c)
     (hash-set! types id @any/c) ...
     (case-lambda
       [(v) (cond [(typed? v) (get-type v)]
-                 [(int v) (hash-ref types (if (current-bitwidth) num int))]
-                 [(real v) (hash-ref types (if (current-bitwidth) num real))]
-                 [(num v)  (hash-ref types num)]
                  [(id v) (hash-ref types id)] ...
                  [else @any/c])]
       [(v u) (least-common-supertype (type-of v) (type-of u))]
@@ -139,8 +124,7 @@
 ; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
 (define type-of 
   (typechecker 
-   #:numeric integer? real? number?
-   #:other boolean? list? pair? procedure? vector? box?))
+   #:base boolean? integer? real? list? pair? procedure? vector? box?))
 
 #|
 ; This macro constructs the type-of procedure.  To allow additional lifted types, 

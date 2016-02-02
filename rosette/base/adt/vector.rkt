@@ -10,7 +10,7 @@
          (only-in "../core/term.rkt" define-lifted-type @any/c)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? && ||)
-         (only-in "../core/num.rkt" @number? @= @<= @< @- @+)
+         (only-in "../core/real.rkt" @integer? @= @<= @< @- @+)
          (only-in "../core/union.rkt" union)
          (only-in "../core/merge.rkt" merge))
 
@@ -64,7 +64,7 @@
   ;(printf "vector-set! ~a ~a ~a\n" (eq-hash-code vec) idx val)
   (if (and (vector? vec) (number? idx))
       (apply! vector-set! vector-ref vec idx val)
-      (match* ((coerce vec @vector? 'vector-set!) (coerce idx @number? 'vector-set!))
+      (match* ((coerce vec @vector? 'vector-set!) (coerce idx @integer? 'vector-set!))
         [((? vector? vs) (? number? idx)) 
          (apply! vector-set! vector-ref vs idx val)]
         [((? vector? vs) idx)
@@ -114,17 +114,17 @@
      (@vector-copy! dest dest-start src 0)]
     [(dest dest-start src src-start)
      (let ([dest (coerce dest @vector? 'vector-copy!)]
-           [dest-start (coerce dest-start @number? 'vector-copy!)]
+           [dest-start (coerce dest-start @integer? 'vector-copy!)]
            [src (coerce src @vector? 'vector-copy!)]
-           [src-start (coerce src-start @number? 'vector-copy!)])
+           [src-start (coerce src-start @integer? 'vector-copy!)])
        (for*/all ([d dest] [s src])
          (@vector-copy! d dest-start s src-start (vector-length s))))]
     [(dest dest-start src src-start src-end)
      (let ([dest (coerce dest @vector? 'vector-copy!)]
-           [dest-start (coerce dest-start @number? 'vector-copy!)]
+           [dest-start (coerce dest-start @integer? 'vector-copy!)]
            [src (coerce src @vector? 'vector-copy!)]
-           [src-start (coerce src-start @number? 'vector-copy!)]
-           [src-end (coerce src-end @number? 'vector-copy!)])
+           [src-start (coerce src-start @integer? 'vector-copy!)]
+           [src-end (coerce src-end @integer? 'vector-copy!)])
        (assert-bound [0 @<= dest-start] 'vector-copy)
        (assert-bound [0 @<= src-start @<= src-end] 'vector-copy!)
        (define len (@- src-end src-start))

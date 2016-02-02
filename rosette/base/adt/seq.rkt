@@ -5,7 +5,7 @@
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          "../core/safe.rkt" "../core/lift.rkt"
          (only-in "../core/bool.rkt" && or-|| ||)
-         (only-in "../core/num.rkt" @number? @= @< @<=)
+         (only-in "../core/real.rkt" @integer? @= @< @<=)
          (only-in "../core/union.rkt" union union?)
          (only-in "../core/merge.rkt" merge merge* unsafe-merge*)
          (only-in "../core/forall.rkt" guard-apply))
@@ -38,7 +38,7 @@
      #`(define (#,(lift-id #'proc) xs idx)
          (if (and (racket-contract? xs) (number? idx))
              (proc xs idx)
-             (match* ((coerce xs rosette-contract? (quote proc)) (coerce idx @number? (quote proc)))
+             (match* ((coerce xs rosette-contract? (quote proc)) (coerce idx @integer? (quote proc)))
                [((? racket-contract? vs) (? number? idx)) 
                 (proc vs idx)]
                [((? racket-contract? vs) idx)
@@ -84,31 +84,13 @@
                         ([xs (map (curryr coerce rosette-contract? (quote proc)) xss)])
                         (unsafe/append out xs))])))]))
 
-#|
-(printf " APPEND ~a\n" xss)
-                      (define out 
-                        (for/fold ([out (racket-constructor)])
-                          ([xs (map (curryr coerce rosette-contract? (quote proc)) xss)])
-                          (printf "   APPEND ~a ~a\n" out xs)
-                          (unsafe/append out xs)))
-                      (define (calc x) (match x 
-                                         [(union vs) (length vs)]
-                                         [_ 1]))
-                      (define actual (calc out))
-                      (define expected (for/product ([xs xss]) (calc xs)))
-                      (printf " DONE ~a, COMPRESSION = ~a (~a / ~a)\n" 
-                              out (exact->inexact (/ actual expected)) actual expected)
-                      out])))]))
-|#
-
-
 (define-syntax (define/lift/split stx)
   (syntax-case stx ()
     [(_ proc left right)
      #`(define (#,(lift-id #'proc) xs idx)
          (if (and (not (union? xs)) (number? idx))
              (proc xs idx)
-             (match* (xs (coerce idx @number? (quote proc)))
+             (match* (xs (coerce idx @integer? (quote proc)))
                [((not (? union?)) (? number? idx)) (proc xs idx)]
                [(_ idx) (values (left xs idx) (right xs idx))])))]))
 

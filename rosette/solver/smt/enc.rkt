@@ -1,16 +1,14 @@
 #lang racket
 
-(require (prefix-in smt/ (only-in "smtlib2.rkt" bv not and or xor => <=> ite = < <= + - * /))
-         (only-in "smtlib2.rkt" [abs int_abs] div mod)
-         (except-in "smtlib2.rkt" bv not and or xor => <=> ite = < + - * / abs) 
-         "env.rkt" "../common/enc.rkt" 
+(require "env.rkt" 
+         (prefix-in $ "smtlib2.rkt") 
          (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
          (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=>)
-         (only-in "../../base/core/num.rkt" 
-                  current-bitwidth 
-                  @= @< @<= @> @>= @+ @* @*h @- @/ @abs @sgn @quotient @remainder @expt                   
-                  @<< @>> @>>> @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor)
+         (only-in "../../base/core/real.rkt" 
+                  @integer? @real? @= @< @<= @>= @> 
+                  @+ @* @- @/ @quotient @remainder @modulo 
+                  @abs @integer->real @real->integer @int?)
          (only-in "../../base/core/bitvector.rkt" 
                   bitvector? bv bitvector-size 
                   @bveq @bvslt @bvsle @bvult @bvule   
@@ -18,12 +16,9 @@
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
                   @concat @extract @zero-extend @sign-extend 
                   @integer->bitvector @bitvector->integer @bitvector->natural)
-         (prefix-in $ (only-in "../../base/core/real.rkt" @integer? @real? @= @< @<= @>= @> 
-                               @+ @* @- @/ @quotient @remainder @modulo 
-                               @abs @integer->real @real->integer @int?))
-         (only-in "../../base/struct/enum.rkt" enum-literal? ordinal))
+         (only-in "../../base/struct/enum.rkt" enums enum-<? enum-literal? ordinal))
 
-(provide enc finitize)
+(provide enc)
 
 ; The enc procedure takes a value and an environment, and returns  
 ; an SMTLIB identifier representing that value in the given environment.  If it 
@@ -33,132 +28,108 @@
 (define (enc v env)
   (ref! env v (match v
                 [(? expression?) (enc-expr v env)]
-                [(? constant?)  (enc-const v env)]
-                [_             (enc-lit v env)])))
+                [(? constant?)   (enc-const v env)]
+                [_               (enc-lit v env)])))
 
 (define (enc-expr v env)  
   (match v
-    [(expression (== @*) -1 e) 
-     (bvneg (enc e env))]
-    [(expression (== @*) (and (? rational?) (not (? integer?)) r) es ...) 
-     (bvsdiv (apply bvmul (enc (numerator r) env) (for/list ([e es]) (enc e env))) 
-             (enc (denominator r) env))]
-    [(expression (== @*) a ... (expression (== @expt) x (and (? number?) (? negative? n))) b ...)
-     (let ([a/x^n (bvsdiv (enc (apply @* a) env) (enc (@expt x (- n)) env))])
-       (if (null? b) a/x^n (bvmul a/x^n (enc (apply @* b) env))))]
-    [(expression (== @expt) e (? integer? n)) 
-     (let ([e^n (apply bvmul (make-list (abs n) (enc e env)))])
-       (if (< n 0) (bvsdiv 1 e^n) e^n))]
-    [(expression (app rosette->smt (? procedure? smt/op)) es ...) 
-     (apply smt/op (for/list ([e es]) (enc e env)))]
     [(and (expression (== ite*) gvs ...) (app get-type t))
-     (let-values ([(zero op) (if (bitvector? t) 
-                                 (values (enc (bv 0 (bitvector-size t)) env) bvor) 
-                                 (values 0 smt/+))])
-       (apply op (for/list ([gv gvs]) (smt/ite (enc (guarded-test gv) env) (enc (guarded-value gv) env) zero))))]
-    [(expression (== @bitvector->natural) v) (bv->nat (enc v env) (bitvector-size (get-type v)))]
-    [(expression (== @bitvector->integer) v) (bv->int (enc v env) (bitvector-size (get-type v)))]  
-    [(expression (== @integer->bitvector) v t) (int->bv (enc v env) (bitvector-size t))]
+     (let-values ([($0 $op) (if (bitvector? t) 
+                                (values ($bv 0 (bitvector-size t)) $bvor) 
+                                (values 0 $+))])
+       (apply $op (for/list ([gv gvs]) 
+                    ($ite (enc (guarded-test gv) env) 
+                          (enc (guarded-value gv) env) 
+                          $0))))]
+    [(expression (== @abs) x)
+     ($real-abs (enc x env) (get-type v))]
     [(expression (== @extract) i j e)
-     (extract i j (enc e env))]
-    [(expression (== @zero-extend) v t)
-     (zero_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
+     ($extract i j (enc e env))]
     [(expression (== @sign-extend) v t)
-     (sign_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
-    [(expression (== @*h) x y)
-     (extract (sub1 (* 2 (current-bitwidth))) 
-              (current-bitwidth)
-              (bvmul (concat (enc 0 env) (enc x env)) 
-                     (concat (enc 0 env) (enc y env))))]
-    [(expression (== $@abs) e)
-     (let ([te (enc e env)])
-       (if (equal? (get-type v) $@integer?) 
-           (int_abs te) 
-           (smt/ite (smt/< te 0) (smt/- te) te)))]
-    [(expression (== $@quotient) x y) 
-     (let* ([tx (enc x env)]
-            [ty (enc y env)]
-            [tx/ty (div (int_abs tx) (int_abs ty))])
-       (smt/ite (smt/= (smt/< tx 0) (smt/< ty 0)) tx/ty (smt/- tx/ty)))]   
-    [(expression (== $@remainder) x y) 
-     (let* ([tx (enc x env)]
-            [ty (enc y env)]
-            [tx%ty (mod (int_abs tx) (int_abs ty))])
-       (smt/ite (smt/< tx 0) (smt/- tx%ty) tx%ty))]
-    [(expression (== $@modulo) x y) 
-     (let* ([tx (enc x env)]
-            [ty (enc y env)])
-       (smt/ite (smt/< 0 ty) (mod tx ty) (smt/- (mod (smt/- tx) ty))))]
-    [_ (error 'encode "cannot encode expression ~a" v)]))
+     ($sign_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
+    [(expression (== @zero-extend) v t)
+     ($zero_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
+    [(expression (== @integer->bitvector) v t) 
+     ($int->bv (enc v env) (bitvector-size t))]
+    [(expression (== @bitvector->integer) v) 
+     ($bv->int (enc v env) (bitvector-size (get-type v)))]  
+    [(expression (== @bitvector->natural) v) 
+     ($bv->nat (enc v env) (bitvector-size (get-type v)))]
+    [(expression (app rosette->smt (? procedure? $op)) es ...) 
+     (apply $op (for/list ([e es]) (enc e env)))]
+    [_ (error 'enc "cannot encode ~a to SMT" v)]))
 
-(define (enc-const v env)
-  (ref! env v))
+(define (enc-const v env) (ref! env v))
 
 (define (enc-lit v env)
   (match v 
     [#t true]
     [#f false]
-    [(? number?) ; Horrible hack to allow testing Int and Real theory before they are properly integrated. 
-     (cond [(current-bitwidth) (smt/bv (finitize v) (current-bitwidth))]
-           [(integer? v) (inexact->exact v)]
-           [(exact? v) (smt// (numerator v) (denominator v))]
-           [else v])]
-    [(bv lit t) (smt/bv lit (bitvector-size t))]
+    [(? integer?) (inexact->exact v)]
+    [(? real?) (if (exact? v) ($/ (numerator v) (denominator v)) v)]
+    [(bv lit t) ($bv lit (bitvector-size t))]
     [(? enum-literal?) (ordinal v)]
-    [_ (error 'enc-literal "expected a boolean?, number? or enum-literal?, given ~a" v)]))
+    [_ (error 'enc "expected a boolean?, number? or enum-literal?, given ~a" v)]))
+
+(define-syntax define-encoder
+  (syntax-rules ()
+    [(_ id [rosette-op smt-op] ...)
+     (define (id op) 
+       (cond [(eq? op rosette-op) smt-op] ... 
+             [(for/or ([e enums]) (eq? op (enum-<? e))) $<]
+             [else #f]))]))
 
 (define-encoder rosette->smt 
-  [#:== ; bool 
-        [@! smt/not] [@&& smt/and] [@|| smt/or] [@=> smt/=>] [@<=> smt/<=>]  
-        ; num
-        [ite smt/ite] [=? smt/=] [@= smt/=] [@< bvslt] [@<= bvsle] 
-        [@bitwise-ior bvor] [@bitwise-and bvand] 
-        [@bitwise-not bvnot] [@bitwise-xor bvxor]
-        [@<< bvshl] [@>>> bvlshr] [@>> bvashr]
-        [@+ bvadd] [@* bvmul] [@quotient bvsdiv] [@remainder bvsrem]
-        [@abs smt/abs] [@sgn smt/sgn]
-        ; bitvector
-        [@bveq smt/=] [@bvslt bvslt] [@bvsle bvsle] [@bvult bvult] [@bvule bvule] 
-        [@bvnot bvnot] [@bvor bvor] [@bvand bvand] [@bvxor bvxor] 
-        [@bvshl bvshl] [@bvlshr bvlshr] [@bvashr bvashr]
-        [@bvneg bvneg] [@bvadd bvadd] [@bvmul bvmul] [@bvudiv bvudiv] [@bvsdiv bvsdiv]
-        [@bvurem bvurem] [@bvsrem bvsrem] [@bvsmod bvsmod] [@concat concat]
-        ; int and real
-        [$@= smt/=] [$@< smt/<] [$@<= smt/<=] 
-        [$@+ smt/+] [$@* smt/*] [$@- smt/-] [$@/ smt//] 
-        [$@integer->real to_real] [$@real->integer to_int] [$@int? is_int]]
-  [#:?  [enum-comparison-op? smt/<]])
+  ; core 
+  [@! $not] [@&& $and] [@|| $or] [@=> $=>] [@<=> $<=>] [ite $ite] [=? $=]
+  ; int and real
+  [@= $=] [@< $<] [@<= $<=] 
+  [@+ $+] [@* $*] [@- $-] [@/ $/]  
+  [@quotient $quotient] [@remainder $remainder] [@modulo $modulo]
+  [@integer->real $to_real] [@real->integer $to_int] [@int? $is_int]
+  ; bitvector
+  [@bveq $=] [@bvslt $bvslt] [@bvsle $bvsle] [@bvult $bvult] [@bvule $bvule] 
+  [@bvnot $bvnot] [@bvor $bvor] [@bvand $bvand] [@bvxor $bvxor] 
+  [@bvshl $bvshl] [@bvlshr $bvlshr] [@bvashr $bvashr]
+  [@bvneg $bvneg] [@bvadd $bvadd] [@bvmul $bvmul] [@bvudiv $bvudiv] [@bvsdiv $bvsdiv]
+  [@bvurem $bvurem] [@bvsrem $bvsrem] [@bvsmod $bvsmod] [@concat $concat])
 
-(define (smt/abs e)
-  (smt/ite (bvslt e (smt/bv 0 (current-bitwidth))) (bvneg e) e))
 
-(define (smt/sgn e)
-  (let ([zero (smt/bv 0 (current-bitwidth))]) 
-    (smt/ite (smt/= e zero) zero 
-             (smt/ite (bvslt e zero) 
-                      (smt/bv -1 (current-bitwidth))
-                      (smt/bv  1 (current-bitwidth))))))
+(define ($quotient tx ty)
+  (define tx/ty ($div ($abs tx) ($abs ty)))
+  ($ite ($= ($< tx 0) ($< ty 0)) tx/ty ($- tx/ty)))
 
-(define (bv->nat v n) 
-  (apply smt/+ (for/list ([i n]) (bv-bit v i n))))
+(define ($remainder tx ty)
+  (define tx%ty ($mod ($abs tx) ($abs ty)))
+  ($ite ($< tx 0) ($- tx%ty) tx%ty))
 
-(define (bv->int v n)
-  (apply smt/+ (smt/- (bv-bit v (- n 1) n)) 
-         (for/list ([i (- n 1)]) (bv-bit v i n))))
+(define ($modulo tx ty)
+  ($ite ($< 0 ty) ($mod tx ty) ($- ($mod ($- tx) ty))))
 
-(define (bv-bit v i n)
-  (define bv0 (smt/bv 0 n))
-  (define b (expt 2 i))
-  (smt/ite (smt/= bv0 (bvand v (smt/bv b n))) 0 b)) 
-  
-(define (int->bv i n)
-  (define bv0 (smt/bv 0 n))
+(define ($real-abs v t)
+  (if (equal? t @integer?)
+      ($abs v)
+      ($ite ($< v 0) ($- v) v)))
+
+(define ($int->bv i n)
+  (define bv0 ($bv 0 n))
   (apply 
-   bvor 
-   (let loop ([b (- n 1)] [m (mod i (expt 2 n))])
+   $bvor 
+   (let loop ([b (- n 1)] [m ($mod i (expt 2 n))])
      (if (< b 0)
          (list)
          (let* ([2^b (expt 2 b)]
-                [1? (smt/<= 2^b m)])          
-           (cons (smt/ite 1? (smt/bv 2^b n) bv0) 
-                 (loop (- b 1) (smt/- m (smt/ite 1? 2^b 0)))))))))
+                [1? ($<= 2^b m)])          
+           (cons ($ite 1? ($bv 2^b n) bv0) 
+                 (loop (- b 1) ($- m ($ite 1? 2^b 0)))))))))
+
+(define ($bv->nat v n) 
+  (apply $+ (for/list ([i n]) ($bit v i n))))
+
+(define ($bv->int v n)
+  (apply $+ ($- ($bit v (- n 1) n)) (for/list ([i (- n 1)]) ($bit v i n))))
+
+(define ($bit v i n)
+  (define bv0 ($bv 0 n))
+  (define b (expt 2 i))
+  ($ite ($= bv0 ($bvand v ($bv b n))) 0 b)) 

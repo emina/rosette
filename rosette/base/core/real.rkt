@@ -79,6 +79,13 @@
        [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge* ps))])
 
+(define current-bitwidth
+  (make-parameter 5 
+                  (lambda (bw) 
+                    (unless (or (false? bw) (and (integer? bw) (positive? bw)))
+                      (raise-argument-error 'current-bitwidth "positive integer or #f" bw))
+                    bw)))
+
 ;; ----------------- Lifting Utilities ----------------- ;; 
 (define (guarded-numbers xs)
   (for/fold ([i #f][r #f]) ([gx xs])
