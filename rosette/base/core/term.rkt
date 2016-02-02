@@ -23,6 +23,7 @@
  term->list        ; (-> any/c any/c)
  clear-terms!      ; (-> void? void?)
  unsafe-clear-terms!
+ sublist?
  (all-from-out "type.rkt"))
 
 (define angelic?
@@ -175,3 +176,16 @@
 (define (expr-e expr)
   `(,(term-op expr) ,@(term-child expr)))
   
+#|-----------------------------------------------------------------------------------|#
+; Utilities for working with terms.
+#|-----------------------------------------------------------------------------------|#
+; Returns #t if ys contains all elements of xs, in the order 
+; in which they occur in xs. Otherwise returns #f.
+(define (sublist? xs ys)
+  (and (<= (length xs) (length ys))
+       (match xs
+         [(list) #t]
+         [(list x xs ...)
+          (match ys 
+            [(list _ ... (== x) ys ...) (sublist? xs ys)]
+            [_ #f])])))

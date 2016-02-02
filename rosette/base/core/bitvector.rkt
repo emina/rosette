@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
 (require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
-         "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt" "bitwise.rkt")
+         "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 (require (only-in "real.rkt" @>= @> @= @integer? T*->integer?))
 
 (provide 
@@ -727,7 +727,7 @@
        [(_ (bv !iden _)) y]
        [(_ _)
         (or
-         (simplify-connective @bvop @bvco @bvnot bv? (bv !iden (get-type x)) x y)
+         (simplify-connective @bvop @bvco (bv !iden (get-type x)) x y)
          (sort/expression @bvop x y))])]
     [(x . xs) 
      (let*-values ([(lits terms) (partition bv? (cons x xs))]
@@ -736,12 +736,91 @@
                    [(t) (get-type x)])
        (if (or (= lit !iden) (null? terms)) 
            (bv lit t)
-           (match (simplify-connective* @bvop @bvco @bvnot bv? (bv !iden t) (remove-duplicates terms))
+           (match (simplify-connective* @bvop @bvco (bv !iden t) (remove-duplicates terms))
              [(list (bv u _)) (bv (op lit u) t)]
              [(list y) (bvop (bv lit t) y)]
              [ys (if (= lit iden)
                      (apply expression @bvop (sort ys term<?))
                      (apply expression @bvop (bv lit t) (sort ys term<?)))])))]))
+
+; Simplification rules for bitwise and/or. Assumes that 
+; neither x nor y are iden or !iden.
+(define (simplify-connective op co !iden x y) 
+  (cond [(equal? x y) x]
+        [(expression? x)
+         (cond [(expression? y)
+                (or (simplify-connective:expr/term op co !iden x y)
+                    (simplify-connective:expr/term op co !iden y x)
+                    (match* (x y)
+                      [((expression (== op) xs ...) (expression (== op) ys ...))
+                       (for*/or ([a xs][b ys])
+                         (match* (a b)
+                           [(_ (expression (== @bvnot) (== a))) !iden]
+                           [((expression (== @bvnot) (== b)) _) !iden]
+                           [((bv x _) (bv y _)) (and (= x (bitwise-not y)) !iden)]
+                           [(_ _) #f]))]
+                      [((expression (== co) xs ...) (expression (== co) ys ...))
+                       (cond [(sublist? xs ys) x]
+                             [(sublist? ys xs) y]
+                             [else #f])]                      
+                    [(_ _) #f]))]
+               [(constant? y) (simplify-connective:expr/term op co !iden x y)]
+               [else (simplify-connective:expr/lit op co !iden x y)])]
+        [(expression? y)
+         (cond [(constant? x) (simplify-connective:expr/term op co !iden y x)]
+               [else (simplify-connective:expr/lit op co !iden y x)])]
+        [else #f]))
+
+(define (simplify-connective:expr/term op co !iden x y)
+  (match x 
+    [(expression (== @bvnot) (== y)) !iden]
+    [(expression (== co) _ ... (== y) _ ...) y]
+    [(expression (== op) _ ... (== y) _ ...) x]
+    [(expression (== op) _ ... (expression (== @bvnot) (== y)) _ ...) !iden]
+    [(expression (== @bvnot) (expression (== co) _ ... (== y) _ ...)) !iden]
+    [(expression (== @bvnot) (expression (== co) _ ... (expression (== @bvnot) (== y)) _ ...)) x]
+    [(expression (== @bvnot) (expression (== op) _ ... (expression (== @bvnot) (== y)) _ ...)) y]
+    [(expression (== @bvnot) a) 
+     (match y 
+       [(expression (== op) _ ... (== a) _ ...) !iden]
+       [_ #f])]
+    [_ #f]))
+
+(define (simplify-connective:expr/lit op co !iden x y)
+  (define !y (bvnot y))
+  (match x 
+    [(expression (== co) (== y) _ ...) y]
+    [(expression (== op) (== y) _ ...) x]
+    [(expression (== op) (== !y) _ ...) !iden]
+    [(expression (== @bvnot) (expression (== co) (== y) _ ...)) !iden]
+    [(expression (== @bvnot) (expression (== co) (== !y) _ ...)) x]
+    [(expression (== @bvnot) (expression (== op) (== !y) _ ...)) y]
+    [_ #f]))
+
+; Simplification rules for bitwise and/or, applied to fix point. 
+; Assumes that the xs list contains no literals, only terms.
+(define (simplify-connective* op co !iden xs)
+  (or
+   (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
+                            (match x
+                              [(expression (== @bvnot) y) (values (cons y !ys) ys)]
+                              [_ (values !ys (cons x ys))]))])
+     (for/first ([!y !ys] #:when (member !y ys)) (list !iden)))
+   (and (> (length xs) 100) xs)
+   (let outer ([xs xs])
+     (match xs
+       [(list x rest ..1)
+        (let inner ([head rest] [tail '()])
+          (match head
+            [(list) (match (outer tail)
+                      [(and (list (== !iden)) t) t]
+                      [t (cons x t)])]
+            [(list y ys ...)
+             (match (simplify-connective op co !iden x y)
+               [#f (inner ys (cons y tail))]
+               [(== !iden) (list !iden)]
+               [v (outer (cons v (append ys tail)))])]))]
+       [_ xs])))) 
 
 ; Partial evaluation rules for adders (bvxor and bvadd).
 (define-syntax-rule (bitwise-adder op bvop @bvop simplify-bvop)

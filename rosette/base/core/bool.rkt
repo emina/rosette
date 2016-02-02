@@ -190,17 +190,6 @@
            [(sublist? ys xs) b]
            [else ⊥])]
     [(_ _) ⊥]))
-
-; Returns #t if ys contains all elements of xs, in the order 
-; in which they occur in xs. Otherwise returns #f.
-(define (sublist? xs ys)
-  (and (<= (length xs) (length ys))
-       (match xs
-         [(list) #t]
-         [(list x xs ...)
-          (match ys 
-            [(list _ ... (== x) ys ...) (sublist? xs ys)]
-            [_ #f])])))
     
 (define (simplify-fp op co !iden xs)
   (or 
