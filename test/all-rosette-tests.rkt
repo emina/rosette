@@ -14,6 +14,7 @@
  "base/finitize.rkt"
  "base/list.rkt"
  "base/vector.rkt"
+ "query/solve.rkt"
  "query/verify.rkt"
  )
 
