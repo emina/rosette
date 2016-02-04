@@ -2,109 +2,139 @@
 
 (require "../base/core/term.rkt")
 
-(provide solution? 
-         sat unsat 
-         empty-solution
-         unbind
-         unsat?
-         solution->list
-         [rename-out (solution-sat? sat?)
-                     (solution-model model)
-                     (solution-core core)] )
+(provide solution? sat? unsat?
+         sat unsat empty-solution model core
+         unbind solution->list)
 
-; Stores the solution to a given Kodkodi problem.  The sat? field is either #t or #f. 
-; The model field is an ordered dictionary; the core field is a list.  The model field is non-false 
-; iff the sat? field is #t; otherwise, the core field may be non-false.  The model field, if non-false, 
-; binds symbolic variables to values.
-; The core field, if non-false, contains a minimal unsatisifable core of the original problem, given as 
-; a list of program expressions.  A core is option for unsatisfiable solutions. 
-; If the solution is satisfiable, it can be used as a procedure to retrieve the value of a variable in 
-; the model.  If the model does not have a binding for that variable, it returns the variable itself.
-(struct solution (sat? model core)
+; Represents the solution to a set of logical constraints.  The solution 
+; has single field, result, which stores either a model of the constraints, 
+; an unsatisfiable core, or #f. 
+; 
+; If the constraints are satisfiable, the result is dictionary binding symbolic 
+; constants to values. In that case, the solution 
+; can be used as a procedure, which takes as input a symbolic constant and 
+; returns a concrete value for that constant, if any, or the constant itself, if the 
+; model has no binding for that constant.
+; 
+; If the constraints are unsatisfiable, and no core has been extract, the result field is #f.
+; If a core has been extract, the result is a list of constraints (that is @boolean? terms or 
+; values) that do not have a model.
+(struct solution (result)
   #:property prop:procedure 
-  (lambda (self arg) 
-    (or (solution-sat? self) (error 'solution "cannot query an unsat solution: ~s" self))
-    (dict-ref (solution-model self) arg arg))
-    #:methods gen:custom-write
+  (lambda (self arg)
+    (match self
+      [(solution (? dict? model)) (dict-ref model arg arg)]
+      [else (error 'solution "cannot query an unsat solution: ~s" self)]))
+  #:methods gen:custom-write
   [(define (write-proc self port mode)
      (if mode 
          (display-solution self port)
          (write-solution self port)))])
 
-(define (unsat? sol) (not (solution-sat? sol)))
+(define (sat? sol) (and (solution? sol) (dict? (solution-result sol))))
 
-; Creates and returns a new satisfiable solution consisting of the given model.  The model
-; must be an immutable dictionary, with symbolic variables as keys.
-(define (sat model)
-  (unless (and (dict? model) (not (dict-mutable? model)))
-      (error 'sat "expected an immutable dictionary, given ~s" model))
-  ;(log-info (format "SAT: ~s" model))
-  (solution #t model #f))
+(define (unsat? sol) (not (sat? sol)))
+
+(define (get-model s)
+  (match s
+    [(solution (? dict? m)) m]
+    [_ (error 'model "expected a sat? solution, given ~a" s)]))
+
+(define (get-core s)
+  (match s
+    [(solution #f) #f]
+    [(solution (? list? c)) c]
+    [_ (error 'model "expected an unsat? solution, given ~a" s)]))
+
+(define-match-expander model
+  (syntax-rules ()
+    [(model) (solution (? dict? (app dict-count 0)))]
+    [(model pat) (solution (? dict? pat))])
+  (syntax-id-rules (set!)
+    [(model s) (get-model s)]
+    [model get-model]))
+
+(define-match-expander core
+  (syntax-rules ()
+    [(core) (solution #f)]
+    [(core #f) (solution #f)]
+    [(core pat) (solution (? list? pat))])
+  (syntax-id-rules (set!)
+    [(core s) (get-core s)]
+    [core get-core]))
+
+(define empty-sat (solution (hash)))
+(define empty-unsat (solution #f)) 
+
+; Creates and returns a satisfiable solution consisting of the given model.  The model
+; must be an immutable dictionary, with symbolic constants as keys.
+(define sat
+  (case-lambda 
+    [() empty-sat]
+    [(model) (unless (and (dict? model) (not (dict-mutable? model)))
+               (error 'sat "expected an immutable dictionary, given ~s" model))
+             (solution model)]))
 
 ; Creates and returns a new unsatisfiable solution that consists of the given core, if any, 
-; or no core, if called with no arguments.  The core must be minimal, and it must be given 
-; as a list of program expressions.
+; or no core, if called with no arguments.  The must be a list of @boolean? values.
 (define unsat 
-  (case-lambda [() (solution #f #f #f)]
+  (case-lambda [() empty-unsat]
                [(core) (unless (and (list? core) (not (null? core)))
-                           (error 'unsat "expected a non-empty list, given ~s" core))
-                       (solution #f #f core)]))
+                         (error 'unsat "expected a non-empty list, given ~s" core))
+                       (solution core)]))
 
 ; Returns a satisfiable solution with an empty model.
-(define empty-solution
-  (let ([empty (sat (hash))])
-    (lambda () empty)))
+(define (empty-solution) empty-sat)
 
 (define (solution->list sol)
-  (if (unsat? sol)
-      (let-values ([(origin no-origin) (partition term-origin (solution-core sol))])
-        (append (sort origin stx<?) (no-origin)))
-      (sort (dict->list (solution-model sol)) var<? #:key car)))
+  (match (solution-result sol)
+    [(? dict? model)  (sort (dict->list model) var<? #:key car)]
+    [(? list? core)   (let-values ([(origin no-origin) (partition term-origin core)])
+                        (append (sort origin stx<?) no-origin))]
+    [#f (list)]))
+     
 
 ; Given a satisfiable solution, returns a copy of the given solution but without 
 ; any bindings for variables that satisfy the given predicate.
 (define (unbind sol unbind?)
-  (unless (solution-sat? sol)
-    (error 'solution-unbind "cannot remove variable bindings from an unsat solution: ~s" sol))
-  ;(printf "UNBINDING ~a ~a\n" sol unbind?)
-  ;(for ([(var val) (solution-model sol)] #:when (unbind? var))
-  ;  (printf "UNBIND ~s FROM ~s\n" var val)) 
-  (sat (for/hash ([(var val) (solution-model sol)] #:unless (unbind? var))
-         (values var val)))) 
-
-(define (write-solution sol port)   
-  (if (solution-sat? sol)
-      (let ([trace (dict->list (solution-model sol))])
-        (fprintf port "model(")
-        (unless (null? trace)
-          (fprintf port "[~s ~s]" (term-name (caar trace)) (cdar trace))
-          (for ([binding (cdr trace)])
-            (fprintf port "\n      [~s ~s]" (term-name (car binding)) (cdr binding))))
-        (fprintf port ")"))
-      (let ([core (solution-core sol)])
-        (fprintf port "core(")
-        (when core
-          (fprintf port "[~a ~a]"  (term-origin (car core)) (car core))
-          (for ([assertion (cdr core)])
-            (fprintf port "\n     [~a ~a]"  (term-origin assertion) assertion)))
-        (fprintf port ")"))))
+  (match (solution-result sol)
+    [(? dict? model) (sat (for/hash ([(var val) model] #:unless (unbind? var))
+                            (values var val)))]
+    [_ (error 'unbind "cannot remove variable bindings from an unsat solution: ~s" sol)]))
+   
+(define (write-solution sol port)
+  (match (solution-result sol)
+    [(? dict? model)
+     (let ([trace (dict->list model)])
+       (fprintf port "model(")
+       (unless (null? trace)
+         (fprintf port "[~s ~s]" (term-name (caar trace)) (cdar trace))
+         (for ([binding (cdr trace)])
+           (fprintf port "\n      [~s ~s]" (term-name (car binding)) (cdr binding))))
+       (fprintf port ")"))]
+    [core
+     (fprintf port "core(")
+     (when core
+       (fprintf port "[~a ~a]"  (term-origin (car core)) (car core))
+       (for ([assertion (cdr core)])
+         (fprintf port "\n     [~a ~a]"  (term-origin assertion) assertion)))
+     (fprintf port ")")]))
 
 (define (display-solution sol port)
-  ;(for ([c (solution-core sol)]) (printf "CLAUSE: ~a, ORIGIN: ~a\n" c (term-origin c)))    
-  (if (solution-sat? sol)
-      (let ([trace (sort (dict->list (solution-model sol)) var<? #:key car)])
-        (fprintf port "(model")
-        (unless (null? trace)
-          (for ([binding trace])
-            (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
-        (fprintf port ")"))
-      (let* ([core (solution-core sol)]
-             [core (and core (sort (remove-duplicates (filter-map term-origin core)) stx<?))])        
-        (fprintf port "(core")
-        (when core
-          (for ([assertion core])
-            (fprintf port "\n ~a" assertion)))
-        (fprintf port ")"))))
+  (match (solution-result sol)
+    [(? dict? model) 
+     (let ([trace (sort (dict->list model) var<? #:key car)])
+       (fprintf port "(model")
+       (unless (null? trace)
+         (for ([binding trace])
+           (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
+       (fprintf port ")"))]
+    [core 
+     (fprintf port "(core")
+     (when core
+       (for ([assertion (sort (remove-duplicates (filter-map term-origin core)) stx<?)])
+         (fprintf port "\n ~a" assertion)))
+     (fprintf port ")")]))
 
 (define (identifier-and-index v)
   (match (term-name v)
