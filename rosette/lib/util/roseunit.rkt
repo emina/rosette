@@ -7,7 +7,7 @@
                   current-bitwidth term-cache current-oracle oracle with-asserts-only
                   current-solution empty-solution solution? sat? unsat?))
 
-(provide run-all-tests test-groups test-suite+ test-sat test-unsat check-sat check-unsat)    
+(provide run-all-tests test-groups test-suite+ test-sat test-unsat check-sol check-sat check-unsat)    
 
 ; Groups tests into N modules with names id ..., each 
 ; of which requires the specified modules and submodules.
@@ -68,8 +68,12 @@
 (define satisfiable? (and/c solution? sat?))
 (define unsatisfiable? (and/c solution? unsat?))
 
-(define (check-sat v [msg ""]) (check-pred satisfiable? v msg))
-(define (check-unsat v [msg ""]) (check-pred unsatisfiable? v msg))
+(define-syntax-rule (check-sol pred test)
+  (let ([sol test])
+    (check-true (pred sol) (format "not ~a for ~a: ~a" (quote pred) (quote test) sol))))
+
+(define-syntax-rule (check-sat test) (check-sol satisfiable? test))
+(define-syntax-rule (check-unsat test) (check-sol unsatisfiable? test))
 
 (define-syntax-rule (test-sat name expr)
   (test-case name (check-sat expr "Not a satisfiable solution.")))
