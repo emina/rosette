@@ -7,7 +7,7 @@
          rosette/base/core/finitize
          rosette/base/form/define
          rosette/base/form/control
-         rosette/query/solve 
+         rosette/query/form
          rosette/solver/solution)
 
 (define-symbolic a b c @boolean?)

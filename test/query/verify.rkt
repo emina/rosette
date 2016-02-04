@@ -3,7 +3,7 @@
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/form/define
          rosette/solver/solution rosette/base/core/bool rosette/base/core/real
-         rosette/query/tools rosette/base/form/control)
+         rosette/query/form rosette/base/form/control)
 
 (define-symbolic x @boolean?)
 (define-symbolic n @integer?)
