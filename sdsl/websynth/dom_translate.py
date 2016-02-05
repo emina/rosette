@@ -66,7 +66,7 @@ def generate(args):
     #if (args.rackunit_test == False) :
     #    f.write('(current-log-handler (log-handler #:info any/c))\n')
         
-    f.write('(current-bitwidth 1)\n\n')
+    f.write('(current-bitwidth #f)\n\n')
 
     f.write('(define (demonstration)\n\n');
     # All zpath asserts
@@ -117,10 +117,10 @@ def generate(args):
     for r_index in [0]:
         for f_index in range(field_count):
             zpath_name = field_zpath_name(r_index, f_index)
-            f.write('\t(define {zpath_name}_list (map label (evaluate {zpath_name})))\n'.format(zpath_name=zpath_name))
-            f.write('\t(define generalizelized_{zpath_name}_list \n'.format(zpath_name=zpath_name))
-            f.write('\t\t(apply-mask {zpath_name}_list (evaluate recordmask)))\n'.format(zpath_name=zpath_name))
-            f.write('\t(define field{i}_zpath (synthsis_solution->zpath generalizelized_{zpath_name}_list))\n'.format(i=f_index,
+            f.write('\t(define {zpath_name}_list (map label (evaluate {zpath_name} sol)))\n'.format(zpath_name=zpath_name))
+            f.write('\t(define generalized_{zpath_name}_list \n'.format(zpath_name=zpath_name))
+            f.write('\t\t(apply-mask {zpath_name}_list (evaluate recordmask sol)))\n'.format(zpath_name=zpath_name))
+            f.write('\t(define field{i}_zpath (synthsis_solution->zpath generalized_{zpath_name}_list))\n'.format(i=f_index,
                                                                                                                     zpath_name=zpath_name))
             f.write('\n')
 

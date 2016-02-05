@@ -109,7 +109,7 @@
 
 ; Cross-record Mask
 (define-symbolic recordmask boolean? [max_zpath_depth])
-(current-bitwidth 1)
+(current-bitwidth #f)
 
 (define (demonstration)
 
@@ -283,20 +283,20 @@
 	; Record 15 zpaths
 
 	; Construct final zpaths
-	(define r0f0zpath_list (map label (evaluate r0f0zpath)))
-	(define generalizelized_r0f0zpath_list 
-		(apply-mask r0f0zpath_list (evaluate recordmask)))
-	(define field0_zpath (synthsis_solution->zpath generalizelized_r0f0zpath_list))
+	(define r0f0zpath_list (map label (evaluate r0f0zpath sol)))
+	(define generalized_r0f0zpath_list 
+		(apply-mask r0f0zpath_list (evaluate recordmask sol)))
+	(define field0_zpath (synthsis_solution->zpath generalized_r0f0zpath_list))
 
-	(define r0f1zpath_list (map label (evaluate r0f1zpath)))
-	(define generalizelized_r0f1zpath_list 
-		(apply-mask r0f1zpath_list (evaluate recordmask)))
-	(define field1_zpath (synthsis_solution->zpath generalizelized_r0f1zpath_list))
+	(define r0f1zpath_list (map label (evaluate r0f1zpath sol)))
+	(define generalized_r0f1zpath_list 
+		(apply-mask r0f1zpath_list (evaluate recordmask sol)))
+	(define field1_zpath (synthsis_solution->zpath generalized_r0f1zpath_list))
 
-	(define r0f2zpath_list (map label (evaluate r0f2zpath)))
-	(define generalizelized_r0f2zpath_list 
-		(apply-mask r0f2zpath_list (evaluate recordmask)))
-	(define field2_zpath (synthsis_solution->zpath generalizelized_r0f2zpath_list))
+	(define r0f2zpath_list (map label (evaluate r0f2zpath sol)))
+	(define generalized_r0f2zpath_list 
+		(apply-mask r0f2zpath_list (evaluate recordmask sol)))
+	(define field2_zpath (synthsis_solution->zpath generalized_r0f2zpath_list))
 
 	(zip 
 		(DOM-Flatten (DOM-XPath dom field0_zpath))
