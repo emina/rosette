@@ -2,8 +2,9 @@
 
 (require (for-syntax racket/syntax) 
          racket/stxparam 
+         (only-in "core.rkt" current-solver)
          "../lib/util/syntax-properties.rkt"  
-         "../base/form/define.rkt" "../base/core/bool.rkt" "state.rkt" "../base/form/state.rkt" 
+         "../base/form/define.rkt" "../base/core/bool.rkt"  "../base/form/state.rkt" 
          "../solver/solver.rkt" "../solver/solution.rkt" 
          "../base/core/equality.rkt" "../base/core/term.rkt")
 
