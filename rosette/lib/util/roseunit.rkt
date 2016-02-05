@@ -70,7 +70,8 @@
 
 (define-syntax-rule (check-sol pred test)
   (let ([sol test])
-    (check-true (pred sol) (format "not ~a for ~a: ~a" (quote pred) (quote test) sol))))
+    (check-true (pred sol) (format "not ~a for ~a: ~a" (quote pred) (quote test) sol))
+    sol))
 
 (define-syntax-rule (check-sat test) (check-sol satisfiable? test))
 (define-syntax-rule (check-unsat test) (check-sol unsatisfiable? test))

@@ -3,23 +3,26 @@
 (require "eval.rkt" "state.rkt" 
          (only-in "../base/core/term.rkt" constant? get-type term-cache term<?)
          (only-in "../base/core/equality.rkt" @equal?)
-         (only-in "../base/core/bool.rkt" ! || with-asserts-only)
+         (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
          (only-in "../base/core/real.rkt" @integer? @real?)
-         (only-in "../base/core/bitvector.rkt" bv)
+         (only-in "../base/core/bitvector.rkt" bv bitvector?)
+         (only-in "../base/struct/enum.rkt" enum? enum-first)
          (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
+         (only-in "../base/util/log.rkt" log-info)
          (only-in "../solver/solver.rkt" send/handle-breaks)
-         (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?))
+         (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
+         (only-in "../solver/smt/z3.rkt" z3%))
 
-(provide all-true? some-false? unfinitize ∃-solve eval/asserts)
+(provide all-true? some-false? unfinitize eval/asserts ∃-solve ∃∀-solve)
 
 ; Returns true if evaluating all given formulas against 
 ; the provided solution returns the constant #t.
-(define (all-true? φs [sol (current-solution)])
+(define (all-true? φs sol)
   (and (sat? sol) (for/and ([φ φs]) (equal? #t (evaluate φ sol)))))
 
 ; Returns true if evaluating at least one of the given 
 ; formulas against the provided solution returns the constant #f.
-(define (some-false? φs [sol (current-solution)])
+(define (some-false? φs sol)
   (and (sat? sol) (for/or ([φ φs]) (false? (evaluate φ sol)))))
 
 (define return-#f (const '(#f)))
@@ -84,4 +87,82 @@
      (send/apply solver assert φs)
      (send/handle-breaks solver solve)]))
 
+; Solves the exists-forall problem for the provided list of inputs, assumptions and assertions. 
+; That is, if I is the set of all input symbolic constants, 
+; and H is the set of the remaining (non-input) constants appearing 
+; in the assumptions and the assertions, 
+; this procedure solves the following constraint: 
+; ∃H . ∀I . assumes => asserts.
+(define (∃∀-solve inputs assumes asserts #:solver [solver% z3%] #:bitwidth [bw (current-bitwidth)])
+  (parameterize ([current-custodian (make-custodian)]
+                 [term-cache (hash-copy (term-cache))])
+    (with-handlers ([exn? (lambda (e) (custodian-shutdown-all (current-custodian)) (raise e))])
+      (begin0 
+        (cond 
+          [bw
+           (define fmap (finitize (append inputs assumes asserts) bw))
+           (define fsol (cegis (for/list ([i inputs])  (hash-ref fmap i))
+                               (for/list ([φ assumes]) (hash-ref fmap φ))
+                               (for/list ([φ asserts]) (hash-ref fmap φ))
+                               (new solver%) (new solver%)))
+           (unfinitize fsol fmap)]
+          [else 
+           (cegis inputs assumes asserts (new solver%) (new solver%))])
+        (custodian-shutdown-all (current-custodian))))))
+         
+
+; Uses the given solvers to solve the exists-forall problem 
+; for the provided list of inputs, assumptions and assertions. 
+; That is, if I is the set of all input symbolic constants, 
+; and H is the set of the remaining (non-input) constants appearing 
+; in the assumptions and the assertions, 
+; this procedure solves the following constraint: 
+; ∃H . ∀I . assumes => asserts.
+(define (cegis inputs assumes asserts guesser checker)
+  
+  (define φ   (if (null? assumes) 
+                  asserts 
+                  (list (=> (apply && assumes) (apply && asserts)))))
+  
+  (define ¬φ `(,@assumes ,(apply || (map ! asserts))))
+   
+  (define trial 0)
+  
+  (define (guess sol)
+    (log-cegis-info [trial] "searching for a candidate: ~s" (map sol inputs))
+    (send/apply guesser assert (evaluate φ sol))
+    (match (send guesser solve)
+      [(model m) (sat (for/hash ([(c v) m] #:unless (member c inputs)) (values c v)))]
+      [other other]))
+  
+  (define (check sol)
+    (log-cegis-info [trial] "verifying the candidate solution ...")
+    (send checker clear)
+    (send/apply checker assert (evaluate ¬φ sol))
+    (match (send checker solve)
+      [(? sat? m) (sat (for/hash ([i inputs]) (values i (value-for (m i)))))]
+      [other other]))
     
+  (let loop ([candidate (begin0 (guess (sat)) (send guesser clear))])
+    (cond 
+      [(unsat? candidate) candidate]
+      [else
+        (let ([cex (check candidate)])
+          (cond 
+            [(unsat? cex) candidate]
+            [else (set! trial (add1 trial))
+                  (loop (guess cex))]))])))
+             
+(define-syntax-rule (log-cegis-info [trial] msg rest ...) 
+  (log-info ['cegis] "[~a] ~a" trial (format msg rest ...)))    
+
+(define (value-for v)
+  (if (constant? v)
+      (match (get-type v)
+        [(== @boolean?) #f]
+        [(or (== @integer?) (== @real?)) 0]
+        [(? bitvector? t) (bv 0 t)]
+        [(? enum? t) (enum-first t)])
+      v))
+        
+        

@@ -1,12 +1,10 @@
 #lang racket
 
 (require "util.rkt" "state.rkt" 
-         (only-in "../base/core/bool.rkt" ! ||)
-         (only-in "../solver/solution.rkt" sat unsat))
+         (only-in "../base/core/reflect.rkt" symbolics)
+         (only-in "../base/core/bool.rkt" ! ||))
 
-(provide solve verify)
-
-(define return-unsat (const (unsat)))
+(provide solve verify synthesize)
 
 ; The solve query evaluates the given forms, gathers all 
 ; assertions generated during the evaluation, 
@@ -34,5 +32,16 @@
     [(_ #:guarantee post) (verify #:assume #t #:guarantee post)]
     [(_ post) (verify #:assume #t #:guarantee post)]))
 
-
-
+; The synthesize query evaluates the given forms, gathers all 
+; assumptions and assertions generated during the evaluation, 
+; and searches for a model (a binding from symbolic 
+; constants to values) of the formula ∃H.∀I. pre => post, 
+; where I are the given input constants and H are all other symoblic constants. 
+(define-syntax synthesize 
+  (syntax-rules (synthesize)
+    [(_ #:forall inputs #:assume pre #:guarantee post)
+     (∃∀-solve (symbolics inputs) 
+               (eval/asserts (thunk pre)) 
+               (eval/asserts (thunk post)))]    
+    [(_ #:forall inputs #:guarantee post)
+     (synthesize #:forall inputs #:assume #t #:guarantee post)]))
