@@ -1,6 +1,6 @@
 #lang racket
 
-(require "eval.rkt" "state.rkt" 
+(require "eval.rkt" 
          (only-in "../base/core/term.rkt" constant? get-type term-cache term<?)
          (only-in "../base/core/equality.rkt" @equal?)
          (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
@@ -9,11 +9,21 @@
          (only-in "../base/struct/enum.rkt" enum? enum-first)
          (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
          (only-in "../base/util/log.rkt" log-info)
-         (only-in "../solver/solver.rkt" send/handle-breaks)
+         (only-in "../solver/solver.rkt" solver<%> send/handle-breaks)
          (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
          (only-in "../solver/smt/z3.rkt" z3%))
 
-(provide all-true? some-false? unfinitize eval/asserts ∃-solve ∃∀-solve)
+(provide current-solver ∃-solve ∃∀-solve eval/asserts 
+         all-true? some-false? unfinitize)
+
+; Current solver instance that is used for queries and kept alive for performance.
+(define current-solver
+  (make-parameter (new z3%)
+                  (lambda (solver)
+                    (unless (is-a? solver solver<%>)
+                      (error 'current-solver "expected a solver<%>, given ~s" solver))
+                    (send (current-solver) shutdown)
+                    solver)))
 
 ; Returns true if evaluating all given formulas against 
 ; the provided solution returns the constant #t.

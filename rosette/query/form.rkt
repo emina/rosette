@@ -1,10 +1,10 @@
 #lang racket
 
-(require "util.rkt" "state.rkt" 
+(require "core.rkt" 
          (only-in "../base/core/reflect.rkt" symbolics)
          (only-in "../base/core/bool.rkt" ! ||))
 
-(provide solve verify synthesize)
+(provide solve verify synthesize current-solver)
 
 ; The solve query evaluates the given forms, gathers all 
 ; assertions generated during the evaluation, 

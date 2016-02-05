@@ -1,15 +1,14 @@
 #lang racket
 
-(require "generate.rkt"
-         (only-in rosette/query/state current-solution))
+(require "generate.rkt")
 
 (provide print-forms print-expressions)
 
-(define (print-forms [sol (current-solution)] #:filter [print? any/c])
+(define (print-forms sol #:filter [print? any/c])
   (for ([synth (sort (generate-forms sol #:filter print?) stx<? #:key car)])
     (printf "\n~a\n~a\n" (car synth) (pretty-format (syntax->datum (cdr synth))))))
 
-(define (print-expressions [sol (current-solution)] #:filter [print? any/c])
+(define (print-expressions sol #:filter [print? any/c])
   (for ([synth (sort (generate-expressions sol #:filter print?) stx<? #:key car)])
     (printf "\n~a\n~a\n" (car synth) (pretty-format (syntax->datum (cdr synth))))))
 

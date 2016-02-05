@@ -26,5 +26,4 @@
 (current-oracle)
 (current-bitwidth)
 (current-solver)
-(current-solution)
 |#

@@ -22,7 +22,6 @@
 (define (clear-state!)
   (current-bitwidth 5)
   (current-oracle (oracle))
-  (current-solution (empty-solution))
   (clear-asserts)
   (unsafe-clear-terms!)
   (current-solver (new z3%)))

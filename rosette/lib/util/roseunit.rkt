@@ -5,7 +5,7 @@
 (require (only-in rosette 
                   clear-state!
                   current-bitwidth term-cache current-oracle oracle with-asserts-only
-                  current-solution empty-solution solution? sat? unsat?))
+                  solution? sat? unsat?))
 
 (provide run-all-tests test-groups test-suite+ test-sat test-unsat check-sol check-sat check-unsat)    
 
@@ -55,8 +55,7 @@
       (with-asserts-only
        (parameterize ([current-bitwidth (current-bitwidth)]
                       [term-cache (hash-copy (term-cache))]
-                      [current-oracle (oracle (current-oracle))]
-                      [current-solution (empty-solution)])
+                      [current-oracle (oracle (current-oracle))])
          test ...)))]
     [(_ name #:before before test ...)
      (test-suite+ name #:before before #:after void test ...)]

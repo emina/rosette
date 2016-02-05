@@ -1,7 +1,7 @@
 
 #lang racket
 
-(require "state.rkt" "../base/util/log.rkt"
+(require "../base/util/log.rkt"
          "../base/core/term.rkt" "../base/core/op.rkt" "../base/core/bool.rkt" 
          "../base/core/polymorphic.rkt" "../base/core/union.rkt"
          "../base/core/merge.rkt" "../solver/solution.rkt")
@@ -20,7 +20,7 @@
 ; variable occuring in the expression, the output is a concrete value.  Otherwise, the 
 ; output is a (possibly) symbolic value, expressed in terms of variables that are not
 ; bound by the given solution.  The solution must be sat?.
-(define (evaluate expr [sol (current-solution)])
+(define (evaluate expr sol)
   (if (and (sat? sol) (= (dict-count (model sol)) 0)) 
       expr
       (eval-rec expr sol (make-hash))))

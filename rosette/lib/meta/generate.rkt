@@ -3,8 +3,7 @@
 (require (only-in "identifiers.rkt" syntax-identifier) 
          (only-in rosette/lib/util/syntax read-module 
                   location location-source location-contains?)
-         (only-in rosette/base/util/ord-dict ord-dict)
-         (only-in rosette/query/state current-solution))
+         (only-in rosette/base/util/ord-dict ord-dict))
 
 (provide add-generator! tagged? generate-forms generate-expressions)
 
@@ -20,7 +19,7 @@
 (define (tagged? tags) 
   (lambda (id) (member (syntax->datum id) tags)))
 
-(define (generate-forms [sol (current-solution)] #:filter [generate? any/c])
+(define (generate-forms sol #:filter [generate? any/c])
   (let* ([synths  (generate-expressions sol #:filter generate?)]
          [sources (map (compose1 location car) synths)]
          [synths  (for/hash ([loc sources] [synth synths])
@@ -49,19 +48,18 @@
                  (generate-form form loc->expr)))))]
     [_ stx]))
         
-(define (generate-expressions [sol (current-solution)] #:filter [generate? any/c])
-  (parameterize ([current-solution sol])
+(define (generate-expressions sol #:filter [generate? any/c])
     (filter pair? 
      (for/list ([(root gens) (in-dict generators)] 
                 #:when (generate? (node-identifier root)))
-       (let ([expr (generate-expression root gens)])
-         (and expr (cons (node-identifier root) expr)))))))
+       (let ([expr (generate-expression sol root gens)])
+         (and expr (cons (node-identifier root) expr))))))
 
-(define (generate-expression root generators)
+(define (generate-expression sol root generators)
   
   (define (generate path)
     (let* ([gen  (dict-ref generators path #f)]
-           [expr (and gen (gen (curryr recurse path)))])
+           [expr (and gen (gen sol (curryr recurse path)))])
       (and (syntax? expr) (skip-identity expr))))
   
   (define (recurse stx path)

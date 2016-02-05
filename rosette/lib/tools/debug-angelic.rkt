@@ -23,7 +23,6 @@
   (and indicator 
        (with-handlers ([exn:fail? (const #f)])
          (parameterize ([current-oracle (oracle)]
-                        [current-solution (empty-solution)]
                         [relate (lambda (relaxer val)
                                   (if (term=? relaxer indicator)
                                       (not (equal? relaxer val))
@@ -32,8 +31,7 @@
            #t))))
 
 (define (candidates validator bad)
-  (parameterize ([current-oracle (oracle)]
-                 [current-solution (empty-solution)])
+  (parameterize ([current-oracle (oracle)])
     (let-values ([(out asserts) (with-asserts (validator bad))])
       (filter (curryr flexible? validator bad) asserts))))
       

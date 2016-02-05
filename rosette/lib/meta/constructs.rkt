@@ -12,22 +12,22 @@
          #:guard    guard
          #:declare  [unroll? boolean?] 
          #:compile  (if unroll? body (assert #f))
-         #:generate (lambda (gen)
-                      (cond [(selected? unroll?)     (gen (syntax/source body))]
-                            [(selected? (! unroll?)) (gen #'(assert #f))]
+         #:generate (lambda (gen sol)
+                      (cond [(selected? unroll? sol)     (gen (syntax/source body))]
+                            [(selected? (! unroll?) sol) (gen #'(assert #f))]
                             [else #f]))))]
     [(_ (id arg ...) body)
      (syntax/loc stx 
        (define-synthesis-rule (id arg ...)
          #:compile  body
-         #:generate (lambda (gen) (gen (syntax/source body)))))]))
+         #:generate (lambda (gen sol) (gen (syntax/source body)))))]))
 
 (define-synthesis-rule (choose t ... tn)
   #:declare  ([v boolean?] ... : #'(t ...))
   #:compile  (cond [v t] ... [else tn]);(wrap (cond [v t] ... [else tn]))
-  #:generate (lambda (gen) 
-               (cond [(selected? v) (gen (syntax/source t))] ...
-                     [(selected? (! (|| v ...))) (gen (syntax/source tn))]
+  #:generate (lambda (gen sol) 
+               (cond [(selected? v sol) (gen (syntax/source t))] ...
+                     [(selected? (! (|| v ...)) sol) (gen (syntax/source tn))]
                      [else #f])))
 
 (define-synthesis-rule (choose-number low high)
@@ -35,29 +35,29 @@
   #:compile (begin (assert (<= low v))
                    (assert (<= v high))
                    v)
-  #:generate (lambda (gen)
-               (let ([val (evaluate v)])
+  #:generate (lambda (gen sol)
+               (let ([val (evaluate v sol)])
                  (and (not (term? val))
                       (gen #`#,val)))))
 
 (define-synthesis-rule (??)
   #:declare [v integer?]
   #:compile v
-  #:generate (lambda (gen)
-               (let ([val (evaluate v)])
+  #:generate (lambda (gen sol)
+               (let ([val (evaluate v sol)])
                  (and (not (term? val))
                       (gen #`#,val)))))
 
 (define-synthesis-rule (option p expr)
   #:declare  [opt? boolean?]
   #:compile  (let ([e (thunk expr)]) (if opt? (p (e)) (e)))
-  #:generate (lambda (gen) 
-               (cond [(selected? opt?) #`(#,(gen (syntax/source p)) #,(gen (syntax/source expr)))]
-                     [(selected? (! opt?)) (gen (syntax/source expr))]
+  #:generate (lambda (gen sol) 
+               (cond [(selected? opt? sol) #`(#,(gen (syntax/source p)) #,(gen (syntax/source expr)))]
+                     [(selected? (! opt?) sol) (gen (syntax/source expr))]
                      [else #f])))
 
-(define (selected? v) 
-  (let ([v (evaluate v)])
+(define (selected? v sol) 
+  (let ([v (evaluate v sol)])
     (and (not (term? v)) v)))
 
 (define-syntax (tag stx)
