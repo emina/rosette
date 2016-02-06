@@ -7,7 +7,7 @@
 ; The basic semantics is expressed using the next, peek, push, pop, read and write 
 ; primitives for manipulating machine state.  These are defined in machine.rkt.
 
-(define (Halt m)   
+(define (Halt m) 
   (let@ ([(_ Lpc) (pc m)])
     (goto m (@ (LOC m) Lpc))))
 

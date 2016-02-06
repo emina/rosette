@@ -16,7 +16,7 @@
 ;     (-> machine? boolean?)
 ;     (-> machine? machine? boolean?)
 ;     (listof instruction?)
-;     [(or/c number? #f)]
+;     [(or/c integer? #f)]
 ;     void?)
 (define (verify-EENI start end ≈ prog [k #f])
   (time (displayln (verify-EENI* start end ≈ prog k #t))))
@@ -36,11 +36,10 @@
 ;     (-> machine? boolean?)
 ;     (-> machine? machine? boolean?)
 ;     (listof instruction?)
-;     [(or/c number? #f)]
+;     [(or/c integer? #f)]
 ;     (or/c EENI-witness? #t))
 (define (verify-EENI* start end ≈ prog [k #f] [verbose? #f])
-  (parameterize ([current-solution (empty-solution)]
-                 [current-bitwidth 5]
+  (parameterize ([current-bitwidth 5]
                  [current-oracle (oracle)]
                  [term-cache (hash-copy (term-cache))])
     
@@ -59,17 +58,16 @@
     (define cex
       (let ([m0 m0]
             [m1 m1])
-        (with-handlers ([exn:fail? (lambda (e) #f)]) ; The verify form throws an exception if no cex is found.
-          (verify 
-           #:assume  (begin 
-                       (assert (≈ m0 m1))     
-                       (set! m0 (step m0 k))  
-                       (set! m1 (step m1 k)) 
-                       (assert (end m0))
-                       (assert (end m1)))
-           #:guarantee (assert (≈ m0 m1))))))
+        (verify 
+         #:assume  (begin 
+                     (assert (≈ m0 m1))     
+                     (set! m0 (step m0 k))  
+                     (set! m1 (step m1 k)) 
+                     (assert (end m0))
+                     (assert (end m1)))
+         #:guarantee (assert (≈ m0 m1)))))
     
-    (if cex (EENI-witness (evaluate m0 cex) (evaluate m1 cex) k ≈) #t)))
+    (if (sat? cex) (EENI-witness (evaluate m0 cex) (evaluate m1 cex) k ≈) #t)))
 
 (struct EENI-witness (m0 m1 k ≈)
   #:transparent 

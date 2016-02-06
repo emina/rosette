@@ -86,7 +86,7 @@
        (define fmap (finitize φs bw))
        (send/apply solver assert (for/list ([φ φs]) (hash-ref fmap φ)))
        (let loop ()
-         (define fsol (send/handle-breaks solver solve))
+         (define fsol (send/handle-breaks solver solve)) 
          (define sol (unfinitize fsol fmap)) 
          (cond 
            [(or (unsat? sol) (all-true? φs sol)) sol]

@@ -37,14 +37,9 @@
                   [#f (eval-rec f sol cache)]
                   [g (ite g (eval-rec t sol cache) (eval-rec f sol cache))])]
                [(or (expression (== ite*) gvs ...) (union gvs))
-                (let loop ([vs gvs] [out '()])
-                  (if (null? vs) 
-                      (apply merge* out)
-                      (let ([gv (car vs)])
-                        (match (eval-rec (car gv) sol cache)
-                          [#t (eval-rec (cdr gv) sol cache)]
-                          [#f (loop (cdr vs) out)]
-                          [g  (loop (cdr vs) (cons (cons g (eval-rec (cdr gv) sol cache)) out))]))))]
+                (if (union? expr)
+                    (eval-guarded gvs sol cache car cdr)
+                    (eval-guarded gvs sol cache guarded-test guarded-value))]
                [(expression op child ...)  
                 (apply (op-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
                [(? list?)                
@@ -63,3 +58,14 @@
                [_ expr])])
         (hash-set! cache expr result)
         result)))
+
+(define (eval-guarded gvs sol cache test value)
+  (let loop ([vs gvs] [out '()])
+    (if (null? vs) 
+        (apply merge* out)
+        (let ([gv (car vs)])
+          (match (eval-rec (test gv) sol cache)
+            [#t (eval-rec (value gv) sol cache)]
+            [#f (loop (cdr vs) out)]
+            [g  (loop (cdr vs) (cons (cons g (eval-rec (value gv) sol cache)) out))])))))
+  

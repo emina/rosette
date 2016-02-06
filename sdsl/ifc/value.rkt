@@ -45,9 +45,9 @@
      (let@ (bind0) (let@ (bind ...) body ...))]))
 
 ; Returns a fresh symbolic integer.
-; (-> void? number?)
+; (-> void? integer?)
 (define (?int)
-  (define-symbolic* n number?)
+  (define-symbolic* n integer?)
   n)
 
 ; Returns a fresh symbolic label.

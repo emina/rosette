@@ -12,11 +12,12 @@
   "util/log.rkt") 
 
 (provide
+  (rename-out [@|| ||]) ; The character sequence || does not play nicely with the filtered-out form.
   (filtered-out drop@ 
     (combine-out   
      ; core/bool.rkt
      pc with-asserts with-asserts-only relax asserts clear-asserts
-     @assert @boolean? @false? @! @&& @|| @=> @<=> 
+     @assert @boolean? @false? @! @&& @=> @<=> 
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs
