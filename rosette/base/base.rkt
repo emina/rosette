@@ -4,7 +4,7 @@
 (require 
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
-  "core/bool.rkt" "core/real.rkt" "core/bitvector.rkt" 
+  "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" 
   "core/equality.rkt" "core/finitize.rkt" "core/reflect.rkt" 
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/procedure.rkt" 
   "struct/struct.rkt" "struct/generics.rkt" "struct/enum.rkt"
@@ -22,6 +22,10 @@
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs
      @integer->real @real->integer @int? 
+     ; core/numerics.rkt
+     @number? @positive? @negative? @zero? @even? @odd?
+     @add1 @sub1 @sgn @truncate @floor @ceiling @min @max
+     @exact->inexact @inexact->exact @expt 
      ; core/bitvector.rkt
      bv bv? bitvector bitvector-size bitvector? 
      @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
