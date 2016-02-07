@@ -106,19 +106,21 @@
    ord                ; integer?  
    [props #:mutable]) ; hash?
   #:methods gen:typed 
-  [(define (get-type v) (term-type v))]
-  #|#:methods gen:equal+hash
-  [(define (equal-proc u v rec) (eq? (term-val u) (term-val v)))
-   (define (hash-proc u rec)  (eq-hash-code (term-val u)))
-   (define (hash2-proc u rec) (eq-hash-code (term-val u)))]|#
+  [(define (get-type v) (term-type v))])
+
+(struct constant term ()
   #:methods gen:custom-write
   [(define (write-proc self port mode) 
-     (if (expression? self)
-         (fprintf port "~.a" (term->datum self))
-         (write (const-e self) port)))])
+     (write (const-e self) port))])
 
-(struct constant term ())
-(struct expression term ())
+(struct expression term ()
+  #:methods gen:custom-write
+  [(define (write-proc self port mode) 
+     (case mode
+       [(#t #f) 
+        (let ([val (term-val self)])
+          (fprintf port "(~a:~a:~a)" (op-name (car val)) (length (cdr val)) (get-type self)))]
+       [else (fprintf port "~.a" (term->datum self))]))])
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
