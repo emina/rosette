@@ -116,11 +116,11 @@
 (struct expression term ()
   #:methods gen:custom-write
   [(define (write-proc self port mode) 
-     (case mode
-       [(#t #f) 
-        (let ([val (term-val self)])
-          (fprintf port "(~a:~a:~a)" (op-name (car val)) (length (cdr val)) (get-type self)))]
-       [else (fprintf port "~.a" (term->datum self))]))])
+     (let ([val (term-val self)])
+       (case mode
+         [(#t #f) 
+          (fprintf port "(~a:~a:~a)" (op-name (car val)) (length (cdr val)) (get-type self))]
+         [else (print val port 1)])))])
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
