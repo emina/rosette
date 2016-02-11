@@ -3,9 +3,10 @@ sudo: false
 
 env:
   global:
-    - RACKET_DIR=~/racket
     - Z3_DIR=~/z3
-    - RACKET_URL="http://www.eecs.northwestern.edu/racket/6.2.1/racket-6.2.1-x86_64-linux-ubuntu-precise.sh"
+    - Z3_REV="z3-4.4.1"
+    - RACKET_DIR=~/racket
+    - RACKET_URL="https://www.cs.utah.edu/plt/installers/6.2.1/racket-6.2.1-x86_64-linux-ubuntu-precise.sh"
 
 install:
   - if [[ ! -e "$RACKET_DIR/bin/racket" ]]; then
@@ -17,6 +18,7 @@ install:
       rm -rf $Z3_DIR;
       git clone https://github.com/z3prover/z3.git $Z3_DIR;
       cd $Z3_DIR;
+      git checkout $Z3_REV;
       python scripts/mk_make.py;
       cd $Z3_DIR/build;
       make -j2;
