@@ -21,7 +21,20 @@
   #:methods
   [(define (type-eq? self u v) (pair=? @eq? u v))
    (define (type-equal? self u v) (pair=? @equal? u v))
-   (define (cast self v) (adt-cast v #:type pair? #:lifted @pair?))
+   (define (cast self v)  
+     ; We have to special-case the cast for pairs, because all lists 
+     ; except for the empty list are also pairs.  Therefore, the generic 
+     ; adt-cast that relies on subtypes can't be used for pairs (since 
+     ; list? is not a subtype of pair?).
+     (match v
+       [(? pair?) (values #t v)]
+       [(union (list (cons _ (? pair?)) ...) _) (values #t v)]
+       [(union gvs (or (== @any/c) (== @list?))) 
+        (match (for/list ([gv gvs] #:when (pair? (cdr gv))) gv)
+          [(list) (values #f v)]
+          [(list (cons g u)) (values g u)]
+          [gps (values (apply || (map car gps)) (apply union gps))])]
+       [_ (values #f v)]))
    (define (type-compress self force? ps)
      (match ps
        [(list _ ) ps]
