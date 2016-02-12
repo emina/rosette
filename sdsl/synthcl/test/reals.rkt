@@ -3,7 +3,8 @@
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit "../model/reals.rkt")
 
 (define-symbolic a b c boolean?)
-(define-symbolic x y z number?)
+(define-symbolic x integer?)
+(define-symbolic y real?)
 (define x4 (int4 1 2 3 4))
    
 (define scalar-tests
@@ -40,12 +41,12 @@
    (check-equal? ((int) a) (if a 1 0))
    (check-equal? ((int) x) x)
    (check-equal? (real-type-of ((int) x)) int)
-   (check-equal? ((int) (if a x y)) (if a x y))
-   (check-equal? ((int) (if a a y)) (if a 1 y))
+   (check-equal? ((int) (if a x y)) (real->integer (if a x y)))
+   (check-equal? ((int) (if a a y)) (real->integer (if a 1 y)))
    (check-equal? ((int) (if a a 3.5)) (if a 1 3))
    
    (check-equal? (float 5.5) 5.5)
-   (check-equal? (float x) x)
+   (check-equal? (float y) y)
    (check-exn exn:fail? (thunk (float #f)))
    (check-exn exn:fail? (thunk (float a)))
    (check-exn exn:fail? (thunk (float 3)))
@@ -55,8 +56,8 @@
    (check-equal? ((float) 5) 5.0)
    (check-equal? ((float) 10.98437587245) 10.98437587245)
    (check-equal? ((float) a) (if a 1.0 0.0))
-   (check-equal? ((float) x) x)
-   (check-equal? ((float) (if a x y)) (if a x y))
+   (check-equal? ((float) x) (integer->real x))
+   (check-equal? ((float) (if a x y)) (if a (integer->real x) y))
    (check-equal? ((float) (if a a y)) (if a 1.0 y))
    (check-equal? ((float) (if a a 3.5)) (if a 1.0 3.5))))
 
@@ -65,7 +66,7 @@
    "Tests for vector types"
 
    (check-equal? ((int2) a) (int2 (if a -1 0) (if a -1 0)))
-   (check-equal? ((int2) (float x)) (int2 x x))
+   (check-equal? ((int2) y) (int2 y y))
    (check-equal? ((int2) 3) (int2 3 3))
    (check-equal? ((int2) 3.5) (int2 3 3))
    (check-equal? ((int3) #t) (int3 -1 -1 -1))
