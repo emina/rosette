@@ -46,6 +46,8 @@
                 (cons (eval-rec x sol cache) (eval-rec y sol cache))]
                [(? vector?)              
                 (for/vector #:length (vector-length expr) ([e expr]) (eval-rec e sol cache))]
+               [(? box?)
+                ((if (immutable? expr) box-immutable box) (eval-rec (unbox expr) sol cache))] 
                [(union vs)                 
                 (let loop ([vs vs] [out '()])
                   (if (null? vs) 
