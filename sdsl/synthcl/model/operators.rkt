@@ -1,6 +1,7 @@
 #lang s-exp rosette
 
-(require "type.rkt" "reals.rkt" (only-in rosette [/ rosette//]))
+(require "type.rkt" "reals.rkt"  
+         (only-in rosette [/ @/] [bitvector->integer bv->int] [sqrt @sqrt]))
 
 ; This module provides the implementation for a subset of 
 ; arithmetic operators for each OpenCL scalar type.  These
@@ -13,12 +14,10 @@
          ; Scalar ternary selection operator (Ch. 6.3.i)
          (rename-out [if ?:])
          ; Real and integer operators (Ch. 6.3.a)
-         + - * / % sqrt abs
+         + - * / % sqrt abs 
          (rename-out [expt pow])
          ; Bitwise integer operators (Ch. 6.3.a and 6.3.f).   
-         (rename-out [bitwise-and &] [bitwise-ior $]
-                     [bitwise-xor ^] [bitwise-not ~]
-                     [>> >>] [<< <<])
+         & $ ^ ~ << >>
          ; Comparison operators (Ch 6.3.d).
          (rename-out [= ==]) != < <= > >=
          ; Logic operators (Ch 6.3.g).
@@ -57,9 +56,45 @@
                -1 
                0))))
 
+; Bitwise integer operators (Ch. 6.3.a and 6.3.f).   
+(define (int->bv v) (integer->bitvector v (bitvector (current-bitwidth))))
+
+(define (& . vs) ; Bitwise and
+  (bv->int (apply bvand (map int->bv vs))))
+
+(define ($ . vs) ; Bitwise or
+  (bv->int (apply bvor (map int->bv vs))))
+
+(define (^ . vs) ; Bitwise xor
+  (bv->int (apply bvxor (map int->bv vs))))
+
+(define (~ v) ; Bitwise not
+  (bv->int (bvnot (int->bv v))))
+
+(define (<< x y) ; Left shift
+  (bv->int (bvshl (int->bv x) (int->bv y))))
+
+(define (>> x y) ; Arithmetic right shirt
+  (bv->int (bvashr (int->bv x) (int->bv y))))
+
 ;; Arithmetic operators (Ch. 6.3.a): division by zero does not throw an exception.
-(define (/ x y) (if (= y 0) 0 (if (equal? (real-type-of x) int) (quotient x y) (rosette// x y))))
+(define (/ x y) (if (= y 0) 0 (if (equal? (real-type-of x) int) (quotient x y) (@/ x y))))
 (define (% x y) (if (= y 0) 0 (remainder x y)))
+
+(define (sqrt x) ; Bitvector approximation of square root.
+  (match x
+    [(or (? fixnum?) (? flonum?)) (@sqrt (max 0 x))]
+    [(expression (== *) y y) (abs y)]
+    [_ (define n (arithmetic-shift (current-bitwidth) -1))
+       (define y (int->bv (real->integer (coerce x real? 'sqrt))))
+       (let loop ([res (int->bv 0)] [delta (arithmetic-shift 1 (sub1 n))] [i n])
+         (if (<= i 0) 
+             (bv->int res)
+             (let ([tmp (bvor res (int->bv delta))])
+               (loop (if (bvsge y (bvmul tmp tmp)) tmp res) 
+                     (arithmetic-shift delta -1) 
+                     (sub1 i)))))]))
+  
 
 ;; Additional relational operators (Ch 6.3.d).
 (define (!= x y) (! (= x y)))

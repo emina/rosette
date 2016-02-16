@@ -4,7 +4,7 @@
 
 (test-groups [test fast]
  ;"memory.rkt"
- ;"operators.rkt"
+ "operators.rkt"
  "reals.rkt"
  ;"typecheck.rkt"
  "work.rkt"
