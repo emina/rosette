@@ -69,14 +69,13 @@
        [_ (error 'decode-binding "expected 'true or 'false binding for ~a, given ~a" const val)])]
     [(== @integer?) 
      (match val
-       [(? exact-integer?) val]
+       [(? integer?) val]
        [(list '- v) (- v)])]
     [(== @real?) 
      (match val 
-       [(? exact-integer?) (exact->inexact val)]
        [(? real?) val]
        [(list '- (list '/ a b)) (- (/ (to-exact-int a) (to-exact-int b)))]
-       [(list '- v) (- (exact->inexact v))]
+       [(list '- v) (- v)]
        [(list '/ a b) (/ (to-exact-int a) (to-exact-int b))]
        [(list '/ (list '- a) b) (/ (- (to-exact-int b)) (to-exact-int b))])]
     [(? bitvector? t)

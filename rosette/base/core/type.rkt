@@ -49,25 +49,21 @@
 ; A given Racket type cannot be lifted more than once.  That is, multiple attempts to 
 ; call define-lifted-type with the same base type as argument will result in an error.
 ; Only these Racket types are expected to be lifted:
-; boolean?, exact-integer?, real?, list?, pair?, procedure?, vector?, and box?.
+; boolean?, integer?, real?, list?, pair?, procedure?, vector?, and box?.
 (define-syntax (define-lifted-type stx)
   (syntax-case stx ()
-    [(_ id #:base base #:is-a? is-a? #:methods defs) 
-     #`(define-lifted-type id #:name 'base #:base base #:is-a? is-a? #:methods defs)]
-    [(_ id #:name name #:base base #:is-a? is-a? #:methods defs)       
+    [(_ id #:base base #:is-a? is-a? #:methods defs)       
        #`(begin
            (unless (hash-has-key? types base)
              (error 'lift "Cannot lift ~a.\nExpected one of ~a." base (hash-keys types)))
            (unless (eq? @any/c (hash-ref types base))
              (error 'lift "Type already lifted: ~a." base))
-           (define id (make-lifted-type #:name name #:base base #:is-a? is-a? #:methods defs))       
+           (define id (make-lifted-type #:base base #:is-a? is-a? #:methods defs))       
            (hash-set! types base id))]))
 
 (define-syntax (make-lifted-type stx)
   (syntax-case stx (define)
-    [(_ #:base base #:is-a? is-a? #:methods defs)
-     #`(make-lifted-type #:name 'base #:base base #:is-a? is-a? #:methods defs)]
-    [(_ #:name name #:base base #:is-a? is-a? #:methods defs)       
+    [(_ #:base base #:is-a? is-a? #:methods defs)       
      (let* ([methods (for/hash ([expr (syntax->list #'defs)])
                       (with-syntax ([(define (method arg ...) body ...) expr])
                         (values (syntax->datum #'method) #'(lambda (arg ...) body ...))))]
@@ -79,12 +75,12 @@
            (struct lifted (pred)
              #:property prop:procedure [struct-field-index pred]
              #:methods gen:custom-write
-             [(define (write-proc self port mode) (fprintf port "~a" name))]
+             [(define (write-proc self port mode) (fprintf port "~a" 'base))]
              #:methods gen:type
              [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 
                                                          #'(lambda (self other) (if (equal? self other) self @any/c))))
               (define cast                   #,(required 'cast))  
-              (define type-name              #,(hash-ref methods 'type-name #'(lambda (self) name)))
+              (define type-name              #,(hash-ref methods 'type-name #'(lambda (self) 'base)))
               (define type-applicable?       #,(hash-ref methods 'type-applicable? #'(lambda (self) #f)))             
               (define type-eq?               #,(hash-ref methods 'type-eq? #'(lambda (self u v) (eq? u v))))                  
               (define type-equal?            #,(hash-ref methods 'type-equal? #'(lambda (self u v) (equal? u v))))               
@@ -110,6 +106,27 @@
 ; Returns the lifted Rosette type corresponding to the given liftable Racket built-in predicate.
 (define (lifted-type pred) (hash-ref types pred))
 
+; This is a hacked type-of implementation to allow testing Int and Real theories 
+; before they are properly integrated.  The current-bitwidth parameter controls 
+; whether we are using the old int/real semantics (default) or not.
+(define-syntax-rule (typechecker #:base id ...)
+  (begin
+    (hash-set! types id @any/c) ...
+    (case-lambda
+      [(v) (cond [(typed? v) (get-type v)]
+                 [(id v) (hash-ref types id)] ...
+                 [else @any/c])]
+      [(v u) (least-common-supertype (type-of v) (type-of u))]
+      [vs    (for/fold ([t (type-of (car vs))]) ([v (cdr vs)] #:break (eq? t @any/c))
+               (least-common-supertype t (type-of v)))])))
+
+; The type-of procedure a type t that accepts the given values, and there is no t' 
+; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
+(define type-of 
+  (typechecker 
+   #:base boolean? integer? real? list? pair? procedure? vector? box?))
+
+#|
 ; This macro constructs the type-of procedure.  To allow additional lifted types, 
 ; add their Racket predicates to the #:base list of the type-of definition.  Note 
 ; that the order of the #:base types is important---if p is a subtype? of q, then 
@@ -129,4 +146,9 @@
 ; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
 (define type-of 
   (typechecker 
-   #:base boolean? exact-integer? real? list? pair? procedure? vector? box?))
+   #:base boolean? number? list? pair? procedure? vector? box?
+          ; integer? and real? will replace number?.
+          ; they are currently in the last position to ensure that they are 
+          ; not used until the replacement has been tested.
+          integer? real? 
+          ))|#

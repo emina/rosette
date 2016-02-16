@@ -12,7 +12,7 @@
 
 (define (int? v)
   (match v
-    [(? exact-integer?) #t]
+    [(? integer?) #t]
     [(term _ (== @integer?)) #t]
     [(term _ (== @real?)) (expression @int? v)]
     [(union xs (or (== @real?) (== @any/c)))
@@ -49,8 +49,7 @@
    (define (type-compress self force? ps) (generic-merge* ps))])
   
 (define-lifted-type @integer?
-  #:name 'integer?
-  #:base exact-integer?
+  #:base integer?
   #:is-a? int?
   #:methods 
   [(define (least-common-supertype self t)
@@ -59,7 +58,7 @@
    (define (type-equal? self u v) ($= u v))
    (define (cast self v)
      (match v
-       [(? exact-integer?) (values #t v)]
+       [(? integer?) (values #t v)]
        [(term _ (== self)) (values #t v)]
        [(term _ (== @real?)) 
         (let ([g (int? v)])
@@ -84,7 +83,7 @@
 (define (guarded-numbers xs)
   (for/fold ([i #f][r #f]) ([gx xs])
     (match (cdr gx)
-      [(or (? exact-integer?) (term _ (== @integer?))) (values gx r)]
+      [(or (? integer?) (term _ (== @integer?))) (values gx r)]
       [(or (? real?) (term _ (== @real?))) (values i gx)]
       [_ (values i r)])))
 
@@ -257,7 +256,7 @@
 (define-syntax-rule (define-remainder $op op @op)
   (define ($op x y)
     (match* (x y)
-      [((? exact-integer?) (? exact-integer?)) (op x y)]
+      [((? integer?) (? integer?)) (op x y)]
       [(_ 1) 0]
       [(_ -1) 0]
       [(0 _) 0]
@@ -323,12 +322,12 @@
 
 (define (integer->real i)
   (match i
-    [(? exact-integer?) (exact->inexact i)]  
+    [(? integer?) i]  
     [(? term?) (expression @integer->real i)]))
 
 (define (real->integer r)
   (match r
-    [(? real?) (inexact->exact (floor r))]
+    [(? real?) (floor r)]
     [(expression (== @integer->real) x) x]
     [(expression (== ite) a 
                  (expression (== @integer->real) x) 

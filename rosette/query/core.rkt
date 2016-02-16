@@ -4,7 +4,7 @@
          (only-in "../base/core/term.rkt" constant? get-type term-cache term<?)
          (only-in "../base/core/equality.rkt" @equal?)
          (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
-         (only-in "../base/core/real.rkt" @integer? @real? @integer->real)
+         (only-in "../base/core/real.rkt" @integer? @real?)
          (only-in "../base/core/bitvector.rkt" bv bitvector?)
          (only-in "../base/struct/enum.rkt" enum? enum-first)
          (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
@@ -53,8 +53,7 @@
     [(model m)
      (sat (for/hash ([(k fk) fmap] #:when (dict-has-key? m fk))
             (match* ((get-type k) (dict-ref m fk))
-              [((== @integer?) (bv v _)) (values k v)]
-              [((== @real?) (bv v _)) (values k (@integer->real v))]
+              [((or (== @integer?) (== @real?)) (bv v _)) (values k v)]
               [(_ v) (values k v)])))]
     [(core #f) sol] ; no core extracted
     [(core φs)
