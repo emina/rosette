@@ -105,6 +105,7 @@
 ; ∃H . ∀I . assumes => asserts.
 (define (∃∀-solve inputs assumes asserts #:solver [solver% z3%] #:bitwidth [bw (current-bitwidth)])
   (parameterize ([current-custodian (make-custodian)]
+                 [current-subprocess-custodian-mode 'kill]
                  [term-cache (hash-copy (term-cache))])
     (with-handlers ([exn? (lambda (e) (custodian-shutdown-all (current-custodian)) (raise e))])
       (begin0 
