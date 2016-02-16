@@ -3,7 +3,7 @@
 (require rosette/lib/util/roseunit)
 
 (test-groups [test fast]
- ;"memory.rkt"
+ "memory.rkt"
  "operators.rkt"
  "reals.rkt"
  ;"typecheck.rkt"
