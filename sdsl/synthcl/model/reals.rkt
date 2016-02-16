@@ -129,8 +129,8 @@
   #:primitive fixnum?
   #:convert ([(? boolean? v) (if v 1 0)]
              [(? fixnum? v) v]
-             [(? flonum? v) (inexact->exact (truncate v))]
-             [v (real->integer v)]))
+             [(? flonum? v) (exact-truncate v)]
+             [v (coerce v integer? 'int)]))
 
 (define-scalar-type float
   #:base real?
@@ -138,7 +138,7 @@
   #:convert ([(? boolean? v) (if v 1.0 0.0)]
              [(? fixnum? v) (exact->inexact v)]
              [(? flonum? v) v]
-             [v (if (integer? v) (integer->real v) v)]))
+             [v (coerce v real? 'float)]))
 
 (define void 
   (let ()

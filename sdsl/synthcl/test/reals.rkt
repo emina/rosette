@@ -41,8 +41,8 @@
    (check-equal? ((int) a) (if a 1 0))
    (check-equal? ((int) x) x)
    (check-equal? (real-type-of ((int) x)) int)
-   (check-equal? ((int) (if a x y)) (real->integer (if a x y)))
-   (check-equal? ((int) (if a a y)) (real->integer (if a 1 y)))
+   (check-equal? ((int) (if a x y)) (if a x (real->integer y)))
+   (check-equal? ((int) (if a a y)) (if a 1 (real->integer y)))
    (check-equal? ((int) (if a a 3.5)) (if a 1 3))
    
    (check-equal? (float 5.5) 5.5)
@@ -66,7 +66,7 @@
    "Tests for vector types"
 
    (check-equal? ((int2) a) (int2 (if a -1 0) (if a -1 0)))
-   (check-equal? ((int2) y) (int2 y y))
+   (check-equal? ((int2) y) (int2 (real->integer y) (real->integer y)))
    (check-equal? ((int2) 3) (int2 3 3))
    (check-equal? ((int2) 3.5) (int2 3 3))
    (check-equal? ((int3) #t) (int3 -1 -1 -1))
