@@ -25,7 +25,7 @@
      ; core/numerics.rkt
      @number? @positive? @negative? @zero? @even? @odd?
      @add1 @sub1 @sgn @truncate @floor @ceiling @min @max
-     @exact->inexact @inexact->exact @expt 
+     @expt
      ; core/bitvector.rkt
      bv bv? bitvector bitvector-size bitvector? 
      @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge

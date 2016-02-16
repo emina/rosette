@@ -65,7 +65,7 @@
   (match v 
     [#t true]
     [#f false]
-    [(? integer?) (inexact->exact v)]
+    [(? exact-integer?) v]
     [(? real?) (if (exact? v) ($/ (numerator v) (denominator v)) v)]
     [(bv lit t) ($bv lit (bitvector-size t))]
     [(? enum-literal?) (ordinal v)]

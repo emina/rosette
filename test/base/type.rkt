@@ -41,7 +41,7 @@
 ; enums
 (define-enum e (list 1 #t #f 4 identity "foo" 'bar))
 
-(define types (map lifted-type (list boolean? integer? real? list? pair? procedure? vector? box?)))
+(define types (map lifted-type (list boolean? exact-integer? real? list? pair? procedure? vector? box?)))
 
 (define (least-common-supertype-tests)
   (for ([t types])

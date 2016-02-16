@@ -6,7 +6,7 @@
 
 (provide @number? @positive? @negative? @zero? @even? @odd?
          @add1 @sub1 @sgn @truncate @floor @ceiling @min @max
-         @exact->inexact @inexact->exact @expt 
+         @expt 
          ;@sqrt @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor
          ;@<< @>> @>>> @bitwise-bit-set? @bitwise-bit-field
          )
@@ -58,16 +58,6 @@
 (define @min (lift-op (curry extreme @<=)))
 (define @max (lift-op (curry extreme @>=)))
 
-(define (@exact->inexact x)
-  (if (number? x) 
-      (exact->inexact x)
-      (numeric-coerce x 'exact->inexact)))
-
-(define (@inexact->exact x)
-  (if (number? x) 
-      (inexact->exact x)
-      (numeric-coerce x 'inexact->exact)))
-
 (define (@expt z w)
   (match* (z w)
     [((? number?) (? number?)) (expt z w)]
@@ -79,6 +69,18 @@
          (apply @* (make-list w z))
          (@/ 1 (@* (make-list (- w) z))))]
     [(_ _) (expt z w)]))
+
+;(define (@exact->inexact x)
+;  (if (number? x) 
+;      (exact->inexact x)
+;      (numeric-coerce x 'exact->inexact)))
+;
+;(define (@inexact->exact x)
+;  (if (number? x) 
+;      (inexact->exact x)
+;      (numeric-coerce x 'inexact->exact)))
+
+
 
 ;(define (non-negative-literal? x) (and (real? x) (>= x 0)))
 ;

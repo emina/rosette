@@ -36,9 +36,11 @@
 
 (define (lift-solution finitized-solution finitization-map)
   (sat (for/hash ([(k v) finitization-map] #:when (constant? k))
-                  (values k (if (or (equal? @real? (get-type k)) (equal? @integer? (get-type k)))
-                                (@bitvector->integer (finitized-solution v))
-                                (finitized-solution v))))))
+                  (values k (cond [(equal? @integer? (get-type k)) 
+                                   (@bitvector->integer (finitized-solution v))]
+                                  [(equal? @real? (get-type k)) 
+                                   (@integer->real (@bitvector->integer (finitized-solution v)))]
+                                  [else (finitized-solution v)])))))
 
 (define-syntax-rule (finitize/solve bw constraint ...)
   (let* ([terms (with-asserts-only 
@@ -66,11 +68,12 @@
   ;(printf "expected: ~a\nactual: ~a\n" expected actual)
   (check-equal? actual expected))
 
-(define (check-finitization-1 op x y)
-  (for ([i (in-range minval maxval+1)] #:when (< (integer-length (op i)) bw))
-    (define expected (op i))
-    (define sol (finitize/solve bw (@= (op x) y) (@= x i)))
-    (check-equal? (sol y) expected)))
+(define (check-finitization-1 op x y)  
+  (define convert (if (equal? @real? (get-type x)) @integer->real identity))
+  (for ([i (in-range minval maxval+1)] #:when (< (integer-length (inexact->exact (op i))) bw))
+    (define expected (op (convert i)))
+    (define sol (finitize/solve bw (@= (op x) y) (@= x (convert i))))
+    (check-= (sol y) expected 0)))
 
 (define (check-bitvector->* op x y bw start end)
   (for ([v (in-range start (add1 end))])
@@ -98,14 +101,16 @@
     (check-equal? (sol a) expected)))
 
 (define (check-binary-op op x y z [skip-zero? #f])
+  (define cx (if (equal? @real? (get-type x)) @integer->real identity))
+  (define cy (if (equal? @real? (get-type y)) @integer->real identity))
   (for* ([i (in-range minval maxval+1)]
          [j (in-range minval maxval+1)]
          #:unless (and (= j 0) skip-zero?)
          #:when (integer? (op i j))
          #:when (<= minval (op i j) maxval))
-    (define expected (op i j))
-    (define sol (finitize/solve bw (@= (op x y) z) (@= x i) (@= y j)))
-    (check-equal? (sol z) expected)))
+    (define expected (op (cx i) (cy j)))
+    (define sol (finitize/solve bw (@= (op x y) z) (@= x (cx i)) (@= y (cy j))))
+    (check-= (sol z) expected 0)))
 
 (define tests:pure-bitvector-terms
   (test-suite+
