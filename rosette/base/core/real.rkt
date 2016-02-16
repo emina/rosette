@@ -43,7 +43,7 @@
             [((cons g x) #f) (values g (integer->real x))]
             [(#f (cons g x)) (values g x)]
             [((cons gi xi) (cons gr _)) 
-             (values (or (= (length xs) 2) (|| gi gr)) (merge* (cons gi (integer->real xi)) r))]
+             (values (or (= (length xs) 2) (|| gi gr)) (ite* (cons gi (integer->real xi)) r))]
             [(_ _) (values #f v)]))]
        [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge* ps))])

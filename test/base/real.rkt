@@ -299,6 +299,7 @@
   (check-state (@integer->real (@+ xi yi)) (@integer->real (@+ xi yi)) (list))
   (check-state (@integer->real xr) (@integer->real (@real->integer xr)) (list (@int? xr)))
   (check-state (@integer->real (merge a 1 'a)) 1 (list a))
+  (check-state (@integer->real (merge a 1 yr)) (ite a 1 yr) (list))
   (check-state (@integer->real (merge a xr 'a)) 
                (@integer->real (@real->integer xr))
                (list (&& a (@int? xr))))
