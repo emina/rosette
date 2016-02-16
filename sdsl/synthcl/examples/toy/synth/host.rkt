@@ -59,10 +59,8 @@
 
 ; Synthesize the kernel procedure so that it is correct for all small 
 ; arrays of length that is evenly divisible by 4.  In this case, we are 
-; ensuring correctness for all arrays of size 4, 8 and 12.  But increasing 
-; the search space to all arrays of size 4, 6, 12, 16 and 20 yields the 
-; same result (in ~3 seconds vs <1 second for the smaller search space).
+; ensuring correctness for all arrays of size 4, 8, 12, 16 and 20.
 (synth #:forall [(: int offset)
-                 (: int len in (range 4 13 4)) ;(range 4 21 4))
+                 (: int len in (range 4 21 4))
                  (: int[len] src)] 
        #:ensure (check (host src len offset) (spec src len offset) len))
