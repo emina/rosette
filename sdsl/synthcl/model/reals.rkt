@@ -130,7 +130,7 @@
   #:convert ([(? boolean? v) (if v 1 0)]
              [(? fixnum? v) v]
              [(? flonum? v) (exact-truncate v)]
-             [v (coerce v integer? 'int)]))
+             [v (real->integer v)]))
 
 (define-scalar-type float
   #:base real?
