@@ -28,9 +28,6 @@
 (procedure int (foo [int x]) (locally-scoped (- ((int) x) 1)))
 
 (synth #:forall [(: int x)]
-       #:ensure (assert  (== x (tiny0 x))))
-
-(synth #:forall [(: int x)]
        #:ensure (assert (&& (== x (tiny0 x)) 
                             (== (- x 1) (tiny1 x)))))
 

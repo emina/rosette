@@ -59,7 +59,7 @@
   
   (define (generate path)
     (let* ([gen  (dict-ref generators path #f)]
-           [expr (and gen (gen sol (curryr recurse path)))])
+           [expr (and gen (gen (curryr recurse path) sol))])
       (and (syntax? expr) (skip-identity expr))))
   
   (define (recurse stx path)
