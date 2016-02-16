@@ -21,7 +21,7 @@
     (current-bitwidth #f)
     
     (check-unsat (synthesize #:forall '() #:guarantee (@assert #f)))
-    (check-sat (synthesize #:forall '() #:assume (@assert #f) #:guarantee (@assert #f)))
+    (check-unsat (synthesize #:forall '() #:assume (@assert #f) #:guarantee (@assert #f)))
 
     (check-equal?
      (model (check-sat (synthesize #:forall a #:assume (@assert a) #:guarantee (@assert (@&& a b)))))

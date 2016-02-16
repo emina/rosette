@@ -103,6 +103,8 @@
 ; in the assumptions and the assertions, 
 ; this procedure solves the following constraint: 
 ; ∃H . ∀I . assumes => asserts.
+; Note, however, that the procedure will *not* produce models that satisfy the above 
+; formula by making assumes evaluate to false.
 (define (∃∀-solve inputs assumes asserts #:solver [solver% z3%] #:bitwidth [bw (current-bitwidth)])
   (parameterize ([current-custodian (make-custodian)]
                  [current-subprocess-custodian-mode 'kill]
@@ -129,11 +131,11 @@
 ; in the assumptions and the assertions, 
 ; this procedure solves the following constraint: 
 ; ∃H . ∀I . assumes => asserts.
+; Note, however, that the procedure will *not* produce models that satisfy the above 
+; formula by making assumes evaluate to false.
 (define (cegis inputs assumes asserts guesser checker)
   
-  (define φ   (if (null? assumes) 
-                  asserts 
-                  (list (=> (apply && assumes) (apply && asserts)))))
+  (define φ   (append assumes asserts))
   
   (define ¬φ `(,@assumes ,(apply || (map ! asserts))))
    
