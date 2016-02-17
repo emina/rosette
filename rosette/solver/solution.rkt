@@ -3,8 +3,7 @@
 (require "../base/core/term.rkt")
 
 (provide solution? sat? unsat?
-         sat unsat model core
-         solution->list)
+         sat unsat model core)
 
 ; Represents the solution to a set of logical constraints.  The solution 
 ; has single field, result, which stores either a model of the constraints, 
@@ -83,14 +82,6 @@
                          (error 'unsat "expected a non-empty list, given ~s" core))
                        (solution core)]))
 
-(define (solution->list sol)
-  (match (solution-result sol)
-    [(? dict? model)  (sort (dict->list model) var<? #:key car)]
-    [(? list? core)   (let-values ([(origin no-origin) (partition term-origin core)])
-                        (append (sort origin stx<?) no-origin))]
-    [#f (list)]))
-     
-  
 (define (write-solution sol port)
   (match (solution-result sol)
     [(? dict? model)
