@@ -51,6 +51,8 @@
     (flush-output port)))
 
 ; Commands
+(define (set-option opt val) (print-cmd "(set-option ~a ~a)" opt val))
+
 (define (set-logic l) (print-cmd "(set-logic ~a)" l))
 (define (check-sat)   (print-cmd "(check-sat)\n"))
 (define (get-model)   (print-cmd "(get-model)\n"))
