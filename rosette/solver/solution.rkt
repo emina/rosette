@@ -3,7 +3,7 @@
 (require "../base/core/term.rkt")
 
 (provide solution? sat? unsat?
-         sat unsat empty-solution model core
+         sat unsat model core
          unbind solution->list)
 
 ; Represents the solution to a set of logical constraints.  The solution 
@@ -82,9 +82,6 @@
                [(core) (unless (and (list? core) (not (null? core)))
                          (error 'unsat "expected a non-empty list, given ~s" core))
                        (solution core)]))
-
-; Returns a satisfiable solution with an empty model.
-(define (empty-solution) empty-sat)
 
 (define (solution->list sol)
   (match (solution-result sol)
