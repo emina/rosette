@@ -17,3 +17,6 @@
 
 (module+ test
   (time (run-tests fast-tests)))
+
+(module+ fast
+  (time (run-tests fast-tests)))
