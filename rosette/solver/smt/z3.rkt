@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/runtime-path "smt.rkt" "../common/server.rkt")
+(require racket/runtime-path "smt.rkt" "server.rkt")
 
 (provide z3%)
 

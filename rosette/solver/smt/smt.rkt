@@ -1,23 +1,25 @@
 #lang racket
 
 (require "../solver.rkt" "../solution.rkt" 
-         "../common/server.rkt" (only-in "../common/util.rkt" filter-asserts)
-         "../../base/util/log.rkt" "cmd.rkt" (rename-in "env.rkt" [env make-env]))
+         "server.rkt"  "../../base/util/log.rkt" "cmd.rkt" 
+         (only-in "../../base/core/term.rkt" term? term-type)
+         (only-in "../../base/core/bool.rkt" @boolean?)
+         (rename-in "env.rkt" [env make-env]))
 
 (provide smt%)
+
+(define (filter-asserts asserts)
+  (for/list ([a asserts] #:unless (equal? a #t))
+    (unless (or (boolean? a) (and (term? a) (equal? @boolean? (term-type a))))
+      (error 'assert "expected a boolean value, given ~s" a))
+    a))
 
 (define smt%
   (class* object% (solver<%>) (inspect (make-inspector))
     [init path]
     [init opts]
     
-    (define server 
-      (new server% 
-           [initializer (thunk (apply subprocess #f #f #f path opts))]
-           [stderr-handler (lambda (err)
-                             (let ([expr (read err)])
-                               (unless (eof-object? expr)
-                                 (log-error [this] "~a" expr))))]))
+    (define smt-server (server path opts)) 
     
     (define asserts '())
     (define env (make-env))
@@ -28,12 +30,12 @@
       (lambda in (set! asserts (append asserts (filter-asserts in)))))
     
     (define/public (clear)
-      (send server write clear-solver)
+      (server-write smt-server clear-solver)
       (set!-values (asserts env) (values '() (make-env))))
     
     (define/public (shutdown)
       (clear)
-      (send server shutdown))
+      (server-shutdown smt-server))
     
     (define/public (debug)     (error 'debug "not supported by ~a" this))      
     (define/public (solve-all) (error 'solve-all "not supported by ~a" this))
@@ -44,10 +46,10 @@
             [else    
              (parameterize ([current-log-source this])
                (log-time [this] "compilation" : 
-                         (send server write (curry encode env asserts))
+                         (server-write smt-server (curry encode env asserts))
                          (set! asserts '()))
                (log-time [this] "solving"     : 
-                         (send server read (curry decode env))))]))))
+                         (server-read smt-server (curry decode env))))]))))
 
 
 
