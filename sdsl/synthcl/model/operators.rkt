@@ -85,15 +85,18 @@
   (match x
     [(or (? fixnum?) (? flonum?)) (@sqrt (max 0 x))]
     [(expression (== *) y y) (abs y)]
-    [_ (define n (arithmetic-shift (current-bitwidth) -1))
-       (define y (int->bv (real->integer (coerce x real? 'sqrt))))
-       (let loop ([res (int->bv 0)] [delta (arithmetic-shift 1 (sub1 n))] [i n])
-         (if (<= i 0) 
-             (bv->int res)
-             (let ([tmp (bvor res (int->bv delta))])
-               (loop (if (bvsge y (bvmul tmp tmp)) tmp res) 
-                     (arithmetic-shift delta -1) 
-                     (sub1 i)))))]))
+    [(expression (== +) (expression (== *) a a) (expression (== *) b b))
+     (+ (abs a) (abs b))] ; an approximation of euclidean distance
+    [_ 
+     (define n (arithmetic-shift (current-bitwidth) -1))
+     (define y (int->bv (real->integer (coerce x real? 'sqrt))))
+     (let loop ([res (int->bv 0)] [delta (arithmetic-shift 1 (sub1 n))] [i n])
+       (if (<= i 0) 
+           (bv->int res)
+           (let ([tmp (bvor res (int->bv delta))])
+             (loop (if (bvsge y (bvmul tmp tmp)) tmp res) 
+                   (arithmetic-shift delta -1) 
+                   (sub1 i)))))]))
   
 
 ;; Additional relational operators (Ch 6.3.d).
