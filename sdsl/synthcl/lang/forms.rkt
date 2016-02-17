@@ -177,8 +177,8 @@
 (define-synthesis-rule (?? t)
   #:declare [v (type-base t)]
   #:compile v
-  #:generate (lambda (gen)
-               (let ([val (evaluate v)])
+  #:generate (lambda (gen sol)
+               (let ([val (evaluate v sol)])
                  (and (not (term? val)) (gen #`#,val)))))
 
 ; Syntax for creating a local scope for a sequence of statements. 
