@@ -54,12 +54,14 @@
       (set-server-values! s (current-custodian) p out in err))))
    
 ; Calls the given procedure on the server's input port and returns the result.
+; Initializes the server if it is not already initialized?.
 (define (server-write s proc)
   (initialize s)
   (begin0 (proc (server-stdin s))
           (flush-output (server-stdin s))))
 
 ; Calls the given procedure on the server's output port and returns the result.
+; Assumes that the server is initialized?.
 (define (server-read s proc)
   (proc (server-stdout s)))
           
