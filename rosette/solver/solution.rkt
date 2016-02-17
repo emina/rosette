@@ -4,7 +4,7 @@
 
 (provide solution? sat? unsat?
          sat unsat model core
-         unbind solution->list)
+         solution->list)
 
 ; Represents the solution to a set of logical constraints.  The solution 
 ; has single field, result, which stores either a model of the constraints, 
@@ -90,15 +90,7 @@
                         (append (sort origin stx<?) no-origin))]
     [#f (list)]))
      
-
-; Given a satisfiable solution, returns a copy of the given solution but without 
-; any bindings for variables that satisfy the given predicate.
-(define (unbind sol unbind?)
-  (match (solution-result sol)
-    [(? dict? model) (sat (for/hash ([(var val) model] #:unless (unbind? var))
-                            (values var val)))]
-    [_ (error 'unbind "cannot remove variable bindings from an unsat solution: ~s" sol)]))
-   
+  
 (define (write-solution sol port)
   (match (solution-result sol)
     [(? dict? model)
