@@ -1,7 +1,7 @@
 #lang racket
 
-(require rackunit rackunit/text-ui  "common.rkt"
-         rosette/solver/smt/z3  rosette/solver/solution 
+(require rackunit rackunit/text-ui  "common.rkt" "solver.rkt"
+         rosette/solver/solution 
          rosette/lib/util/roseunit 
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real
@@ -10,7 +10,6 @@
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette evaluate))
 
-(define solver (new z3%))
 
 (define-symbolic a b c d e f g @boolean?)
 (define-symbolic xi yi zi @integer?)
@@ -20,11 +19,6 @@
 (define maxval 4)
 (define maxval+1 5)
 
-(define (solve  . asserts)
-  (send/apply solver assert asserts)
-  (begin0
-    (send solver solve)
-    (send solver clear)))
 
 (define-syntax-rule (check-valid? (op e ...) expected)
   (let ([actual (op e ...)])
@@ -598,4 +592,4 @@
 (time (run-tests tests:real->integer))
 (time (run-tests tests:lifted))
 
-(send solver shutdown)
+(shutdown)

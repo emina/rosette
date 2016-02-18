@@ -12,9 +12,7 @@
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/real @= @< @<= @integer?)
-         "exprs.rkt" )
-
-(define solver (new z3%))
+         "exprs.rkt" "solver.rkt")
 
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
@@ -24,12 +22,6 @@
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
 (define maxval (sub1 maxval+1))
 (define (bv v [t BV]) (@bv v t))
-
-(define (solve  . asserts)
-  (send/apply solver assert asserts)
-  (begin0
-    (send solver solve)
-    (send solver clear)))
 
 (define (check-nary op id x y z)
   (check-equal? (op id id) id)
@@ -931,4 +923,4 @@
 (time (run-tests tests:integer->bitvector))
 (time (run-tests tests:lifted-operators))
 
-(send solver shutdown)
+(shutdown)

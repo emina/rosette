@@ -1,6 +1,6 @@
 #lang racket
 
-(require "solver/solver.rkt" "solver/smt/z3.rkt"
+(require "solver/smt/z3.rkt"
          "solver/solution.rkt" 
          "base/base.rkt"
          "query/query.rkt"
@@ -14,8 +14,7 @@
     (racket/map racket/car all)))
 
 (define (rosette)
-  (racket/append (exported 'rosette/solver/solver)
-                 (exported 'rosette/solver/solution)
+  (racket/append (exported 'rosette/solver/solution)
                  (exported 'rosette/base/base)
                  (exported 'rosette/query/query)))
 
@@ -24,11 +23,10 @@
   (current-oracle (oracle))
   (clear-asserts)
   (unsafe-clear-terms!)
-  (current-solver (new z3%)))
+  (current-solver (z3)))
 
 (provide 
- (all-from-out 
-  "solver/solver.rkt" 
+ (all-from-out  
   "solver/solution.rkt" 
   "base/base.rkt"
   "query/query.rkt") 

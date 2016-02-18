@@ -1,7 +1,7 @@
 #lang racket
 
 (require rackunit rackunit/text-ui 
-         rosette/solver/smt/z3  rosette/solver/solution 
+         rosette/solver/solution 
          rosette/lib/util/roseunit 
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real (except-in rosette/base/core/bitvector bv)
@@ -10,9 +10,8 @@
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette/base/core/bitvector [bv @bv])
-         (only-in rosette evaluate))
-
-(define solver (new z3%))
+         (only-in rosette evaluate)
+         "solver.rkt")
 (current-bitwidth #f)
 
 (define bw 4)
@@ -27,12 +26,6 @@
 (define-symbolic xi yi zi @integer?)
 (define-symbolic xr yr zr @real?)
 (define-symbolic xb yb zb BV)
-
-(define (solve  . asserts)
-  (send/apply solver assert asserts)
-  (begin0
-    (send solver solve)
-    (send solver clear)))
 
 (define (lift-solution finitized-solution finitization-map)
   (sat (for/hash ([(k v) finitization-map] #:when (constant? k))
@@ -180,7 +173,7 @@
 (time (run-tests tests:real-comparison-terms))
 (time (run-tests tests:real-binary-terms))
 
-(send solver shutdown)
+(shutdown)
 
 
 

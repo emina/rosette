@@ -9,21 +9,21 @@
          (only-in "../base/struct/enum.rkt" enum? enum-first)
          (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
          (only-in "../base/util/log.rkt" log-info)
-         (only-in "../solver/solver.rkt" solver<%> send/handle-breaks)
+         (only-in "../solver/solver.rkt" solver? assert shutdown clear solve)
          (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
-         (only-in "../solver/smt/z3.rkt" z3%))
+         (only-in "../solver/smt/z3.rkt" z3))
 
 (provide current-solver ∃-solve ∃∀-solve eval/asserts 
          all-true? some-false? unfinitize)
 
 ; Current solver instance that is used for queries and kept alive for performance.
 (define current-solver
-  (make-parameter (new z3%)
-                  (lambda (solver)
-                    (unless (is-a? solver solver<%>)
-                      (error 'current-solver "expected a solver<%>, given ~s" solver))
-                    (send (current-solver) shutdown)
-                    solver)))
+  (make-parameter (z3)
+                  (lambda (s)
+                    (unless (solver? s)
+                      (error 'current-solver "expected a solver?, given ~s" s))
+                    (shutdown (current-solver))
+                    s)))
 
 ; Returns true if evaluating all given formulas against 
 ; the provided solution returns the constant #t.
@@ -68,10 +68,10 @@
 ; precise semantics. Note that this procedure does 
 ; clear the solver's state either before or after use.
 (define (∃-solve φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
-  (send solver clear)
+  (clear solver)
   (begin0  
     (∃-solve+ φs #:solver solver #:bitwidth bw)
-    (send solver clear)))
+    (clear solver)))
 
 ; Searches for a model, if any, for the conjunction 
 ; of the given formulas, using the provided solver and 
@@ -80,22 +80,22 @@
 ; correct under the precise semantics. This procedure does *not* 
 ; clear the solver's state either before or after use.
 (define (∃-solve+ φs #:solver solver #:bitwidth bw)
-  (cond 
-    [bw 
-     (parameterize ([term-cache (hash-copy (term-cache))])
-       (define fmap (finitize φs bw))
-       (send/apply solver assert (for/list ([φ φs]) (hash-ref fmap φ)))
-       (let loop ()
-         (define fsol (send/handle-breaks solver solve)) 
-         (define sol (unfinitize fsol fmap)) 
-         (cond 
-           [(or (unsat? sol) (all-true? φs sol)) sol]
-           [else (send solver assert 
-                       (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v)))))
-                 (loop)])))]
-    [else 
-     (send/apply solver assert φs)
-     (send/handle-breaks solver solve)]))
+  (with-handlers ([exn:break? (lambda (e) (shutdown solver) (raise e))])
+    (cond 
+      [bw 
+       (parameterize ([term-cache (hash-copy (term-cache))])
+         (define fmap (finitize φs bw))
+         (assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
+         (let loop ()
+           (define fsol (solve solver))
+           (define sol (unfinitize fsol fmap)) 
+           (cond 
+             [(or (unsat? sol) (all-true? φs sol)) sol]
+             [else (assert solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+                   (loop)])))]
+      [else 
+       (assert solver φs)
+       (solve solver)])))
 
 ; Solves the exists-forall problem for the provided list of inputs, assumptions and assertions. 
 ; That is, if I is the set of all input symbolic constants, 
@@ -105,7 +105,7 @@
 ; ∃H . ∀I . assumes => asserts.
 ; Note, however, that the procedure will *not* produce models that satisfy the above 
 ; formula by making assumes evaluate to false.
-(define (∃∀-solve inputs assumes asserts #:solver [solver% z3%] #:bitwidth [bw (current-bitwidth)])
+(define (∃∀-solve inputs assumes asserts #:solver [solver z3] #:bitwidth [bw (current-bitwidth)])
   (parameterize ([current-custodian (make-custodian)]
                  [current-subprocess-custodian-mode 'kill]
                  [term-cache (hash-copy (term-cache))])
@@ -117,10 +117,10 @@
            (define fsol (cegis (for/list ([i inputs])  (hash-ref fmap i))
                                (for/list ([φ assumes]) (hash-ref fmap φ))
                                (for/list ([φ asserts]) (hash-ref fmap φ))
-                               (new solver%) (new solver%)))
+                               (solver) (solver)))
            (unfinitize fsol fmap)]
           [else 
-           (cegis inputs assumes asserts (new solver%) (new solver%))])
+           (cegis inputs assumes asserts (solver) (solver))])
         (custodian-shutdown-all (current-custodian))))))
          
 
@@ -143,20 +143,20 @@
   
   (define (guess sol)
     (log-cegis-info [trial] "searching for a candidate: ~s" (map sol inputs))
-    (send/apply guesser assert (evaluate φ sol))
-    (match (send guesser solve)
+    (assert guesser (evaluate φ sol))
+    (match (solve guesser)
       [(model m) (sat (for/hash ([(c v) m] #:unless (member c inputs)) (values c v)))]
       [other other]))
   
   (define (check sol)
     (log-cegis-info [trial] "verifying the candidate solution ...")
-    (send checker clear)
-    (send/apply checker assert (evaluate ¬φ sol))
-    (match (send checker solve)
+    (clear checker)
+    (assert checker (evaluate ¬φ sol))
+    (match (solve checker)
       [(? sat? m) (sat (for/hash ([i inputs]) (values i (value-for (m i)))))]
       [other other]))
     
-  (let loop ([candidate (begin0 (guess (sat)) (send guesser clear))])
+  (let loop ([candidate (begin0 (guess (sat)) (clear guesser))])
     (cond 
       [(unsat? candidate) candidate]
       [else

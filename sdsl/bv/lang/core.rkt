@@ -10,7 +10,8 @@
   (only-in rosette/base/core/bitvector bitvector bitvector-size)
   (only-in rosette/base/util/log log-info)
   (only-in rosette/solver/solution model sat sat? unsat? unsat)
-  (only-in rosette/solver/smt/z3 z3%))
+  (only-in rosette/solver/smt/z3 z3)
+  (only-in rosette/solver/solver assert solve clear))
 
 (provide ∃∀-solve)
 
@@ -26,16 +27,16 @@
   (parameterize ([current-custodian (make-custodian)]
                  [current-subprocess-custodian-mode 'kill])
     (with-handlers ([exn? (lambda (e) (custodian-shutdown-all (current-custodian)) (raise e))])
-      (define guesser (new z3%))
-      (define checker (new z3%))
+      (define guesser (z3))
+      (define checker (z3))
       (define maxbw (bitvector-size (BV)))
       (define (correct? sol)
         (and (sat? sol)
              (parameterize ([term-cache (hash-copy (term-cache))]
                             [BV (bitvector maxbw)])
-               (send checker clear)
-               (send/apply checker assert (φ_verify (evaluate (trace* impl) sol) spec))
-               (unsat? (send checker solve)))))
+               (clear checker)
+               (assert checker (φ_verify (evaluate (trace* impl) sol) spec))
+               (unsat? (solve checker)))))
       (let loop ([bw (min (max 1 minbw) maxbw)])
         (define candidate 
           (parameterize ([term-cache (hash-copy (term-cache))]
@@ -61,26 +62,26 @@
   (define inputs (trace-args t0))  ; symbolic inputs
   
   (define (init)
-    (send guesser clear)
-    (send/apply guesser assert (φ_wfp impl))
-    (send/apply guesser assert (φ_synth t0 spec))
+    (clear guesser)
+    (assert guesser (φ_wfp impl))
+    (assert guesser (φ_synth t0 spec))
     (log-solver-info [trial] "searching for an initial candidate at ~a" (BV))
     (begin0
-      (solution->candidate (send guesser solve))
-      (send guesser clear)
-      (send/apply guesser assert (φ_wfp impl))))
+      (solution->candidate (solve guesser))
+      (clear guesser)
+      (assert guesser (φ_wfp impl))))
     
   (define (guess sol)
     (set! trial (add1 trial))
     (define sample (map sol inputs))
     (log-solver-info [trial] "searching for a candidate: ~s" sample)
-    (send/apply guesser assert (φ_synth (trace* impl sample) spec))
-    (solution->candidate (send guesser solve)))
+    (assert guesser (φ_synth (trace* impl sample) spec))
+    (solution->candidate (solve guesser)))
   
   (define (check sol)
-    (send checker clear)
-    (send/apply checker assert (φ_verify (evaluate t0 sol) spec))
-    (solution->sample (send checker solve) inputs))
+    (clear checker)
+    (assert checker (φ_verify (evaluate t0 sol) spec))
+    (solution->sample (solve checker) inputs))
     
   (let loop ([candidate (init)])
     (cond 
@@ -92,13 +93,13 @@
             [else (loop (guess cex))]))])))
      
 (define (φ_synth trace spec) ;(printf "φ_synth: ~a\n" trace)
-  (printr (append (φ_wft trace) (φ_spec trace spec))))
+  (append (φ_wft trace) (φ_spec trace spec)))
 
 (define (φ_verify trace spec) ;(printf "φ_verify: ~a\n" trace)
-  (printr `(,@(φ_wft trace) ,(apply || (map ! (φ_spec trace spec))))))
+  `(,@(φ_wft trace) ,(apply || (map ! (φ_spec trace spec)))))
 
-(define (φ_wfp impl)  ;(printf "φ_wfp: ~a\n" impl)
-  (printr (with-asserts-only (well-formed-program impl))))
+(define (φ_wfp impl) ;(printf "φ_wfp: ~a\n" impl)
+  (with-asserts-only (well-formed-program impl)))
 
 (define (φ_wft trace) 
   (with-asserts-only (well-formed-trace trace)))
@@ -122,13 +123,7 @@
  
 (define-syntax-rule (log-solver-info [trial] msg rest ...) 
   (log-info "[~a] ~a" trial (format msg rest ...)))   
-  ;(printf "[~a] ~a\n" trial (format msg rest ...)))
 
-
-(require (only-in rosette log-handler current-log-handler term->datum))
-(define (printr expr)
-  ;(for ([e expr]) (printf "~a\n" (term->datum e)))
-  expr)
 
 #|
 (require "program.rkt")
