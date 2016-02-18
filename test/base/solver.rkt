@@ -1,16 +1,14 @@
 #lang racket
 
-(require rosette/solver/smt/z3
-         (prefix-in $ (only-in rosette/solver/solver assert solve clear shutdown)))
+(require rosette/solver/smt/z3 rosette/solver/solver)
 
-(provide solver solve shutdown)
+(provide solver solve solver-shutdown)
 
 (define solver (make-parameter (z3)))
 
 (define (solve  . asserts)
-  ($assert (solver) asserts)
+  (solver-add (solver) asserts)
   (begin0
-    ($solve (solver))
-    ($clear (solver))))
+    (solver-check (solver))
+    (solver-clear (solver))))
 
-(define (shutdown) ($shutdown (solver)))

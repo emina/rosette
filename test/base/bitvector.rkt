@@ -923,4 +923,4 @@
 (time (run-tests tests:integer->bitvector))
 (time (run-tests tests:lifted-operators))
 
-(shutdown)
+(solver-shutdown (solver))

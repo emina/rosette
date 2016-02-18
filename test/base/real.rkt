@@ -592,4 +592,4 @@
 (time (run-tests tests:real->integer))
 (time (run-tests tests:lifted))
 
-(shutdown)
+(solver-shutdown (solver))

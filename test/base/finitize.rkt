@@ -173,7 +173,7 @@
 (time (run-tests tests:real-comparison-terms))
 (time (run-tests tests:real-binary-terms))
 
-(shutdown)
+(solver-shutdown (solver))
 
 
 

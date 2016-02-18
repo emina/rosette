@@ -17,7 +17,7 @@
 (struct z3 (server [asserts #:mutable] [env #:mutable])
   #:methods gen:solver
   [
-   (define (assert self bools)
+   (define (solver-add self bools)
      (set-z3-asserts! self 
       (append (z3-asserts self)
               (for/list ([b bools] #:unless (equal? b #t))
@@ -25,16 +25,16 @@
                   (error 'assert "expected a boolean value, given ~s" b))
                 b))))
    
-   (define (clear self) 
+   (define (solver-clear self) 
      (set-z3-asserts! self '())
      (set-z3-env! self (env))
      (server-write (z3-server self) clear-solver))
    
-   (define (shutdown self)
-     (clear self)
+   (define (solver-shutdown self)
+     (solver-clear self)
      (server-shutdown (z3-server self)))
    
-   (define (solve self)
+   (define (solver-check self)
      (match-define (z3 server (app remove-duplicates asserts) env) self)
      (if (ormap false? asserts) 
          (unsat)
@@ -45,6 +45,6 @@
                (log-time [self] "solving" : 
                   (server-read  server (curry decode env))))))
    
-   (define (debug self) #f)
+   (define (solver-localize self) #f)
    ])
 

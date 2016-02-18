@@ -9,7 +9,7 @@
          (only-in "../base/struct/enum.rkt" enum? enum-first)
          (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
          (only-in "../base/util/log.rkt" log-info)
-         (only-in "../solver/solver.rkt" solver? assert shutdown clear solve)
+         (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-add solver-check)
          (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
          (only-in "../solver/smt/z3.rkt" z3))
 
@@ -22,7 +22,7 @@
                   (lambda (s)
                     (unless (solver? s)
                       (error 'current-solver "expected a solver?, given ~s" s))
-                    (shutdown (current-solver))
+                    (solver-shutdown (current-solver))
                     s)))
 
 ; Returns true if evaluating all given formulas against 
@@ -68,10 +68,10 @@
 ; precise semantics. Note that this procedure does 
 ; clear the solver's state either before or after use.
 (define (∃-solve φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
-  (clear solver)
+  (solver-clear solver)
   (begin0  
     (∃-solve+ φs #:solver solver #:bitwidth bw)
-    (clear solver)))
+    (solver-clear solver)))
 
 ; Searches for a model, if any, for the conjunction 
 ; of the given formulas, using the provided solver and 
@@ -80,22 +80,22 @@
 ; correct under the precise semantics. This procedure does *not* 
 ; clear the solver's state either before or after use.
 (define (∃-solve+ φs #:solver solver #:bitwidth bw)
-  (with-handlers ([exn:break? (lambda (e) (shutdown solver) (raise e))])
+  (with-handlers ([exn:break? (lambda (e) (solver-shutdown solver) (raise e))])
     (cond 
       [bw 
        (parameterize ([term-cache (hash-copy (term-cache))])
          (define fmap (finitize φs bw))
-         (assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
+         (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
          (let loop ()
-           (define fsol (solve solver))
+           (define fsol (solver-check solver))
            (define sol (unfinitize fsol fmap)) 
            (cond 
              [(or (unsat? sol) (all-true? φs sol)) sol]
-             [else (assert solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+             [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
                    (loop)])))]
       [else 
-       (assert solver φs)
-       (solve solver)])))
+       (solver-add solver φs)
+       (solver-check solver)])))
 
 ; Solves the exists-forall problem for the provided list of inputs, assumptions and assertions. 
 ; That is, if I is the set of all input symbolic constants, 
@@ -143,20 +143,20 @@
   
   (define (guess sol)
     (log-cegis-info [trial] "searching for a candidate: ~s" (map sol inputs))
-    (assert guesser (evaluate φ sol))
-    (match (solve guesser)
+    (solver-add guesser (evaluate φ sol))
+    (match (solver-check guesser)
       [(model m) (sat (for/hash ([(c v) m] #:unless (member c inputs)) (values c v)))]
       [other other]))
   
   (define (check sol)
     (log-cegis-info [trial] "verifying the candidate solution ...")
-    (clear checker)
-    (assert checker (evaluate ¬φ sol))
-    (match (solve checker)
+    (solver-clear checker)
+    (solver-add checker (evaluate ¬φ sol))
+    (match (solver-check checker)
       [(? sat? m) (sat (for/hash ([i inputs]) (values i (value-for (m i)))))]
       [other other]))
     
-  (let loop ([candidate (begin0 (guess (sat)) (clear guesser))])
+  (let loop ([candidate (begin0 (guess (sat)) (solver-clear guesser))])
     (cond 
       [(unsat? candidate) candidate]
       [else

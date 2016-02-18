@@ -11,7 +11,7 @@
   (only-in rosette/base/util/log log-info)
   (only-in rosette/solver/solution model sat sat? unsat? unsat)
   (only-in rosette/solver/smt/z3 z3)
-  (only-in rosette/solver/solver assert solve clear))
+  (only-in rosette/solver/solver solver-add solver-check solver-clear))
 
 (provide ∃∀-solve)
 
@@ -34,9 +34,9 @@
         (and (sat? sol)
              (parameterize ([term-cache (hash-copy (term-cache))]
                             [BV (bitvector maxbw)])
-               (clear checker)
-               (assert checker (φ_verify (evaluate (trace* impl) sol) spec))
-               (unsat? (solve checker)))))
+               (solver-clear checker)
+               (solver-add checker (φ_verify (evaluate (trace* impl) sol) spec))
+               (unsat? (solver-check checker)))))
       (let loop ([bw (min (max 1 minbw) maxbw)])
         (define candidate 
           (parameterize ([term-cache (hash-copy (term-cache))]
@@ -62,26 +62,26 @@
   (define inputs (trace-args t0))  ; symbolic inputs
   
   (define (init)
-    (clear guesser)
-    (assert guesser (φ_wfp impl))
-    (assert guesser (φ_synth t0 spec))
+    (solver-clear guesser)
+    (solver-add guesser (φ_wfp impl))
+    (solver-add guesser (φ_synth t0 spec))
     (log-solver-info [trial] "searching for an initial candidate at ~a" (BV))
     (begin0
-      (solution->candidate (solve guesser))
-      (clear guesser)
-      (assert guesser (φ_wfp impl))))
+      (solution->candidate (solver-check guesser))
+      (solver-clear guesser)
+      (solver-add guesser (φ_wfp impl))))
     
   (define (guess sol)
     (set! trial (add1 trial))
     (define sample (map sol inputs))
     (log-solver-info [trial] "searching for a candidate: ~s" sample)
-    (assert guesser (φ_synth (trace* impl sample) spec))
-    (solution->candidate (solve guesser)))
+    (solver-add guesser (φ_synth (trace* impl sample) spec))
+    (solution->candidate (solver-check guesser)))
   
   (define (check sol)
-    (clear checker)
-    (assert checker (φ_verify (evaluate t0 sol) spec))
-    (solution->sample (solve checker) inputs))
+    (solver-clear checker)
+    (solver-add checker (φ_verify (evaluate t0 sol) spec))
+    (solution->sample (solver-check checker) inputs))
     
   (let loop ([candidate (init)])
     (cond 
