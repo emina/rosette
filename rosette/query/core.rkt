@@ -1,19 +1,20 @@
 #lang racket
 
-(require "eval.rkt" 
-         (only-in "../base/core/term.rkt" constant? get-type term-cache term<?)
-         (only-in "../base/core/equality.rkt" @equal?)
-         (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
-         (only-in "../base/core/real.rkt" @integer? @real?)
-         (only-in "../base/core/bitvector.rkt" bv bitvector?)
-         (only-in "../base/struct/enum.rkt" enum? enum-first)
-         (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
-         (only-in "../base/util/log.rkt" log-info)
-         (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-add solver-check)
-         (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
-         (only-in "../solver/smt/z3.rkt" z3))
+(require 
+  "eval.rkt" 
+  (only-in "../base/core/term.rkt" constant? get-type term-cache term<?)
+  (only-in "../base/core/equality.rkt" @equal?)
+  (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
+  (only-in "../base/core/real.rkt" @integer? @real?)
+  (only-in "../base/core/bitvector.rkt" bv bitvector?)
+  (only-in "../base/struct/enum.rkt" enum? enum-first)
+  (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
+  (only-in "../base/util/log.rkt" log-info)
+  (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-add solver-check solver-localize)
+  (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
+  (only-in "../solver/smt/z3.rkt" z3))
 
-(provide current-solver ∃-solve ∃∀-solve eval/asserts 
+(provide current-solver ∃-solve ∃∀-solve ∃-debug eval/asserts 
          all-true? some-false? unfinitize)
 
 ; Current solver instance that is used for queries and kept alive for performance.
@@ -57,7 +58,7 @@
               [(_ v) (values k v)])))]
     [(core #f) sol] ; no core extracted
     [(core φs)
-     (unsat (for/list ([(k v) fmap] #:when (member φs v)) k))]))
+     (unsat (for/list ([(k v) fmap] #:when (member v φs)) k))]))
 
 ; Searches for a model, if any, for the conjunction 
 ; of the given formulas, using the provided solver and 
@@ -65,38 +66,50 @@
 ; current-solver and current-bitwidth.  Returns an unsat 
 ; solution if the given formulas don't have a model with 
 ; the specified bitwidth that is also correct under the 
-; precise semantics. Note that this procedure does 
-; clear the solver's state either before or after use.
+; precise semantics. This procedure clears the solver's state 
+; before and after use.
 (define (∃-solve φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
   (solver-clear solver)
   (begin0  
-    (∃-solve+ φs #:solver solver #:bitwidth bw)
+    (with-handlers ([exn:break? (lambda (e) (solver-shutdown solver) (raise e))])
+      (cond 
+        [bw 
+         (parameterize ([term-cache (hash-copy (term-cache))])
+           (define fmap (finitize φs bw))
+           (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
+           (let loop ()
+             (define fsol (solver-check solver))
+             (define sol (unfinitize fsol fmap)) 
+             (cond 
+               [(or (unsat? sol) (all-true? φs sol)) sol]
+               [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+                     (loop)])))]
+        [else 
+         (solver-add solver φs)
+         (solver-check solver)]))
     (solver-clear solver)))
 
-; Searches for a model, if any, for the conjunction 
+; Extracts an unsatisfiable core for the conjunction 
 ; of the given formulas, using the provided solver and 
-; bitwidth.  Returns an unsat solution if the given formulas 
-; don't have a model with the specified bitwidth that is also 
-; correct under the precise semantics. This procedure does *not* 
-; clear the solver's state either before or after use.
-(define (∃-solve+ φs #:solver solver #:bitwidth bw)
-  (with-handlers ([exn:break? (lambda (e) (solver-shutdown solver) (raise e))])
-    (cond 
-      [bw 
-       (parameterize ([term-cache (hash-copy (term-cache))])
-         (define fmap (finitize φs bw))
-         (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
-         (let loop ()
-           (define fsol (solver-check solver))
-           (define sol (unfinitize fsol fmap)) 
-           (cond 
-             [(or (unsat? sol) (all-true? φs sol)) sol]
-             [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
-                   (loop)])))]
-      [else 
-       (solver-add solver φs)
-       (solver-check solver)])))
-
+; bitwidth.  The solver and the bitwidth are, by default, 
+; current-solver and current-bitwidth.  This procedure assumes 
+; that the formulas are unsatisfiable.  If not, an error is thrown. 
+; The procedure clears the solver's state before and after use.
+(define (∃-debug φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
+  (solver-clear solver)
+  (begin0
+    (with-handlers ([exn:break? (lambda (e) (solver-shutdown solver) (raise e))])
+      (cond 
+        [bw 
+         (parameterize ([term-cache (hash-copy (term-cache))])
+           (define fmap (finitize φs bw))
+           (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
+           (unfinitize (solver-localize solver) fmap))]
+        [else 
+         (solver-add solver φs)
+         (solver-localize solver)]))
+    (solver-clear solver)))
+  
 ; Solves the exists-forall problem for the provided list of inputs, assumptions and assertions. 
 ; That is, if I is the set of all input symbolic constants, 
 ; and H is the set of the remaining (non-input) constants appearing 
