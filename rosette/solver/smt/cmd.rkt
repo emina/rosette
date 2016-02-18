@@ -1,41 +1,37 @@
 #lang racket
 
-(require racket/syntax 
-         (only-in "smtlib2.rkt" cmd assert check-sat get-model reset read-solution true false)
+(require (only-in "smtlib2.rkt" assert check-sat get-model read-solution true false)
          "env.rkt" "enc.rkt"
-         "../../base/core/term.rkt" 
+         (only-in "../../base/core/term.rkt" type-of)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/struct/enum.rkt" enum? enum-members)
          "../solution.rkt")
 
-(provide encode decode clear-solver)
+(provide encode decode)
 
-; Given an encoding environment, a list of asserts, and
-; a solver output port, the encode procedure prints an SMT 
-; encoding of the given assertions to the given port, with 
-; respect to the given environment. In particular, the encoder 
-; will not emit any declarations or definitions for Rosette 
+; Given an encoding environment and a list of asserts, 
+; the encode procedure prints an SMT encoding of the given assertions, 
+; with respect to the given environment, to current-output-port. 
+; In particular, the encoder will not emit any declarations or definitions for Rosette 
 ; values that appear in the given assertions and that are 
 ; already bound in the environment.  The environment will 
 ; be augmented, if needed, with additional declarations and 
 ; definitions.
-(define (encode env asserts port)
-  (cmd [port]
-    (for ([a asserts])
-      (assert (enc a env)))
-    (check-sat)
-    (get-model)))
+(define (encode env asserts)
+  (for ([a asserts])
+    (assert (enc a env)))
+  (check-sat)
+  (get-model))
 
-; Given an encoding enviornment and a solver input port, 
-; the decode procedure reads the solution from the port 
-; and converts it into a Rosette solution object.  The 
-; port must be connected to a solver working on a problem 
-; P such that every identifier declared or defined in P 
-; is bound in (decls env) or (defs env), respectively.
-(define (decode env port)
-  (match (read-solution port)
+; Given an encoding enviornment, the decode procedure reads 
+; the solution from current-input-port and converts it into a 
+; Rosette solution object.  The port must be connected to a 
+; solver working on a problem P such that every identifier 
+; declared or defined in P is bound in (decls env) or (defs env), respectively.
+(define (decode env)
+  (match (read-solution)
     [(? hash? sol) 
      (sat (for/hash ([(const id) (in-dict (decls env))])
             (values const 
@@ -43,13 +39,6 @@
                         (decode-binding const (hash-ref sol id))
                         (default-binding const)))))]
     [#f (unsat)]))
-
-; Given a solver input port, the reset procedure prints
-; commands necessary to clear the solver's state to the
-; given port.
-(define (clear-solver port)
-  (cmd [port]
-    (reset)))
 
 (define (default-binding const)
   (match (type-of const)

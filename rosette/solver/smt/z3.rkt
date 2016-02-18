@@ -3,7 +3,8 @@
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt" 
-          "../../base/util/log.rkt" 
+         "../../base/util/log.rkt" 
+         (only-in "smtlib2.rkt" reset)
          (only-in "../../base/core/term.rkt" term? term-type term->datum)
          (only-in "../../base/core/bool.rkt" @boolean?))
 
@@ -28,7 +29,7 @@
    (define (solver-clear self) 
      (set-z3-asserts! self '())
      (set-z3-env! self (env))
-     (server-write (z3-server self) clear-solver))
+     (server-write (z3-server self) (reset)))
    
    (define (solver-shutdown self)
      (solver-clear self)
@@ -40,10 +41,10 @@
          (unsat)
          (parameterize ([current-log-source self])
                (log-time [self] "compilation" : 
-                  (server-write server (curry encode env asserts))
+                  (server-write server (encode env asserts))
                   (set-z3-asserts! self '()))
                (log-time [self] "solving" : 
-                  (server-read  server (curry decode env))))))
+                  (server-read server (decode env))))))
    
    (define (solver-localize self) #f)
    ])

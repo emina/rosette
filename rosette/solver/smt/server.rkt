@@ -2,7 +2,8 @@
 
 (require racket/runtime-path  "../../base/util/log.rkt")
 
-(provide server server-write server-read server-shutdown)
+(provide server server-start server-running? server-shutdown 
+         server-write server-read server-error)
 
 ; A server manages the creation, use, and shutdown of external processes.  
 ; The path field specifies the absolute path to the program to be called 
@@ -34,40 +35,47 @@
   (set-server-stdin! s stdin)
   (set-server-stderr! s stderr))
 
-; Returns true if the given server has been initialized.
-(define (initialized? s) 
+; Returns true if the given server has been initialized and is running.
+(define (server-running? s) 
   (define p (server-process s))
   (and p (equal? (subprocess-status p) 'running)))
 
-; Initializes the given server if it's not already initialized.
-(define (initialize s)
-  (unless (initialized? s) 
+; Initializes the given server if it's not already initialized and returns it.
+(define (server-start s)
+  (unless (server-running? s) 
     (parameterize ([current-custodian (make-custodian)]
                    [current-subprocess-custodian-mode 'kill])
       (define-values (p out in err) 
         (apply subprocess #f #f #f (server-path s) (server-opts s)))
-      (thread (thunk (let loop () 
-                       (match (read err)
-                         [(? eof-object?) (void)]
-                         [expr (log-error [s] "~a" expr)])
-                       (loop))))
-      (set-server-values! s (current-custodian) p out in err))))
-   
-; Calls the given procedure on the server's input port and returns the result.
-; Initializes the server if it is not already initialized?.
-(define (server-write s proc)
-  (initialize s)
-  (begin0 (proc (server-stdin s))
-          (flush-output (server-stdin s))))
+      (set-server-values! s (current-custodian) p out in err)))
+  s)
 
-; Calls the given procedure on the server's output port and returns the result.
-; Assumes that the server is initialized?.
-(define (server-read s proc)
-  (proc (server-stdout s)))
+; Evaluates the given expression with current-output-port 
+; set to the given server's input port and returns the result.
+; Initializes the server if it is not already running.
+(define-syntax-rule (server-write s expr)
+  (parameterize ([current-output-port (server-stdin (server-start s))])
+    (begin0 
+      expr
+      (flush-output (current-output-port)))))
+
+; Evaluates the given expression with current-input-port 
+; set to the given server's output port and returns the result.
+; Assumes that the server is running.
+(define-syntax-rule (server-read s expr)
+  (parameterize ([current-input-port (server-stdout s)])
+    expr))
+
+; Evaluates the given expression with current-input-port 
+; set to the given server's error port and returns the result.
+; Assumes that the server is running.
+(define-syntax-rule (server-error s expr)
+  (parameterize ([current-input-port (server-stderr s)])
+    expr))
           
 ; Shuts down the given solver's process, if any.
 (define (server-shutdown s)
-  (when (initialized? s) 
+  (when (server-running? s) 
     (subprocess-kill (server-process s) #t)
     (custodian-shutdown-all (server-custodian s))
     (set-server-values! s #f #f #f #f #f)))
