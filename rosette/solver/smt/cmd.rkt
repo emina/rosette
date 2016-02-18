@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in "smtlib2.rkt" assert check-sat get-model read-solution true false)
+(require (only-in "smtlib2.rkt" assert check-sat get-model get-unsat-core read-solution true false)
          "env.rkt" "enc.rkt"
          (only-in "../../base/core/term.rkt" type-of)
          (only-in "../../base/core/bool.rkt" @boolean?)
@@ -9,7 +9,7 @@
          (only-in "../../base/struct/enum.rkt" enum? enum-members)
          "../solution.rkt")
 
-(provide encode decode)
+(provide encode encode-for-proof decode)
 
 ; Given an encoding environment and a list of asserts, 
 ; the encode procedure prints an SMT encoding of the given assertions, 
@@ -25,6 +25,30 @@
   (check-sat)
   (get-model))
 
+; Given an encoding environment and a list of asserts, 
+; the encode-labeled procedure prints an SMT encoding of the given assertions 
+; to current-output-port, ensuring that each printed assertion is named. 
+; This procedure expects the assertions to be unsatifisable, and the underlying 
+; solver's unsat-core-extraction option to be set.  The environment will be augmented, 
+; if needed, with additional declarations and definitions.
+(define (encode-for-proof env asserts)
+  (for ([a asserts])
+    (define id (enc a env))
+    (assert id (id->name id)))
+  (check-sat)
+  (get-unsat-core))
+
+; Generates an assertion label for a declared or defined SMT id by prefixing that 
+; id with 'a'.  This will generate unique ids, since none of the declared or defined 
+; constants start with 'a' (see env.rkt).
+(define (id->name id)
+  (string->symbol (format "a~a" (symbol->string id))))
+
+; Converts an assertion label (produced by id->name) to a declared or defined SMT id 
+; by stripping off the first character ('a').
+(define (name->id name)
+  (string->symbol (substring (symbol->string name) 1)))
+
 ; Given an encoding enviornment, the decode procedure reads 
 ; the solution from current-input-port and converts it into a 
 ; Rosette solution object.  The port must be connected to a 
@@ -38,6 +62,11 @@
                     (if (hash-has-key? sol id)
                         (decode-binding const (hash-ref sol id))
                         (default-binding const)))))]
+    [(? list? names)
+     (unsat (let ([core (apply set (map name->id names))])
+              (for/list ([(bool id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
+                          #:when (set-member? core id)) 
+                 bool)))]
     [#f (unsat)]))
 
 (define (default-binding const)

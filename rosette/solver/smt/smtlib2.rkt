@@ -31,22 +31,25 @@
 ; Prints all smt commands to current-output-port.
 (define-syntax-rule (printf-smt arg ...)
   (begin 
-    ;(fprintf (current-error-port) arg ...)
+    (fprintf (current-error-port) arg ...)
     (printf arg ...)))
 
 ; Commands
 (define (set-option opt val) (printf-smt "(set-option ~a ~a)" opt val))
 
-(define (set-logic l) (printf-smt "(set-logic ~a)" l))
-(define (check-sat)   (printf-smt "(check-sat)\n"))
-(define (get-model)   (printf-smt "(get-model)\n"))
-(define (get-info kw) (printf-smt "(get-info ~a)\n" kw))
+(define (set-logic l)    (printf-smt "(set-logic ~a)" l))
+(define (check-sat)      (printf-smt "(check-sat)\n"))
+(define (get-model)      (printf-smt "(get-model)\n"))
+(define (get-unsat-core) (printf-smt "(get-unsat-core)\n"))
+(define (get-info kw)    (printf-smt "(get-info ~a)\n" kw))
 
-(define (reset)       (printf-smt "(reset)\n"))
+(define (reset)          (printf-smt "(reset)\n"))
+(define (push n)         (printf-smt "(push ~a)\n" n))
+(define (pop n)          (printf-smt "(pop ~a)\n" n))
 
-(define (push n)      (printf-smt "(push ~a)\n" n))
-(define (pop n)       (printf-smt "(pop ~a)\n" n))
-(define (assert expr) (printf-smt "(assert ~a)" expr))
+(define assert 
+  (case-lambda [(e)     (printf-smt "(assert ~a)" e)]
+               [(e id)  (printf-smt "(assert (! ~a :named ~a))" e id)]))
 
 ; Declarations and definitions
 (define (declare-const id type)

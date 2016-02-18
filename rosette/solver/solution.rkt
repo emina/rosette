@@ -112,7 +112,7 @@
     [core 
      (fprintf port "(core")
      (when core
-       (for ([assertion (sort (remove-duplicates (filter-map term-origin core)) stx<?)])
+       (for ([assertion core]);(sort (remove-duplicates (filter-map term-origin core)) stx<?)])
          (fprintf port "\n ~a" assertion)))
      (fprintf port ")")]))
 

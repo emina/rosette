@@ -22,7 +22,9 @@
 ; 
 ; The solver-localize procedure searches for an unsatisfiable core for the current 
 ; set of constraints.  It throws an error if these constraints are 
-; satisfiable.
+; satisfiable.  The server-localize procedure will only perform localization on  
+; constraints that were added to the solver _after_ the most recent call to 
+; solver-check (if any).  All constraints added prior to that call are ignored.
 ; 
 ; The solver-shutdown procedure terminates the current solving process (if any), 
 ; clears all added constraints, and releases all system resources associated 

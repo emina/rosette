@@ -4,7 +4,7 @@
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt" 
          "../../base/util/log.rkt" 
-         (only-in "smtlib2.rkt" reset)
+         (only-in "smtlib2.rkt" reset set-option)
          (only-in "../../base/core/term.rkt" term? term-type term->datum)
          (only-in "../../base/core/bool.rkt" @boolean?))
 
@@ -29,7 +29,7 @@
    (define (solver-clear self) 
      (set-z3-asserts! self '())
      (set-z3-env! self (env))
-     (server-write (z3-server self) (reset)))
+     (server-write (z3-server self) (reset-default-options)))
    
    (define (solver-shutdown self)
      (solver-clear self)
@@ -46,6 +46,27 @@
                (log-time [self] "solving" : 
                   (server-read server (decode env))))))
    
-   (define (solver-localize self) #f)
+   (define (solver-localize self)
+     (match-define (z3 server (app remove-duplicates asserts) _) self)
+     (if (ormap false? asserts) 
+         (unsat (list #f))
+         (parameterize ([current-log-source self])
+           (set-z3-env! self (env))
+           (server-write (z3-server self) (reset-core-options))
+           (log-time [self] "compilation" : 
+             (server-write server (encode-for-proof (z3-env self) asserts)))
+           (log-time [self] "solving" : 
+             (server-read server (decode (z3-env self)))))))
    ])
 
+(define (reset-default-options)
+  (reset)
+  (set-option ':produce-unsat-cores 'false)
+  (set-option ':auto-config 'true)
+  (set-option ':smt.relevancy 2))
+
+(define (reset-core-options)
+  (reset)
+  (set-option ':produce-unsat-cores 'true)
+  (set-option ':auto-config 'false)
+  (set-option ':smt.relevancy 0))
