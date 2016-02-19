@@ -46,15 +46,18 @@
                 [_ #f]))
 
 (define term-cache (make-parameter (make-hash)))
+(define term-count (make-parameter 0)) ; term ids will increase forever regardless of cache clearing
 
 (define (clear-terms!)
   (hash-clear! (term-cache)))
-                
+
 (define-syntax-rule (make-term term-constructor args type) 
   (let ([val args]) 
     (or (hash-ref (term-cache) val #f)
-        (hash-ref! (term-cache) val (term-constructor val type (hash-count (term-cache)) #f)))))
-   
+        (let ([ord (term-count)]) 
+          (term-count (add1 ord))
+          (hash-ref! (term-cache) val (term-constructor val type ord))))))
+           
 (define (make-const id-stx t [index #f])
   (unless (identifier? id-stx)
     (error 'constant "expected a syntactic identifier, given ~s" id-stx))
@@ -96,7 +99,8 @@
   (val                ; (or/c identifier? (cons/c identifier? number?) (cons/c op? (non-empty-listof any/c)))
    type               ; type?  
    ord                ; integer?  
-   [props #:mutable]) ; hash?
+   [props #:auto #:mutable]) ; (or/c #f hash?)
+  #:auto-value #f
   #:methods gen:typed 
   [(define (get-type v) (term-type v))])
 
