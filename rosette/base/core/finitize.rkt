@@ -17,18 +17,18 @@
 
 ; The finitize procedure takes as input a list of terms, in any combination of theories, 
 ; and encodes those terms in the theory of bitvectors (BV), representing integers and reals 
-; as bitvectors of length bw (or current-bitwidth by defualt).  This procedure assumes that bw 
-; is not #f.
-;
-; The procedure produces a map from input terms, and their subterms, to 
-; their corresponding BV finitizations.  Terms that are already in BV 
+; as bitvectors of length bw.  The bw parameter is optional and defaults to current-bitwidth.  
+; The optional map argument must be a mutable hash map, which is either empty or was 
+; returned by a previous call to finitize with the same value of bw.
+; 
+; The procedure updates and returns the given map, which binds the given input terms, and 
+; their subterms, to their corresponding BV finitizations.  Terms that are already in BV 
 ; finitize to themselves.
-(define (finitize terms [bw (current-bitwidth)])
+(define (finitize terms [bw (current-bitwidth)] [env (make-hash)])
   (parameterize ([current-bitwidth bw])
-    (let ([env (make-hash)])
-      (for ([t terms])
-        (enc t env))
-      env)))
+    (for ([t terms])
+      (enc t env))
+    env))
 
 ; The enc procedure takes a value (a term or a literal), 
 ; and an environment (a hash-map from terms to their QF_BV encoding), and returns  
