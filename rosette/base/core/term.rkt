@@ -48,8 +48,12 @@
 (define term-cache (make-parameter (make-hash)))
 (define term-count (make-parameter 0)) ; term ids will increase forever regardless of cache clearing
 
-(define (clear-terms!)
-  (hash-clear! (term-cache)))
+(define (clear-terms! [terms #f])
+  (if (false? terms)
+      (hash-clear! (term-cache))
+      (let ([cache (term-cache)])
+        (for ([t terms])
+          (hash-remove! cache (term-val t))))))
 
 (define-syntax-rule (make-term term-constructor args type) 
   (let ([val args]) 
