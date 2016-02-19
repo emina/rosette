@@ -23,7 +23,7 @@
   (current-bitwidth 5)
   (current-oracle (oracle))
   (clear-asserts)
-  (unsafe-clear-terms!)
+  (clear-terms!)
   (current-solver (z3)))
 
 (provide 

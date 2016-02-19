@@ -43,7 +43,7 @@
      term expression constant
      term-name term-index term-op term-child  
      term=? term-origin term-track-origin
-     term-e term->datum term->list clear-terms! unsafe-clear-terms! term-cache
+     term-e term->datum term->list clear-terms! term-cache
      union? union union-contents union-guards union-values
      union-filter in-union in-union* in-union-guards in-union-values
      ; adt/box.rkt

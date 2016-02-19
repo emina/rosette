@@ -22,7 +22,6 @@
  term->datum       ; (-> any/c any/c)
  term->list        ; (-> any/c any/c)
  clear-terms!      ; (-> void? void?)
- unsafe-clear-terms!
  sublist?
  (all-from-out "type.rkt"))
 
@@ -49,13 +48,6 @@
 (define term-cache (make-parameter (make-hash)))
 
 (define (clear-terms!)
-  (define tmp (term-cache))
-  (term-cache (make-hash))
-  (define new-cache (term-cache))
-  (for ([(k v) tmp] #:when (constant? v)) 
-    (hash-set! new-cache k v)))
-
-(define (unsafe-clear-terms!)
   (hash-clear! (term-cache)))
                 
 (define-syntax-rule (make-term term-constructor args type) 
