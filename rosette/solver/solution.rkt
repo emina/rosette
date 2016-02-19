@@ -2,8 +2,7 @@
 
 (require "../base/core/term.rkt")
 
-(provide solution? sat? unsat?
-         sat unsat model core)
+(provide solution? sat? unsat? sat unsat model core)
 
 ; Represents the solution to a set of logical constraints.  The solution 
 ; has single field, result, which stores either a model of the constraints, 
@@ -15,8 +14,8 @@
 ; returns a concrete value for that constant, if any, or the constant itself, if the 
 ; model has no binding for that constant.
 ; 
-; If the constraints are unsatisfiable, and no core has been extract, the result field is #f.
-; If a core has been extract, the result is a list of constraints (that is @boolean? terms or 
+; If the constraints are unsatisfiable, and no core has been extracted, the result field is #f.
+; If a core has been extracted, the result is a list of constraints (that is @boolean? terms or 
 ; values) that do not have a model.
 (struct solution (result)
   #:property prop:procedure 
@@ -26,9 +25,21 @@
       [else (error 'solution "cannot query an unsat solution: ~s" self)]))
   #:methods gen:custom-write
   [(define (write-proc self port mode)
-     (if mode 
-         (display-solution self port)
-         (write-solution self port)))])
+     (match (solution-result self)
+       [(? dict? model) 
+        (let ([bindings (sort (dict->list model) term<? #:key car)])
+          (fprintf port "(model")
+          (unless (null? bindings)
+            (for ([binding bindings])
+              (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
+          (fprintf port ")"))]
+       [(or #f (list #f)) (fprintf port "(core #f)")]
+       [core 
+        (fprintf port "(core")
+        (for ([assertion (sort core term<?)]) 
+          (define origin  (term-origin assertion))
+          (fprintf port "\n [~a @ ~a]" assertion (if origin origin 'unknown)))
+        (fprintf port ")")]))])
 
 (define (sat? sol) (and (solution? sol) (dict? (solution-result sol))))
 
@@ -82,71 +93,9 @@
                          (error 'unsat "expected a non-empty list, given ~s" core))
                        (solution core)]))
 
-(define (write-solution sol port)
-  (match (solution-result sol)
-    [(? dict? model)
-     (let ([trace (dict->list model)])
-       (fprintf port "model(")
-       (unless (null? trace)
-         (fprintf port "[~s ~s]" (term-name (caar trace)) (cdar trace))
-         (for ([binding (cdr trace)])
-           (fprintf port "\n      [~s ~s]" (term-name (car binding)) (cdr binding))))
-       (fprintf port ")"))]
-    [core
-     (fprintf port "core(")
-     (when core
-       (fprintf port "[~a ~a]"  (term-origin (car core)) (car core))
-       (for ([assertion (cdr core)])
-         (fprintf port "\n     [~a ~a]"  (term-origin assertion) assertion)))
-     (fprintf port ")")]))
 
-(define (display-solution sol port)
-  (match (solution-result sol)
-    [(? dict? model) 
-     (let ([trace (sort (dict->list model) var<? #:key car)])
-       (fprintf port "(model")
-       (unless (null? trace)
-         (for ([binding trace])
-           (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
-       (fprintf port ")"))]
-    [core 
-     (fprintf port "(core")
-     (when core
-       (for ([assertion core]);(sort (remove-duplicates (filter-map term-origin core)) stx<?)])
-         (fprintf port "\n ~a" assertion)))
-     (fprintf port ")")]))
 
-(define (identifier-and-index v)
-  (match (term-name v)
-    [(cons id idx) (values id idx)]
-    [n (values n 0)]))
 
-(define (var<? v0 v1)
-  (let*-values ([(v0-stx v0-idx) (identifier-and-index v0)]
-                [(v1-stx v1-idx) (identifier-and-index v1)])
-    (if (equal? v0-stx v1-stx)
-        (< v0-idx v1-idx)
-        (stx<? v0-stx v1-stx))))
-                     
-(define (source->string stx)
-  (let ([src (syntax-source stx)])
-    (cond [(false? src) ""]
-          [(string? src) src]
-          [(path? src) (path->string src)]
-          [else (~.a src)])))
-    
-(define (stx<? s0 s1)
-  (let* ([src0 (source->string s0)]
-         [src1 (source->string s1)])
-    (or (string<? src0 src1)
-        (and (equal? src0 src1)
-             (let ([ln0 (or (syntax-line s0) -1)]
-                   [ln1 (or (syntax-line s1) -1)])
-               (or (< ln0 ln1)
-                   (and (= ln0 ln1)
-                        (let ([cl0 (or (syntax-column s0) -1)]
-                              [cl1 (or (syntax-column s1) -1)])
-                          (< cl0 cl1)))))))))
  
   
                                    
