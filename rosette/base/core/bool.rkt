@@ -8,7 +8,7 @@
          ! && || => <=> @! @&& @|| @=> @<=> 
          and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only relax 
-         (rename-out [export-asserts asserts]) clear-asserts)
+         (rename-out [export-asserts asserts]) clear-asserts!)
 
 ;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
@@ -224,7 +224,7 @@
 ;; ----------------- Assertions and path condition ----------------- ;; 
 (define (export-asserts) (remove-duplicates (asserts)))
 
-(define (clear-asserts)  (asserts '()))
+(define (clear-asserts!)  (asserts '()))
     
 (define asserts 
   (make-parameter 

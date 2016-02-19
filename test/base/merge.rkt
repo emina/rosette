@@ -75,7 +75,7 @@
   (check-true (subtype? (type-of p) @procedure?))
   (check-false (subtype? (type-of q) @procedure?))
   
-  (clear-asserts)
+  (clear-asserts!)
   (check-true (null? (asserts)))
   (define s* (merge a s *))
   (check-equal? (s*) 1)
