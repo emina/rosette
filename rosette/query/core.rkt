@@ -71,23 +71,29 @@
 (define (∃-solve φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
   (solver-clear solver)
   (begin0  
-    (with-handlers ([exn:break? (lambda (e) (solver-shutdown solver) (raise e))])
+    (with-handlers ([exn? (lambda (e) (solver-shutdown solver) (raise e))])
       (cond 
         [bw 
          (parameterize ([term-cache (hash-copy (term-cache))])
-           (define fmap (finitize φs bw))
-           (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
-           (let loop ()
-             (define fsol (solver-check solver))
-             (define sol (unfinitize fsol fmap)) 
-             (cond 
-               [(or (unsat? sol) (all-true? φs sol)) sol]
-               [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
-                     (loop)])))]
+           (∃-solve-finite solver φs bw (make-hash)))]
         [else 
          (solver-add solver φs)
          (solver-check solver)]))
     (solver-clear solver)))
+
+; Finitizes the given formulas using the provided finitization map, 
+; adds the result the provided solver, and searches for a model (if any)
+; that is correct under the precise semantics.
+(define (∃-solve-finite solver φs bw fmap)
+  (finitize φs bw fmap)
+  (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
+  (let loop ()
+    (define fsol (solver-check solver))
+    (define sol (unfinitize fsol fmap)) 
+    (cond 
+      [(or (unsat? sol) (all-true? φs sol)) sol]
+      [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+            (loop)])))
 
 ; Extracts an unsatisfiable core for the conjunction 
 ; of the given formulas, using the provided solver and 
@@ -98,7 +104,7 @@
 (define (∃-debug φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
   (solver-clear solver)
   (begin0
-    (with-handlers ([exn:break? (lambda (e) (solver-shutdown solver) (raise e))])
+    (with-handlers ([exn? (lambda (e) (solver-shutdown solver) (raise e))])
       (cond 
         [bw 
          (parameterize ([term-cache (hash-copy (term-cache))])
