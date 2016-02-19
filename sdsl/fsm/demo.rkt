@@ -27,5 +27,5 @@
 (m '(c d r))
 (m '(c a d a r))
 (verify-automaton m #px"^c[ad]+r$")
-;(debug-automaton m #px"^c[ad]+r$" '(c r))
+(debug-automaton m #px"^c[ad]+r$" '(c r))
 (synthesize-automaton M #px"^c[ad]+r$")
