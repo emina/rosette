@@ -17,6 +17,8 @@
  "query/solve.rkt"
  "query/verify.rkt"
  "query/synthesize.rkt"
+ "query/debug.rkt"
+ "query/solve+.rkt"
  )
 
 #|
