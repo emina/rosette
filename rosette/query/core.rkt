@@ -1,8 +1,9 @@
 #lang racket
 
 (require 
+  racket/generator
   "eval.rkt" 
-  (only-in "../base/core/term.rkt" constant? get-type term-cache term<?)
+  (only-in "../base/core/term.rkt" constant? get-type term? term-cache clear-terms! term<?)
   (only-in "../base/core/equality.rkt" @equal?)
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
   (only-in "../base/core/real.rkt" @integer? @real?)
@@ -14,7 +15,7 @@
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
   (only-in "../solver/smt/z3.rkt" z3))
 
-(provide current-solver ∃-solve ∃∀-solve ∃-debug eval/asserts 
+(provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug eval/asserts 
          all-true? some-false? unfinitize)
 
 ; Current solver instance that is used for queries and kept alive for performance.
@@ -28,7 +29,7 @@
 
 ; Returns true if evaluating all given formulas against 
 ; the provided solution returns the constant #t.
-(define (all-true? φs sol)
+(define (all-true? φs sol)  
   (and (sat? sol) (for/and ([φ φs]) (equal? #t (evaluate φ sol)))))
 
 ; Returns true if evaluating at least one of the given 
@@ -75,26 +76,60 @@
       (cond 
         [bw 
          (parameterize ([term-cache (hash-copy (term-cache))])
-           (∃-solve-finite solver φs bw (make-hash)))]
+           (define fmap (finitize φs bw))
+           (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
+           (let loop ()
+             (define fsol (solver-check solver))
+             (define sol (unfinitize fsol fmap)) 
+             (cond 
+               [(or (unsat? sol) (all-true? φs sol)) sol]
+               [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+                     (loop)])))]
         [else 
          (solver-add solver φs)
          (solver-check solver)]))
     (solver-clear solver)))
 
-; Finitizes the given formulas using the provided finitization map, 
-; adds the result the provided solver, and searches for a model (if any)
-; that is correct under the precise semantics.
-(define (∃-solve-finite solver φs bw fmap)
-  (finitize φs bw fmap)
-  (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
-  (let loop ()
-    (define fsol (solver-check solver))
-    (define sol (unfinitize fsol fmap)) 
-    (cond 
-      [(or (unsat? sol) (all-true? φs sol)) sol]
-      [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
-            (loop)])))
-
+; Returns a generator that uses the solver of the given type, with the given 
+; bitwidth setting, to incrementally solve a series of constraints.  The generator 
+; consumes lists of constraints (i.e., boolean values and terms), and produces a 
+; sequence of solutions.  Specifically, the ith returned solution is a solution for 
+; all constraints added to the generator in the preceding i-1 calls.
+(define (∃-solve+ #:solver [solver-type z3] #:bitwidth [bw (current-bitwidth)])
+  (define cust (make-custodian))
+  (define solver (parameterize ([current-custodian cust]
+                                [current-subprocess-custodian-mode 'kill])
+                   (solver-type)))
+  (define handler (lambda (e) (custodian-shutdown-all cust) (raise e)))
+  (if bw
+      (generator (ψs)
+       (let ([fmap (make-hash)]
+             [φs '()])
+         (let outer ([δs ψs])
+           (with-handlers ([exn? handler])
+             (finitize δs bw fmap)
+             (solver-add solver (for/list ([δ δs]) (hash-ref fmap δ)))
+             (set! φs (append δs φs)) 
+             (let inner ()
+               (define fsol (solver-check solver))
+               (define sol (unfinitize fsol fmap))
+               (cond [(unsat? sol) 
+                      (custodian-shutdown-all cust) 
+                      (clear-terms! ; Purge finitization terms from the cache
+                       (for/list ([(t ft) fmap] #:when (and (term? ft) (not (eq? t ft)))) ft))
+                      sol]
+                     [(all-true? φs sol) (outer (yield sol))]
+                     [else  
+                      (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+                      (inner)]))))))                      
+      (generator (φs)
+       (let loop ([φs φs])
+         (with-handlers ([exn? handler])
+           (solver-add solver φs)
+           (define sol (solver-check solver))
+           (cond [(unsat? sol) (custodian-shutdown-all cust) sol]
+                 [else (loop (yield sol))]))))))
+  
 ; Extracts an unsatisfiable core for the conjunction 
 ; of the given formulas, using the provided solver and 
 ; bitwidth.  The solver and the bitwidth are, by default, 

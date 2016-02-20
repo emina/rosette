@@ -4,7 +4,7 @@
          (only-in "../base/core/reflect.rkt" symbolics)
          (only-in "../base/core/bool.rkt" ! ||))
 
-(provide solve verify synthesize current-solver)
+(provide solve verify synthesize current-solver (rename-out [∃-solve+ solve+]))
 
 ; The solve query evaluates the given forms, gathers all 
 ; assertions generated during the evaluation, 
