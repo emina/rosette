@@ -48,12 +48,25 @@
 (define term-cache (make-parameter (make-hash)))
 (define term-count (make-parameter 0)) ; term ids will increase forever regardless of cache clearing
 
+; Clears the entire term-cache if invoked with #f (default), or 
+; it clears all terms reachable from the given set of leaf terms.
 (define (clear-terms! [terms #f])
   (if (false? terms)
       (hash-clear! (term-cache))
-      (let ([cache (term-cache)])
+      (let ([cache (term-cache)]
+            [evicted (list->mutable-set terms)])
         (for ([t terms])
-          (hash-remove! cache (term-val t))))))
+          (hash-remove! cache (term-val t)))
+        (let loop ()
+          (define delta  
+            (for/list ([(k t) cache] #:when (and (list? k) (for/or ([c k]) (set-member? evicted c))))
+              t))
+          (unless (null? delta)
+            (for ([t delta])
+              (hash-remove! cache (term-val t))
+              (set-add! evicted t))
+            (loop))))))
+
 
 (define-syntax-rule (make-term term-constructor args type) 
   (let ([val args]) 
