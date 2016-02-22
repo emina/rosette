@@ -182,7 +182,7 @@
 (define (const-e var)
   (let ([n (term-name var)])
     (cond [(list? n) (for/fold ([s (format-symbol "~a" (car n))]) ([r (cdr n)]) (format-symbol "~a$~a" s r))]
-          [(pair? n) (format-symbol "~a$~a" n (cdr n))]
+          [(pair? n) (format-symbol "~a$~a" (car n) (cdr n))]
           [else (format-symbol "~a" n)])))
 
 (define (op-e op) (op-name op))
