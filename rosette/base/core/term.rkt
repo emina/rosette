@@ -181,9 +181,9 @@
 
 (define (const-e var)
   (let ([n (term-name var)])
-    (if (pair? n) 
-        (format-symbol "~a$~a" (syntax-e (car n)) (cdr n))
-        (format-symbol "~a" (syntax-e n)))))
+    (cond [(list? n) (for/fold ([s (format-symbol "~a" (car n))]) ([r (cdr n)]) (format-symbol "~a$~a" s r))]
+          [(pair? n) (format-symbol "~a$~a" n (cdr n))]
+          [else (format-symbol "~a" n)])))
 
 (define (op-e op) (op-name op))
 
