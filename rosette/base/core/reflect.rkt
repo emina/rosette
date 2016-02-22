@@ -8,7 +8,7 @@
          term? constant? expression? 
          term expression constant
          term-type term=? term-origin term-track-origin
-         term-e term->datum clear-terms! term-cache
+         term->datum clear-terms! term-cache
          union? union union-contents union-guards union-values
          union-filter in-union in-union* in-union-guards in-union-values
          symbolics)

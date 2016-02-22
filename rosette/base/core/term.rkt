@@ -13,13 +13,10 @@
  term-origin       ; (-> term? any/c)
  term-track-origin ; (-> term? any/c term?)
  term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
- term-e            ; (-> any/c any/c)
  term->datum       ; (-> any/c any/c)
  clear-terms!      ; (-> void? void?)
  sublist?
  (all-from-out "type.rkt"))
-
-
 
 (define term-cache (make-parameter (make-hash)))
 (define term-count (make-parameter 0)) ; term ids will increase forever regardless of cache clearing
@@ -132,11 +129,6 @@
 (define (term->datum val) 
   (convert val (make-hash)))
 
-(define (term-e val)
-  (cond [(constant? val) (const-e val)]
-        [(expression? val) (expr-e val)]
-        [else val]))
-
 (define (convert val cache)
   (if (hash-has-key? cache val) 
       (hash-ref cache val)
@@ -154,9 +146,6 @@
      (cond [(list? n) (for/fold ([s (format-symbol "~a" (car n))]) ([r (cdr n)]) (format-symbol "~a$~a" s r))]
            [(pair? n) (format-symbol "~a$~a" (car n) (cdr n))]
            [else (format-symbol "~a" n)])]))
-
-(define (expr-e expr)
-  (match expr [(an-expression op child ...) `(,(op-name op) ,@child)]))
   
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.
