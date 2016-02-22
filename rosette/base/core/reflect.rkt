@@ -5,7 +5,7 @@
          "term.rkt" "union.rkt")
 
 (provide type? type-of coerce for/all for*/all
-         term? constant? expression? angelic?
+         term? constant? expression? 
          term expression constant
          term-name term-index term-op term-child  
          term=? term-origin term-track-origin

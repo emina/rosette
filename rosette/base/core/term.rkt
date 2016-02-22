@@ -12,7 +12,6 @@
  term-child        ; (-> term? (listof any/c))  
  term-type         ; (-> term? type?)  
  constant?         ; (-> any/c boolean?)
- angelic?          ; (-> any/c boolean?)
  expression?       ; (case-> (-> any/c boolean?) (-> any/c op? boolean?))
  term<?            ; (-> term? term? boolean?)
  term-origin       ; (-> term? any/c)
@@ -24,10 +23,6 @@
  clear-terms!      ; (-> void? void?)
  sublist?
  (all-from-out "type.rkt"))
-
-(define angelic?
-  (match-lambda [(a-constant (not (? identifier?)) _) #t]
-                [_ #f])) 
 
 (define term-op 
   (match-lambda [(an-expression op _ ...) op]
