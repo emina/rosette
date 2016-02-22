@@ -89,20 +89,13 @@
    [props #:auto #:mutable]) ; (or/c #f hash?)
   #:auto-value #f
   #:methods gen:typed 
-  [(define (get-type v) (term-type v))])
-
-(struct constant term ()
+  [(define (get-type v) (term-type v))]
   #:methods gen:custom-write
-  [(define (write-proc self port mode) 
-     (fprintf port "#<~a:~a>" (const-e self) (get-type self)))])
+  [(define (write-proc self port mode)
+     (fprintf port "~a" (term->string self)))])
 
-(struct expression term ()
-  #:methods gen:custom-write
-  [(define (write-proc self port mode) 
-     (let ([val (term-val self)])
-       (fprintf port "#<~a:~a>" 
-                (op-name (car val)) 
-                (get-type self))))])
+(struct constant term ())
+(struct expression term ())
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
@@ -121,12 +114,62 @@
 (define (term-track-origin v origin) (term-property v 'origin origin))
 
 #|-----------------------------------------------------------------------------------|#
-; The following functions convert symbolic values to plain s-expressions.  They are 
-; analogous to  Racket's syntax->datum and syntax-e for unpacking syntax
-; expressions.
+; The following functions convert symbolic values to strings or plain s-expressions.
 #|-----------------------------------------------------------------------------------|#
 
-(define (term->datum val) 
+(define (term->string val [max-length (error-print-width)])
+  (let ([output-str (open-output-string)])
+    (parameterize ([current-output-port output-str])
+      (print-rec val (make-hash) max-length))
+    (get-output-string output-str)))
+
+(define (print-expr val cache max-length)
+  (match-let ([o (current-output-port)]
+              [(an-expression op child ...) val])
+    (display "(")
+    (display (op-name op))
+    (display " ")
+    (let ([n (for/sum ([(e i) (in-indexed child)]
+                       #:break (>= (file-position o) max-length))
+               (print-rec e cache max-length)
+               (unless (= i (sub1 (length child)))
+                 (display " "))
+               1)])
+      (when (< n (length child))
+        (display "...")))
+    (display ")")))
+
+(define (print-guarded vec cache max-length)
+  (match-let ([o (current-output-port)]
+              [(vector _ test value) vec])
+    (printf "[")
+    (print-rec test cache max-length)
+    (display " ")
+    (if (< (file-position o) max-length)
+        (print-rec value cache max-length)
+        (display "..."))
+    (display "]")))
+  
+(define (print-rec val cache max-length)
+  (let ([str (if (hash-has-key? cache val)
+                 (hash-ref cache val)
+                 (let* ([output-str (open-output-string)]
+                        [current-pos (file-position (current-output-port))]
+                        [output-port (relocate-output-port output-str #f #f current-pos)])
+                   (parameterize ([current-output-port output-port])
+                     (cond [(constant? val) (display (const-e val))]
+                           [(expression? val) (print-expr val cache max-length)]
+                           [(struct? val) (let ([vec (struct->vector val)])
+                                            (if (equal? (vector-ref vec 0) 'struct:guarded)
+                                                (print-guarded vec cache max-length)
+                                                (display val)))]
+                           [else (display val)]))
+                   (let ([str (get-output-string output-str)])
+                     (hash-set! cache val str)
+                     str)))])
+    (display str)))
+
+(define (term->datum val)
   (convert val (make-hash)))
 
 (define (convert val cache)
@@ -134,17 +177,21 @@
       (hash-ref cache val)
       (let ([datum
              (match val
-               [(? constant?) (const-e val)]
+               [(? constant?) (format-symbol "~a" (const-e val))]
                [(an-expression op child ...) `(,(op-name op) ,@(for/list ([e child]) (convert e cache)))]
                [_  val])])
         (hash-set! cache val datum)
         datum)))
 
+(define (maybe-identifier x)
+  (if (identifier? x) (syntax->datum x) x))
 (define (const-e const)
   (match const
     [(a-constant n _)
-     (cond [(list? n) (for/fold ([s (format "~a" (car n))]) ([r (cdr n)]) (format "~a$~a" s r))]
-           [else (format "~a" n)])]))
+     (cond [(list? n) (for/fold ([s (format "~a" (maybe-identifier (car n)))]) 
+                                ([r (cdr n)]) 
+                        (format "~a$~a" s (maybe-identifier r)))]
+           [else (format "~a" (maybe-identifier n))])]))
   
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.

@@ -5,7 +5,7 @@
          "../solver.rkt" "../solution.rkt" 
          "../../base/util/log.rkt" 
          (only-in "smtlib2.rkt" reset set-option)
-         (only-in "../../base/core/term.rkt" term? term-type term->datum)
+         (only-in "../../base/core/term.rkt" term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?))
 
 (provide (rename-out [make-z3 z3]) z3?)
