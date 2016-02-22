@@ -6,10 +6,6 @@
  term-cache
  term?             ; (-> any/c boolean?)
  (rename-out [a-term term] [an-expression expression] [a-constant constant])     ; pattern matching macro
- term-name         ; (-> term? (or/c syntax? false/c))
- term-index        ; (-> term? (or/c false/c number? list?))
- term-op           ; (-> term? (or/c op? false/c))
- term-child        ; (-> term? (listof any/c))  
  term-type         ; (-> term? type?)  
  constant?         ; (-> any/c boolean?)
  expression?       ; (case-> (-> any/c boolean?) (-> any/c op? boolean?))
@@ -19,26 +15,11 @@
  term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
  term-e            ; (-> any/c any/c)
  term->datum       ; (-> any/c any/c)
- term->list        ; (-> any/c any/c)
  clear-terms!      ; (-> void? void?)
  sublist?
  (all-from-out "type.rkt"))
 
-(define term-op 
-  (match-lambda [(an-expression op _ ...) op]
-                [_ #f]))
 
-(define term-child 
-  (match-lambda [(an-expression _ child ...) child]
-                [_ '()]))
-
-(define term-name 
-  (match-lambda [(a-constant name _) name]
-                [_ #f]))
-
-(define term-index
-  (match-lambda [(a-constant (cons _ idx) _) idx]
-                [_ #f]))
 
 (define term-cache (make-parameter (make-hash)))
 (define term-count (make-parameter 0)) ; term ids will increase forever regardless of cache clearing
@@ -147,43 +128,38 @@
 
 #|-----------------------------------------------------------------------------------|#
 ; The following functions convert symbolic values to plain s-expressions.  They are 
-; analogous to  Racket's syntax->datum, synatx-e, and syntax->list for unpacking syntax
+; analogous to  Racket's syntax->datum and syntax-e for unpacking syntax
 ; expressions.
 #|-----------------------------------------------------------------------------------|#
 
 (define (term->datum val) 
-  (convert val const-e op-e (make-hash)))
+  (convert val (make-hash)))
 
 (define (term-e val)
   (cond [(constant? val) (const-e val)]
         [(expression? val) (expr-e val)]
         [else val]))
 
-(define (term->list val)
-  (convert val term-name identity (make-hash)))
-
-(define (convert val convert-var convert-op cache)
+(define (convert val cache)
   (if (hash-has-key? cache val) 
       (hash-ref cache val)
       (let ([datum
-             (cond [(constant? val)   (convert-var val)]
-                   [(expression? val) `(,(convert-op (term-op val)) 
-                                       ,@(for/list ([e (term-child val)]) 
-                                           (convert e convert-var convert-op cache)))]
-                   [else  val])])
+             (match val
+               [(? constant?) (const-e val)]
+               [(an-expression op child ...) `(,(op-name op) ,@(for/list ([e child]) (convert e cache)))]
+               [_  val])])
         (hash-set! cache val datum)
         datum)))
 
-(define (const-e var)
-  (let ([n (term-name var)])
-    (cond [(list? n) (for/fold ([s (format-symbol "~a" (car n))]) ([r (cdr n)]) (format-symbol "~a$~a" s r))]
-          [(pair? n) (format-symbol "~a$~a" (car n) (cdr n))]
-          [else (format-symbol "~a" n)])))
-
-(define (op-e op) (op-name op))
+(define (const-e const)
+  (match const
+    [(a-constant n _)
+     (cond [(list? n) (for/fold ([s (format-symbol "~a" (car n))]) ([r (cdr n)]) (format-symbol "~a$~a" s r))]
+           [(pair? n) (format-symbol "~a$~a" (car n) (cdr n))]
+           [else (format-symbol "~a" n)])]))
 
 (define (expr-e expr)
-  `(,(term-op expr) ,@(term-child expr)))
+  (match expr [(an-expression op child ...) `(,(op-name op) ,@child)]))
   
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.
