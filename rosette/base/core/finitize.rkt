@@ -90,9 +90,8 @@
     
 (define (enc-const v env)
   (match v
-    [(constant (or (? identifier? id) (cons id _)) (or (== @integer?) (== @real?)))
-     (constant (format-id id "~a" (gensym (term-e v)) #:source id)
-               (bitvector (current-bitwidth)))]
+    [(constant id (or (== @integer?) (== @real?)))
+     (constant ((if (list? id) cons list) (gensym 'bv) id) (bitvector (current-bitwidth)))] 
     [_ v]))
                               
 (define (enc-lit v env)

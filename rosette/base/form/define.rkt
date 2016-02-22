@@ -23,7 +23,7 @@
   (syntax-case stx ()
     [(_ [var oracle] type)
      (identifier? #'var)
-     (syntax/loc stx (define var (constant #'var (oracle #'var) type)))]
+     (syntax/loc stx (define var (constant (list #'var (oracle #'var)) type)))]
     [(_ var type)
      (identifier? #'var)
      (syntax/loc stx (define-symbolic* [var (current-oracle)] type))]
