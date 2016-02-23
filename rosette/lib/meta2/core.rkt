@@ -11,30 +11,23 @@
                  '()
                  (lambda (v) (cons v (context)))))
 
-(define (in-context anchor ctx closure)
-  (define loc (format "~a:~a:~a:~a:~a" 
-                      (syntax-source ctx)
-                      (syntax-line ctx)
-                      (syntax-column ctx)
-                      (syntax-position ctx) 
-                      (syntax-span ctx)))
-  (parameterize ([context (cons anchor loc)]) (closure)))
+(define (in-context ctx closure)
+  (parameterize ([context (identifier->tag ctx)]) (closure)))
 
 ; Creates a constant of the given type that is 
 ; identified by the current context.  Repeated 
 ; call to this procedure with the same context and type 
 ; return equal? results.
 (define (context->constant type)
-  (constant (caar (context)) (map cdr (context)) type))
+  (constant (context) type))
 
 ; Creates a list of n constants of the given type, 
 ; which are identified by the current context.  Repeated 
 ; call to this procedure with the same context, type, and 
 ; n return equal? results.
 (define (context->constants type n)
-  (define id (caar (context)))
-  (define path (map cdr (context)))
-  (for/list ([i n]) (constant id (cons i path) type)))
+  (define path (context))
+  (for/list ([i n]) (constant (cons i path) type)))
 
 (define codegen (make-free-id-table null #:phase 0))
 
@@ -65,7 +58,7 @@
            (syntax-case stx ()
              [(call pk ... #:depth k)
               (quasisyntax/loc stx 
-                (in-context #'call (syntax/source call) 
+                (in-context (syntax/source call) 
                             (thunk #,(if (<= (eval #'k) 0) 
                                          (syntax/source e0) 
                                          (syntax/source ek)))))]))                    
@@ -77,11 +70,19 @@
            (syntax-case stx ()
              [(call pat ...) 
               (quasisyntax/loc stx 
-                (in-context #'call (syntax/source call) 
+                (in-context (syntax/source call) 
                             (thunk #,(syntax/source expr))))] ...))                  
          (free-id-table-set! codegen #'id id-gen)))]))
 
-
+(define (identifier->tag id)
+  (tag (syntax->datum id) 
+       (syntax-source id)
+       (syntax-line id)
+       (syntax-column id)
+       (syntax-position id) 
+       (syntax-span id)))
+       
+(struct tag (name source line column position span) #:transparent)
 
 ;(define-synthax ??
 ;  ([(_) (?? (context))]

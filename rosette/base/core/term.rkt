@@ -143,9 +143,8 @@
 (define (const-e const)
   (match const
     [(a-constant n _)
-     (cond [(list? n) (for/fold ([s (format-symbol "~a" (car n))]) ([r (cdr n)]) (format-symbol "~a$~a" s r))]
-           [(pair? n) (format-symbol "~a$~a" (car n) (cdr n))]
-           [else (format-symbol "~a" n)])]))
+     (cond [(list? n) (for/fold ([s (format "~a" (car n))]) ([r (cdr n)]) (format "~a$~a" s r))]
+           [else (format "~a" n)])]))
   
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.
