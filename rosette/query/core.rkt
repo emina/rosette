@@ -115,7 +115,7 @@
   (define solver (parameterize ([current-custodian cust]
                                 [current-subprocess-custodian-mode 'kill])
                    (solver-type)))
-  (define handler (lambda (e) (custodian-shutdown-all cust) (raise e)))
+  (define handler (lambda (e) (solver-shutdown solver) (custodian-shutdown-all cust) (raise e)))
   (if bw
       (generator (ψs)
        (let ([fmap (make-hash)]
@@ -128,7 +128,8 @@
              (let inner ()
                (define fsol (complete (solver-check solver) fmap))
                (define sol (unfinitize fsol fmap))
-               (cond [(unsat? sol) 
+               (cond [(unsat? sol)
+                      (solver-shutdown solver) 
                       (custodian-shutdown-all cust) 
                       (clear-terms! ; Purge finitization terms from the cache
                        (for/list ([(t ft) fmap] #:when (and (term? ft) (not (eq? t ft)))) ft))
@@ -142,7 +143,7 @@
          (with-handlers ([exn? handler])
            (solver-add solver φs)
            (define sol (solver-check solver))
-           (cond [(unsat? sol) (custodian-shutdown-all cust) sol]
+           (cond [(unsat? sol) (solver-shutdown solver) (custodian-shutdown-all cust) sol]
                  [else (loop (yield sol))]))))))
 
   
