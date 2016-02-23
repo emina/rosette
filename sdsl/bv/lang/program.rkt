@@ -30,8 +30,8 @@
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (fprintf port "~a" 
-              `(:= ,(term->datum (inst-out self))
-                   (,(inst-op self) ,@(map term->datum (inst-in self))))))])
+              `(:= ,(inst-out self)
+                   (,(inst-op self) ,@(inst-in self)))))])
 
 ; Represents a BV program, which specifies the number of 
 ; argument registers and an unordered list of instructions.
@@ -53,13 +53,7 @@
 ; values loaded by the ith instruction in (prog-insts (trace-prog t)).
 ; See the well-formed-trace procedure for constraints on well-formed traces.
 (struct trace (prog args access) 
-  #:transparent
-  #:methods gen:custom-write
-  [(define (write-proc self port mode)
-     (fprintf port "(trace ~a ~a ~a)"  
-              (trace-prog self)
-              (map term->datum (trace-args self)) 
-              (map (lambda (lds) (map term->datum lds)) (trace-access self))))])
+  #:transparent)
 
 ; Constructs a symbolic instruction for the given op.
 (define (inst* op)
