@@ -13,7 +13,6 @@
  term-origin       ; (-> term? any/c)
  term-track-origin ; (-> term? any/c term?)
  term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
- term->datum       ; (-> any/c any/c)
  clear-terms!      ; (-> void? void?)
  sublist?
  (all-from-out "type.rkt"))
@@ -169,19 +168,7 @@
                      str)))])
     (display str)))
 
-(define (term->datum val)
-  (convert val (make-hash)))
 
-(define (convert val cache)
-  (if (hash-has-key? cache val) 
-      (hash-ref cache val)
-      (let ([datum
-             (match val
-               [(? constant?) (format-symbol "~a" (const-e val))]
-               [(an-expression op child ...) `(,(op-name op) ,@(for/list ([e child]) (convert e cache)))]
-               [_  val])])
-        (hash-set! cache val datum)
-        datum)))
 
 (define (maybe-identifier x)
   (if (identifier? x) (syntax->datum x) x))

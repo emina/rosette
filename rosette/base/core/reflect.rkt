@@ -2,6 +2,7 @@
 
 (require (only-in "safe.rkt" coerce) 
          (only-in "forall.rkt" for/all for*/all) 
+         (only-in "op.rkt" op-name)
          "term.rkt" "union.rkt")
 
 (provide type? type-of coerce for/all for*/all
@@ -40,3 +41,15 @@
                       [(list (== vs)) '()]
                       [components (append-map loop components)])]
                  [_ '()]))))))]))
+
+(define (term->datum val)
+  (let convert ([val val] [cache (make-hash)])
+    (if (hash-has-key? cache val) 
+        (hash-ref cache val)
+        (let ([datum
+               (match val
+                 [(? constant?) (string->symbol (format "~a" val))]
+                 [(expression op child ...) `(,(op-name op) ,@(for/list ([e child]) (convert e cache)))]
+                 [_  val])])
+          (hash-set! cache val datum)
+          datum))))
