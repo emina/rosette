@@ -69,13 +69,6 @@
                  bool)))]
     [#f (unsat)]))
 
-(define (default-binding const)
-  (match (type-of const)
-    [(== @boolean?) #f]
-    [(or (== @integer?) (== @real?)) 0]
-    [(? bitvector? t) (bv 0 t)]
-    [(? enum? t) (vector-ref (enum-members t) 0)]))
-
 (define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
 
 (define (decode-binding const val)

@@ -12,7 +12,7 @@
   (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
   (only-in "../base/util/log.rkt" log-info)
   (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-add solver-check solver-localize)
-  (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
+  (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
   (only-in "../solver/smt/z3.rkt" z3))
 
 (provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug eval/asserts 
@@ -49,7 +49,7 @@
 ; Takes as input a solution and a finitization map 
 ; produced by calling the finitize proceudre in rosette/base/core/finitize, 
 ; and returns a new solution that applies the inverse 
-; of the given to the provided solution.
+; of the given to the provided solution.   
 (define (unfinitize sol fmap)
   (match sol
     [(model m)
@@ -60,6 +60,21 @@
     [(core #f) sol] ; no core extracted
     [(core φs)
      (unsat (for/list ([(k v) fmap] #:when (member v φs)) k))]))
+
+; Takes as input a solution and a finitization map 
+; produced by calling the finitize proceudre in rosette/base/core/finitize, 
+; and returns a solution that is complete with respect to the given map.  
+; That is, if the given solution is satisfiable but has no mapping for a
+; constant in fmap, the returned solution has a default binding  
+; for that constant (and same bindings as sol for other constants).  If 
+; the given solution is unsat, it is simply returned.
+(define (complete sol fmap)
+  (match sol
+    [(model m)
+     (sat (for/hash ([(k fk) fmap] #:when (constant? k))
+            (values fk (dict-ref m fk (default-binding fk)))))]
+    [_ sol]))
+  
 
 ; Searches for a model, if any, for the conjunction 
 ; of the given formulas, using the provided solver and 
@@ -79,7 +94,7 @@
            (define fmap (finitize φs bw))
            (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
            (let loop ()
-             (define fsol (solver-check solver))
+             (define fsol (complete (solver-check solver) fmap))
              (define sol (unfinitize fsol fmap)) 
              (cond 
                [(or (unsat? sol) (all-true? φs sol)) sol]
@@ -111,7 +126,7 @@
              (solver-add solver (for/list ([δ δs]) (hash-ref fmap δ)))
              (set! φs (append δs φs)) 
              (let inner ()
-               (define fsol (solver-check solver))
+               (define fsol (complete (solver-check solver) fmap))
                (define sol (unfinitize fsol fmap))
                (cond [(unsat? sol) 
                       (custodian-shutdown-all cust) 
@@ -129,6 +144,7 @@
            (define sol (solver-check solver))
            (cond [(unsat? sol) (custodian-shutdown-all cust) sol]
                  [else (loop (yield sol))]))))))
+
   
 ; Extracts an unsatisfiable core for the conjunction 
 ; of the given formulas, using the provided solver and 

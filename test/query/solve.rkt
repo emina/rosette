@@ -64,7 +64,14 @@
     (current-bitwidth 3)
     (check-unsat (solve (@assert (@= xr (@bitvector->integer yb)))
                         (@assert (@bveq yb (bv -8 4)))))
- ))              
+ ))     
+
+
+(define regression-tests 
+  (test-suite+ "Solve regression tests."
+    (parameterize ([current-bitwidth 32])
+      (check-sat (solve (@assert (@<= 0 (@abs (@if (@= 2 xi) 0 10)))))))))
 
 (time (run-tests basic-tests))
 (time (run-tests finitized-tests))
+(time (run-tests regression-tests))

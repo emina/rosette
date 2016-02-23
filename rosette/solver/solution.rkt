@@ -1,8 +1,13 @@
 #lang racket
 
-(require "../base/core/term.rkt")
+(require "../base/core/term.rkt"
+         (only-in "../base/core/term.rkt" type-of)
+         (only-in "../base/core/bool.rkt" @boolean?)
+         (only-in "../base/core/bitvector.rkt" bitvector? bv)
+         (only-in "../base/core/real.rkt" @integer? @real?)
+         (only-in "../base/struct/enum.rkt" enum? enum-members))
 
-(provide solution? sat? unsat? sat unsat model core)
+(provide solution? sat? unsat? sat unsat model core default-binding)
 
 ; Represents the solution to a set of logical constraints.  The solution 
 ; has single field, result, which stores either a model of the constraints, 
@@ -93,8 +98,13 @@
                          (error 'unsat "expected a non-empty list, given ~s" core))
                        (solution core)]))
 
-
-
+; Returns a default binding (value) for the given constant, based on its type.
+(define (default-binding const)
+  (match (term-type const)
+    [(== @boolean?) #f]
+    [(or (== @integer?) (== @real?)) 0]
+    [(? bitvector? t) (bv 0 t)]
+    [(? enum? t) (vector-ref (enum-members t) 0)]))
 
  
   
