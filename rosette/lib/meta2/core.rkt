@@ -3,12 +3,12 @@
 (require syntax/id-table 
          (for-syntax "syntax-properties.rkt")  
          "syntax-properties.rkt" 
-         (only-in rosette constant))
+         (only-in rosette/lib/util/syntax read-module)
+         (only-in rosette constant model))
 
 (provide (all-defined-out))
 
-(define context (make-parameter 
-                 '()
+(define context (make-parameter '()
                  (lambda (v) (cons v (context)))))
 
 (define (in-context ctx closure)
@@ -82,34 +82,46 @@
        (syntax-position id) 
        (syntax-span id)))
        
-(struct tag (name source line column position span) #:transparent)
+(struct tag (name source line column position span) 
+  #:transparent
+  #:methods gen:custom-write
+  [(define (write-proc self port mode)
+     (match self
+       [(tag n (? path? src) ln col _ _)
+        (fprintf port "~a:~a:~a:~a" n 
+                 (string-replace (path->string (file-name-from-path src)) ".rkt" "") ln col)]
+       [(tag n src ln col _ _)
+        (fprintf port "~a:~a:~a:~a" n src ln col)]))])
 
-;(define-synthax ??
-;  ([(_) (?? (context))]
-;   [(_ t) t])
-;  (lambda (expr sol) #t))
-;
-;(define-synthax choose
-;  ([(_ x) (begin0 x (printf "~a\n" (context)))]
-;   [(_ x y ...) (list x y ...)])
-;  (lambda (expr sol) 
-;    (syntax-case expr ()
-;      [(_ x) #'x]
-;      [_ #f])))
-;
-;(define-synthax rc 
-;  ([(_ #:depth 0) (printf "~a\n" (context))]
-;   [(_ #:depth k) (rc #:depth (sub1 k))]))
-;
-;(define (ch3) (choose (choose (choose 3))))
+(define (tag-contains? outer inner)
+  (match* (outer inner)
+    [((tag _ src0 _ _ pos0 span0) (tag _ src1 _ _ pos1 span1))
+     (and (equal? src0 src1)
+          (<= pos0 pos1)
+          (<= (+ pos1 span1) (pos0 span0)))]))
 
-;(define-synthax choose
-;  ([(_ x) 
-;    (begin0 x (printf "~a: ~a\n" x (context)))]
-;   [(_ x y ...) 
-;    (begin0 (list (choose x) y ...) (printf "~a: ~a\n" (list x y ...) (context)))]))
-;(choose 1)
-;(choose 1 2 3 4)
-;(choose (choose 2))
+; Returns the context (if any) that make up the constant's identifier.
+(define (constant->context c)
+  (match c
+    [(constant (and ts (list (? tag?) ...)) _) ts]
+    [(constant (and ts (list _ (? tag?) ...)) _) (cdr ts)]
+    [_ #f]))
+
+; Returns the set of contexts that make up the constants in the given solution.
+(define (solution->contexts sol)
+  (for*/set ([k (in-dict-keys (model sol))]
+             [ts (in-value (constant->context k))] #:when ts)
+    ts))
+
+
+(define (generate-forms sol)
+  (let* ([ctxs (solution->contexts sol)]
+         [roots (for/set ([ctx ctxs]) (last ctx))]
+         [sources (for/set ([r roots]) (tag-source r))]
+         [sources (set-map sources read-module)])
+    sources))
+
+    
+
 
 
