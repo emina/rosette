@@ -15,6 +15,9 @@
  term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
  clear-terms!      ; (-> void? void?)
  sublist?
+ guarded 
+ guarded-test 
+ guarded-value
  (all-from-out "type.rkt"))
 
 (define term-cache (make-parameter (make-hash)))
@@ -113,6 +116,18 @@
 (define (term-track-origin v origin) (term-property v 'origin origin))
 
 #|-----------------------------------------------------------------------------------|#
+; A guarded value is a typed value consisting a boolean? condition (a test) term and 
+; a value term.  The type of a guarded value is the same as the type of its value field. 
+; The term structure defines a symbolic value, which can be a variable or an expression.
+; Symbolic values can also be annotated with additional information that indicates, 
+; for example, where in the code they came from.
+#|-----------------------------------------------------------------------------------|#
+(struct guarded (test value) 
+  #:transparent
+  #:methods gen:typed
+  [(define (get-type self) (type-of (guarded-value self)))])
+
+#|-----------------------------------------------------------------------------------|#
 ; The following functions convert symbolic values to strings or plain s-expressions.
 #|-----------------------------------------------------------------------------------|#
 
@@ -138,9 +153,9 @@
         (display "...")))
     (display ")")))
 
-(define (print-guarded vec cache max-length)
+(define (print-guarded val cache max-length)
   (match-let ([o (current-output-port)]
-              [(vector _ test value) vec])
+              [(guarded test value) val])
     (printf "[")
     (print-rec test cache max-length)
     (display " ")
@@ -158,20 +173,16 @@
                    (parameterize ([current-output-port output-port])
                      (cond [(constant? val) (display (const-e val))]
                            [(expression? val) (print-expr val cache max-length)]
-                           [(struct? val) (let ([vec (struct->vector val)])
-                                            (if (equal? (vector-ref vec 0) 'struct:guarded)
-                                                (print-guarded vec cache max-length)
-                                                (display val)))]
+                           [(guarded? val) (print-guarded val cache max-length)]
                            [else (display val)]))
                    (let ([str (get-output-string output-str)])
                      (hash-set! cache val str)
                      str)))])
     (display str)))
 
-
-
 (define (maybe-identifier x)
   (if (identifier? x) (syntax->datum x) x))
+
 (define (const-e const)
   (match const
     [(a-constant n _)

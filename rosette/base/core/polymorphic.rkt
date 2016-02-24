@@ -56,10 +56,7 @@
                [(_ _ (expression (== ite) (== (! b)) x _)) (ite b t x)]
                [(_ _ _) (expression ite b t f)])))
 
-(struct guarded (test value) 
-  #:transparent
-  #:methods gen:typed
-  [(define (get-type self) (type-of (guarded-value self)))])
+
   
 
 ; A generic ite* operator that takes one or more guard-value pairs, 
