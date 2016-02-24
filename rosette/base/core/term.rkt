@@ -140,6 +140,18 @@
         (display "...")))
     (display ")")))
 
+(define (any->datum x)
+  (if (identifier? x) (syntax->datum x) x))
+
+(define (print-const val cache max-length)
+  (display 
+   (match val
+     [(a-constant (? list? n) _)
+      (for/fold ([s (format "~a" (any->datum (car n)))]) 
+                                 ([r (cdr n)]) 
+        (format "~a$~a" s (any->datum r)))]
+     [(a-constant n _) (format "~a" (any->datum n))])))
+
 (define (print-rec val cache max-length)
   (let ([str (if (hash-has-key? cache val)
                  (hash-ref cache val)
@@ -147,7 +159,7 @@
                         [current-pos (file-position (current-output-port))]
                         [output-port (relocate-output-port output-str #f #f current-pos)])
                    (parameterize ([current-output-port output-port])
-                     (cond [(constant? val) (display (const-e val))]
+                     (cond [(constant? val) (print-const val cache max-length)]
                            [(expression? val) (print-expr val cache max-length)] 
                            [else (display val)]))
                    (let ([str (get-output-string output-str)])
@@ -155,16 +167,6 @@
                      str)))])
     (display str)))
 
-(define (maybe-identifier x)
-  (if (identifier? x) (syntax->datum x) x))
-
-(define (const-e const)
-  (match const
-    [(a-constant n _)
-     (cond [(list? n) (for/fold ([s (format "~a" (maybe-identifier (car n)))]) 
-                                ([r (cdr n)]) 
-                        (format "~a$~a" s (maybe-identifier r)))]
-           [else (format "~a" (maybe-identifier n))])]))
   
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.
