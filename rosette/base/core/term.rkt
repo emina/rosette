@@ -15,9 +15,6 @@
  term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
  clear-terms!      ; (-> void? void?)
  sublist?
- guarded 
- guarded-test 
- guarded-value
  (all-from-out "type.rkt"))
 
 (define term-cache (make-parameter (make-hash)))
@@ -115,17 +112,7 @@
 
 (define (term-track-origin v origin) (term-property v 'origin origin))
 
-#|-----------------------------------------------------------------------------------|#
-; A guarded value is a typed value consisting a boolean? condition (a test) term and 
-; a value term.  The type of a guarded value is the same as the type of its value field. 
-; The term structure defines a symbolic value, which can be a variable or an expression.
-; Symbolic values can also be annotated with additional information that indicates, 
-; for example, where in the code they came from.
-#|-----------------------------------------------------------------------------------|#
-(struct guarded (test value) 
-  #:transparent
-  #:methods gen:typed
-  [(define (get-type self) (type-of (guarded-value self)))])
+
 
 #|-----------------------------------------------------------------------------------|#
 ; The following functions convert symbolic values to strings or plain s-expressions.
@@ -153,17 +140,6 @@
         (display "...")))
     (display ")")))
 
-(define (print-guarded val cache max-length)
-  (match-let ([o (current-output-port)]
-              [(guarded test value) val])
-    (printf "[")
-    (print-rec test cache max-length)
-    (display " ")
-    (if (< (file-position o) max-length)
-        (print-rec value cache max-length)
-        (display "..."))
-    (display "]")))
-  
 (define (print-rec val cache max-length)
   (let ([str (if (hash-has-key? cache val)
                  (hash-ref cache val)
@@ -172,8 +148,7 @@
                         [output-port (relocate-output-port output-str #f #f current-pos)])
                    (parameterize ([current-output-port output-port])
                      (cond [(constant? val) (display (const-e val))]
-                           [(expression? val) (print-expr val cache max-length)]
-                           [(guarded? val) (print-guarded val cache max-length)]
+                           [(expression? val) (print-expr val cache max-length)] 
                            [else (display val)]))
                    (let ([str (get-output-string output-str)])
                      (hash-set! cache val str)

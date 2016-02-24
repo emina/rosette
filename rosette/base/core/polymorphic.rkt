@@ -3,7 +3,7 @@
 (require "term.rkt" "union.rkt" "op.rkt" "bool.rkt")
 
 (provide 
- ite ite* guarded guarded-test guarded-value =?    
+ ite ite* ⊢ guarded guarded-test guarded-value =?    
  generic-merge generic-merge*
  T*->T T*->boolean?
  sort/expression
@@ -57,7 +57,28 @@
                [(_ _ _) (expression ite b t f)])))
 
 
-  
+; A generic operator that takes a boolean condition and a value, and it evaluates 
+; to that value if the condition is true.  Otherwise, its output is undefined.
+(define (make-guarded g v) (expression ⊢ g v))
+
+(define-operator ⊢
+  #:name '⊢
+  #:type (lambda (g v) (type-of v))
+  #:unsafe make-guarded)
+
+(define-match-expander guarded
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ g-pat v-pat) #'(expression (== ⊢) g-pat v-pat)]))
+  (syntax-id-rules ()
+    [(_ g v) (make-guarded g v)]
+    [_ make-guarded]))
+
+(define (guarded-test gv) 
+  (match gv [(expression (== ⊢) g _) g]))
+
+(define (guarded-value gv) 
+  (match gv [(expression (== ⊢) _ v) v]))
 
 ; A generic ite* operator that takes one or more guard-value pairs, 
 ; (g1 . v1) ... (gn . vn), and merges them into a single value 
