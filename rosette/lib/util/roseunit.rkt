@@ -55,8 +55,7 @@
       (with-asserts-only
        (parameterize ([current-bitwidth (current-bitwidth)]
                       [term-cache (hash-copy (term-cache))]
-                      [current-oracle (oracle (current-oracle))]
-                      [error-print-width 4])
+                      [current-oracle (oracle (current-oracle))])
          test ...)))]
     [(_ name #:before before test ...)
      (test-suite+ name #:before before #:after void test ...)]

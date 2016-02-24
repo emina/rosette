@@ -2,6 +2,8 @@
 
 (require rosette/lib/util/roseunit)
 
+(error-print-width 4)
+
 (test-groups [test fast] 
  "../sdsl/websynth/test/all-tests.rkt"         ; WebSynth
  "../sdsl/bv/test/all-tests.rkt"               ; BV

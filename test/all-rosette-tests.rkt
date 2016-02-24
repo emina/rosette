@@ -2,6 +2,8 @@
  
 (require rosette/lib/util/roseunit)
 
+(error-print-width 4)
+
 (run-all-tests 
  "base/effects.rkt" 
  "base/type.rkt" 
