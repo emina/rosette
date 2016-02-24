@@ -1,6 +1,6 @@
 #lang racket
 
-(require syntax/id-table 
+(require syntax/id-table racket/stxparam
          (for-syntax "syntax-properties.rkt")  
          "syntax-properties.rkt" 
          (only-in rosette/lib/util/syntax read-module)
@@ -8,11 +8,23 @@
 
 (provide (all-defined-out))
 
+; Stores the current synthax-expansion context, represented 
+; as a list of tags, where the most recent tag identifies the 
+; most recently instantiated synthax macro.
+(define-syntax-parameter static-context 
+  (syntax-id-rules () [_ (context)]))
+
+; Stores the current synthax-calling context, represented 
+; as a list of tags, where the most recent tag identifies the 
+; most recently instantiated synthax macro.
 (define context (make-parameter '()
                  (lambda (v) (cons v (context)))))
 
+; Executes the given thunk in a context that has the 
+; given ctx value as its most recent tag.
 (define (in-context ctx closure)
-  (parameterize ([context (identifier->tag ctx)]) (closure)))
+  (parameterize ([context (identifier->tag ctx)]) 
+    (closure)))
 
 ; Creates a constant of the given type that is 
 ; identified by the current context.  Repeated 
@@ -72,35 +84,48 @@
               (quasisyntax/loc stx 
                 (in-context (syntax/source call) 
                             (thunk #,(syntax/source expr))))] ...))                  
-         (free-id-table-set! codegen #'id id-gen)))]))
+         (free-id-table-set! codegen #'id (cons #'id id-gen))))]))
 
-(define (identifier->tag id)
-  (tag (syntax->datum id) 
-       (syntax-source id)
-       (syntax-line id)
-       (syntax-column id)
-       (syntax-position id) 
-       (syntax-span id)))
-       
-(struct tag (name source line column position span) 
+; Creates a tag for the given identifier, which must appear as a 
+; key in the codegen table.  The id field of the produced tag is 
+; the identifier from the codgen table that is free-identifier=? 
+; to the input identifier.
+(define (identifier->tag stx)
+  (tag (car (free-id-table-ref codegen stx)) (syntax->srcloc stx)))
+
+; Creates a srcloc value that captures the source location information for 
+; the given syntax object.
+(define (syntax->srcloc stx)
+  (srcloc (syntax-source stx) 
+          (syntax-line stx) 
+          (syntax-column stx)
+          (syntax-position stx) 
+          (syntax-span stx)))
+
+; A tag consiting of a cannonical identifier (syntax) for a synthax construct, and a 
+; source location at which that construct is instantied.
+(struct tag (id srcloc) 
   #:transparent
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (match self
-       [(tag n (? path? src) ln col _ _)
-        (fprintf port "~a:~a:~a:~a" n 
+       [(tag n (srcloc (? path? src) ln col _ _))
+        (fprintf port "~a:~a:~a:~a" (syntax->datum n) 
                  (string-replace (path->string (file-name-from-path src)) ".rkt" "") ln col)]
-       [(tag n src ln col _ _)
-        (fprintf port "~a:~a:~a:~a" n src ln col)]))])
+       [(tag n (srcloc src ln col _ _))
+        (fprintf port "~a:~a:~a:~a" (syntax->datum n) src ln col)]))])
 
-(define (tag-contains? outer inner)
+; Returns true iff the source locations are in the same module, 
+; and the position and span out of first tag subsumes those of the second.
+(define (srcloc-contains? outer inner)
   (match* (outer inner)
-    [((tag _ src0 _ _ pos0 span0) (tag _ src1 _ _ pos1 span1))
+    [((srcloc src0 _ _ pos0 span0) (srcloc src1 _ _ pos1 span1))
      (and (equal? src0 src1)
           (<= pos0 pos1)
-          (<= (+ pos1 span1) (pos0 span0)))]))
+          (<= (+ pos1 span1) (+ pos0 span0)))]))
 
-; Returns the context (if any) that make up the constant's identifier.
+; Returns the context suffix, if any, that makes up the constant's identifier. 
+; If the identifier contains no tag suffix, returns #f.
 (define (constant->context c)
   (match c
     [(constant (and ts (list (? tag?) ...)) _) ts]
@@ -113,13 +138,60 @@
              [ts (in-value (constant->context k))] #:when ts)
     ts))
 
-
+; Given a satisfiable solution that represents the result of a synthesis query, 
+; generates a syntactic representation of the synthesized code, given as a list 
+; of syntax objects.
 (define (generate-forms sol)
-  (let* ([ctxs (solution->contexts sol)]
-         [roots (for/set ([ctx ctxs]) (last ctx))]
-         [sources (for/set ([r roots]) (tag-source r))]
-         [sources (set-map sources read-module)])
-    sources))
+  
+  (define ctxs (solution->contexts sol))
+ 
+  (define synthaxes 
+    (for*/hash ([ctx ctxs][t ctx])
+      (values (tag-srcloc t) (tag-id t))))
+  
+  (define sources 
+    (for/set ([k (in-hash-keys synthaxes)]) 
+      (srcloc-source k)))
+                                
+  (define (synth? loc)
+    (for/or ([k (in-hash-keys synthaxes)])
+      (srcloc-contains? loc k)))
+  
+  ;(displayln "synthaxes:")
+  ;(pretty-display synthaxes)
+  ;(newline)
+    
+  (define (generate form)
+    (syntax-case form ()
+      [(e _ ...)
+       (let* ([loc (syntax->srcloc #'e)]
+              [id  (hash-ref synthaxes loc #f)])
+         (if id
+             (parameterize ([context (tag id loc)])              
+               (let ([gf ((cdr (free-id-table-ref codegen id)) form sol)])
+                 (printf "generating ~a\n  context: ~a\n  result: ~a\n" form (context) gf)
+                 (if (equal? gf form) 
+                     form
+                     (generate gf))))
+             (let* ([es (syntax->list form)]
+                    [gs (map generate es)])
+               (if (equal? es gs) 
+                   form
+                   (quasisyntax/loc form (#,@gs))))))]
+      [_ form]))
+                         
+  (apply 
+   append
+   (for/list ([source sources])
+     (syntax-case (read-module source) ()
+       [(mod _ _ (_ forms ...))
+        (free-identifier=? #'module (datum->syntax #'module (syntax->datum #'mod)))
+        (for/list ([form (syntax->list #'(forms ...))] #:when (synth? (syntax->srcloc form)))
+          (generate form))]
+       [other (error 'generate-forms "expected a module, given ~a" #'other)]))))
+
+  
+  
 
     
 
