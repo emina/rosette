@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require "viz.rkt" (rename-in rosette/lib/meta/meta [choose ?]))
+(require "viz.rkt" (rename-in rosette/lib/meta2/holes [choose ?]))
 
 (provide automaton reject ? alphabet viz)
 

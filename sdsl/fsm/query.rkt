@@ -3,7 +3,7 @@
 (require 
  "automaton.rkt" "lib.rkt"
  rosette/query/debug rosette/lib/tools/render 
- rosette/lib/meta/meta)
+ rosette/lib/meta2/holes)
 
 (provide define/debug debug-automaton 
          verify-automaton solve-automaton 
