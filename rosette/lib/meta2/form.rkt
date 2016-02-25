@@ -5,13 +5,13 @@
 (provide ?? choose)
 
 (define-synthax ??
-  ([(_)  (context->constant integer?)]
-   [(_ t) (context->constant t)])
+  ([(_)   (hole integer?)]
+   [(_ t) (hole t)])
   (lambda (expr sol)
     (define h 
       (syntax-case expr ()
-        [(_)   (context->constant integer?)]
-        [(_ t) (context->constant (eval #'t))]))
+        [(_)   (hole integer?)]
+        [(_ t) (hole (eval #'t))]))
     (define val (sol h))
     (if (term? val) expr val)))
 
@@ -23,7 +23,7 @@
       [(_ x) #'x]
       [(_ x ...) 
        (let* ([xs (syntax->list #'(x ...))]
-              [vs (map sol (context->constants boolean? (sub1 (length xs))))])
+              [vs (map sol (hole boolean? (sub1 (length xs))))])
          (if (andmap term? vs)
              expr
              (let loop ([xs xs][vs vs])
@@ -33,7 +33,7 @@
                  [(_ _) (loop (cdr xs) (cdr vs))]))))])))
          
 (define (choose* . xs)
-  (let loop ([xs xs][hs (context->constants boolean? (sub1 (length xs)))])
+  (let loop ([xs xs][hs (hole boolean? (sub1 (length xs)))])
     (match xs
       [(list y) (y)]
       [(list y ys ...)

@@ -6,7 +6,7 @@
          (only-in rosette/lib/util/syntax read-module)
          (only-in rosette constant model))
 
-(provide (all-defined-out))
+(provide hole define-synthax solution->forms)
 
 ; Stores the current synthax-expansion context, represented 
 ; as a list of tags, where the most recent tag identifies the 
@@ -25,20 +25,15 @@
   (parameterize ([context ctx]) 
     (closure)))
 
-; Creates a constant of the given type that is 
-; identified by the current context.  Repeated 
-; call to this procedure with the same context and type 
-; return equal? results.
-(define (context->constant type)
-  (constant (context) type))
-
-; Creates a list of n constants of the given type, 
-; which are identified by the current context.  Repeated 
-; call to this procedure with the same context, type, and 
+; Creates a list of n constants of the given type that  
+; are identified by the current context.  Repeated 
+; calls to this procedure with the same context, type, and 
 ; n return equal? results.
-(define (context->constants type n)
-  (define path (context))
-  (for/list ([i n]) (constant (cons i path) type)))
+(define hole
+  (case-lambda 
+    [(type)   (constant (context) type)]
+    [(type n) (define path (context))
+              (for/list ([i n]) (constant (cons i path) type))]))
 
 (define codegen (make-free-id-table null #:phase 0))
 
@@ -59,7 +54,7 @@
          (lambda (expr sol)
            (syntax-case expr ()
              [(_ p0 ... #:depth k)
-              (if (= (eval #'k) 0) 
+              (if (= (eval #'k (tag->namespace (last (context)))) 0) 
                   (syntax/source e0) 
                   (syntax/source ek))]))))]
     [(_ id ([(_ p0 ... #:depth 0) e0] 
@@ -73,10 +68,10 @@
               (quasisyntax/loc stx 
                 (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
                   (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
-                                       (in-context ctx
-                                                   (thunk #,(if (<= (eval #'k) 0) 
-                                                                (syntax/source e0) 
-                                                                (syntax/source ek)))))))]))                    
+                    (in-context ctx
+                                (thunk #,(if (<= (eval #'k) 0) 
+                                             (syntax/source e0) 
+                                             (syntax/source ek)))))))]))                    
          (free-id-table-set! codegen #'id (cons #'id id-gen))))]
     [(_ id ([(_ pat ...) expr] ...) id-gen)
      (syntax/loc stx
@@ -87,8 +82,8 @@
               (quasisyntax/loc stx 
                 (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
                   (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
-                                       (in-context ctx
-                                                   (thunk #,(syntax/source expr))))))] ...))                  
+                    (in-context ctx
+                                (thunk #,(syntax/source expr))))))] ...))                  
          (free-id-table-set! codegen #'id (cons #'id id-gen))))]))
 
 ; Creates a tag for the given identifier, which must appear as a 
@@ -120,6 +115,12 @@
        [(tag n (srcloc src ln col _ _))
         (fprintf port "~a:~a:~a:~a" (syntax->datum n) src ln col)]))])
 
+; Returns a namespace for the source module of the given tag.
+(define (tag->namespace t)
+  (module->namespace
+   (make-resolved-module-path 
+    (srcloc-source (tag-srcloc t)))))
+
 ; Returns true iff the source locations are in the same module, 
 ; and the position and span out of first tag subsumes those of the second.
 (define (srcloc-contains? outer inner)
@@ -146,47 +147,39 @@
 ; Given a satisfiable solution that represents the result of a synthesis query, 
 ; generates a syntactic representation of the synthesized code, given as a list 
 ; of syntax objects.
-(define (generate-forms sol)
+(define (solution->forms sol)
   
   (define ctxs (solution->contexts sol))
  
   (define synthaxes 
     (for*/hash ([ctx ctxs][t ctx])
       (values (tag-srcloc t) (tag-id t))))
+ 
+  (define roots
+    (for/set ([ctx ctxs]) (tag-srcloc (last ctx))))
   
   (define sources 
-    (for/set ([k (in-hash-keys synthaxes)]) 
-      (srcloc-source k)))
+    (for/set ([r roots]) (srcloc-source r)))
                                 
   (define (synth? loc)
-    (for/or ([k (in-hash-keys synthaxes)])
-      (srcloc-contains? loc k)))
+    (for/or ([r roots])
+      (srcloc-contains? loc r)))
   
-  ;(displayln "synthaxes:")
-  ;(pretty-display synthaxes)
-  ;(newline)
-    
   (define (generate form)
     (syntax-case form ()
-      [(def _ ...)
-       (and (identifier? #'def)
-            (free-identifier=? #'define-synthax (datum->syntax #'define-synthax (syntax->datum #'def))))
-       form]
       [(e _ ...)
        (let* ([loc (syntax->srcloc #'e)]
               [id  (hash-ref synthaxes loc #f)])
          (if id
              (parameterize ([context (cons (tag id loc) (context))])              
                (let ([gf ((cdr (free-id-table-ref codegen id)) form sol)])
-                 ;(printf "generating ~a\n  context: ~a\n  result: ~a\n" form (context) gf)
-                 (if (equal? gf form) 
-                     form
-                     (generate gf))))
+                 (cond [(equal? gf form) form]
+                       [else (generate gf)])))
              (let* ([es (syntax->list form)]
                     [gs (map generate es)])
-               (if (equal? es gs) 
-                   form
-                   (quasisyntax/loc form (#,@gs))))))]
+               (with-syntax ([(g ...) gs])
+                 (cond [(equal? es gs) form]
+                       [else (quasisyntax/loc form (g ...))])))))]
       [_ form]))
                          
   (apply 
