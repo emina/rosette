@@ -12,18 +12,17 @@
 ; as a list of tags, where the most recent tag identifies the 
 ; most recently instantiated synthax macro.
 (define-syntax-parameter static-context 
-  (syntax-id-rules () [_ (context)]))
+  (syntax-id-rules () [_ '()]))
 
 ; Stores the current synthax-calling context, represented 
 ; as a list of tags, where the most recent tag identifies the 
 ; most recently instantiated synthax macro.
-(define context (make-parameter '()
-                 (lambda (v) (cons v (context)))))
+(define context (make-parameter '()))
 
 ; Executes the given thunk in a context that has the 
 ; given ctx value as its most recent tag.
 (define (in-context ctx closure)
-  (parameterize ([context (identifier->tag ctx)]) 
+  (parameterize ([context ctx]) 
     (closure)))
 
 ; Creates a constant of the given type that is 
@@ -59,8 +58,10 @@
                            [(_ pk ... #:depth k) ek])
          (lambda (expr sol)
            (syntax-case expr ()
-             [(_ p0 ... #:depth 0) (syntax/source e0)]
-             [(_ pk ... #:depth k) (syntax/source ek)]))))]
+             [(_ p0 ... #:depth k)
+              (if (= (eval #'k) 0) 
+                  (syntax/source e0) 
+                  (syntax/source ek))]))))]
     [(_ id ([(_ p0 ... #:depth 0) e0] 
             [(_ pk ... #:depth k) ek]) 
         id-gen)
@@ -70,11 +71,13 @@
            (syntax-case stx ()
              [(call pk ... #:depth k)
               (quasisyntax/loc stx 
-                (in-context (syntax/source call) 
-                            (thunk #,(if (<= (eval #'k) 0) 
-                                         (syntax/source e0) 
-                                         (syntax/source ek)))))]))                    
-         (free-id-table-set! codegen #'id id-gen)))]
+                (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
+                  (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
+                                       (in-context ctx
+                                                   (thunk #,(if (<= (eval #'k) 0) 
+                                                                (syntax/source e0) 
+                                                                (syntax/source ek)))))))]))                    
+         (free-id-table-set! codegen #'id (cons #'id id-gen))))]
     [(_ id ([(_ pat ...) expr] ...) id-gen)
      (syntax/loc stx
        (begin
@@ -82,8 +85,10 @@
            (syntax-case stx ()
              [(call pat ...) 
               (quasisyntax/loc stx 
-                (in-context (syntax/source call) 
-                            (thunk #,(syntax/source expr))))] ...))                  
+                (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
+                  (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
+                                       (in-context ctx
+                                                   (thunk #,(syntax/source expr))))))] ...))                  
          (free-id-table-set! codegen #'id (cons #'id id-gen))))]))
 
 ; Creates a tag for the given identifier, which must appear as a 
@@ -163,13 +168,17 @@
     
   (define (generate form)
     (syntax-case form ()
+      [(def _ ...)
+       (and (identifier? #'def)
+            (free-identifier=? #'define-synthax (datum->syntax #'define-synthax (syntax->datum #'def))))
+       form]
       [(e _ ...)
        (let* ([loc (syntax->srcloc #'e)]
               [id  (hash-ref synthaxes loc #f)])
          (if id
-             (parameterize ([context (tag id loc)])              
+             (parameterize ([context (cons (tag id loc) (context))])              
                (let ([gf ((cdr (free-id-table-ref codegen id)) form sol)])
-                 (printf "generating ~a\n  context: ~a\n  result: ~a\n" form (context) gf)
+                 ;(printf "generating ~a\n  context: ~a\n  result: ~a\n" form (context) gf)
                  (if (equal? gf form) 
                      form
                      (generate gf))))
