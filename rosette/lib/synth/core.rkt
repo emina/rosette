@@ -6,7 +6,7 @@
          (only-in rosette/lib/util/syntax read-module)
          (only-in rosette constant model term-cache))
 
-(provide hole completion define-synthax solution->forms)
+(provide hole completion define-synthax generate-forms print-forms)
 
 ; Stores the current synthax-expansion context, represented 
 ; as a list of tags, where the most recent tag identifies the 
@@ -196,7 +196,7 @@
 ; Given a satisfiable solution that represents the result of a synthesis query, 
 ; generates a syntactic representation of the synthesized code, given as a list 
 ; of syntax objects.
-(define (solution->forms sol)
+(define (generate-forms sol)
   
   (define ctxs (solution->contexts sol))
   
@@ -241,8 +241,11 @@
             (generate form))]
          [other (error 'generate-forms "expected a module, given ~a" #'other)]))))
 
-  
-  
+; Pretty-prints the result of (generate-forms sol). 
+(define (print-forms sol)
+  (for ([f (generate-forms sol)])
+    (printf "~a:~a:~a\n" (syntax-source f) (syntax-line f) (syntax-column f))
+    (printf "~a\n" (pretty-format (syntax->datum f)))))  
 
     
 

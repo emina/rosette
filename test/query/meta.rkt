@@ -27,7 +27,7 @@
 (define (check-synth expr expected)
   (let ([sol (synthesize #:forall x #:guarantee (assert expr))])
     (check-sat sol)
-    (check-equal? (list->set (map syntax->datum (solution->forms sol)))
+    (check-equal? (list->set (map syntax->datum (generate-forms sol)))
                   (list->set expected))))
 
 (define basic-tests
