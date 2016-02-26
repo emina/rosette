@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rosette/lib/synth)
+(require rosette/lib/synthax)
 
 (provide (all-defined-out))
 

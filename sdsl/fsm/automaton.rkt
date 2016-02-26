@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require "viz.rkt" (rename-in rosette/lib/synth [choose ?]))
+(require "viz.rkt" (rename-in rosette/lib/synthax [choose ?]))
 
 (provide automaton reject ? alphabet viz)
 

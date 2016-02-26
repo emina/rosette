@@ -3,7 +3,7 @@
 (require 
  "automaton.rkt" "lib.rkt"
  rosette/query/debug rosette/lib/tools/render 
- rosette/lib/synth)
+ rosette/lib/synthax)
 
 (provide define/debug debug-automaton 
          verify-automaton solve-automaton 

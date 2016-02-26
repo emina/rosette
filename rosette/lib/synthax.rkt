@@ -1,6 +1,6 @@
 #lang racket
 
-(require "synth/core.rkt" "synth/form.rkt" "util/syntax-properties.rkt")
+(require "synthax/core.rkt" "synthax/form.rkt" "util/syntax-properties.rkt")
 
 (provide generate-forms print-forms
          define-synthax ?? choose

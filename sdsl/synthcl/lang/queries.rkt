@@ -4,7 +4,7 @@
          (only-in rackunit test-pred) 
          (for-syntax (only-in racket/syntax with-syntax*))
          (only-in "forms.rkt" range :)
-         (only-in rosette/lib/synth print-forms)
+         (only-in rosette/lib/synthax print-forms)
          (prefix-in @ (only-in rosette verify synthesize)))
 
 (provide verify synth expected? query-output-port)

@@ -1,7 +1,7 @@
 #lang s-exp rosette
 
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
-         rosette/lib/synth "synthax-external.rkt")
+         rosette/lib/synthax "synthax-external.rkt")
 
 (define-symbolic x integer?)
 
