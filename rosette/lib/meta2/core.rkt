@@ -4,9 +4,9 @@
          (for-syntax "../util/syntax-properties.rkt")  
          "../util/syntax-properties.rkt"
          (only-in rosette/lib/util/syntax read-module)
-         (only-in rosette constant model))
+         (only-in rosette constant model term-cache))
 
-(provide hole define-synthax eval-synthax solution->forms)
+(provide hole completion define-synthax solution->forms)
 
 ; Stores the current synthax-expansion context, represented 
 ; as a list of tags, where the most recent tag identifies the 
@@ -25,23 +25,42 @@
   (parameterize ([context ctx]) 
     (closure)))
 
-; Creates a list of n constants of the given type that  
-; are identified by the current context.  Repeated 
-; calls to this procedure with the same context, type, and 
-; n return equal? results.
+; Creates n constants of the given type that  
+; are identified by the current context. If n is
+; not provided, returns a single constants; if n 
+; is provided, a list of n constants is returned.
+; Repeated calls to this procedure with the same 
+; context, type, and n return equal? results.  
 (define hole
   (case-lambda 
     [(type)   (constant (context) type)]
     [(type n) (define path (context))
               (for/list ([i n]) (constant (cons i path) type))]))
 
-; Eval in the namespace determined by the root of the current context.
-(define (eval-synthax stx)
-  (eval stx (tag->namespace (last (context)))))
-  
+; Returns completions for the n holes that are 
+; identified by the current context. The completions are 
+; extracted from the given solution. If n is not provided, returns a 
+; single value; if n is provided, a list of n values is returned.
+; Repeated calls to this procedure with the same context and 
+; solution return equal? results.  
+(define completion
+  (case-lambda
+    [(sol) (sol (context->constant (context)))]
+    [(sol n) (define path (context))
+             (for/list ([i n]) 
+               (sol (context->constant (cons i path))))]))
+
+; Returns the constant in the current term-cache with the given
+; identifier, or throws an error if no such constant exists.
+(define (context->constant ctx)
+  (hash-ref (term-cache) ctx 
+            (thunk (error 'context->constant "unknown constant identifier: ~a" ctx))))
 
 (define codegen (make-free-id-table null #:phase 0))
 
+(define (eval-base stx)
+  (eval (syntax->datum stx) (make-base-namespace)))
+     
 ; Defines a macro that introduces a new kind of hole in Rosette.
 ; Recursive holes are defined with the #:depth keyword, specifying
 ; the base and recursive case.  Plain holes can specify any number of 
@@ -54,14 +73,12 @@
     [(_ (id p0 ... k) #:base e0 #:rec ek) 
      (syntax/loc stx 
        (define-synthax 
-         (id p0 ... k) 
-         #:base e0 
-         #:rec ek
+         (id p0 ... k) #:base e0 #:rec ek
          #:codegen 
          (lambda (expr sol)
            (syntax-case expr ()
              [(_ p0 ... k)
-              (if (= (eval-synthax #'k) 0) 
+              (if (<= (eval-base #'k) 0) 
                   (syntax/source e0) 
                   (syntax/source ek))]))))]
     [(_ (id pk ... k) #:base e0 #:rec ek #:codegen id-gen)
@@ -86,7 +103,7 @@
          (lambda (expr sol)
            (syntax-case expr ()
              [(_ p0 ... #:depth k)
-              (if (= (eval-synthax #'k) 0) 
+              (if (<= (eval-base #'k) 0) 
                   (syntax/source e0) 
                   (syntax/source ek))]))))]
     [(_ id ([(_ p0 ... #:depth 0) e0] 
@@ -153,12 +170,6 @@
        [(tag n (srcloc src ln col _ _))
         (fprintf port "~a:~a:~a:~a" (syntax->datum n) src ln col)]))])
 
-; Returns a namespace for the source module of the given tag.
-(define (tag->namespace t)
-  (module->namespace
-   (make-resolved-module-path 
-    (srcloc-source (tag-srcloc t)))))
-
 ; Returns true iff the source locations are in the same module, 
 ; and the position and span out of first tag subsumes those of the second.
 (define (srcloc-contains? outer inner)
@@ -188,17 +199,17 @@
 (define (solution->forms sol)
   
   (define ctxs (solution->contexts sol))
- 
+  
   (define synthaxes 
     (for*/hash ([ctx ctxs][t ctx])
       (values (tag-srcloc t) (tag-id t))))
- 
+  
   (define roots
     (for/set ([ctx ctxs]) (tag-srcloc (last ctx))))
   
   (define sources 
     (for/set ([r roots]) (srcloc-source r)))
-                                
+  
   (define (synth? loc)
     (for/or ([r roots])
       (srcloc-contains? loc r)))
@@ -219,16 +230,16 @@
                  (cond [(equal? es gs) form]
                        [else (quasisyntax/loc form (g ...))])))))]
       [_ form]))
-                         
-  (apply 
-   append
-   (for/list ([source sources])
-     (syntax-case (read-module source) ()
-       [(mod _ _ (_ forms ...))
-        (free-identifier=? #'module (datum->syntax #'module (syntax->datum #'mod)))
-        (for/list ([form (syntax->list #'(forms ...))] #:when (synth? (syntax->srcloc form)))
-          (generate form))]
-       [other (error 'generate-forms "expected a module, given ~a" #'other)]))))
+  
+    (apply 
+     append
+     (for/list ([source sources])
+       (syntax-case (read-module source) ()
+         [(mod _ _ (_ forms ...))
+          (free-identifier=? #'module (datum->syntax #'module (syntax->datum #'mod)))
+          (for/list ([form (syntax->list #'(forms ...))] #:when (synth? (syntax->srcloc form)))
+            (generate form))]
+         [other (error 'generate-forms "expected a module, given ~a" #'other)]))))
 
   
   

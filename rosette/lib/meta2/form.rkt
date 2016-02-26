@@ -8,11 +8,7 @@
   ([(_)   (hole integer?)]
    [(_ t) (hole t)])
   (lambda (expr sol)
-    (define h 
-      (syntax-case expr ()
-        [(_)   (hole integer?)]
-        [(_ t) (hole (eval-synthax #'t))]))
-    (define val (sol h))
+    (define val (completion sol))
     (if (term? val) expr val)))
 
 (define-synthax choose
@@ -23,7 +19,7 @@
       [(_ x) #'x]
       [(_ x ...) 
        (let* ([xs (syntax->list #'(x ...))]
-              [vs (map sol (hole boolean? (sub1 (length xs))))])
+              [vs (completion sol (sub1 (length xs)))])
          (if (andmap term? vs)
              expr
              (let loop ([xs xs][vs vs])
