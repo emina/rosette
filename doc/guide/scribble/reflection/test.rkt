@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (define-symbolic b boolean?)
 (define v (vector 1))
