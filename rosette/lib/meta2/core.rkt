@@ -1,12 +1,12 @@
 #lang racket
 
 (require syntax/id-table racket/stxparam
-         (for-syntax "syntax-properties.rkt")  
-         "syntax-properties.rkt" 
+         (for-syntax "../util/syntax-properties.rkt")  
+         "../util/syntax-properties.rkt"
          (only-in rosette/lib/util/syntax read-module)
          (only-in rosette constant model))
 
-(provide hole define-synthax solution->forms)
+(provide hole define-synthax eval-synthax solution->forms)
 
 ; Stores the current synthax-expansion context, represented 
 ; as a list of tags, where the most recent tag identifies the 
@@ -35,6 +35,11 @@
     [(type n) (define path (context))
               (for/list ([i n]) (constant (cons i path) type))]))
 
+; Eval in the namespace determined by the root of the current context.
+(define (eval-synthax stx)
+  (eval stx (tag->namespace (last (context)))))
+  
+
 (define codegen (make-free-id-table null #:phase 0))
 
 ; Defines a macro that introduces a new kind of hole in Rosette.
@@ -46,6 +51,33 @@
 ; the current (context).
 (define-syntax (define-synthax stx)
   (syntax-case stx ()
+    [(_ (id p0 ... k) #:base e0 #:rec ek) 
+     (syntax/loc stx 
+       (define-synthax 
+         (id p0 ... k) 
+         #:base e0 
+         #:rec ek
+         #:codegen 
+         (lambda (expr sol)
+           (syntax-case expr ()
+             [(_ p0 ... k)
+              (if (= (eval-synthax #'k) 0) 
+                  (syntax/source e0) 
+                  (syntax/source ek))]))))]
+    [(_ (id pk ... k) #:base e0 #:rec ek #:codegen id-gen)
+     (syntax/loc stx
+       (begin
+         (define-syntax (id stx)
+           (syntax-case stx ()
+             [(call pk ... k)
+              (quasisyntax/loc stx 
+                (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
+                  (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
+                                       (in-context ctx
+                                                   (thunk #,(if (<= (eval #'k) 0) 
+                                                                (syntax/source e0) 
+                                                                (syntax/source ek)))))))]))                    
+         (free-id-table-set! codegen #'id (cons #'id id-gen))))]
     [(_ id ([(_ p0 ... #:depth 0) e0] 
             [(_ pk ... #:depth k) ek])) 
      (syntax/loc stx 
@@ -54,7 +86,7 @@
          (lambda (expr sol)
            (syntax-case expr ()
              [(_ p0 ... #:depth k)
-              (if (= (eval #'k (tag->namespace (last (context)))) 0) 
+              (if (= (eval-synthax #'k) 0) 
                   (syntax/source e0) 
                   (syntax/source ek))]))))]
     [(_ id ([(_ p0 ... #:depth 0) e0] 
@@ -73,6 +105,12 @@
                                              (syntax/source e0) 
                                              (syntax/source ek)))))))]))                    
          (free-id-table-set! codegen #'id (cons #'id id-gen))))]
+    [(_ id ([(_ p ...) e] ...))
+     (syntax/loc stx 
+       (define-synthax id ([(_ p ...) e] ...)
+         (lambda (expr sol)
+           (syntax-case expr ()
+             [(_ p ...) (syntax/source e)] ...))))]
     [(_ id ([(_ pat ...) expr] ...) id-gen)
      (syntax/loc stx
        (begin

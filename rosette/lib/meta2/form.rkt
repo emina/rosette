@@ -11,7 +11,7 @@
     (define h 
       (syntax-case expr ()
         [(_)   (hole integer?)]
-        [(_ t) (hole (eval #'t))]))
+        [(_ t) (hole (eval-synthax #'t))]))
     (define val (sol h))
     (if (term? val) expr val)))
 

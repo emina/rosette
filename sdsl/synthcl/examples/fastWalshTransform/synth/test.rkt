@@ -12,7 +12,7 @@
    (parameterize ([query-output-port (open-output-nowhere)])
      
      (parameterize ([expected? sat?])
-       (synth_scalar)
+       ;(synth_scalar)
        (synth_vector)))))
 
 (module+ test

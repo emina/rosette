@@ -5,7 +5,6 @@
                        "types.rkt")
          syntax/stx syntax/id-table
          (prefix-in rosette/ (only-in rosette  = <= >= ))
-         (only-in rosette/lib/meta/meta choose)
          "env.rkt" "util.rkt" "errors.rkt" "types.rkt" 
          "operators.rkt" "forms.rkt" "queries.rkt")
 
@@ -314,8 +313,39 @@
           (quasisyntax/loc stx
             (proc out (id [type param] ...) #,@exprs))
           void)))]
-    [_ (raise-bad-form-error (format "(~a type (id [type id] ...) expr ...)" (syntax->datum #'proc)) stx)]))
-     
+    [_ (raise-bad-form-error (format "(~a type (id [type id] ...) expr ...)" (syntax->datum stx)) stx)]))
+
+; Typechecks a grammar declaration.
+(define (typecheck-grammar stx)
+  (syntax-case stx ()   
+    [(grammar out (id [type param] ...) #:base expr0 #:rec exprk)
+     (parameterize ([current-env (env)])
+       (for-each typecheck (syntax->list #`([: type param] ...)))
+       (let* ([out-type (function-type-result (type-ref (typecheck #'id)))]
+              [texpr0 (typecheck #'expr0)]
+              [texprk (typecheck #'exprk)]
+              [t0 (type-ref texpr0)]
+              [tk (type-ref texprk)])
+         (unless (equal? out-type void)
+           (check-no-conversion t0 out-type stx texpr0)
+           (check-no-conversion tk out-type stx texprk))
+         (type-set
+          (quasisyntax/loc stx
+            (grammar out (id [type param] ...) #:base #,texpr0 #:rec #,texprk))
+          void)))]
+    [(grammar out (id [type param] ...) expr)
+     (parameterize ([current-env (env)])
+       (for-each typecheck (syntax->list #`([: type param] ...)))
+       (let ([out-type (function-type-result (type-ref (typecheck #'id)))]
+             [texpr (typecheck #'expr)])
+         (unless (equal? out-type void)
+           (check-no-conversion (type-ref texpr) out-type stx texpr))
+         (type-set
+          (quasisyntax/loc stx
+            (grammar out (id [type param] ...) #,texpr))
+          void)))]
+    [_ (raise-bad-form-error (format "(~a type (id [type id] ...) expr ...)" (syntax->datum stx)) stx)]))
+
 ; Typechecks the ternary selection operator.
 (define (typecheck-selection stx)
   (syntax-case stx ()
@@ -418,7 +448,7 @@
     (dict-set! procs #'synth          typecheck-query)
     (dict-set! procs #'choose         typecheck-choose)
     (dict-set! procs #'??             typecheck-??)
-    (dict-set! procs #'grammar        typecheck-procedure)
+    (dict-set! procs #'grammar        typecheck-grammar)
     
     (dict-set! procs #'procedure      typecheck-procedure)
     (dict-set! procs #'kernel         typecheck-procedure)

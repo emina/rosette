@@ -25,18 +25,19 @@
   (= [tArray pair]  (+ t1 t2))
   (= [tArray match] (- t1 t2)))
 
+
 (grammar int (idx [int tid] [int step] [int depth])
-  (assert (>= depth 0))
-  [choose tid step (?? int) 
-          (locally-scoped
-           (: int left right)
-           (= left  (idx tid step (- depth 1)))
-           (= right (idx tid step (- depth 1)))
-           [choose (+ left right)
-                   (- left right)
-                   (/ left right)
-                   (* left right)
-                   (% left right)])])
+  #:base (choose tid step (?? int)) 
+  #:rec  (locally-scoped
+          (: int left right)
+          (= left  (idx tid step (- depth 1)))
+          (= right (idx tid step (- depth 1)))
+          [choose left 
+                  (+ left right)
+                  (- left right)
+                  (/ left right)
+                  (* left right)
+                  (% left right)]))
 
 (kernel void (fwtKernel [float* tArray] [int step])
   (: int tid group pair match)

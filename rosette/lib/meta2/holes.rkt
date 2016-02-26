@@ -1,9 +1,10 @@
 #lang racket
 
-(require "core.rkt" "form.rkt")
+(require "core.rkt" "form.rkt" "../util/syntax-properties.rkt")
 
 (provide solution->forms print-forms
-         define-synthax ?? choose)
+         define-synthax ?? choose
+          (for-syntax save-properties) restore-properties)
 
 (define (print-forms sol)
   (for ([f (solution->forms sol)])
