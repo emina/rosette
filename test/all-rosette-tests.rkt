@@ -21,7 +21,7 @@
  "query/synthesize.rkt"
  "query/debug.rkt"
  "query/solve+.rkt"
- "query/meta.rkt"
+ "query/synthax.rkt"
  )
 
 #|
