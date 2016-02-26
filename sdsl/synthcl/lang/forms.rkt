@@ -4,7 +4,7 @@
          (for-syntax "types.rkt" "errors.rkt" (only-in racket make-list) (only-in syntax/stx stx-null?))
          "types.rkt" "util.rkt"
          (prefix-in rosette/ (only-in rosette if assert void))
-         (only-in rosette/lib/meta2/holes define-synthax [?? @??] choose)
+         (only-in rosette/lib/synth define-synthax [?? @??] choose)
          (only-in "../model/runtime.rkt" address-of malloc)
          (only-in "builtins.rkt" NULL clCreateProgramWithSource))
 

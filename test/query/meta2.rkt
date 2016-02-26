@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rosette/lib/meta2/holes)
+(require rosette/lib/synth)
 
 (provide (all-defined-out))
 

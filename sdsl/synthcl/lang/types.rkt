@@ -4,7 +4,7 @@
 ; the type instances / predicates in the OpenCL model.
 
 (require (only-in racket/syntax format-symbol)
-         syntax/id-table rosette/lib/meta2/holes
+         syntax/id-table rosette/lib/synth
          (for-syntax (only-in "../model/type.rkt" type-name type?))
          "../model/type.rkt" "../model/reals.rkt" 
          "../model/pointers.rkt" "../model/objects.rkt")

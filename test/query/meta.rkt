@@ -1,7 +1,7 @@
 #lang s-exp rosette
 
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
-         rosette/lib/meta2/holes "meta2.rkt")
+         rosette/lib/synth "meta2.rkt")
 
 (define-symbolic x integer?)
 
