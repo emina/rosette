@@ -50,4 +50,4 @@
 ; is number of bits from end of A to start of B. ~ 3.5 sec.
 (define-fragment (p19* x m k) 
   #:implements p19
-  #:library (bvlib [{bvxor} 3] [{bvand bvshl bvlshr} 1]))
+  #:library (bvlib [{bvlshr bvshl bvand} 1] [{bvxor} 3]))
