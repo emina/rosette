@@ -21,7 +21,7 @@
 (struct z3 (server [asserts #:mutable] [mins #:mutable] [maxs #:mutable] [env #:mutable])
   #:methods gen:solver
   [
-   (define (solver-add self bools)
+   (define (solver-assert self bools)
      (set-z3-asserts! self 
       (append (z3-asserts self)
               (for/list ([b bools] #:unless (equal? b #t))

@@ -11,7 +11,7 @@
   (only-in "../base/struct/enum.rkt" enum? enum-first)
   (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
   (only-in "../base/util/log.rkt" log-info)
-  (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-add solver-check solver-localize)
+  (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-assert solver-check solver-localize)
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
   (only-in "../solver/smt/z3.rkt" z3))
 
@@ -92,16 +92,16 @@
         [bw 
          (parameterize ([term-cache (hash-copy (term-cache))])
            (define fmap (finitize φs bw))
-           (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
+           (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
            (let loop ()
              (define fsol (complete (solver-check solver) fmap))
              (define sol (unfinitize fsol fmap)) 
              (cond 
                [(or (unsat? sol) (all-true? φs sol)) sol]
-               [else (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+               [else (solver-assert solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
                      (loop)])))]
         [else 
-         (solver-add solver φs)
+         (solver-assert solver φs)
          (solver-check solver)]))
     (solver-clear solver)))
 
@@ -123,7 +123,7 @@
          (let outer ([δs ψs])
            (with-handlers ([exn? handler])
              (finitize δs bw fmap)
-             (solver-add solver (for/list ([δ δs]) (hash-ref fmap δ)))
+             (solver-assert solver (for/list ([δ δs]) (hash-ref fmap δ)))
              (set! φs (append δs φs)) 
              (let inner ()
                (define fsol (complete (solver-check solver) fmap))
@@ -136,12 +136,12 @@
                       sol]
                      [(all-true? φs sol) (outer (yield sol))]
                      [else  
-                      (solver-add solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+                      (solver-assert solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
                       (inner)]))))))                      
       (generator (φs)
        (let loop ([φs φs])
          (with-handlers ([exn? handler])
-           (solver-add solver φs)
+           (solver-assert solver φs)
            (define sol (solver-check solver))
            (cond [(unsat? sol) (solver-shutdown solver) (custodian-shutdown-all cust) sol]
                  [else (loop (yield sol))]))))))
@@ -161,10 +161,10 @@
         [bw 
          (parameterize ([term-cache (hash-copy (term-cache))])
            (define fmap (finitize φs bw))
-           (solver-add solver (for/list ([φ φs]) (hash-ref fmap φ)))
+           (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
            (unfinitize (solver-localize solver) fmap))]
         [else 
-         (solver-add solver φs)
+         (solver-assert solver φs)
          (solver-localize solver)]))
     (solver-clear solver)))
   
@@ -214,7 +214,7 @@
   
   (define (guess sol)
     (log-cegis-info [trial] "searching for a candidate: ~s" (map sol inputs))
-    (solver-add guesser (evaluate φ sol))
+    (solver-assert guesser (evaluate φ sol))
     (match (solver-check guesser)
       [(model m) (sat (for/hash ([(c v) m] #:unless (member c inputs)) (values c v)))]
       [other other]))
@@ -222,7 +222,7 @@
   (define (check sol)
     (log-cegis-info [trial] "verifying the candidate solution ...")
     (solver-clear checker)
-    (solver-add checker (evaluate ¬φ sol))
+    (solver-assert checker (evaluate ¬φ sol))
     (match (solver-check checker)
       [(? sat? m) (sat (for/hash ([i inputs]) (values i (value-for (m i)))))]
       [other other]))

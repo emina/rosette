@@ -3,17 +3,17 @@
 (require racket/generic)
 
 (provide gen:solver solver? 
-         solver-add solver-clear
+         solver-assert solver-clear
          solver-minimize solver-maximize
          solver-check solver-localize 
          solver-shutdown)
 
 ; The generic solver interface specifies the set of procedures that 
 ; should be provided by a Rosette solver. These include 
-; solver-add, solver-clear, solver-minimize, solver-maximize,
+; solver-assert, solver-clear, solver-minimize, solver-maximize,
 ; solver-check, solver-localize, and solver-shutdown. 
 ;
-; The solver-add procedure takes as input zero or more @boolean? 
+; The solver-assert procedure takes as input zero or more @boolean? 
 ; values and adds them to the current state of the solver. 
 ; The solver-clear procedure clears all constraints from the current 
 ; state of the solver.
@@ -37,7 +37,7 @@
 ; with this solver instance.  The solver must be able to reacquire these resources 
 ; if needed.  That is, the solver should behave as specified above after a shutdown call.
 (define-generics solver
-  [solver-add solver bools]
+  [solver-assert solver bools]
   [solver-clear solver]
   [solver-minimize solver nums]
   [solver-maximize solver nums]

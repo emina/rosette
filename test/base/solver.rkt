@@ -7,7 +7,7 @@
 (define solver (make-parameter (z3)))
 
 (define (solve  . asserts)
-  (solver-add (solver) asserts)
+  (solver-assert (solver) asserts)
   (begin0
     (solver-check (solver))
     (solver-clear (solver))))

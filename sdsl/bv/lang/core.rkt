@@ -11,7 +11,7 @@
   (only-in rosette/base/util/log log-info)
   (only-in rosette/solver/solution model sat sat? unsat? unsat)
   (only-in rosette/solver/smt/z3 z3)
-  (only-in rosette/solver/solver solver-add solver-check solver-clear))
+  (only-in rosette/solver/solver solver-assert solver-check solver-clear))
 
 (provide ∃∀-solve)
 
@@ -35,7 +35,7 @@
              (parameterize ([term-cache (hash-copy (term-cache))]
                             [BV (bitvector maxbw)])
                (solver-clear checker)
-               (solver-add checker (φ_verify (evaluate (trace* impl) sol) spec))
+               (solver-assert checker (φ_verify (evaluate (trace* impl) sol) spec))
                (unsat? (solver-check checker)))))
       (let loop ([bw (min (max 1 minbw) maxbw)])
         (define candidate 
@@ -63,24 +63,24 @@
   
   (define (init)
     (solver-clear guesser)
-    (solver-add guesser (φ_wfp impl))
-    (solver-add guesser (φ_synth t0 spec))
+    (solver-assert guesser (φ_wfp impl))
+    (solver-assert guesser (φ_synth t0 spec))
     (log-solver-info [trial] "searching for an initial candidate at ~a" (BV))
     (begin0
       (solution->candidate (solver-check guesser))
       (solver-clear guesser)
-      (solver-add guesser (φ_wfp impl))))
+      (solver-assert guesser (φ_wfp impl))))
     
   (define (guess sol)
     (set! trial (add1 trial))
     (define sample (map sol inputs))
     (log-solver-info [trial] "searching for a candidate: ~s" sample)
-    (solver-add guesser (φ_synth (trace* impl sample) spec))
+    (solver-assert guesser (φ_synth (trace* impl sample) spec))
     (solution->candidate (solver-check guesser)))
   
   (define (check sol)
     (solver-clear checker)
-    (solver-add checker (φ_verify (evaluate t0 sol) spec))
+    (solver-assert checker (φ_verify (evaluate t0 sol) spec))
     (solution->sample (solver-check checker) inputs))
     
   (let loop ([candidate (init)])
