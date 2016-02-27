@@ -1,48 +1,39 @@
-#lang racket
+#lang s-exp rosette
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit
-         rosette/base/core/bool 
-         rosette/base/core/real
-         rosette/base/core/bitvector
-         rosette/base/core/finitize
-         rosette/base/form/define
-         rosette/base/form/control
-         rosette/query/form
-         rosette/query/eval
-         rosette/solver/solution)
+(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
 
-(define-symbolic a b c @boolean?)
-(define-symbolic xi yi zi @integer?)
-(define-symbolic xr yr zr @real?)
+(define-symbolic a b c boolean?)
+(define-symbolic xi yi zi integer?)
+(define-symbolic xr yr zr real?)
 (define-symbolic xb yb zb (bitvector 4))
 
 (define basic-tests
   (test-suite+ "Basic synthesis tests."
     (current-bitwidth #f)
     
-    (check-unsat (synthesize #:forall '() #:guarantee (@assert #f)))
-    (check-unsat (synthesize #:forall '() #:assume (@assert #f) #:guarantee (@assert #f)))
+    (check-unsat (synthesize #:forall '() #:guarantee (assert #f)))
+    (check-unsat (synthesize #:forall '() #:assume (assert #f) #:guarantee (assert #f)))
 
     (check-equal?
-     (model (check-sat (synthesize #:forall a #:assume (@assert a) #:guarantee (@assert (@&& a b)))))
+     (model (check-sat (synthesize #:forall a #:assume (assert a) #:guarantee (assert (&& a b)))))
      (hash b #t))
     
-    (check-unsat (synthesize #:forall xb #:guarantee (@assert (@bvslt xb (@bvadd xb yb)))))
+    (check-unsat (synthesize #:forall xb #:guarantee (assert (bvslt xb (bvadd xb yb)))))
     
     (parameterize ([current-bitwidth 4])
-      (check-unsat (synthesize #:forall xi #:guarantee (@assert (@< xi (@+ xi yi))))))
+      (check-unsat (synthesize #:forall xi #:guarantee (assert (< xi (+ xi yi))))))
     
     (check-true
-     (evaluate (@> yi 0) (synthesize #:forall xi #:guarantee (@assert (@< xi (@+ xi yi))))))
+     (evaluate (> yi 0) (synthesize #:forall xi #:guarantee (assert (< xi (+ xi yi))))))
     
     (check-true
-     (evaluate (@> yr 0) (synthesize #:forall xr #:guarantee (@assert (@< xr (@+ xr yr))))))
+     (evaluate (> yr 0) (synthesize #:forall xr #:guarantee (assert (< xr (+ xr yr))))))
     
     (check-true
-     (evaluate (@> yr 0) (synthesize #:forall xi #:guarantee (@assert (@< xi (@+ xi yr))))))
+     (evaluate (> yr 0) (synthesize #:forall xi #:guarantee (assert (< xi (+ xi yr))))))
     
     (check-true
-     (evaluate (@>= yi 0) (synthesize #:forall xi #:assume (@assert (@> xi 0)) #:guarantee (@assert (@>= xi yi)))))
+     (evaluate (>= yi 0) (synthesize #:forall xi #:assume (assert (> xi 0)) #:guarantee (assert (>= xi yi)))))
     
     ))
 

@@ -1,21 +1,11 @@
-#lang racket
+#lang s-exp rosette
 
 (require rackunit rackunit/text-ui racket/generator
-         rosette/lib/util/roseunit
-         rosette/base/core/term
-         rosette/base/core/reflect
-         rosette/base/core/bool 
-         rosette/base/core/real
-         rosette/base/core/bitvector
-         rosette/base/core/finitize
-         rosette/base/form/define
-         rosette/base/form/control
-         rosette/query/form
-         rosette/solver/solution)
+         rosette/lib/util/roseunit)
 
-(define-symbolic a b c @boolean?)
-(define-symbolic xi yi zi @integer?)
-(define-symbolic xr yr zr @real?)
+(define-symbolic a b c boolean?)
+(define-symbolic xi yi zi integer?)
+(define-symbolic xr yr zr real?)
 (define-symbolic xb yb zb (bitvector 4))
 
 (define consts (set a b c xi yi zi xr yr zr xb yb zb))
@@ -38,18 +28,18 @@
 
     (check-solve+ #t #f)
     (check-solve+ #f)
-    (check-solve+ (@> xi (@+ xi yr)) (@= yr 2.5))
-    (check-solve+ (@< xi (@+ xi yr)) (@= yr 2.5) (@> 0 yr))
-    (check-solve+ (@> xi (@+ xi (@bitvector->integer yb))) (@bveq yb (bv 1 4)))    
-    (check-solve+ (@< xi (@+ xi (@bitvector->integer yb))) (@bveq yb (bv 1 4)) (@= xi 0) (@< xi 0))
-    (check-solve+ (! (@= yr 0)) (@= (@/ xr yr) zr) (@= zr 1.5) (! (@= xr (@* yr 1.5)))) 
-    (check-solve+ (@= (@* xr yr) zr) (@= zr 20000) (@= zr 0))
+    (check-solve+ (> xi (+ xi yr)) (= yr 2.5))
+    (check-solve+ (< xi (+ xi yr)) (= yr 2.5) (> 0 yr))
+    (check-solve+ (> xi (+ xi (bitvector->integer yb))) (bveq yb (bv 1 4)))    
+    (check-solve+ (< xi (+ xi (bitvector->integer yb))) (bveq yb (bv 1 4)) (= xi 0) (< xi 0))
+    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 1.5) (! (= xr (* yr 1.5)))) 
+    (check-solve+ (= (* xr yr) zr) (= zr 20000) (= zr 0))
     
     (current-bitwidth 4)
     (check-solve+ #t #f)
     (check-solve+ #f)
-    (check-solve+ (@bveq xb yb) (@bveq xb (bv 3 4)) (! (@bveq yb (bv 3 4))))
-    (check-solve+ (@bveq xb yb) (@bveq xb (bv 0 4)) (@bveq yb (bv 1 4)))
+    (check-solve+ (bveq xb yb) (bveq xb (bv 3 4)) (! (bveq yb (bv 3 4))))
+    (check-solve+ (bveq xb yb) (bveq xb (bv 0 4)) (bveq yb (bv 1 4)))
     ))
 
 (define finitized-tests
@@ -57,15 +47,15 @@
     (current-bitwidth 5)
     
     ; Finite model that is also a real model.
-    (check-solve+ (! (@= yr 0)) (@= (@/ xr yr) zr) (@= zr 2) (@= xr 5))
-    (check-solve+ (@= xr (@bitvector->integer yb)) (@bveq yb (bv 2 4)) (! (@= xr 2)))
+    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 2) (= xr 5))
+    (check-solve+ (= xr (bitvector->integer yb)) (bveq yb (bv 2 4)) (! (= xr 2)))
     
     ; No finite model that is also a real model.
-    (check-solve+ (! (@= yr 0)) (@= (@/ xr yr) zr) (@= zr 1.5))
-    (check-solve+ (@= (@* xr yr) zr) (@= zr 20000))
+    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 1.5))
+    (check-solve+ (= (* xr yr) zr) (= zr 20000))
     
     (current-bitwidth 3)
-    (check-solve+ (@= xr (@bitvector->integer yb)) (@bveq yb (bv -8 4)))
+    (check-solve+ (= xr (bitvector->integer yb)) (bveq yb (bv -8 4)))
  )) 
                      
 (time (run-tests basic-tests))
