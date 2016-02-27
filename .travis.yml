@@ -4,7 +4,7 @@ sudo: false
 env:
   global:
     - Z3_DIR=~/z3
-    - Z3_REV="z3-4.4.1"
+    - Z3_REV="4cf72e23e6d51df47ed67c35ea9a90016d9b69d5"
     - RACKET_DIR=~/racket
     - RACKET_URL="https://www.cs.utah.edu/plt/installers/6.4/racket-6.4-x86_64-linux-ubuntu-precise.sh"
 
