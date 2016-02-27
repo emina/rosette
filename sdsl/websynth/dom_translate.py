@@ -125,7 +125,7 @@ def generate(args):
             f.write('\n')
 
     #if (args.rackunit_test == False) :
-    #    f.write('\t(printf "DOM stats:  size = ~a, depth = ~a, tags = ~a\\n" (size dom) max_zpath_depth (enum-size tag?))\n')
+    #    f.write('\t(printf "DOM stats:  size = ~a, depth = ~a\\n" (size dom) max_zpath_depth)\n')
         
     # Scrape!
     f.write('\t(zip \n')

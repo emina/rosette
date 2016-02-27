@@ -1,21 +1,23 @@
 #lang s-exp rosette
 
 (require "dom.rkt")
-(provide (except-out (all-defined-out) tag-type))
+(provide (except-out (all-defined-out) tags))
 
-(define-syntax-rule (define-tags tags)
-  (begin
-    (define-enum tag (cons "" tags))
-    (tag-type tag?)))
+(define-syntax-rule (define-tags ts)
+  (tags ts))
 
-(define tag-type (make-parameter #f))
+(define tag? integer?)
 
-(define (tag str) (enum-value (tag-type) str))
+(define tags (make-parameter (cons (hash "" 0) (vector ""))
+                             (lambda (vs)
+                               (cons
+                                (for/hash ([(s i) (in-indexed (cons "" vs))])
+                                 (values s i))
+                                (list->vector (cons "" vs))))))
 
-(define-syntax tag?
-  (syntax-id-rules ()
-    [tag? (tag-type)]
-    [(tag? v) ((tag-type) v)]))
+(define (tag str) (hash-ref (car (tags)) str))
+
+(define (label i) (vector-ref (cdr (tags)) i))
 
 ; Maximum depth of the DOM, so we know how many variables
 ; to allocate. (Writen by Emina Torlak)
