@@ -8,7 +8,6 @@
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
-         (only-in "../../base/struct/enum.rkt" enum? enum-members)
          "../solution.rkt")
 
 (provide encode encode-for-proof decode)
@@ -100,5 +99,4 @@
        [(? number?) (bv val t)]
        [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
         (bv n t)])]
-    [(? enum? t) (vector-ref (enum-members t) val)]
     [other other]))

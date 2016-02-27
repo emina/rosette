@@ -15,8 +15,7 @@
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
                   @concat @extract @zero-extend @sign-extend 
-                  @integer->bitvector @bitvector->integer @bitvector->natural)
-         (only-in "../../base/struct/enum.rkt" enums enum-<? enum-literal? ordinal))
+                  @integer->bitvector @bitvector->integer @bitvector->natural))
 
 (provide enc)
 
@@ -68,15 +67,13 @@
     [(? integer?) (inexact->exact v)]
     [(? real?) (if (exact? v) ($/ (numerator v) (denominator v)) v)]
     [(bv lit t) ($bv lit (bitvector-size t))]
-    [(? enum-literal?) (ordinal v)]
-    [_ (error 'enc "expected a boolean?, number? or enum-literal?, given ~a" v)]))
+    [_ (error 'enc "expected a boolean?, integer?, real?, or bitvector?, given ~a" v)]))
 
 (define-syntax define-encoder
   (syntax-rules ()
     [(_ id [rosette-op smt-op] ...)
      (define (id op) 
        (cond [(eq? op rosette-op) smt-op] ... 
-             [(for/or ([e enums]) (eq? op (enum-<? e))) $<]
              [else #f]))]))
 
 (define-encoder rosette->smt 

@@ -8,7 +8,6 @@
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
-  (only-in "../base/struct/enum.rkt" enum? enum-first)
   (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
   (only-in "../base/util/log.rkt" log-info)
   "../solver/solver.rkt"
@@ -253,8 +252,7 @@
       (match (get-type v)
         [(== @boolean?) #f]
         [(or (== @integer?) (== @real?)) 0]
-        [(? bitvector? t) (bv 0 t)]
-        [(? enum? t) (enum-first t)])
+        [(? bitvector? t) (bv 0 t)])
       v))
         
         

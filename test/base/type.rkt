@@ -3,7 +3,6 @@
 (require rackunit rackunit/text-ui rosette/lib/util/roseunit
          rosette/base/core/term
          rosette/base/adt/procedure
-         rosette/base/struct/enum
          rosette/base/adt/list
          rosette/base/struct/struct
          (only-in rosette/base/form/define define-symbolic))
@@ -38,9 +37,6 @@
 (struct m1 p2 ([m #:mutable]))
 (struct m2 i0 (m) #:mutable #:transparent)
 
-; enums
-(define-enum e (list 1 #t #f 4 identity "foo" 'bar))
-
 (define types (map lifted-type (list boolean? integer? real? list? pair? procedure? vector? box?)))
 
 (define (least-common-supertype-tests)
@@ -68,8 +64,6 @@
   (check-false (subtype? @list? @pair?))
   (check-true (subtype? i0? @any/c))
   (check-true (subtype? p1? @procedure?))
-  (check-true (subtype? e? e?))
-  (check-true (subtype? e? @any/c))
   (check-true (subtype? i0? i0?))
   (check-true (subtype? i1? i0?))
   (check-true (subtype? i2? i0?))

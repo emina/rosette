@@ -4,8 +4,7 @@
          (only-in "../base/core/term.rkt" type-of)
          (only-in "../base/core/bool.rkt" @boolean?)
          (only-in "../base/core/bitvector.rkt" bitvector? bv)
-         (only-in "../base/core/real.rkt" @integer? @real?)
-         (only-in "../base/struct/enum.rkt" enum? enum-members))
+         (only-in "../base/core/real.rkt" @integer? @real?))
 
 (provide solution? sat? unsat? sat unsat model core default-binding)
 
@@ -103,8 +102,7 @@
   (match (term-type const)
     [(== @boolean?) #f]
     [(or (== @integer?) (== @real?)) 0]
-    [(? bitvector? t) (bv 0 t)]
-    [(? enum? t) (vector-ref (enum-members t) 0)]))
+    [(? bitvector? t) (bv 0 t)]))
 
  
   

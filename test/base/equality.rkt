@@ -7,7 +7,6 @@
          rosette/base/core/real
          rosette/base/adt/box
          rosette/base/adt/procedure
-         rosette/base/struct/enum
          rosette/base/adt/list
          rosette/base/adt/vector
          (only-in rosette/base/struct/struct struct)

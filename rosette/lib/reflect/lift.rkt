@@ -10,8 +10,8 @@
 ; values.  This means the lifted procedure will work when given 
 ; either a concrete Racket value or a symbolic union that 
 ; could evaluate to such a value.  Note that the lifted procedure 
-; will not work on primitive symbolic values (boolean? number? and 
-; enum?), only on symbolic unions or concrete values.
+; will not work on primitive symbolic values (boolean?, integer?, real? and 
+; bitvector?), only on symbolic unions or concrete values.
 ;
 ; The define-lift macro takes takes one of two forms:
 ; * (define-lifted lifted-id [(arg-type ...) procedure-to-lift])

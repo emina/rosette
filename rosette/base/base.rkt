@@ -7,7 +7,7 @@
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" 
   "core/equality.rkt" "core/finitize.rkt" "core/reflect.rkt" 
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/procedure.rkt" 
-  "struct/struct.rkt" "struct/generics.rkt" "struct/enum.rkt"
+  "struct/struct.rkt" "struct/generics.rkt"
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt" 
   "util/log.rkt") 
 
@@ -83,9 +83,6 @@
      struct struct-field-index define/generic define-struct
      ; struct/generics.rkt
      @define-generics @make-struct-type-property
-     ; struct/enum.rkt
-     define-enum enums enum? enum-size enum-members enum-<? label ordinal
-     enum-first enum-last enum-value enum-literal? 
      ; form/state.rkt
      current-oracle oracle oracle? 
      ; form/define.rkt
