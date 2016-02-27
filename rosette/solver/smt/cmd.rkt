@@ -1,6 +1,8 @@
 #lang racket
 
-(require (only-in "smtlib2.rkt" assert check-sat get-model get-unsat-core read-solution true false)
+(require (only-in "smtlib2.rkt" assert minimize maximize
+                  check-sat get-model get-unsat-core
+                  read-solution true false)
          "env.rkt" "enc.rkt"
          (only-in "../../base/core/term.rkt" type-of)
          (only-in "../../base/core/bool.rkt" @boolean?)
@@ -11,17 +13,21 @@
 
 (provide encode encode-for-proof decode)
 
-; Given an encoding environment and a list of asserts, 
-; the encode procedure prints an SMT encoding of the given assertions, 
+; Given an encoding environment and a list of asserts, minimization objectives,
+; and maximization objective, the encode procedure prints an SMT encoding of the given assertions, 
 ; with respect to the given environment, to current-output-port. 
 ; In particular, the encoder will not emit any declarations or definitions for Rosette 
 ; values that appear in the given assertions and that are 
 ; already bound in the environment.  The environment will 
 ; be augmented, if needed, with additional declarations and 
 ; definitions.
-(define (encode env asserts)
+(define (encode env asserts mins maxs)
   (for ([a asserts])
     (assert (enc a env)))
+  (for ([m mins])
+    (minimize (enc m env)))
+  (for ([m maxs])
+    (maximize (enc m env)))
   (check-sat)
   (get-model))
 

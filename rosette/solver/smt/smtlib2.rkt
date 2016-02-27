@@ -17,16 +17,18 @@
 (define (read-solution)
   (define port (current-input-port))
   (match (read port)
-    [(== 'sat) 
-     (match (read port)
-       [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
-        (for/hash ([c const] [v val]) (values c v))]
-       [other (error 'solution "expected model, given ~a" other)])]
+    [(== 'sat)
+     (let loop ()
+       (match (read port)
+         [(list (== 'objectives) _ ...) (loop)]
+         [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
+          (for/hash ([c const] [v val]) (values c v))]
+         [other (error 'solution "expected model, given ~a" other)]))]
     [(== 'unsat) 
      (match (read port) 
        [(list (? symbol? name) ...) name]
        [_ #f])]
-    [other (error 'smt-solution "unrecognized solver output: ~a" other)]))
+    [other (error 'solution "unrecognized solver output: ~a" other)]))
 
 ; Prints all smt commands to current-output-port.
 (define-syntax-rule (printf-smt arg ...)
@@ -50,6 +52,9 @@
 (define assert 
   (case-lambda [(e)     (printf-smt "(assert ~a)" e)]
                [(e id)  (printf-smt "(assert (! ~a :named ~a))" e id)]))
+
+(define (minimize t)    (printf-smt "(minimize ~a)" t))
+(define (maximize t)    (printf-smt "(maximize ~a)" t))
 
 ; Declarations and definitions
 (define (declare-const id type)
