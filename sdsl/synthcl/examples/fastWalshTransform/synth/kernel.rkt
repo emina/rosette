@@ -28,7 +28,7 @@
 
 (grammar int (idx [int tid] [int step] [int depth])
   #:base (choose tid step (?? int)) 
-  #:rec  (locally-scoped
+  #:else (locally-scoped
           (: int left right)
           (= left  (idx tid step (- depth 1)))
           (= right (idx tid step (- depth 1)))

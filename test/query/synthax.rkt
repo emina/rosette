@@ -5,24 +5,24 @@
 
 (define-symbolic x integer?)
 
-(define-synthax rec 
-  ([(_ x #:depth 0) (choose x (??))]
-   [(_ x #:depth k) (let ([smaller (rec x #:depth (sub1 k))])
-                      (choose smaller (+ x smaller)))]))
+(define-synthax (rec x k)
+  #:base (choose x (??))
+  #:else (let ([smaller (rec x (sub1 k))])
+           (choose smaller (+ x smaller))))
 
 (define (h0) (??))
 (define (h1 x) (choose 1 (choose x 3)))
 (define (h2 x) (choose 6 (+ x (h0)) 8))
 (define (h3 x) (choose 1 (h2 x)))
 
-(define (h4 x) (rec x #:depth 0))
-(define (h5 x) (rec x #:depth 1))
-(define (h6 x) (rec x #:depth 2))
+(define (h4 x) (rec x 0))
+(define (h5 x) (rec x 1))
+(define (h6 x) (rec x 2))
 
 (define (h7 x) (choose 1 (c2 x)))
-(define (h8 x) (crec x #:depth 0))
-(define (h9 x) (crec x #:depth 2))
-(define (h10 x)(crec (h1 x) #:depth 1)) 
+(define (h8 x) (crec x 0))
+(define (h9 x) (crec x 2))
+(define (h10 x)(crec (h1 x) 1)) 
   
 (define (check-synth expr expected)
   (let ([sol (synthesize #:forall x #:guarantee (assert expr))])

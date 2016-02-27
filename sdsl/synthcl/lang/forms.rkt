@@ -156,9 +156,9 @@
   (syntax-case stx ()
     [(grammar out (id [type param] ... [type-depth depth])
       #:base expr0
-      #:rec exprk)
+      #:else exprk)
      (quasisyntax/loc stx
-       (define-synthax (id param ... depth) #:base expr0 #:rec exprk))]
+       (define-synthax (id param ... depth) #:base expr0 #:else exprk))]
     [(grammar out (id [type param] ...) expr)
      (quasisyntax/loc stx
        (define-synthax id ([(_ param ...) expr])))]))

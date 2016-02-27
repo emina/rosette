@@ -318,7 +318,7 @@
 ; Typechecks a grammar declaration.
 (define (typecheck-grammar stx)
   (syntax-case stx ()   
-    [(grammar out (id [type param] ...) #:base expr0 #:rec exprk)
+    [(grammar out (id [type param] ...) #:base expr0 #:else exprk)
      (parameterize ([current-env (env)])
        (for-each typecheck (syntax->list #`([: type param] ...)))
        (let* ([out-type (function-type-result (type-ref (typecheck #'id)))]
@@ -331,7 +331,7 @@
            (check-no-conversion tk out-type stx texprk))
          (type-set
           (quasisyntax/loc stx
-            (grammar out (id [type param] ...) #:base #,texpr0 #:rec #,texprk))
+            (grammar out (id [type param] ...) #:base #,texpr0 #:else #,texprk))
           void)))]
     [(grammar out (id [type param] ...) expr)
      (parameterize ([current-env (env)])

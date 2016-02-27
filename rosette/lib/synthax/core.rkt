@@ -47,8 +47,7 @@
   (case-lambda
     [(sol) (sol (context->constant (context)))]
     [(sol n) (define path (context))
-             (for/list ([i n]) 
-               (sol (context->constant (cons i path))))]))
+             (for/list ([i n]) (sol (context->constant (cons i path))))]))
 
 ; Returns the constant in the current term-cache with the given
 ; identifier, or throws an error if no such constant exists.
@@ -70,10 +69,10 @@
 ; the current (context).
 (define-syntax (define-synthax stx)
   (syntax-case stx ()
-    [(_ (id p0 ... k) #:base e0 #:rec ek) 
+    [(_ (id p0 ... k) #:base e0 #:else ek) 
      (syntax/loc stx 
        (define-synthax 
-         (id p0 ... k) #:base e0 #:rec ek
+         (id p0 ... k) #:base e0 #:else ek
          #:codegen 
          (lambda (expr sol)
            (syntax-case expr ()
@@ -81,7 +80,7 @@
               (if (<= (eval-base #'k) 0) 
                   (syntax/source e0) 
                   (syntax/source ek))]))))]
-    [(_ (id pk ... k) #:base e0 #:rec ek #:codegen id-gen)
+    [(_ (id pk ... k) #:base e0 #:else ek #:codegen id-gen)
      (syntax/loc stx
        (begin
          (define-syntax (id stx)
@@ -94,33 +93,6 @@
                                                    (thunk #,(if (<= (eval #'k) 0) 
                                                                 (syntax/source e0) 
                                                                 (syntax/source ek)))))))]))                    
-         (free-id-table-set! codegen #'id (cons #'id id-gen))))]
-    [(_ id ([(_ p0 ... #:depth 0) e0] 
-            [(_ pk ... #:depth k) ek])) 
-     (syntax/loc stx 
-       (define-synthax id ([(_ p0 ... #:depth 0) e0] 
-                           [(_ pk ... #:depth k) ek])
-         (lambda (expr sol)
-           (syntax-case expr ()
-             [(_ p0 ... #:depth k)
-              (if (<= (eval-base #'k) 0) 
-                  (syntax/source e0) 
-                  (syntax/source ek))]))))]
-    [(_ id ([(_ p0 ... #:depth 0) e0] 
-            [(_ pk ... #:depth k) ek]) 
-        id-gen)
-     (syntax/loc stx
-       (begin
-         (define-syntax (id stx)
-           (syntax-case stx ()
-             [(call pk ... #:depth k)
-              (quasisyntax/loc stx 
-                (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
-                  (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
-                    (in-context ctx
-                                (thunk #,(if (<= (eval #'k) 0) 
-                                             (syntax/source e0) 
-                                             (syntax/source ek)))))))]))                    
          (free-id-table-set! codegen #'id (cons #'id id-gen))))]
     [(_ id ([(_ p ...) e] ...))
      (syntax/loc stx 
