@@ -11,7 +11,7 @@
   (only-in "../base/struct/enum.rkt" enum? enum-first)
   (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
   (only-in "../base/util/log.rkt" log-info)
-  (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-assert solver-check solver-localize)
+  (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-assert solver-check solver-debug)
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
   (only-in "../solver/smt/z3.rkt" z3))
 
@@ -162,10 +162,10 @@
          (parameterize ([term-cache (hash-copy (term-cache))])
            (define fmap (finitize φs bw))
            (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
-           (unfinitize (solver-localize solver) fmap))]
+           (unfinitize (solver-debug solver) fmap))]
         [else 
          (solver-assert solver φs)
-         (solver-localize solver)]))
+         (solver-debug solver)]))
     (solver-clear solver)))
   
 ; Solves the exists-forall problem for the provided list of inputs, assumptions and assertions. 

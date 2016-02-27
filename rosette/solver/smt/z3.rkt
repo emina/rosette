@@ -55,7 +55,7 @@
                (log-time [self] "solving" : 
                   (server-read server (decode env))))))
    
-   (define (solver-localize self)
+   (define (solver-debug self)
      (match-define (z3 server (app unique asserts) _ _ _) self)
      (if (ormap false? asserts) 
          (unsat (list #f))

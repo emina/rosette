@@ -5,13 +5,13 @@
 (provide gen:solver solver? 
          solver-assert solver-clear
          solver-minimize solver-maximize
-         solver-check solver-localize 
+         solver-check solver-debug 
          solver-shutdown)
 
 ; The generic solver interface specifies the set of procedures that 
 ; should be provided by a Rosette solver. These include 
 ; solver-assert, solver-clear, solver-minimize, solver-maximize,
-; solver-check, solver-localize, and solver-shutdown. 
+; solver-check, solver-debug, and solver-shutdown. 
 ;
 ; The solver-assert procedure takes as input zero or more @boolean? 
 ; values and adds them to the current state of the solver. 
@@ -26,7 +26,7 @@
 ; the current set of constraints.  If the constraints are satisfiable, 
 ; the resulting solution is sat?; otherwise it is unsat?.
 ; 
-; The solver-localize procedure searches for an unsatisfiable core for the current 
+; The solver-debug procedure searches for an unsatisfiable core for the current 
 ; set of constraints.  It throws an error if these constraints are 
 ; satisfiable.  The server-localize procedure will only perform localization on  
 ; constraints that were added to the solver _after_ the most recent call to 
@@ -42,5 +42,5 @@
   [solver-minimize solver nums]
   [solver-maximize solver nums]
   [solver-check solver]
-  [solver-localize solver]
+  [solver-debug solver]
   [solver-shutdown solver])
