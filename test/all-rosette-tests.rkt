@@ -21,6 +21,7 @@
  "query/synthesize.rkt"
  "query/debug.rkt"
  "query/solve+.rkt"
+ "query/optimize.rkt"
  "query/synthax.rkt"
  )
 

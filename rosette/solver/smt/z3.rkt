@@ -37,6 +37,8 @@
    
    (define (solver-clear self) 
      (set-z3-asserts! self '())
+     (set-z3-mins! self '())
+     (set-z3-maxs! self '())
      (set-z3-env! self (env))
      (server-write (z3-server self) (reset-default-options)))
    
@@ -51,7 +53,9 @@
          (parameterize ([current-log-source self])
                (log-time [self] "compilation" : 
                   (server-write server (encode env asserts mins maxs))
-                  (set-z3-asserts! self '()))
+                  (set-z3-asserts! self '())
+                  (set-z3-mins! self '())
+                  (set-z3-maxs! self '()))
                (log-time [self] "solving" : 
                   (server-read server (decode env))))))
    

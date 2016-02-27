@@ -11,7 +11,7 @@
   (only-in "../base/struct/enum.rkt" enum? enum-first)
   (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
   (only-in "../base/util/log.rkt" log-info)
-  (only-in "../solver/solver.rkt" solver? solver-shutdown solver-clear solver-assert solver-check solver-debug)
+  "../solver/solver.rkt"
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
   (only-in "../solver/smt/z3.rkt" z3))
 
@@ -84,15 +84,21 @@
 ; the specified bitwidth that is also correct under the 
 ; precise semantics. This procedure clears the solver's state 
 ; before and after use.
-(define (∃-solve φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
+(define (∃-solve φs
+                 #:minimize [mins '()]
+                 #:maximize [maxs '()]
+                 #:solver [solver (current-solver)]
+                 #:bitwidth [bw (current-bitwidth)])
   (solver-clear solver)
   (begin0  
     (with-handlers ([exn? (lambda (e) (solver-shutdown solver) (raise e))])
       (cond 
         [bw 
          (parameterize ([term-cache (hash-copy (term-cache))])
-           (define fmap (finitize φs bw))
+           (define fmap (finitize (append φs mins maxs) bw))
            (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
+           (solver-minimize solver (for/list ([m mins]) (hash-ref fmap m)))
+           (solver-maximize solver (for/list ([m maxs]) (hash-ref fmap m)))
            (let loop ()
              (define fsol (complete (solver-check solver) fmap))
              (define sol (unfinitize fsol fmap)) 
@@ -102,6 +108,8 @@
                      (loop)])))]
         [else 
          (solver-assert solver φs)
+         (solver-minimize solver mins)
+         (solver-maximize solver maxs)
          (solver-check solver)]))
     (solver-clear solver)))
 
