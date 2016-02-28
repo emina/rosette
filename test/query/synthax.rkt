@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require rackunit rackunit/text-ui rosette/lib/roseunit
          rosette/lib/synthax "synthax-external.rkt")

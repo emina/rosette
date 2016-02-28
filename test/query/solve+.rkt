@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require rackunit rackunit/text-ui racket/generator
          rosette/lib/roseunit)
