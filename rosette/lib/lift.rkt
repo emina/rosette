@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "match.rkt" (for-syntax (only-in racket/syntax generate-temporary))
          (only-in racket/splicing splicing-let))

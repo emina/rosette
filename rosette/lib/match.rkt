@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax (only-in racket/syntax generate-temporary)))
 
