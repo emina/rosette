@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "errors.rkt" "work.rkt" "type.rkt" "reals.rkt" 
          (only-in "pointers.rkt" gen:pointer)               

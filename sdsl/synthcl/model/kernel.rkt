@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (only-in racket/syntax format-symbol) "context.rkt" "buffer.rkt" "program.rkt" "errors.rkt")
 

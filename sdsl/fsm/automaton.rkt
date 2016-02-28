@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "viz.rkt" (rename-in rosette/lib/synthax [choose ?]))
 

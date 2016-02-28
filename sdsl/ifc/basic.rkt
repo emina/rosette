@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "machine.rkt")
 (provide (all-defined-out))

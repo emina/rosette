@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (only-in racket/runtime-path define-runtime-path))
 (require "../dom.rkt")

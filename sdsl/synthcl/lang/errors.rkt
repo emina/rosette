@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (provide raise-arity-error raise-operator-arity-error 
          raise-no-common-type-error raise-bad-type-error

@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-template (only-in "forms.rkt" app-or-ref) 
                        (only-in racket quote #%app #%datum) 

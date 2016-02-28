@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "type.rkt" "reals.rkt"  
          (only-in rosette [/ @/] [bitvector->integer bv->int] [sqrt @sqrt]))

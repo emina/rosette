@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require 
   (prefix-in $ (only-in rosette bv bveq bvslt bvsgt bvsle bvsge bvult bvugt bvule bvuge)))

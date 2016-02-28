@@ -27,7 +27,7 @@ def generate(args):
     f = open(rktpath, 'w')
     
     # Racket headers.
-    f.write("#lang s-exp rosette\n\n")
+    f.write("#lang rosette\n\n")
     f.write('(require (only-in racket/runtime-path define-runtime-path))\n')
     f.write('(require "{wf}/dom.rkt")\n'.format(wf=args.websynth_filepath))
     f.write('(require "{wf}/websynth.rkt")\n'.format(wf=args.websynth_filepath))

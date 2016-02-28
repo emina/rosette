@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require racket/stxparam racket/splicing
          (for-syntax "types.rkt" "errors.rkt" (only-in racket make-list) (only-in syntax/stx stx-null?))

@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require 
  "automaton.rkt" "lib.rkt"

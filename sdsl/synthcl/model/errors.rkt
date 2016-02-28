@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (provide raise-conversion-error raise-pointer-cast-error raise-context-error)
 

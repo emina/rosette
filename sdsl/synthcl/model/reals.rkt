@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "type.rkt" "errors.rkt"
          rosette/lib/match (only-in racket/syntax format-symbol)

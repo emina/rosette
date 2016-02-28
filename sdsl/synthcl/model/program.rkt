@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax (only-in rosette/lib/util/syntax read-module)
                      (only-in racket filter-map))

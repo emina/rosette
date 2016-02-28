@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "dom.rkt")
 (provide (except-out (all-defined-out) tags))

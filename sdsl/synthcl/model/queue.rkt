@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "context.rkt" "buffer.rkt" "kernel.rkt" 
          "work.rkt" "runtime.rkt" "memory.rkt"

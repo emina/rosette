@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax "types.rkt" "errors.rkt" (only-in racket/syntax with-syntax*)) 
          "types.rkt" (prefix-in model/ "../model/operators.rkt"))

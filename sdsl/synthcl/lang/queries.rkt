@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "util.rkt" racket/stxparam 
          (only-in rackunit test-pred) 

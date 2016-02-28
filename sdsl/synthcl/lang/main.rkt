@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax "typecheck.rkt" "types.rkt" 
                      (only-in rosette in-dict dict-keys)

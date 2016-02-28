@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "type.rkt" "context.rkt" "queue.rkt" "program.rkt" "kernel.rkt" "buffer.rkt"  
          rosette/lib/match)

@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "machine.rkt" "indistinguishable.rkt" "verify.rkt"
          "basic.rkt" "jump.rkt" "call.rkt")

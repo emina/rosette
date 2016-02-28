@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 ; Provides a mapping from OpenCL type identifiers to 
 ; the type instances / predicates in the OpenCL model.

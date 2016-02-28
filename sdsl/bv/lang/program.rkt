@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (only-in racket [eq? ==]) 
          (only-in "bvops.rkt" bv bv*))
