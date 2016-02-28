@@ -47,7 +47,7 @@ solver-aided DSLs.
 
 ### Available languages
 
-* Rosette ships with two languages: `#lang s-exp rosette/safe` and  `#lang s-exp rosette`.
+* Rosette ships with two languages: `#lang rosette/safe` and  `#lang rosette`.
 
 * The `rosette/safe` language includes only constructs that are safe to
   use with symbolic values.  This (for now) excludes some nice Racket
