@@ -126,29 +126,3 @@
   (typechecker 
    #:base boolean? integer? real? list? pair? procedure? vector? box?))
 
-#|
-; This macro constructs the type-of procedure.  To allow additional lifted types, 
-; add their Racket predicates to the #:base list of the type-of definition.  Note 
-; that the order of the #:base types is important---if p is a subtype? of q, then 
-; p must be listed before q.
-(define-syntax-rule (typechecker #:base id ...)
-  (begin
-    (hash-set! types id @any/c) ...
-    (case-lambda
-      [(v) (cond [(typed? v) (get-type v)]
-                 [(id v) (hash-ref types id)] ...
-                 [else @any/c])]
-      [(v u) (least-common-supertype (type-of v) (type-of u))]
-      [vs    (for/fold ([t (type-of (car vs))]) ([v (cdr vs)] #:break (eq? t @any/c))
-               (least-common-supertype t (type-of v)))])))
-
-; The type-of procedure a type t that accepts the given values, and there is no t' 
-; such that t' != t, (subtype? t' t), and t' also accepts the given values.  
-(define type-of 
-  (typechecker 
-   #:base boolean? number? list? pair? procedure? vector? box?
-          ; integer? and real? will replace number?.
-          ; they are currently in the last position to ensure that they are 
-          ; not used until the replacement has been tested.
-          integer? real? 
-          ))|#
