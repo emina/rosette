@@ -1,27 +1,18 @@
 rosette
 =======
 
-[![Build Status](https://travis-ci.org/emina/rosette.svg?branch=master)](https://travis-ci.org/emina/rosette)
+[![Build Status](https://travis-ci.org/emina/rosette.svg?branch=refactor-ops)](https://travis-ci.org/emina/rosette)
 
-This repository includes the source code and default solver binaries
-for the Rosette solver-aided host language, as well as several example
+This repository includes the source code for the Rosette solver-aided host language, as well as several example
 solver-aided DSLs.
 
 ### Installing Rosette
 
-* Download and install Racket 6.1 from http://racket-lang.org
-
-* Make sure that the default Java installation on your system is a
-  64-bit server VM, version 1.7x:
-
-  `$ java -version`  
-  `java version "1.7.0_25"`  
-  `Java(TM) SE Runtime Environment (build 1.7.0_25-b15)`  
-  `Java HotSpot(TM) 64-Bit Server VM (build 23.25-b01, mixed mode)`
+* Download and install Racket 6.4 from http://racket-lang.org
 
 * Clone the rosette repository:
 
-  `$ git clone git@github.com:emina/rosette.git`
+  `$ git clone https://github.com/emina/rosette.git`
 
 * Use Racket's `raco` tool to install Rosette as one of your Racket collections:
 
@@ -29,10 +20,7 @@ solver-aided DSLs.
   `$ raco link rosette`  
   `$ raco setup -l rosette`  
 
-* Rosette ships with the [Kodkod](http://alloy.mit.edu/kodkod/) solver 
-  binaries, but it also supports [Z3](http://z3.codeplex.com) and 
-  [CVC4](http://cvc4.cs.nyu.edu/web/).  To use Z3 or CVC4, 
-  download (or build) the binaries for your system and put them in the `rosette/bin` directory.
+* Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
 
 ### Executing Rosette programs
 
@@ -43,7 +31,7 @@ solver-aided DSLs.
   need to use the command line, make sure to first compile the program:
 
   `$ raco make <your program>`  
-  `$ racket -r <your program>`  
+  `$ racket <your program>`  
 
 ### Available languages
 
@@ -71,11 +59,5 @@ solver-aided DSLs.
   incorrect semantics or cause more serious problems (e.g., data loss if 
   it writes to a file).
 
-* For more on Rosette, see:
-
-  - Emina Torlak.  [_The Rosette Guide_](http://homes.cs.washington.edu/~emina/rosette/guide/index.html).
-  - Emina Torlak and Rastislav Bodik. [_A lightweight symbolic
-  virtual machine for solver-aided host languages._](http://people.csail.mit.edu/emina/pubs/rosette.pldi14.pdf) In PLDI'14.
-
-  - Emina Torlak and Rastislav Bodik. [_Growing solver-aided
-  languages with rosette._](http://people.csail.mit.edu/emina/pubs/rosette.onward13.pdf) In Onward!'13.
+* For more on using Rosette, see [_The Rosette Guide_](http://homes.cs.washington.edu/~emina/rosette/guide/index.html).  Rosette's internals are described in [_A lightweight symbolic
+  virtual machine for solver-aided host languages._](http://homes.cs.washington.edu/~emina/pubs/rosette.pldi14.pdf) (PLDI'14).
