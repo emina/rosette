@@ -3,7 +3,7 @@
 (require (only-in "host.rkt" verify_scalar verify_vector)
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui rosette/lib/util/roseunit)
+         rackunit rackunit/text-ui rosette/lib/roseunit)
 
 (define fast-tests
   (test-suite+ 

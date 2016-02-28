@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit "../model/reals.rkt")
+(require rackunit rackunit/text-ui rosette/lib/roseunit "../model/reals.rkt")
 
 (define-symbolic a b c boolean?)
 (define-symbolic x integer?)

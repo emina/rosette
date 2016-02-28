@@ -4,7 +4,7 @@
          (only-in "reference.rkt" verify_0_1 verify_1_2 verify_2_3 verify_3_4 verify_4_5 synth_3)
          (only-in "../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui rosette/lib/util/roseunit)
+         rackunit rackunit/text-ui rosette/lib/roseunit)
 
 (define fast-tests
   (test-suite+ 

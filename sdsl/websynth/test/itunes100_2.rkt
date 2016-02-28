@@ -68,7 +68,7 @@
 		(DOM-Flatten (DOM-XPath dom field1_zpath))
 	))
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
+(require rackunit rackunit/text-ui rosette/lib/roseunit)
 (define-runtime-path out (build-path "." "itunes_top100_v2.out"))
 
 (define a-test

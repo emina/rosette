@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui 
          rosette/solver/solution 
-         rosette/lib/util/roseunit 
+         rosette/lib/roseunit 
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real (except-in rosette/base/core/bitvector bv)
          rosette/base/core/finitize

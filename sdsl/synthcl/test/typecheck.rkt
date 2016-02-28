@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit
+(require rackunit rackunit/text-ui rosette/lib/roseunit
          (only-in "../model/memory.rkt" NULL)
          (only-in "../model/runtime.rkt" malloc)
          "../model/work.rkt"

@@ -99,7 +99,7 @@
 		(DOM-Flatten (DOM-XPath dom field0_zpath))
 	))
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
+(require rackunit rackunit/text-ui rosette/lib/roseunit)
 (define-runtime-path out (build-path "." "imdb250.out"))
 
 (define a-test

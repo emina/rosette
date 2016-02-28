@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit
+(require rackunit rackunit/text-ui rosette/lib/roseunit
          "../model/memory.rkt" "../model/work.rkt" 
          "../model/reals.rkt"  "../model/pointers.rkt"
          "../model/context.rkt" "../model/buffer.rkt" "../model/flags.rkt")

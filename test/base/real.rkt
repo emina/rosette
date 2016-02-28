@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui  "common.rkt" "solver.rkt"
          rosette/solver/solution 
-         rosette/lib/util/roseunit 
+         rosette/lib/roseunit 
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real
          rosette/base/core/polymorphic rosette/base/core/merge 

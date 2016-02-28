@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui racket/generator
          rosette/solver/solution 
-         rosette/lib/util/roseunit rosette/solver/smt/z3 
+         rosette/lib/roseunit rosette/solver/smt/z3 
          racket/fixnum 
          rosette/base/core/term
          rosette/base/core/bool

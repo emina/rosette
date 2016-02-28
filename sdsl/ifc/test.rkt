@@ -3,7 +3,7 @@
 (require "machine.rkt" "indistinguishable.rkt" "verify.rkt"
          "basic.rkt" "jump.rkt" "call.rkt")
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit)
+(require rackunit rackunit/text-ui rosette/lib/roseunit)
 
 ; See verify-EENI-demo.rkt for details on the results expected by the tests.
 

@@ -138,7 +138,7 @@ def generate(args):
     else :
         out = os.path.splitext(os.path.basename(args.html_filepath))[0]
         t = os.path.splitext(os.path.basename(args.examples))[0]
-        f.write('(require rackunit rackunit/text-ui rosette/lib/util/roseunit)\n')
+        f.write('(require rackunit rackunit/text-ui rosette/lib/roseunit)\n')
         f.write('(define-runtime-path out (build-path "." "{name}.out"))\n\n'.format(name=out))
         f.write('(define a-test\n')
         f.write('\t(test-suite+ \n')

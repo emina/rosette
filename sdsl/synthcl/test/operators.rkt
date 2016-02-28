@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit
+(require rackunit rackunit/text-ui rosette/lib/roseunit
          (prefix-in $ "../model/operators.rkt") 
          "../model/reals.rkt")
 

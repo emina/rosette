@@ -1,6 +1,6 @@
 #lang racket
 
-(require rosette/lib/util/roseunit)
+(require rosette/lib/roseunit)
 
 (error-print-width 4)
 

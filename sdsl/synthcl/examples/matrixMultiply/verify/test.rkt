@@ -4,7 +4,7 @@
          (prefix-in buggy_ (only-in "host-buggy.rkt" verify_scalar verify_vector verify_vector_opt))
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
          (only-in rosette sat? unsat?)
-         rackunit rackunit/text-ui rosette/lib/util/roseunit)
+         rackunit rackunit/text-ui rosette/lib/roseunit)
 
 (define fast-tests
   (test-suite+ 

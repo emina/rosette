@@ -1,6 +1,6 @@
 #lang s-exp "../bv.rkt"
 
-(require rackunit rackunit/text-ui "util.rkt" rosette/lib/util/roseunit)
+(require rackunit rackunit/text-ui "util.rkt" rosette/lib/roseunit)
 (require "../examples/reference.rkt")
 
 (define medium-tests

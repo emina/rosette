@@ -1,6 +1,6 @@
 #lang racket
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit
+(require rackunit rackunit/text-ui rosette/lib/roseunit
          racket/fixnum
          rosette/base/core/term
          rosette/base/adt/list

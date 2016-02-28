@@ -1,7 +1,7 @@
 #lang s-exp rosette
 
 (require rackunit rackunit/text-ui racket/generator
-         rosette/lib/util/roseunit)
+         rosette/lib/roseunit)
 
 (define-symbolic a b c boolean?)
 (define-symbolic xi yi zi integer?)

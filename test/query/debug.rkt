@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rackunit rackunit/text-ui rosette/lib/util/roseunit
+(require rackunit rackunit/text-ui rosette/lib/roseunit
          rosette/query/debug)
 
 (define-symbolic a b c boolean?)
