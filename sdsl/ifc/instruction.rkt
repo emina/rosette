@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rosette/lib/reflect/match rosette/lib/angelic "value.rkt")
+(require rosette/lib/match rosette/lib/angelic "value.rkt")
 
 (provide program instruction
          (rename-out [inst? instruction?]

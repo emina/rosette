@@ -1,7 +1,7 @@
 #lang s-exp rosette
 
 (require "type.rkt" "context.rkt" "queue.rkt" "program.rkt" "kernel.rkt" "buffer.rkt"  
-         rosette/lib/reflect/match)
+         rosette/lib/match)
 
 (provide cl-type? cl_context cl_command_queue cl_program cl_kernel cl_mem)
 

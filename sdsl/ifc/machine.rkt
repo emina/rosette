@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rosette/lib/reflect/match "value.rkt" "instruction.rkt")
+(require rosette/lib/match "value.rkt" "instruction.rkt")
 
 (provide machine machine? halted? halted∩low? init all
          LOC step push peek pop pop-until read write goto next 

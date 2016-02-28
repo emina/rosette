@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rosette/lib/reflect/match)
+(require rosette/lib/match)
 
 (provide ⊥ ⊤ 0@⊥ let@ R ?int ?label ?bool value? return? 
          (rename-out [boolean? label?] [|| ∨] [=> ⊑]

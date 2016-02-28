@@ -1,7 +1,7 @@
 #lang s-exp rosette
 
 (require "type.rkt" "errors.rkt"
-         rosette/lib/reflect/match (only-in racket/syntax format-symbol)
+         rosette/lib/match (only-in racket/syntax format-symbol)
          (for-syntax (only-in racket/syntax format-id)) 
          (only-in rosette/base/core/type subtype?)
          (only-in rosette [void rosette-void]))

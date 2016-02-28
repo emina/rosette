@@ -2,7 +2,7 @@
 
 (require "errors.rkt" "work.rkt" "type.rkt" "reals.rkt" 
          (only-in "pointers.rkt" gen:pointer)               
-         racket/generic rosette/lib/reflect/match)
+         racket/generic rosette/lib/match)
 
 (provide (rename-out [make-memory memory]) memory? memory-empty?
          memory-synchronize! memory-allocate! memset memory-owns? raw-pointer? NULL)

@@ -1,6 +1,6 @@
 #lang s-exp rosette
 
-(require rosette/lib/reflect/match "machine.rkt")
+(require rosette/lib/match "machine.rkt")
 
 (provide ≈ mem≈ low≈ full≈)
          
