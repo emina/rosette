@@ -22,7 +22,9 @@ solver-aided DSLs.
 
 * Create a `bin` subdirectory in the `rosette` directory:
 
-	`$ mkdir bin`
+	`$ mkdir bin`  
+	`$ ls`  
+	`bin doc rosette sdsl test LICENSE README.md`
 	
 * Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  
 
