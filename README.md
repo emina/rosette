@@ -20,6 +20,10 @@ solver-aided DSLs.
   `$ raco link rosette`  
   `$ raco setup -l rosette`  
 
+* Create a `bin` subdirectory in the `rosette` directory:
+
+	`$ mkdir bin`
+	
 * Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
 
 ### Executing Rosette programs
