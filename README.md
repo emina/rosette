@@ -24,7 +24,9 @@ solver-aided DSLs.
 
 	`$ mkdir bin`
 	
-* Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
+* Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  
+
+* Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
 
 ### Executing Rosette programs
 
