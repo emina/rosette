@@ -1,13 +1,11 @@
 #lang racket
 
-(require (for-syntax racket/syntax)
-         racket/stxparam racket/stxparam-exptime
-         "term.rkt" "union.rkt" "op.rkt")
+(require "term.rkt" "union.rkt" "op.rkt")
 
 (provide @boolean? @false? 
          ! && || => <=> @! @&& @|| @=> @<=> 
          and-&& or-|| instance-of?
-         @assert pc with-asserts with-asserts-only relax 
+         @assert pc with-asserts with-asserts-only 
          (rename-out [export-asserts asserts]) clear-asserts!)
 
 ;; ----------------- Boolean type ----------------- ;; 
@@ -244,18 +242,13 @@
 
 (define-syntax (@assert stx)
   (syntax-case stx ()
-    [(_ val)            (syntax/loc stx (@assert val #f))]
+    [(_ val) (syntax/loc stx (@assert val #f))]
     [(_ val msg) 
      (syntax/loc stx 
-       (syntax-parameterize ([relax (syntax-rules () [(_ form loc) form])])
-                            (let ([guard (not-false? val)])
-                              (asserts (=> (pc) guard)) 
-                              (when (false? guard)
-                                (raise-assertion-error msg)))))]))
-
-(define-syntax-parameter relax
-  (lambda (stx)
-    (syntax-case stx () [(_ form origin) #'form])))
+       (let ([guard (not-false? val)])
+         (asserts (=> (pc) guard)) 
+         (when (false? guard)
+           (raise-assertion-error msg))))]))
 
 (define (not-false? v)
   (or (eq? v #t) (! (@false? v))))

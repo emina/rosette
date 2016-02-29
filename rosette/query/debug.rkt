@@ -1,13 +1,13 @@
 #lang racket
 
-(require (for-syntax racket/syntax) 
-         racket/stxparam 
+(require (for-syntax racket/syntax) racket/stxparam 
          (only-in "core.rkt" current-solver ∃-debug eval/asserts)
-         "../lib/util/syntax-properties.rkt"  
-         "../base/form/define.rkt" "../base/core/bool.rkt"  "../base/form/state.rkt" 
+         "../lib/util/syntax-properties.rkt"
+         (only-in "../base/form/app.rkt" app)
+         "../base/core/bool.rkt"  "../base/form/state.rkt" 
          "../base/core/equality.rkt" "../base/core/term.rkt")
 
-(provide relax? relate debug-origin debug define/debug protect true false)
+(provide relax? relate debug-origin debug define/debug protect assert true false)
 
 (define-syntax debug
   (syntax-rules ()
@@ -19,7 +19,27 @@
        (debug form))]))
 
 (define-syntax-rule (define/debug head body ...) 
-  (define head (syntax-parameterize ([relax relax/assert]) body ...)))
+  (define head
+    (syntax-parameterize
+     ([app app-track])
+     body ...)))
+
+(define-syntax (assert stx)
+  (syntax-case stx ()
+    [(_ expr) (syntax/loc stx (@assert (protect expr) #f))]
+    [(_ expr msg) (syntax/loc stx (@assert (protect expr) (protect msg)))]))
+
+
+(define-for-syntax (app-track stx)
+  (syntax-case stx ()
+    [(_ proc arg ...) 
+     (quasisyntax/loc stx
+       (call-with-values (thunk (#%app proc arg ...))
+                         (relax-values (syntax/source proc))))]))
+
+(define-syntax-rule (protect expr)
+  (syntax-parameterize ([app (syntax-rules () [(_ proc arg (... ...)) (#%app proc arg (... ...))])])
+                       expr))
 
 (define-syntax true
   (syntax-id-rules (set!)
@@ -30,9 +50,6 @@
   (syntax-id-rules (set!)
     [(set! false e) (error 'set! "cannot reassign the constant false")]
     [false (relax #f false)]))
-
-(define-syntax-rule (protect expr)
-  (syntax-parameterize ([relax (syntax-rules () [(_ form loc) form])]) expr))
 
 (define relax?
   (make-parameter none/c
@@ -49,13 +66,6 @@
                     (unless (and (procedure? rel) (procedure-arity-includes? rel 2))
                       (error 'relate "expected a 2 argument procedure, given ~s" rel))
                     rel)))
-
-(define-for-syntax (relax/assert stx)
-  (syntax-case stx ()
-    [(_ val origin) 
-     #`(call-with-values 
-        (thunk val) 
-        (relax-values (syntax/source origin)))]))
 
 (define (relax-values origin)
   (lambda rs 

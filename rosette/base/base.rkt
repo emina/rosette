@@ -15,7 +15,7 @@
   (filtered-out drop@ 
     (combine-out   
      ; core/bool.rkt
-     pc with-asserts with-asserts-only relax asserts clear-asserts!
+     pc with-asserts with-asserts-only asserts clear-asserts!
      @assert @boolean? @false? @! @&& @=> @<=> 
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 

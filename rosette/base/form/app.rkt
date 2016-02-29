@@ -1,11 +1,11 @@
 #lang racket
 
-(require "../core/bool.rkt")
+(require (for-syntax racket/syntax)
+         racket/stxparam racket/stxparam-exptime)
+         
+(provide app (rename-out [app #%app] [app #%plain-app]))
 
-(provide (rename-out [app #%app] [app #%plain-app]))
+(define-syntax-parameter app
+  (syntax-rules ()
+    [(_ proc arg ...) (#%app proc arg ...)]))
 
-(define-syntax (app stx)
-  (syntax-case stx ()
-    [(app proc arg ...) 
-     (quasisyntax/loc stx (relax (#%app proc arg ...) #,#'proc))]))
-     
