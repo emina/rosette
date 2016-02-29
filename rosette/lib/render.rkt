@@ -1,6 +1,7 @@
 #lang racket
 
-(require rosette/solver/solution rosette/base/core/term (only-in rosette symbolics)
+(require rosette/solver/solution 
+         (only-in rosette symbolics) (only-in rosette/query/debug debug-origin)
          rosette/lib/util/syntax (only-in racket/syntax format-id)
          slideshow/code (only-in slideshow vl-append current-font-size))
          
@@ -9,7 +10,7 @@
 (define (render sol [font-size 16])
   (unless (unsat? sol)
     (error 'render "expected an unsatisfiable solution, given ~a" sol))
-  (let* ([core (filter-map location (remove-duplicates (filter-map term-origin (symbolics (core sol)))))]
+  (let* ([core (filter-map location (remove-duplicates (filter-map debug-origin (symbolics (core sol)))))]
          [debugged (debugged-forms (remove-duplicates (map location-source core)) core)]
          [core (apply set core)])
     (parameterize ([code-colorize-enabled #t]

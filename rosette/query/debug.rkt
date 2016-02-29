@@ -7,7 +7,7 @@
          "../base/form/define.rkt" "../base/core/bool.rkt"  "../base/form/state.rkt" 
          "../base/core/equality.rkt" "../base/core/term.rkt")
 
-(provide relax? relate relaxer? relaxed-by debug define/debug protect true false)
+(provide relax? relate debug-origin debug define/debug protect true false)
 
 (define-syntax debug
   (syntax-rules ()
@@ -54,7 +54,7 @@
   (syntax-case stx ()
     [(_ val origin) 
      #`(call-with-values 
-        (lambda () val) 
+        (thunk val) 
         (relax-values (syntax/source origin)))]))
 
 (define (relax-values origin)
@@ -62,17 +62,23 @@
     (apply values 
            (map (lambda (r) 
                   (if (and ((relax?) r) (not (relaxer? r)))
-                      (local [(define-symbolic* relaxer (type-of r))
-                              (define tracked 
-                                (term-property 
-                                 (term-track-origin relaxer origin)
-                                 'relaxer? #t))]
-                        (@assert (term-property ((relate) tracked r) 'relaxed-by relaxer))
+                      (let ([tracked (constant (list relaxer origin) (type-of r))])
+                        (@assert ((relate) tracked r))
                         tracked)
                       r))
                 rs))))
 
-(define (relaxer? val)   (term-property val 'relaxer?))
-(define (relaxed-by val) (term-property val 'relaxed-by))
+(define relaxer #'relaxer)
+
+(define (relaxer? val)
+  (match val
+    [(constant (list (== relaxer) _) _) #t]
+    [_ #f]))
+
+(define (debug-origin val)
+  (match val
+    [(constant (list (== relaxer) origin) _) origin]
+    [_ #f]))
+
 
 

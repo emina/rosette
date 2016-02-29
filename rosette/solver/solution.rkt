@@ -41,8 +41,7 @@
        [core 
         (fprintf port "(core")
         (for ([assertion (sort core term<?)]) 
-          (define origin  (term-origin assertion))
-          (fprintf port "\n [~a @ ~a]" assertion (if origin origin 'unknown)))
+          (fprintf port "\n ~a" assertion))
         (fprintf port ")")]))])
 
 (define (sat? sol) (and (solution? sol) (dict? (solution-result sol))))

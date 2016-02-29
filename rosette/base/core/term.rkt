@@ -10,9 +10,6 @@
  constant?         ; (-> any/c boolean?)
  expression?       ; (case-> (-> any/c boolean?) (-> any/c op? boolean?))
  term<?            ; (-> term? term? boolean?)
- term-origin       ; (-> term? any/c)
- term-track-origin ; (-> term? any/c term?)
- term-property     ; (case-> (-> term? symbol? any/c) (-> term? symbol? any/c term?))
  clear-terms!      ; (-> void? void?)
  sublist?
  (all-from-out "type.rkt"))
@@ -58,7 +55,7 @@
 (define-match-expander a-constant
   (lambda (stx)
     (syntax-case stx ()
-      [(_ id-pat type-pat)     #'(constant id-pat type-pat _ _)]))
+      [(_ id-pat type-pat)     #'(constant id-pat type-pat _)]))
   (syntax-id-rules ()
     [(_ id type) (make-const id type)]
     [_ make-const]))
@@ -66,14 +63,14 @@
 (define-match-expander an-expression
   (lambda (stx)
     (syntax-case stx ()
-      [(_ op-pat elts-pat ...) #'(expression (list op-pat elts-pat ...) _ _ _)]))
+      [(_ op-pat elts-pat ...) #'(expression (list op-pat elts-pat ...) _ _)]))
   (syntax-id-rules ()
     [(_ op elts ...) (make-expr op elts ...)]
     [_ make-expr]))
 
 (define-match-expander a-term
   (syntax-rules ()
-    [(_ val-pat type-pat) (term val-pat type-pat _ _)]))
+    [(_ val-pat type-pat) (term val-pat type-pat _)]))
 
 
 #|-----------------------------------------------------------------------------------|#
@@ -84,9 +81,7 @@
 (struct term 
   (val                ; (or/c any/c (cons/c op? (non-empty-listof any/c)))
    type               ; type?  
-   ord                ; integer?  
-   [props #:auto #:mutable]) ; (or/c #f hash?)
-  #:auto-value #f
+   ord)                ; integer?  
   #:methods gen:typed 
   [(define (get-type v) (term-type v))]
   #:methods gen:custom-write
@@ -97,22 +92,6 @@
 (struct expression term ())
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
-
-(define term-property
-  (case-lambda 
-    ([v prop] 
-     (and (term? v)
-          (let ([props (term-props v)])
-            (and props (hash-ref props prop #f)))))
-    ([v prop prop-val]
-     (and prop-val (term? v) (set-term-props! v (hash-set (or (term-props v) (hash)) prop prop-val)))
-     v)))
-         
-(define (term-origin v) (term-property v 'origin))
-
-(define (term-track-origin v origin) (term-property v 'origin origin))
-
-
 
 #|-----------------------------------------------------------------------------------|#
 ; The following functions convert symbolic values to strings or plain s-expressions.
