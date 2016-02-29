@@ -2,7 +2,7 @@
 
 (require 
  "automaton.rkt" "lib.rkt"
- rosette/query/debug 
+ rosette/query/debug rosette/lib/render 
  rosette/lib/synthax)
 
 (provide define/debug debug-automaton 
