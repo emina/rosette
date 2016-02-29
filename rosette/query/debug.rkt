@@ -67,8 +67,7 @@
                                 (term-property 
                                  (term-track-origin relaxer origin)
                                  'relaxer? #t))]
-                        (@assert (term-property ((relate) tracked r) 'relaxed-by relaxer) 
-                                    "" origin)
+                        (@assert (term-property ((relate) tracked r) 'relaxed-by relaxer))
                         tracked)
                       r))
                 rs))))

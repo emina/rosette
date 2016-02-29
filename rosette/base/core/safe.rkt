@@ -27,54 +27,49 @@
 
 (define-syntax (assert stx)
   (syntax-case stx () 
-    [(_ expr err-thunk origin) (syntax/loc stx (@assert expr err-thunk origin))]
-    [(_ expr err-thunk)        (syntax/loc stx (@assert expr err-thunk #f))]
-    [(_ expr)                  (syntax/loc stx (@assert expr #f #f))]))
+    [(_ expr err-thunk)        (syntax/loc stx (@assert expr err-thunk))]
+    [(_ expr)                  (syntax/loc stx (@assert expr #f))]))
 
 (define-syntax assert-some 
   (syntax-rules ()
-    [(_ expr #:unless size err-thunk origin) 
+    [(_ expr #:unless size err-thunk) 
      (let* ([val expr])
        (unless (= size (length val))
-         (assert (apply || (map car val)) err-thunk origin))
+         (assert (apply || (map car val)) err-thunk))
        val)]
-    [(_ expr #:unless size err-thunk) (assert-some expr #:unless size err-thunk #f)]
-    [(_ expr #:unless size)           (assert-some expr #:unless size #f #f)]
-    [(_ expr err-thunk origin) (let* ([val expr])
-                                 (assert (apply || (map car val)) err-thunk origin)
-                                 val)]
-    [(_ expr err-thunk) (assert-some expr err-thunk #f)]
-    [(_ expr)           (assert-some expr #f #f)]))
+    [(_ expr #:unless size)
+     (assert-some expr #:unless size #f)]
+    [(_ expr err-thunk)
+     (let* ([val expr])
+       (assert (apply || (map car val)) err-thunk)
+       val)]
+    [(_ expr)
+     (assert-some expr #f)]))
 
 (define-syntax assert-|| 
   (syntax-rules ()
-    [(_ expr #:unless size err-thunk origin) 
+    [(_ expr #:unless size err-thunk) 
      (let ([val expr])
        (unless (= size (length val))
-         (assert (apply || val) err-thunk origin)))]
-    [(_ expr #:unless size err-thunk) (assert-|| expr #:unless size err-thunk #f)]
-    [(_ expr #:unless size)           (assert-|| expr #:unless size #f #f)]))
+         (assert (apply || val) err-thunk)))]
+    [(_ expr #:unless size)           (assert-|| expr #:unless size #f)]))
 
 
 (define-syntax assert-bound
   (syntax-rules ()
-    [(_ [limit cmp expr] name origin)
+    [(_ [limit cmp expr] name)
      (let ([low limit]
            [high expr])
        (assert (cmp low high)
-               (argument-error name (format "~.a ~.a ~.a" low cmp (syntax-e #'expr)) low)))]
-    [(_ [limit cmp expr] name)
-     (assert-bound [limit cmp expr] name #f)]    
-    [(_ [lowLimit cmpLow expr cmpHigh highLimit] name origin)
+               (argument-error name (format "~.a ~.a ~.a" low cmp (syntax-e #'expr)) low)))]   
+    [(_ [lowLimit cmpLow expr cmpHigh highLimit] name)
      (let ([low lowLimit]
            [val expr]
            [high highLimit])
        (assert (cmpLow low val) 
                (argument-error name (format "~.a ~.a ~.a" low cmpLow (syntax-e #'expr)) val))
        (assert (cmpHigh val high)
-               (argument-error name (format "~.a ~.a ~.a" (syntax-e #'expr) cmpHigh high) val)))]    
-    [(_ [lowLimit cmpLow expr cmpHigh highLimit] name)
-     (assert-bound [lowLimit cmpLow expr cmpHigh highLimit] name #f)]))
+               (argument-error name (format "~.a ~.a ~.a" (syntax-e #'expr) cmpHigh high) val)))]))
 
 (define-syntax (assert-arity-includes stx)
   (syntax-case stx ()

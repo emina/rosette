@@ -244,15 +244,14 @@
 
 (define-syntax (@assert stx)
   (syntax-case stx ()
-    [(_ val)            (syntax/loc stx (@assert val #f #f))]
-    [(_ val msg)        (syntax/loc stx (@assert val msg #f))]
-    [(_ val msg origin) 
+    [(_ val)            (syntax/loc stx (@assert val #f))]
+    [(_ val msg) 
      (syntax/loc stx 
        (syntax-parameterize ([relax (syntax-rules () [(_ form loc) form])])
                             (let ([guard (not-false? val)])
-                              (asserts (term-track-origin (=> (pc) guard) origin))
+                              (asserts (=> (pc) guard)) 
                               (when (false? guard)
-                                (raise-assertion-error msg origin)))))]))
+                                (raise-assertion-error msg)))))]))
 
 (define-syntax-parameter relax
   (lambda (stx)
@@ -261,13 +260,10 @@
 (define (not-false? v)
   (or (eq? v #t) (! (@false? v))))
 
-(define (raise-assertion-error msg origin)
+(define (raise-assertion-error msg)
   (if (procedure? msg)
       (msg)
-      (error 'assert (cond [(and msg origin) (format "~a\n  failure origin: ~a" msg origin)]
-                           [msg (format "~a" msg)]
-                           [origin (format "failed at ~a" origin)]
-                           [else "failed"]))))
+      (error 'assert (if msg (format "~a" msg) "failed"))))
                      
 (define-syntax (with-asserts stx)
   (syntax-case stx (begin)

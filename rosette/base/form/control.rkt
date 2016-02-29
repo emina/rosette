@@ -25,15 +25,13 @@
 (define-syntax (@if stx)
   (syntax-case stx ()
     [(_ test-expr then-expr else-expr)
-     (with-syntax ([label (syntax/loc stx if)])
-       (quasisyntax/loc stx
-         (branch-and-merge #'label  
-                           (! (@false? test-expr)) 
-                           (thunk then-expr) 
-                           (thunk else-expr))))]))
+     (quasisyntax/loc stx
+       (branch-and-merge test-expr
+                         (thunk then-expr) 
+                         (thunk else-expr)))]))
 
-
-(define (branch-and-merge origin test then-branch else-branch)
+(define (branch-and-merge test-expr then-branch else-branch)
+  (define test (! (@false? test-expr)))
   (cond [(eq? test #t) (then-branch)]
         [(eq? test #f) (else-branch)]
         [else 
@@ -44,15 +42,15 @@
                   (else-state (lambda (post-then post-else) (merge test post-then post-else)))
                   (merge test then-val else-val)]
                  [then-state                  ; only then branch feasible
-                  (@assert test "both branches infeasible" origin)
+                  (@assert test "both branches infeasible")
                   (then-state select-post)
                   then-val]
                  [else-state                  ; only else branch feasible
-                  (@assert (! test) "both branches infeasible" origin)
+                  (@assert (! test) "both branches infeasible")
                   (else-state select-post)
                   else-val]
                  [else                        ; neither branch feasible
-                  (@assert #f "both branches infeasible" origin)]))]))
+                  (@assert #f "both branches infeasible")]))]))
 
 (define (select-post pre post) post) 
 
