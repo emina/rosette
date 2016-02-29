@@ -1,19 +1,11 @@
 
 #lang racket
 
-(require "../base/util/log.rkt"
-         "../base/core/term.rkt" "../base/core/op.rkt" "../base/core/bool.rkt" 
+(require "../base/core/term.rkt" "../base/core/op.rkt" "../base/core/bool.rkt" 
          "../base/core/polymorphic.rkt" "../base/core/union.rkt"
          "../base/core/merge.rkt" "../solver/solution.rkt")
 
-(provide evaluate time/evaluate)
-
-; Times the call to (evaluate expr sol), logs the timing 
-; information and returns the result.
-(define (time/evaluate expr sol)
-  (let-values ([(val cpu real gc) (time-apply evaluate `(,expr ,sol))])
-    (log-info "evaluation time (ms): cpu = ~a, real = ~a, gc = ~a" cpu real gc)
-    (car val)))
+(provide evaluate)
 
 ; Partially evaluates the given expression with respect to the provided solution and 
 ; returns the result.  In particular, if the solution has a binding for every symbolic 

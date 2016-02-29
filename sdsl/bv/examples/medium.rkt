@@ -18,7 +18,8 @@
 ; Sign function. ~ 1.4 sec.
 (define-fragment (p13* x) 
   #:implements p13
-  #:library (bvlib [{bvsz bvneg bvlshr bvashr bvor} 1]))
+  #:library (bvlib [{bvsz bvneg bvlshr bvashr bvor} 1])
+  #:minbv 32)
 
 ; Floor of average of two integers without over-flowing. ~ 2.5 sec.
 (define-fragment (p14* x y) 
@@ -44,7 +45,7 @@
 ; Test whether an unsigned integer is of the form 2^n. ~ 1.6 sec.
 (define-fragment (p18* x) 
   #:implements p18
-  #:library (bvlib [{bv1 bvsub bvnot} 1] [{bvredor bvand} 2]))
+  #:library (bvlib [{bvand bvredor} 2] [{bvsub bvnot bv1} 1]))
 
 ; x where m is mask which identifies field B and k 
 ; is number of bits from end of A to start of B. ~ 3.5 sec.

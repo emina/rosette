@@ -9,7 +9,6 @@
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
   (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
-  (only-in "../base/util/log.rkt" log-info)
   "../solver/solver.rkt"
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
   (only-in "../solver/smt/z3.rkt" z3))
@@ -220,14 +219,12 @@
   (define trial 0)
   
   (define (guess sol)
-    (log-cegis-info [trial] "searching for a candidate: ~s" (map sol inputs))
     (solver-assert guesser (evaluate φ sol))
     (match (solver-check guesser)
       [(model m) (sat (for/hash ([(c v) m] #:unless (member c inputs)) (values c v)))]
       [other other]))
   
   (define (check sol)
-    (log-cegis-info [trial] "verifying the candidate solution ...")
     (solver-clear checker)
     (solver-assert checker (evaluate ¬φ sol))
     (match (solver-check checker)
@@ -244,8 +241,6 @@
             [else (set! trial (add1 trial))
                   (loop (guess cex))]))])))
              
-(define-syntax-rule (log-cegis-info [trial] msg rest ...) 
-  (log-info ['cegis] "[~a] ~a" trial (format msg rest ...)))    
 
 (define (value-for v)
   (if (constant? v)

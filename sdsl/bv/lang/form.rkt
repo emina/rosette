@@ -1,18 +1,13 @@
 #lang racket
 
-(require "program.rkt" "core.rkt" "fragment.rkt"
+(require "program.rkt" "core.rkt" "fragment.rkt" "log.rkt"
          rosette/query/eval
          rosette/base/form/state
          rosette/solver/solution
-         rosette/base/util/log
          (only-in rosette/base/core/term term-cache)
          (for-syntax racket/syntax))
 
 (provide define-fragment synthesize-fragment bvlib verbose?)
-
-(define verbose? (make-parameter #t))
-
-(current-log-handler (log-handler #:info (curry equal? 'define-fragment)))
 
 (define-syntax (define-fragment stx)
   (syntax-case stx ()
@@ -34,14 +29,13 @@
      #'(synthesize-fragment (id param ...) #:implements spec #:library lib-expr #:minbv 4)]
     [(_ (id param ...) #:implements spec #:library lib-expr #:minbv minbv)
      #`(parameterize ([current-oracle (oracle)]
-                      [current-log-source (if (verbose?) 'define-fragment #f)]
                       [term-cache (hash-copy (term-cache))])
-         (log-info "synthesizing ~a" #'id)
+         (bv-info "synthesizing ~a" #'id)
          (define impl (prog* #,(length (syntax->list #'(param ...))) lib-expr))
          (define-values (val cpu real gc) (time-apply ∃∀-solve (list impl spec minbv)))     
          (match (car val)
            [(? sat? sol) 
-            (log-info "synthesized ~a (ms): cpu = ~a, real = ~a, gc = ~a" #'id cpu real gc)
+            (bv-info "synthesized ~a (ms): cpu = ~a, real = ~a, gc = ~a" #'id cpu real gc)
             (define impl-stx (fragment->syntax (list (quote-syntax param) ...) impl sol))
             (values (procedure-rename (eval impl-stx) 'id) impl-stx)]
            [_ 

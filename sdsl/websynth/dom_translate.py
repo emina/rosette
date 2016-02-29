@@ -63,9 +63,6 @@ def generate(args):
     f.write('; Cross-record Mask\n')
     f.write('(define-symbolic recordmask boolean? [max_zpath_depth])\n')
     
-    #if (args.rackunit_test == False) :
-    #    f.write('(current-log-handler (log-handler #:info any/c))\n')
-        
     f.write('(current-bitwidth #f)\n\n')
 
     f.write('(define (demonstration)\n\n');

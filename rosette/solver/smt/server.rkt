@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/runtime-path  "../../base/util/log.rkt")
+(require racket/runtime-path)
 
 (provide server server-start server-running? server-shutdown 
          server-write server-read server-error)

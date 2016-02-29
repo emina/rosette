@@ -3,12 +3,11 @@
 (require 
   (only-in "bvops.rkt" BV bv* bv)
   (only-in "program.rkt" trace* trace-args trace-out well-formed-program well-formed-trace)
-  rosette/query/eval
+  rosette/query/eval "log.rkt"
   (only-in rosette/base/core/term term? constant? get-type term-cache term<?)
   (only-in rosette/base/core/bool ! || && => with-asserts-only)
   (only-in rosette/base/core/real @integer?)
   (only-in rosette/base/core/bitvector bitvector bitvector-size)
-  (only-in rosette/base/util/log log-info)
   (only-in rosette/solver/solution model sat sat? unsat? unsat)
   (only-in rosette/solver/smt/z3 z3)
   (only-in rosette/solver/solver solver-assert solver-check solver-clear))
@@ -122,12 +121,6 @@
     [_ sol]))
  
 (define-syntax-rule (log-solver-info [trial] msg rest ...) 
-  (log-info "[~a] ~a" trial (format msg rest ...)))   
+  (bv-info "[~a] ~a" trial (format msg rest ...)))   
 
 
-#|
-(require "program.rkt")
-;(current-log-handler (log-handler #:info any/c))
-(define impl (prog* 1 (list (op #'identity identity))))
-(∃∀-solve impl identity 4)
-|#

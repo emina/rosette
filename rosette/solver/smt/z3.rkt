@@ -3,7 +3,6 @@
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt" 
-         "../../base/util/log.rkt"
          (only-in racket [remove-duplicates unique])
          (only-in "smtlib2.rkt" reset set-option)
          (only-in "../../base/core/term.rkt" term term? term-type)
@@ -48,28 +47,20 @@
    
    (define (solver-check self)
      (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env) self)
-     (if (ormap false? asserts) 
-         (unsat)
-         (parameterize ([current-log-source self])
-               (log-time [self] "compilation" : 
-                  (server-write server (encode env asserts mins maxs))
-                  (set-z3-asserts! self '())
-                  (set-z3-mins! self '())
-                  (set-z3-maxs! self '()))
-               (log-time [self] "solving" : 
-                  (server-read server (decode env))))))
+     (cond [(ormap false? asserts) (unsat)]
+           [else (server-write server (encode env asserts mins maxs))
+                 (set-z3-asserts! self '())
+                 (set-z3-mins! self '())
+                 (set-z3-maxs! self '())
+                 (server-read server (decode env))]))
    
    (define (solver-debug self)
      (match-define (z3 server (app unique asserts) _ _ _) self)
-     (if (ormap false? asserts) 
-         (unsat (list #f))
-         (parameterize ([current-log-source self])
-           (set-z3-env! self (env))
-           (server-write (z3-server self) (reset-core-options))
-           (log-time [self] "compilation" : 
-             (server-write server (encode-for-proof (z3-env self) asserts)))
-           (log-time [self] "solving" : 
-             (server-read server (decode (z3-env self)))))))
+     (cond [(ormap false? asserts) (unsat (list #f))]
+           [else (set-z3-env! self (env))
+                 (server-write (z3-server self) (reset-core-options))
+                 (server-write server (encode-for-proof (z3-env self) asserts))
+                 (server-read server (decode (z3-env self)))]))
    ])
 
 (define (reset-default-options)

@@ -8,8 +8,7 @@
   "core/equality.rkt" "core/finitize.rkt" "core/reflect.rkt" 
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/procedure.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
-  "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt" 
-  "util/log.rkt") 
+  "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
 
 (provide
   (rename-out [@|| ||]) ; The character sequence || does not play nicely with the filtered-out form.
@@ -94,10 +93,6 @@
      @#%module-begin @#%top-interaction @module @module @module+
      ; form/app.rkt
      #%app #%plain-app 
-     ; util/log.rkt
-     current-log-source current-log-handler
-     define-log log-handler 
-     log-fatal log-error log-warning log-info log-debug log-time
      )))
 
 ;; ------ Racket syntax and procedures that can be used without being lifted ------ ;; 

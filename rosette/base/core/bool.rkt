@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/syntax)
          racket/stxparam racket/stxparam-exptime
-         "../util/log.rkt" "term.rkt" "union.rkt" "op.rkt")
+         "term.rkt" "union.rkt" "op.rkt")
 
 (provide @boolean? @false? 
          ! && || => <=> @! @&& @|| @=> @<=> 
@@ -273,16 +273,10 @@
   (syntax-case stx (begin)
     [(_ (begin form ...)) #'(with-asserts (let () form ...))]
     [(_ form) #`(parameterize ([asserts (asserts)])
-                  (let*-values ([(val cpu real gc) (time-apply (lambda () form) '())]  
-                                [(asserts) (remove-duplicates (asserts))])
-                    (log-symbolic-execution-stats asserts cpu real gc)
-                    (values (car val) asserts)))]))
+                  (let* ([val form]
+                         [bools (remove-duplicates (asserts))])
+                    (values val bools)))]))
 
 (define-syntax-rule (with-asserts-only form)
   (let-values ([(out asserts) (with-asserts form)])
     asserts))
-
-(define (log-symbolic-execution-stats asserts cpu real gc)
-  (unless (null? asserts)
-    (log-info ['rosette] "symbolic execution time (ms): cpu = ~s, real = ~s, gc = ~s" 
-              cpu real gc)))
