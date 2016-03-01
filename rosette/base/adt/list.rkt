@@ -21,6 +21,25 @@
   #:methods
   [(define (type-eq? self u v) (pair=? @eq? u v))
    (define (type-equal? self u v) (pair=? @equal? u v))
+   (define (type-cast self v [caller 'type-cast])  
+     ; We have to special-case the cast for pairs, because all lists 
+     ; except for the empty list are also pairs.  Therefore, the generic 
+     ; adt-type-cast that relies on subtypes can't be used for pairs (since 
+     ; list? is not a subtype of pair?).
+     (match v
+       [(? pair?) v]
+       [(union (list (cons _ (? pair?)) ...) _) v]
+       [(union gvs (or (== @any/c) (== @list?))) 
+        (match (for/list ([gv gvs] #:when (pair? (cdr gv))) gv)
+          [(list (cons g u))
+           (assert g (argument-error caller "pair?" v))
+           u]
+          [gps
+           (cond [(= (length gps) (length gvs)) v]
+                 [else 
+                  (assert (apply || (map car gps)) (argument-error caller "pair?" v))
+                  (apply union gps)])])]
+       [_ (assert #f (argument-error caller "pair?" v))]))
    (define (cast self v)  
      ; We have to special-case the cast for pairs, because all lists 
      ; except for the empty list are also pairs.  Therefore, the generic 
@@ -55,6 +74,8 @@
   #:methods
   [(define (type-eq? self u v) (list=? @eq? u v))
    (define (type-equal? self u v) (list=? @equal? u v))
+   (define (type-cast self v [caller 'type-cast])
+     (adt-type-cast v #:type list? #:lifted @list? #:caller caller)) 
    (define (cast self v) (adt-cast v #:type list? #:lifted @list?))
    (define (type-compress self force? ps) 
      (seq-compress ps length map : [(for/seq head body) (for/list head body)]))

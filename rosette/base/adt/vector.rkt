@@ -25,6 +25,8 @@
      (or (eq? xs ys)
          (and (immutable? xs) (immutable? ys) (vector=? @eq? xs ys))))
    (define (type-equal? self xs ys) (vector=? @equal? xs ys))
+   (define (type-cast self v [caller 'type-cast])
+     (adt-type-cast v #:type vector? #:lifted @vector? #:caller caller)) 
    (define (cast self v) (adt-cast v #:type vector? #:lifted @vector?))  
    (define (type-compress self force? ps)
      (let-values ([(immutable mutable) (partition (compose1 immutable? cdr) ps)])

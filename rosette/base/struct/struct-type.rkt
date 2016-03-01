@@ -10,7 +10,7 @@
          (only-in "../core/merge.rkt" merge merge*)
          (only-in "../core/union.rkt" union union? in-union-guards)
          (only-in "../core/equality.rkt" @equal? @eq?)
-         (only-in "../adt/generic.rkt" adt-cast))
+         (only-in "../adt/generic.rkt" adt-cast adt-type-cast))
 
 (provide @struct-predicate @make-struct-field-accessor @make-struct-field-mutator)
 
@@ -85,7 +85,9 @@
               (not (struct-type-equal+hash type)) 
               (struct=? type u v @eq?))))
    (define (type-equal? type u v)   
-     (struct=? type u v @equal?))  
+     (struct=? type u v @equal?))
+   (define (type-cast self v [caller 'type-cast])
+     (adt-type-cast v #:type (struct-type-native? self) #:lifted self #:caller caller)) 
    (define (cast type v)                  
      (adt-cast v #:type (struct-type-native? type) #:lifted type))
    (define (type-compress type force? ps) 
