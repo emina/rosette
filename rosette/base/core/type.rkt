@@ -81,8 +81,7 @@
              [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 
                                                          #'(lambda (self other) (if (equal? self other) self @any/c))))
               (define cast                   #,(required 'cast))
-              ; type-cast is temporarily optional:  it will become mandatory once all types implement it.
-              (define type-cast              #,(hash-ref methods 'type-cast #'(lambda (self v [caller #f]) v)))
+              (define type-cast              #,(required 'type-cast))
               (define type-name              #,(hash-ref methods 'type-name #'(lambda (self) 'base)))
               (define type-applicable?       #,(hash-ref methods 'type-applicable? #'(lambda (self) #f)))             
               (define type-eq?               #,(hash-ref methods 'type-eq? #'(lambda (self u v) (eq? u v))))                  
@@ -100,6 +99,7 @@
    #:is-a? (const #t) 
    #:methods
    [(define (least-common-supertype self other) self)
+    (define (type-cast self v [caller 'type-cast]) v)
     (define (cast self v) (values #t v))])) 
 
 ; Binds liftable Racket built-in type predicates to their corresponding Rosette types.
