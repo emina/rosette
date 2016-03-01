@@ -12,7 +12,7 @@
  type-compress     
  type-construct type-deconstruct 
  least-common-supertype 
- cast subtype?
+ subtype?
  
  type-of @any/c lifted-type define-lifted-type)
 
@@ -27,7 +27,6 @@
 
 (define-generics type  
   [least-common-supertype type other] ; (-> type? type? type?)
-  [cast type v]                       ; (-> type? any/c (values @boolean? any/c))
   [type-cast type val [caller]]       ; (-> type? any/c symbol? any/c)
   [type-name type]                    ; (-> type? symbol?)
   [type-applicable? type]             ; (-> type? boolean?)
@@ -80,7 +79,6 @@
              #:methods gen:type
              [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 
                                                          #'(lambda (self other) (if (equal? self other) self @any/c))))
-              (define cast                   #,(required 'cast))
               (define type-cast              #,(required 'type-cast))
               (define type-name              #,(hash-ref methods 'type-name #'(lambda (self) 'base)))
               (define type-applicable?       #,(hash-ref methods 'type-applicable? #'(lambda (self) #f)))             
@@ -99,8 +97,7 @@
    #:is-a? (const #t) 
    #:methods
    [(define (least-common-supertype self other) self)
-    (define (type-cast self v [caller 'type-cast]) v)
-    (define (cast self v) (values #t v))])) 
+    (define (type-cast self v [caller 'type-cast]) v)]))
 
 ; Binds liftable Racket built-in type predicates to their corresponding Rosette types.
 ; Initially, all liftable types are bound to @any/c.  See the make-type-of macro.

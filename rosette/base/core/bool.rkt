@@ -23,12 +23,6 @@
         (@assert g (thunk (raise-argument-error caller "expected a boolean?" v)))
         u]
        [_  (@assert #f (thunk (raise-argument-error caller "expected a boolean?" v)))]))
-   (define (cast self v) 
-     (match v
-       [(? boolean?) (values #t v)]
-       [(term _ (== self))  (values #t v)]
-       [(union : [g (and (or (? boolean?) (term _ (== self))) u)] _ ...) (values g u)]
-       [_ (values #f v)]))
    (define (type-compress self force? ps)
      (match ps
        [(list _) ps]

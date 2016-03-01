@@ -53,20 +53,6 @@
             [(_ _)
              (assert #f (numeric-type-error caller @real? v))]))]
        [_ (assert #f (numeric-type-error caller @real? v))]))
-   (define (cast self v)
-     (match v
-       [(? real?) (values #t v)]
-       [(term _ (== self)) (values #t v)]
-       [(term _ (== @integer?)) (values #t (integer->real v))]
-       [(union xs (or (== @real?) (== @any/c)))
-        (let-values ([(i r) (guarded-numbers xs)])
-          (match* (i r)
-            [((cons g x) #f) (values g (integer->real x))]
-            [(#f (cons g x)) (values g x)]
-            [((cons gi xi) (cons gr _)) 
-             (values (or (= (length xs) 2) (|| gi gr)) (ite* (cons gi (integer->real xi)) r))]
-            [(_ _) (values #f v)]))]
-       [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge* ps))])
   
 (define-lifted-type @integer?
@@ -100,27 +86,6 @@
                (merge* i (cons gr (real->integer xr))))]
             [(_ _) (assert #f (numeric-type-error caller @integer? v))]))]
        [_ (assert #f (numeric-type-error caller @integer? v))]))
-   (define (cast self v)
-     (match v
-       [(? integer?) (values #t v)]
-       [(term _ (== self)) (values #t v)]
-       [(term _ (== @real?)) 
-        (let ([g (int? v)])
-          (if g (values g (real->integer v)) (values #f v)))]
-       [(union xs (or (== @real?) (== @any/c)))
-        (let-values ([(i r) (guarded-numbers xs)])
-          (match* (i r)
-            [((cons g x) #f) (values g x)]
-            [(#f (cons g x)) 
-             (let ([g (&& g (int? x))])
-               (if g (values g (real->integer x)) (values #f v)))]
-            [((cons gi xi) (cons gr xr))
-             (let ([gr (&& (int? xr) gr)])
-               (if gr 
-                   (values (or (= (length xs) 2) (|| gi gr)) (merge* i (cons gr (real->integer xr))))
-                   (values gi xi)))]
-            [(_ _) (values #f v)]))]
-       [_ (values #f v)]))
    (define (type-compress self force? ps) (generic-merge* ps))])
 
 ;; ----------------- Lifting Utilities ----------------- ;; 

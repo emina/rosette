@@ -41,16 +41,6 @@
            r])]
        [(? procedure?) v]
        [_ (assert #f (argument-error caller "procedure?" v))]))
-   (define (cast self v) 
-     (match v
-       [(union _ (== @procedure?)) (values #t v)]
-       [(union _ (? (curryr subtype? @procedure?))) (values #t v)]
-       [(union vs (? (curry subtype? @procedure?)))
-        (match (union-filter v @procedure?)
-          [(union (list (cons g u))) (values g u)]
-          [r (values (apply || (union-guards r)) r)])]
-       [(? procedure?) (values #t v)]
-       [_ (values #f v)]))
    (define (type-compress self force? ps)
      (if force? (procedure/unsafe-compress ps) ps))])
 

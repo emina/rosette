@@ -53,16 +53,6 @@
         (assert gt (thunk (error caller "expected ~a, given ~.a" self v)))
         vt]
        [_ (assert #f (thunk (error caller "expected ~a, given ~.a" self v)))]))
-   (define (cast self v)
-     (match v
-      [(bv _ (== self)) (values #t v)]
-      [(term _ (== self)) (values #t v)]
-      [(union vs t)
-       (and (subtype? self t)
-            (match vs
-              [(list _ ... (cons gt (and (? typed? vt) (app get-type (== self)))) _ ...) (values gt vt)]
-              [_ (values #f v)]))]
-      [_ (values #f v)]))
    (define (type-eq? self u v)        (@bveq u v))
    (define (type-equal? self u v)     (@bveq u v))
    (define (type-compress self f? ps) (generic-merge* ps))

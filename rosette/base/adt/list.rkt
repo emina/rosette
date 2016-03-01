@@ -40,20 +40,6 @@
                   (assert (apply || (map car gps)) (argument-error caller "pair?" v))
                   (apply union gps)])])]
        [_ (assert #f (argument-error caller "pair?" v))]))
-   (define (cast self v)  
-     ; We have to special-case the cast for pairs, because all lists 
-     ; except for the empty list are also pairs.  Therefore, the generic 
-     ; adt-cast that relies on subtypes can't be used for pairs (since 
-     ; list? is not a subtype of pair?).
-     (match v
-       [(? pair?) (values #t v)]
-       [(union (list (cons _ (? pair?)) ...) _) (values #t v)]
-       [(union gvs (or (== @any/c) (== @list?))) 
-        (match (for/list ([gv gvs] #:when (pair? (cdr gv))) gv)
-          [(list) (values #f v)]
-          [(list (cons g u)) (values g u)]
-          [gps (values (apply || (map car gps)) (apply union gps))])]
-       [_ (values #f v)]))
    (define (type-compress self force? ps)
      (match ps
        [(list _ ) ps]
@@ -76,7 +62,6 @@
    (define (type-equal? self u v) (list=? @equal? u v))
    (define (type-cast self v [caller 'type-cast])
      (adt-type-cast v #:type list? #:lifted @list? #:caller caller)) 
-   (define (cast self v) (adt-cast v #:type list? #:lifted @list?))
    (define (type-compress self force? ps) 
      (seq-compress ps length map : [(for/seq head body) (for/list head body)]))
    (define (type-construct self vals) vals)

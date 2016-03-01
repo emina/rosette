@@ -21,7 +21,6 @@
          (and (immutable? u) (immutable? v) (@eq? (unbox u) (unbox v)))))
    (define (type-equal? self u v) (@equal? (unbox u) (unbox v)))
    (define (type-cast self v [caller 'type-cast]) (adt-type-cast v #:type box? #:lifted @box? #:caller caller))
-   (define (cast self v) (adt-cast v #:type box? #:lifted @box?))
    (define (type-compress self force? ps)
      (let*-values ([(immutable mutable) (partition (compose1 immutable? cdr) ps)])
        (append (unsafe/compress box-immutable immutable)

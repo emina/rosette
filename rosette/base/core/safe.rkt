@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in "type.rkt" cast)
+(require (only-in "type.rkt" type-cast)
          "bool.rkt"
          racket/performance-hint)
 
@@ -80,6 +80,4 @@
                                               f)))]))
 
 (define (coerce val type [caller-name 'coerce])
-  (let-values ([(can-cast? instance) (cast type val)])
-    (assert can-cast? (type-error caller-name type val))
-    instance))
+  (type-cast type val caller-name))
