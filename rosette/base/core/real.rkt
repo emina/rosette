@@ -32,6 +32,27 @@
      (if (or (equal? self t) (equal? @integer? t)) self @any/c))
    (define (type-eq? self u v) ($= u v)) 
    (define (type-equal? self u v) ($= u v))
+   (define (type-cast self v [caller 'type-cast])
+     (match v
+       [(? real?) v]
+       [(term _ (== self)) v]
+       [(term _ (== @integer?)) (integer->real v)]
+       [(union xs (or (== @real?) (== @any/c)))
+        (let-values ([(i r) (guarded-numbers xs)])
+          (match* (i r)
+            [((cons g x) #f)
+             (assert g (numeric-type-error caller @real? v))
+             (integer->real x)]
+            [(#f (cons g x))
+             (assert g (numeric-type-error caller @real? v))
+             x]
+            [((cons gi xi) (cons gr _))
+             (unless (= (length xs) 2)
+               (assert (|| gi gr) (numeric-type-error caller @real? v)))
+             (ite* (cons gi (integer->real xi)) r)]
+            [(_ _)
+             (assert #f (numeric-type-error caller @real? v))]))]
+       [_ (assert #f (numeric-type-error caller @real? v))]))
    (define (cast self v)
      (match v
        [(? real?) (values #t v)]
@@ -56,6 +77,29 @@
      (if (or (equal? self t) (equal? @real? t)) t @any/c))
    (define (type-eq? self u v) ($= u v)) 
    (define (type-equal? self u v) ($= u v))
+   (define (type-cast self v [caller 'type-cast])
+     (match v
+       [(? integer?) v]
+       [(term _ (== self)) v]
+       [(term _ (== @real?))
+        (assert (int? v) (numeric-type-error caller @integer? v))
+        (real->integer v)]
+       [(union xs (or (== @real?) (== @any/c)))
+        (let-values ([(i r) (guarded-numbers xs)])
+          (match* (i r)
+            [((cons g x) #f)
+             (assert g (numeric-type-error caller @integer? v))
+             x]
+            [(#f (cons g x))
+             (assert (&& g (int? x)) (numeric-type-error caller @integer? v))
+             (real->integer x)]
+            [((cons gi xi) (cons gr xr))
+             (let ([gr (&& (int? xr) gr)])
+               (unless (= (length xs) 2)
+                 (assert (|| gi gr) (numeric-type-error caller @integer? v)))
+               (merge* i (cons gr (real->integer xr))))]
+            [(_ _) (assert #f (numeric-type-error caller @integer? v))]))]
+       [_ (assert #f (numeric-type-error caller @integer? v))]))
    (define (cast self v)
      (match v
        [(? integer?) (values #t v)]
@@ -129,14 +173,14 @@
   (match* (a b)
     [((? int-primitive?)(? int-primitive?)) (op a b)]
     [((? real-primitive?)(? real-primitive?)) (op a b)]
-    [(_ _) (op (coerce a @real? caller) (coerce b @real? caller))]))
+    [(_ _) (op (type-cast @real? a caller) (type-cast @real? b caller))]))
                             
 (define (safe-apply-n op xs) 
   (define caller (object-name op))
   (define ys (for/list ([x xs]) (numeric-coerce x caller)))
   (match ys
     [(or (list (? int-primitive?) ...) (list (? real-primitive?) ...)) (apply op ys)]
-    [_ (apply op (for/list ([y ys]) (coerce y @real? caller)))]))
+    [_ (apply op (for/list ([y ys]) (type-cast @real? y caller)))]))
      
 (define (lift-op op)
   (case (procedure-arity op)
@@ -287,8 +331,8 @@
     #:type T*->integer?
     #:unsafe $op
     #:safe (lambda (x y)
-             (let ([a (coerce x @integer? 'op)]
-                   [b (coerce y @integer? 'op)])
+             (let ([a (type-cast @integer? x 'op)]
+                   [b (type-cast @integer? y 'op)])
                (assert (! ($= b 0)) (undefined-for-zero-error 'op))
                ($op a b)))))
 
@@ -308,12 +352,12 @@
   #:unsafe $/
   #:safe (case-lambda 
            [(x) (@/ 1 x)]
-           [(x y) (let ([a (coerce x @real? '/)]
-                        [b (coerce y @real? '/)])
+           [(x y) (let ([a (type-cast @real? x '/)]
+                        [b (type-cast @real? y '/)])
                     (assert (! ($= 0 b)) (undefined-for-zero-error '/))
                     ($/ a b))]
-           [(x . ys) (let ([z (coerce x @real? '/)]
-                           [zs (for/list ([y ys]) (coerce y @real? '/))])
+           [(x . ys) (let ([z (type-cast @real? x '/)]
+                           [zs (for/list ([y ys]) (type-cast @real? y '/))])
                        (for ([z zs])
                          (assert (! ($= z 0)) (undefined-for-zero-error '/)))
                        ($/ x (apply $* zs)))]))
@@ -340,13 +384,13 @@
   #:name 'integer->real
   #:type T*->real?
   #:unsafe integer->real
-  #:safe (lambda (n) (integer->real (coerce n @integer? 'integer->real))))
+  #:safe (lambda (n) (integer->real (type-cast @integer? n 'integer->real))))
 
 (define-operator @real->integer 
   #:name 'real->integer 
   #:type T*->integer?
   #:unsafe real->integer 
-  #:safe (lambda (n) (real->integer (coerce n @real? 'real->integer))))
+  #:safe (lambda (n) (real->integer (type-cast @real? n 'real->integer))))
 
 ;; ----------------- Simplification rules for operators ----------------- ;;
 
