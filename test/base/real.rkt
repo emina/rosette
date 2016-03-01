@@ -42,9 +42,13 @@
 
 
 (define-syntax-rule (check-cast (type val) (accepted? result))
-  (let-values ([(actual-accepted? actual-result) (cast type val)])
-    (check-equal? actual-accepted? accepted?)
-    (check-equal? actual-result result)))
+  (with-handlers ([exn:fail? (lambda (e) (check-equal? accepted? #f))])  
+    (let-values ([(actual-result asserts) (with-asserts (type-cast type val))])
+      (check-equal? actual-result result)
+      (match asserts
+        [(list)   (check-equal? accepted? #t)]
+        [(list v) (check-equal? accepted? v)]
+        [_ (fail "found more than 1 assertion")]))))
 
 (define (check-cmp-semantics op x y)
   (for* ([i (in-range minval maxval+1)]
