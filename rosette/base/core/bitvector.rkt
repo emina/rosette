@@ -172,9 +172,9 @@
     [((app get-type (? bitvector? tx)) _) 
      (if (equal? tx (get-type y))
          (op x y) 
-         (op x (coerce y tx (object-name op))))]
+         (op x (type-cast tx y (object-name op))))]
     [(_ (app get-type (? bitvector? ty))) 
-     (op (coerce x ty (object-name op)) y)]
+     (op (type-cast ty x (object-name op)) y)]
     [((union xs _) (union ys _))
      (merge+
       (let loop ([xs xs])
@@ -198,7 +198,7 @@
   (match xs
     [(list _ ... (app get-type (? bitvector? t)) _ ...)
      (apply op (for/list ([x xs]) 
-                 (if (equal? (get-type x) t) x (coerce x t (object-name op)))))]
+                 (if (equal? (get-type x) t) x (type-cast t x (object-name op)))))]
     [(list (union vs _) (union ws _) ...)  
      (merge+
       (let loop ([vs vs])
@@ -599,8 +599,8 @@
                                (cons (&& (@= n i) (@= k j)) (extract n k x)))
                              #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j))]))]
     (lambda (@i @j @x)
-      (define i (coerce @i @integer? 'extract))
-      (define j (coerce @j @integer? 'extract))
+      (define i (type-cast @integer? @i 'extract))
+      (define j (type-cast @integer? @j 'extract))
       (define x (bvcoerce @x 'extract))
       (assert (or (integer? i) (term? i)) (arguments-error 'extract "expected an integer i" "i" i))
       (assert (or (integer? j) (term? j)) (arguments-error 'extract "expected an integer j" "j" j))
@@ -691,7 +691,7 @@
   #:unsafe integer->bitvector
   #:safe 
   (lambda (@v @t)
-    (match* ((coerce @v @integer? 'integer->bitvector) @t)
+    (match* ((type-cast @integer? @v 'integer->bitvector) @t)
       [(v (union ts))
        (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
                  (cons (car gt) (integer->bitvector v (cdr gt))))
