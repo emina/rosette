@@ -15,6 +15,14 @@
   #:methods
   [(define (type-eq? self u v) (<=> u v)) 
    (define (type-equal? self u v) (<=> u v))
+   (define (type-cast self v [caller 'type-cast])
+     (match v
+       [(? boolean?) v]
+       [(term _ (== self)) v]
+       [(union : [g (and (or (? boolean?) (term _ (== self))) u)] _ ...)
+        (@assert g (thunk (raise-argument-error caller "expected a boolean?" v)))
+        u]
+       [_  (@assert #f (thunk (raise-argument-error caller "expected a boolean?" v)))]))
    (define (cast self v) 
      (match v
        [(? boolean?) (values #t v)]
@@ -30,20 +38,15 @@
 
 ;; ----------------- Lifting utilities ----------------- ;; 
 
-(define (boolean-coerce v [caller 'boolean-coerce])
-  (let-values ([(g b) (cast @boolean? v)])
-    (@assert g (thunk (raise-argument-error caller "expected a boolean?" v)))
-    b))
-
 (define (lift-op op)
   (define caller (object-name op))
   (case (procedure-arity op)
-    [(1)  (lambda (x) (op (boolean-coerce x caller)))]
-    [(2)  (lambda (x y) (op (boolean-coerce x caller) (boolean-coerce y caller)))]
+    [(1)  (lambda (x) (op (type-cast @boolean? x caller)))]
+    [(2)  (lambda (x y) (op (type-cast @boolean? x caller) (type-cast @boolean? y caller)))]
     [else (case-lambda [() (op)]
-                       [(x) (op (boolean-coerce x caller))]
-                       [(x y) (op (boolean-coerce x caller) (boolean-coerce y caller))]
-                       [xs (apply op (for/list ([x xs]) (boolean-coerce x caller)))])]))
+                       [(x) (op (type-cast @boolean? x caller))]
+                       [(x y) (op (type-cast @boolean? x caller) (type-cast @boolean? y caller))]
+                       [xs (apply op (for/list ([x xs]) (type-cast @boolean? x caller)))])]))
 
 (define boolean?*->boolean? (const @boolean?))
 
@@ -80,11 +83,18 @@
 (define-lifted-operator @=> =>)
 (define-lifted-operator @<=> <=>)
 
-(define (@false? v) 
-  (or (false? v)  
-      (and (typed? v)
-           (let-values ([(g b) (cast @boolean? v)])
-             (and g (&& g (! b)))))))
+(define (@false? v)
+  (match v
+    [#f #t]
+    [(term _ (== @boolean?)) (! v)]
+    [(union xs (== @any/c))
+     (let loop ([xs xs])
+       (match xs
+         [(list) #f]
+         [(list (cons g (and (or (? boolean?) (term _ (== @boolean?))) u)) _ ...)
+          (&& g (! u))]
+         [_ (loop (cdr xs))]))]
+    [_ #f]))
 
 ;; ----------------- Additional operators ----------------- ;; 
 (define-syntax and-&&

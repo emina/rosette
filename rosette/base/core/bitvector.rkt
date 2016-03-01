@@ -45,6 +45,14 @@
   [(define (least-common-supertype self other) (if (equal? self other) self @any/c))
    (define (type-name self) (string->symbol (format "bitvector~a?" (bitvector-size self))))
    (define (type-applicable? self) #f)
+   (define (type-cast self v [caller 'type-cast])
+     (match v
+       [(bv _ (== self)) v]
+       [(term _ (== self)) v]
+       [(union (list _ ... (cons gt (and (? typed? vt) (app get-type (== self)))) _ ...) _) 
+        (assert gt (thunk (error caller "expected ~a, given ~.a" self v)))
+        vt]
+       [_ (assert #f (thunk (error caller "expected ~a, given ~.a" self v)))]))
    (define (cast self v)
      (match v
       [(bv _ (== self)) (values #t v)]

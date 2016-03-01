@@ -6,7 +6,7 @@
  gen:typed typed? get-type       
  
  gen:type
- type? type-name         
+ type? type-name type-cast       
  type-applicable?  
  type-eq? type-equal?       
  type-compress     
@@ -28,6 +28,7 @@
 (define-generics type  
   [least-common-supertype type other] ; (-> type? type? type?)
   [cast type v]                       ; (-> type? any/c (values @boolean? any/c))
+  [type-cast type val [caller]]       ; (-> type? any/c symbol? any/c)
   [type-name type]                    ; (-> type? symbol?)
   [type-applicable? type]             ; (-> type? boolean?)
   [type-eq? type u v]                 ; (-> type? (-> any/c any/c @boolean?)))
@@ -79,7 +80,9 @@
              #:methods gen:type
              [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 
                                                          #'(lambda (self other) (if (equal? self other) self @any/c))))
-              (define cast                   #,(required 'cast))  
+              (define cast                   #,(required 'cast))
+              ; type-cast is temporarily optional:  it will become mandatory once all types implement it.
+              (define type-cast              #,(hash-ref methods 'type-cast #'(lambda (self v [caller #f]) v)))
               (define type-name              #,(hash-ref methods 'type-name #'(lambda (self) 'base)))
               (define type-applicable?       #,(hash-ref methods 'type-applicable? #'(lambda (self) #f)))             
               (define type-eq?               #,(hash-ref methods 'type-eq? #'(lambda (self u v) (eq? u v))))                  
