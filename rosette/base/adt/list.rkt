@@ -10,7 +10,7 @@
          (only-in "../core/real.rkt" @integer? @<= @< @= @> @+)
          (only-in "../core/union.rkt" union union?)
          (only-in "../core/merge.rkt" merge merge*)
-         (only-in "../core/type.rkt" subtype?))
+         (only-in "../core/type.rkt" subtype? type-cast))
 
 (provide (filtered-out with@ (all-defined-out))
          (rename-out [list @list] [null @null]))
@@ -123,7 +123,8 @@
            [(proc init ... xs . rest)
             (assert-arity-includes proc (+ (length (list init ...)) 1 (length rest)) (quote iterator))
             (define name (quote iterator))
-            (let ([vs (cons (coerce xs @list? name) (map (curryr coerce @list? name) rest))])
+            (let ([vs (cons (type-cast @list? xs name)
+                            (for/list ([r rest]) (type-cast @list? r name)))])
               (if (andmap list? vs) 
                   (apply iterator proc init ... vs)
                   (match (apply set-intersect (map lengths vs))
@@ -238,7 +239,7 @@
                       [(equal? (car l-rest) first-r) (rloop (cdr r))]
                       [else (loop (cdr l-rest))])))])))
      (define (@do-remove* name equal? l r)
-         (match* ((coerce l @list? name) (coerce r @list? name))
+         (match* ((type-cast @list? l name) (type-cast @list? r name))
            [((? list? vs) (? list? ws)) (do-remove* equal? vs ws)]
            [((? list? vs) (union ws)) 
             (higher-order/for [ws] #:lift (do-remove* equal? vs) #:enforce @list? #:name name)]
@@ -389,7 +390,7 @@
     [(_ proc)
      #`(define (#,(lift-id #'proc) xs pos)
          (define name (object-name proc))
-         (match* (xs (coerce pos @integer? name))
+         (match* (xs (type-cast @integer? pos name))
            [((union vs) (? number? idx))
             (assert-bound [0 <= idx] name)
             (apply merge* (assert-some 
@@ -433,7 +434,7 @@
 (define (@add-between l x #:splice? [sp? #f] #:before-first [bf '()] #:before-last [bl x] #:after-last [al '()])
   (if (list? l)
       (add-between l x #:splice? sp? #:before-first bf #:before-last bl #:after-last al)
-      (match (coerce l @list? 'add-between)
+      (match (type-cast @list? l 'add-between)
         [(? list? vs) (add-between vs x #:splice? sp? #:before-first bf #:before-last bl #:after-last al)]
         [(union vs) (merge** vs (add-between _ x #:splice? sp? #:before-first bf #:before-last bl #:after-last al))])))
 
@@ -478,13 +479,13 @@
        (assert-arity-includes f 1 name)
        (assert (@pair? xs) (argument-error name "(and/c list? (not/c empty?))" xs))
        
-       (let ([init-min-var (coerce (f (car xs)) @integer? name)])
+       (let ([init-min-var (type-cast @integer? (f (car xs)) name)])
          (let loop ([min (car xs)]
                     [min-var init-min-var]
                     [xs (cdr xs)])
            (@if (null? xs) 
                    min 
-                   (let ([new-min (coerce (f (car xs)) @integer? name)])
+                   (let ([new-min (type-cast @integer? (f (car xs)) name)])
                      (@if (cmp new-min min-var)
                              (loop (car xs) new-min (cdr xs))
                              (loop min min-var (cdr xs))))))))
@@ -503,7 +504,7 @@
                      (cons (@= i idx) (insert xs idx v)))))]
   (define (@insert xs i v)
     (or (and (list? xs) (number? i) (insert xs i v))
-        (match* ((coerce xs @list? 'insert) (coerce i @integer? 'insert))
+        (match* ((type-cast @list? xs 'insert) (type-cast @integer? i 'insert))
           [((? list? xs) (? number? i)) (insert xs i v)]
           [((? list? xs) i) 
            (assert-bound [0 @<= i @<= (length xs)] 'insert)
@@ -528,7 +529,7 @@
                      (cons (@= i idx) (replace xs idx v)))))]
   (define (@replace xs i v)
     (or (and (list? xs) (number? i) (replace xs i v))
-        (match* ((coerce xs @list? 'replace) (coerce i @integer? 'replace))
+        (match* ((type-cast @list? xs 'replace) (type-cast @integer? i 'replace))
           [((? list? xs) (? number? i)) (replace xs i v)]
           [((? list? xs) i) 
            (assert-bound [0 @<= i @< (length xs)] 'replace)

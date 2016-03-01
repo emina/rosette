@@ -4,6 +4,7 @@
          racket/splicing racket/stxparam
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          "../core/safe.rkt" "../core/lift.rkt"
+         (only-in "../core/type.rkt" type-cast)
          (only-in "../core/bool.rkt" && or-|| ||)
          (only-in "../core/real.rkt" @integer? @= @< @<=)
          (only-in "../core/union.rkt" union union?)
@@ -21,7 +22,7 @@
 (define-syntax lift/apply/higher-order
   (syntax-rules (: ->)
     [(_ applicator proc arg ... seq : name : racket-contract? -> rosette-contract?)
-     (match (coerce seq rosette-contract? name)
+     (match (type-cast rosette-contract? seq name)
        [(? racket-contract? vs) (applicator proc arg ... vs)]
        [(union vs) (higher-order/for (vs) #:lift (applicator proc arg ...) #:enforce rosette-contract? #:name name)])]
     [(_ applicator proc arg ... seq : racket-contract? -> rosette-contract?)
@@ -38,7 +39,8 @@
      #`(define (#,(lift-id #'proc) xs idx)
          (if (and (racket-contract? xs) (number? idx))
              (proc xs idx)
-             (match* ((coerce xs rosette-contract? (quote proc)) (coerce idx @integer? (quote proc)))
+             (match* ((type-cast rosette-contract? xs (quote proc))
+                      (type-cast @integer? idx (quote proc)))
                [((? racket-contract? vs) (? number? idx)) 
                 (proc vs idx)]
                [((? racket-contract? vs) idx)
@@ -77,11 +79,11 @@
          (define #,(lift-id #'proc)
            (case-lambda 
              [()      (racket-constructor)]
-             [(xs)    (coerce xs rosette-contract? (quote proc))]
-             [(xs ys) (unsafe/append (coerce xs rosette-contract? (quote proc)) 
-                                     (coerce ys rosette-contract? (quote proc)))]                                               
+             [(xs)    (type-cast rosette-contract? xs (quote proc))]
+             [(xs ys) (unsafe/append (type-cast rosette-contract? xs (quote proc)) 
+                                     (type-cast rosette-contract? ys (quote proc)))]                                               
              [xss     (for/fold ([out (racket-constructor)])
-                        ([xs (map (curryr coerce rosette-contract? (quote proc)) xss)])
+                        ([xs (for/list ([ys xss]) (type-cast rosette-contract? ys (quote proc)))])
                         (unsafe/append out xs))])))]))
 
 (define-syntax (define/lift/split stx)
@@ -90,7 +92,7 @@
      #`(define (#,(lift-id #'proc) xs idx)
          (if (and (not (union? xs)) (number? idx))
              (proc xs idx)
-             (match* (xs (coerce idx @integer? (quote proc)))
+             (match* (xs (type-cast @integer? idx (quote proc)))
                [((not (? union?)) (? number? idx)) (proc xs idx)]
                [(_ idx) (values (left xs idx) (right xs idx))])))]))
 

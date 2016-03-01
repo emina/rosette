@@ -5,7 +5,7 @@
          (only-in "../core/effects.rkt" apply!)
          "../core/term.rkt"  "../core/lift.rkt" "../core/safe.rkt"
          (only-in "../core/bool.rkt" || && and-&&)
-         (only-in "../core/type.rkt" @any/c)
+         (only-in "../core/type.rkt" @any/c type-cast)
          (only-in "../adt/procedure.rkt" @procedure?)
          (only-in "../core/merge.rkt" merge merge*)
          (only-in "../core/union.rkt" union union? in-union-guards)
@@ -22,7 +22,7 @@
      (lambda (receiver value) 
        (if (native? receiver)
            (apply! setter getter receiver value) 
-           (match (coerce receiver lifted? (object-name setter))
+           (match (type-cast lifted? receiver (object-name setter))
              [(? native? r) (apply! setter getter receiver value)]
              [(union rs) (for ([r rs]) 
                            (apply! setter getter (cdr r) (merge (car r) value (getter (cdr r)))))])))
@@ -36,7 +36,7 @@
      (lambda (receiver) 
        (if (native? receiver)
            (getter receiver)
-           (match (coerce receiver lifted? (object-name getter))
+           (match (type-cast lifted? receiver (object-name getter))
              [(? native? r) (getter r)]
              [(union r) (merge** r getter)])))
      (object-name getter))))

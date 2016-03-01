@@ -1,11 +1,10 @@
 #lang racket
 
-(require (only-in "safe.rkt" coerce) 
-         (only-in "forall.rkt" for/all for*/all) 
+(require (only-in "forall.rkt" for/all for*/all) 
          (only-in "op.rkt" op-name)
          "term.rkt" "union.rkt")
 
-(provide type? type-of coerce for/all for*/all
+(provide type? type-of type-cast for/all for*/all
          term? constant? expression? 
          term expression constant
          term-type term=? 

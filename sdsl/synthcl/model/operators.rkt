@@ -1,6 +1,7 @@
 #lang rosette
 
-(require "type.rkt" "reals.rkt"  
+(require "type.rkt" "reals.rkt"
+         (only-in rosette/base/core/type type-cast)
          (only-in rosette [/ @/] [bitvector->integer bv->int] [sqrt @sqrt]))
 
 ; This module provides the implementation for a subset of 
@@ -89,7 +90,7 @@
      (+ (abs a) (abs b))] ; an approximation of euclidean distance
     [_ 
      (define n (arithmetic-shift (current-bitwidth) -1))
-     (define y (int->bv (real->integer (coerce x real? 'sqrt))))
+     (define y (int->bv (real->integer (type-cast real? x 'sqrt))))
      (let loop ([res (int->bv 0)] [delta (arithmetic-shift 1 (sub1 n))] [i n])
        (if (<= i 0) 
            (bv->int res)

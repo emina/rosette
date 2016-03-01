@@ -3,7 +3,7 @@
 (require (for-syntax racket/syntax "../core/lift.rkt") racket/provide 
          "../core/safe.rkt" "generic.rkt"
          (only-in "../core/effects.rkt" apply!) 
-         (only-in "../core/type.rkt" define-lifted-type)
+         (only-in "../core/type.rkt" define-lifted-type type-cast)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? && ||)
          (only-in "../core/union.rkt" union)
@@ -36,12 +36,12 @@
               (box (apply merge* (for/list ([p ps]) (cons (car p) (unbox (cdr p)))))))]))
 
 (define (@unbox b)
-  (match (coerce b @box? 'unbox)
+  (match (type-cast @box? b 'unbox)
     [(box v) v]
     [(union vs) (apply merge* (for/list ([gv vs]) (cons (car gv) (unbox (cdr gv)))))]))
 
 (define (@set-box! b v)
-  (match (coerce b @box? 'set-box!)
+  (match (type-cast @box? b 'set-box!)
     [(? box? x)
      (apply! set-box! unbox x v)]
     [(union vs)

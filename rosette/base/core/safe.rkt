@@ -5,7 +5,7 @@
          racket/performance-hint)
 
 (provide argument-error arguments-error type-error contract-error index-too-large-error
-         assert coerce assert-some assert-|| assert-bound assert-arity-includes)
+         assert assert-some assert-|| assert-bound assert-arity-includes)
 
 (begin-encourage-inline
   
@@ -78,6 +78,3 @@
                               (argument-error name
                                               (format "procedure arity includes ~a" val) 
                                               f)))]))
-
-(define (coerce val type [caller-name 'coerce])
-  (type-cast type val caller-name))

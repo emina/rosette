@@ -4,6 +4,7 @@
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          (only-in "merge.rkt" merge* unsafe-merge*)
          (only-in "union.rkt" union)
+         (only-in "type.rkt" type-cast)
          "safe.rkt")
 
 (provide define/lift (for-syntax lift-id) merge+ merge** unsafe-merge** flat-pattern-contract
@@ -60,7 +61,7 @@
      #`(define (#,(lift-id #'id) val)
          (if (contracted? val) 
              (id val)
-             (match (coerce val rosette-type? (quote id))
+             (match (type-cast rosette-type? val (quote id))
                [(? contracted? v) (id v)]
                [(union vs) (apply merge* (assert-some 
                                       (for/list ([v vs] #:when (contracted? (cdr v))) 
@@ -76,7 +77,7 @@
      #`(define (#,(lift-id #'id) val)
          (if (contracted? val) 
              (id val)
-             (match (coerce val rosette-type? (quote id))
+             (match (type-cast rosette-type? val (quote id))
                [(? contracted? v) (id v)]
                [(union vs) (apply merge* (assert-some 
                                       (for/list ([v vs] #:when (contracted? (cdr v))) 

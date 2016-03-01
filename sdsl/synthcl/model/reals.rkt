@@ -3,7 +3,7 @@
 (require "type.rkt" "errors.rkt"
          rosette/lib/match (only-in racket/syntax format-symbol)
          (for-syntax (only-in racket/syntax format-id)) 
-         (only-in rosette/base/core/type subtype?)
+         (only-in rosette/base/core/type subtype? type-cast)
          (only-in rosette [void rosette-void]))
 
 (provide real-type? real-type-length 
@@ -138,7 +138,7 @@
   #:convert ([(? boolean? v) (if v 1.0 0.0)]
              [(? fixnum? v) (exact->inexact v)]
              [(? flonum? v) v]
-             [v (coerce v real? 'float)]))
+             [v (type-cast real? v 'float)]))
 
 (define void 
   (let ()

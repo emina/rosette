@@ -37,7 +37,7 @@
      ; core/finitize.rkt
      finitize current-bitwidth 
      ; core/reflect.rkt
-     symbolics type? type-of coerce for/all for*/all
+     symbolics type? type-of type-cast for/all for*/all
      term? constant? expression? 
      term expression constant term-type
      term=? term->datum clear-terms! term-cache
