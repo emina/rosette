@@ -6,7 +6,7 @@
   (only-in "../core/type.rkt" define-lifted-type typed? get-type subtype? type-applicable? @any/c)
   (only-in "../core/bool.rkt" ||)
   (only-in "../core/union.rkt" union union? in-union-guards union-filter union-guards)
-  (only-in "../core/safe.rkt" assert)
+  (only-in "../core/safe.rkt" assert argument-error)
   (only-in "../core/forall.rkt" guard-apply)
   (only-in "../form/control.rkt" @not))
 
@@ -27,6 +27,20 @@
         @procedure? 
         @any/c))
    (define (type-applicable? self) #t)
+   (define (type-cast self v [caller 'type-cast])
+     (match v
+       [(union _ (== @procedure?)) v]
+       [(union _ (? (curryr subtype? @procedure?))) v]
+       [(union vs (? (curry subtype? @procedure?)))
+        (match (union-filter v @procedure?)
+          [(union (list (cons g u)))
+           (assert g (argument-error caller "procedure?" v))
+           u]
+          [r
+           (assert (apply || (union-guards r)) (argument-error caller "procedure?" v))
+           r])]
+       [(? procedure?) v]
+       [_ (assert #f (argument-error caller "procedure?" v))]))
    (define (cast self v) 
      (match v
        [(union _ (== @procedure?)) (values #t v)]
