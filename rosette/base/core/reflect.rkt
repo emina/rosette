@@ -47,7 +47,8 @@
         (let ([datum
                (match val
                  [(? constant?) (string->symbol (format "~a" val))]
-                 [(expression op child ...) `(,(op-name op) ,@(for/list ([e child]) (convert e cache)))]
+                 [(expression op child ...) `(,(string->symbol (~s op))
+                                              ,@(for/list ([e child]) (convert e cache)))]
                  [_  val])])
           (hash-set! cache val datum)
           datum))))

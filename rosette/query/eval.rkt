@@ -32,7 +32,7 @@
                     (eval-guarded gvs sol cache car cdr)
                     (eval-guarded gvs sol cache guarded-test guarded-value))]
                [(expression op child ...)  
-                (apply (op-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
+                (apply (function-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
                [(? list?)                
                 (for/list ([e expr]) (eval-rec e sol cache))]
                [(cons x y)               

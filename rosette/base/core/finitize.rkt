@@ -3,7 +3,7 @@
 (require racket/syntax 
          "term.rkt" "real.rkt" "bitvector.rkt"  
          "polymorphic.rkt" "merge.rkt" "union.rkt"
-         (only-in "term.rkt" [op-unsafe unsafe]))
+         (only-in "term.rkt" [function-unsafe unsafe]))
 
 (provide finitize current-bitwidth)
 

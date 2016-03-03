@@ -5,9 +5,10 @@
 (provide
  term-cache clear-terms!
  term? constant? expression? 
- (rename-out [a-term term] [an-expression expression] [a-constant constant]) 
+ (rename-out [a-term term] [an-expression expression] [a-constant constant] [uf uninterpreted]) 
  term-type term<? sublist?
- define-operator op? op-name op-safe op-unsafe 
+ function? function-domain function-range function-unsafe
+ uninterpreted? operator? define-operator
  (all-from-out "type.rkt"))
 
 #|-----------------------------------------------------------------------------------|#
@@ -74,12 +75,13 @@
   (make-term constant id t))
 
 (define (make-expr op . vs)
-  (make-term expression (cons op vs) (op-out-type op vs)))
+  (define ran (function-range op))
+  (make-term expression (cons op vs) (if (type? ran) ran (apply ran vs))))
 
 (define-match-expander a-constant
   (lambda (stx)
     (syntax-case stx ()
-      [(_ id-pat type-pat)     #'(constant id-pat type-pat _)]))
+      [(_ id-pat type-pat) #'(constant id-pat type-pat _)]))
   (syntax-id-rules ()
     [(_ id type) (make-const id type)]
     [_ make-const]))
@@ -96,33 +98,80 @@
   (syntax-rules ()
     [(_ val-pat type-pat) (term val-pat type-pat _)]))
 
-
-; By default, an op application uses the safe (lifted) version of the operation.  
-; This version performs type checking on the arguments, and asserts the preconditions, if any, 
-; before calling the unsafe version of the operator.  The unsafe version is used 
-; internally by Rosette for efficiency.  It assumes that all of its arguments are 
-; properly typed and that all preconditions are met.
-(struct op 
-  (name safe unsafe type)  
+#|-----------------------------------------------------------------------------------|#
+; A function is a special kind of procedure that can appear as the first element of
+; a term expression.  Functions can have fixed interpretation or they can be
+; uninterpreted, in which case their interpretation is determined by the solver.
+; We use the word 'operator' to refer to functions with fixed interpretations
+; (e.g., +, -, etc.).
+;
+; Each function has a domain and a range.  The range of every function is a type?.
+; The domain of an uninterpreted function (UF) is a list of type?.  The domain
+; of an operator may not be explicitly representable, since operators need not
+; have fixed arity and they may be polymorphic. Two operators are equal? iff they are eq?.
+; Two UFs are equal? iff they have the same identifier, domain, and range.
+;
+; All functions have a 'safe' and 'unsafe' version.  The 'safe' version checks that
+; the functions are arguments are in its domain (by emitting appropriate assertions),
+; while the 'unsafe' version assumes that all of its arguments are properly typed and
+; that all of its preconditions are met.  Client code sees only the 'safe' version.
+; The 'unsafe' variant is used internally by Rosette for efficiency.
+#|-----------------------------------------------------------------------------------|#
+(struct function (identifier domain range safe unsafe)
   #:property prop:procedure 
   (struct-field-index safe)
   #:methods gen:custom-write
-  [(define (write-proc self port mode) (fprintf port "~s" (op-name self)))])
+  [(define (write-proc self port mode)
+     (fprintf port "~a" (id->string (function-identifier self))))])
 
-(define (make-op #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
-  (let ([str-name (format "~s" name)]) 
-    (op 
-     (string->symbol str-name) 
-     safe unsafe type)))
+(struct operator function ())
+
+(define (make-operator #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
+  (operator (string->symbol (~s name)) #f type safe unsafe))
 
 (define-syntax-rule (define-operator id arg ...)
-  (define id (make-op arg ...)))
-    
+  (define id (make-operator arg ...)))
 
-(define (op-out-type operator args) 
-  (match operator
-    [(op _ _ _ t)  (apply t args)]))
+(struct uninterpreted function ()
+  #:methods gen:equal+hash
+  [(define (equal-proc u1 u2 rec=?)
+     (and (rec=? (function-identifier u1) (function-identifier u2))
+          (rec=? (function-range u1) (function-range u2))
+          (rec=? (function-domain u1) (function-domain u2))))
+   (define (hash-proc u1 rec-hash)
+     (rec-hash (list (function-identifier u1)
+                     (function-domain u1)
+                     (function-range u1))))
+   (define (hash2-proc u1 rec-hash)
+     (rec-hash (list (function-identifier u1)
+                     (function-domain u1)
+                     (function-range u1))))])
 
+(define (make-uninterpreted id dom ran)
+  (define k (length dom))
+  (define name (string->symbol (id->string id)))
+  (define f
+    (uninterpreted id dom ran 
+                   (procedure-rename
+                    (procedure-reduce-arity
+                     (lambda args
+                       (apply make-expr f (for/list ([a args][t dom]) (type-cast t a name))))
+                     k)
+                    name)
+                   (procedure-reduce-arity
+                    (lambda args
+                      (apply make-expr f args))
+                    k)))
+  f)
+
+(define-match-expander uf
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ pat ...) #'(uninterpreted pat ... _ _)]))
+  (syntax-id-rules ()
+    [(_ id dom ran) (make-uninterpreted id dom ran)]
+    [_ make-uninterpreted]))
+                             
 #|-----------------------------------------------------------------------------------|#
 ; The following procedures convert symbolic values to strings.
 #|-----------------------------------------------------------------------------------|#
@@ -133,11 +182,24 @@
       (print-rec val (make-hash) max-length))
     (get-output-string output-str)))
 
+(define (any->datum x)
+  (if (identifier? x) (syntax->datum x) x))
+
+(define (id->string val)
+  (if (list? val)
+       (for/fold ([s (format "~a" (any->datum (car val)))]) 
+                 ([r (cdr val)]) 
+         (format "~a$~a" s (any->datum r)))
+       (format "~a" (any->datum val))))
+
+(define (print-const val cache max-length)
+  (display (id->string (term-val val))))
+
 (define (print-expr val cache max-length)
   (match-let ([o (current-output-port)]
               [(an-expression op child ...) val])
     (display "(")
-    (display (op-name op))
+    (display (id->string (function-identifier op)))
     (display " ")
     (let ([n (for/sum ([(e i) (in-indexed child)]
                        #:break (>= (file-position o) max-length))
@@ -148,18 +210,6 @@
       (when (< n (length child))
         (display "...")))
     (display ")")))
-
-(define (any->datum x)
-  (if (identifier? x) (syntax->datum x) x))
-
-(define (print-const val cache max-length)
-  (display 
-   (match val
-     [(a-constant (? list? n) _)
-      (for/fold ([s (format "~a" (any->datum (car n)))]) 
-                                 ([r (cdr n)]) 
-        (format "~a$~a" s (any->datum r)))]
-     [(a-constant n _) (format "~a" (any->datum n))])))
 
 (define (print-rec val cache max-length)
   (let ([str (if (hash-has-key? cache val)
@@ -176,7 +226,6 @@
                      str)))])
     (display str)))
 
-  
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.
 #|-----------------------------------------------------------------------------------|#
