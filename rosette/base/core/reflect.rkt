@@ -1,7 +1,6 @@
 #lang racket
 
 (require (only-in "forall.rkt" for/all for*/all) 
-         (only-in "op.rkt" op-name)
          "term.rkt" "union.rkt")
 
 (provide type? type-of type-cast for/all for*/all

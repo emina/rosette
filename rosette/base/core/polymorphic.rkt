@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "union.rkt" "op.rkt" "bool.rkt")
+(require "term.rkt" "union.rkt" "bool.rkt")
 
 (provide 
  ite ite* ⊢ guarded guarded-test guarded-value =?    
@@ -12,7 +12,7 @@
 
 ; A generic typing procedure for a lifted operator that takes N > 0 arguments of type T
 ; and returns a value of type T. Specifically, it assumes that at least one value passed 
-; to it is typed, and it returns the type T of the first given typed value. See op.rkt.
+; to it is typed, and it returns the type T of the first given typed value. See term.rkt.
 (define T*->T 
   (case-lambda 
     [(x) (get-type x)]
@@ -20,7 +20,7 @@
     [xs (for/first ([x xs] #:when (typed? x)) (get-type x))]))
 
 ; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
-; and returns a @boolean?. See op.rkt.
+; and returns a @boolean?. See term.rkt.
 (define (T*->boolean? . xs) @boolean?)
 
 ; Polymorphic operators and procedures that are shared by 

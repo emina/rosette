@@ -1,21 +1,24 @@
 #lang racket
 
-(require racket/syntax (for-syntax racket racket/syntax) "type.rkt" "op.rkt")
+(require racket/syntax (for-syntax racket racket/syntax) "type.rkt")
 
 (provide
- term-cache
- term?             ; (-> any/c boolean?)
- (rename-out [a-term term] [an-expression expression] [a-constant constant])     ; pattern matching macro
- term-type         ; (-> term? type?)  
- constant?         ; (-> any/c boolean?)
- expression?       ; (case-> (-> any/c boolean?) (-> any/c op? boolean?))
- term<?            ; (-> term? term? boolean?)
- clear-terms!      ; (-> void? void?)
- sublist?
+ term-cache clear-terms!
+ term? constant? expression? 
+ (rename-out [a-term term] [an-expression expression] [a-constant constant]) 
+ term-type term<? sublist?
+ define-operator op? op-name op-safe op-unsafe 
  (all-from-out "type.rkt"))
 
+#|-----------------------------------------------------------------------------------|#
+; Term cache stores terms for the purposes of partial cannonicalization.
+; That is, it ensures that no syntactically identical terms are created.
+; It also assigns unique IDs (creation timestamps) to terms.  These IDs
+; are never reused, and they are used to impose an ordering on the children
+; of expressions with commutative operators.
+#|-----------------------------------------------------------------------------------|#
 (define term-cache (make-parameter (make-hash)))
-(define term-count (make-parameter 0)) ; term ids will increase forever regardless of cache clearing
+(define term-count (make-parameter 0)) 
 
 ; Clears the entire term-cache if invoked with #f (default), or 
 ; it clears all terms reachable from the given set of leaf terms.
@@ -36,6 +39,27 @@
               (set-add! evicted t))
             (loop))))))
 
+#|-----------------------------------------------------------------------------------|#
+; The term structure defines a symbolic value, which can be a variable or an expression.
+; The val field of a constant is its unique identifier, and it can be anything.  The val
+; field of an expression is a list, in which the first argument is always a function.
+; That function can be interpreted (that is, an operator), or uninterpreted (that is,
+; its interpretation is determined by the solver).
+#|-----------------------------------------------------------------------------------|#
+(struct term 
+  (val                 ; (or/c any/c (cons/c function? (non-empty-listof any/c)))
+   type                ; type?  
+   ord)                ; integer?  
+  #:methods gen:typed 
+  [(define (get-type v) (term-type v))]
+  #:methods gen:custom-write
+  [(define (write-proc self port mode)
+     (fprintf port "~a" (term->string self)))])
+
+(struct constant term ())
+(struct expression term ())
+   
+(define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
 (define-syntax-rule (make-term term-constructor args type) 
   (let ([val args]) 
@@ -73,28 +97,34 @@
     [(_ val-pat type-pat) (term val-pat type-pat _)]))
 
 
-#|-----------------------------------------------------------------------------------|#
-; The term structure defines a symbolic value, which can be a variable or an expression.
-; Symbolic values can also be annotated with additional information that indicates, 
-; for example, where in the code they came from.
-#|-----------------------------------------------------------------------------------|#
-(struct term 
-  (val                ; (or/c any/c (cons/c op? (non-empty-listof any/c)))
-   type               ; type?  
-   ord)                ; integer?  
-  #:methods gen:typed 
-  [(define (get-type v) (term-type v))]
+; By default, an op application uses the safe (lifted) version of the operation.  
+; This version performs type checking on the arguments, and asserts the preconditions, if any, 
+; before calling the unsafe version of the operator.  The unsafe version is used 
+; internally by Rosette for efficiency.  It assumes that all of its arguments are 
+; properly typed and that all preconditions are met.
+(struct op 
+  (name safe unsafe type)  
+  #:property prop:procedure 
+  (struct-field-index safe)
   #:methods gen:custom-write
-  [(define (write-proc self port mode)
-     (fprintf port "~a" (term->string self)))])
+  [(define (write-proc self port mode) (fprintf port "~s" (op-name self)))])
 
-(struct constant term ())
-(struct expression term ())
-   
-(define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
+(define (make-op #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
+  (let ([str-name (format "~s" name)]) 
+    (op 
+     (string->symbol str-name) 
+     safe unsafe type)))
+
+(define-syntax-rule (define-operator id arg ...)
+  (define id (make-op arg ...)))
+    
+
+(define (op-out-type operator args) 
+  (match operator
+    [(op _ _ _ t)  (apply t args)]))
 
 #|-----------------------------------------------------------------------------------|#
-; The following functions convert symbolic values to strings or plain s-expressions.
+; The following procedures convert symbolic values to strings.
 #|-----------------------------------------------------------------------------------|#
 
 (define (term->string val [max-length (error-print-width)])
@@ -150,6 +180,7 @@
 #|-----------------------------------------------------------------------------------|#
 ; Utilities for working with terms.
 #|-----------------------------------------------------------------------------------|#
+
 ; Returns #t if ys contains all elements of xs, in the order 
 ; in which they occur in xs. Otherwise returns #f.
 (define (sublist? xs ys)

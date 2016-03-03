@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "union.rkt" "op.rkt")
+(require "term.rkt" "union.rkt")
 
 (provide @boolean? @false? 
          ! && || => <=> @! @&& @|| @=> @<=> 

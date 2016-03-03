@@ -1,7 +1,7 @@
 #lang racket
 
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
-(require "term.rkt" "op.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
+(require "term.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 
 (provide @integer? @real? @= @< @<= @>= @> @+ @* @- @/ @quotient @remainder @modulo @abs
