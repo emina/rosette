@@ -12,7 +12,7 @@
 
 (provide (rename-out [make-z3 z3]) z3?)
 
-(define-runtime-path z3-path (build-path ".." ".." ".." "bin" "z3"))
+(define-runtime-path z3-path (build-path ".." ".." ".." "bin" "z3" "bin" "z3"))
 (define z3-opts '("-smt2" "-in"))
 
 (define (make-z3) (z3 (server z3-path z3-opts) '() '() '() (env)))
