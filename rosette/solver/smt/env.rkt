@@ -1,7 +1,8 @@
 #lang racket
 
 (require racket/syntax 
-         (only-in "smtlib2.rkt" Int Real Bool BitVec declare-const define-const assert
+         (only-in "smtlib2.rkt" Int Real Bool BitVec
+                  declare-const declare-fun define-const assert
                   [< smt/<] [<= smt/<=]) 
          "../../base/core/term.rkt" 
          (only-in "../../base/core/bool.rkt" @boolean?)
@@ -36,13 +37,13 @@
 
 (define (smt-id base n) (format-symbol "~a~a" base n))
 
-(define (smt-type val)
-  (match (type-of val)
+(define (smt-type t)
+  (match t
     [(== @boolean?) Bool]
     [(== @integer?) Int]
     [(== @real?) Real]
     [(? bitvector? t) (BitVec (bitvector-size t))]
-    [t (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
+    [_ (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
 
 ; The ref! macro retrieves the SMT encoding for 
 ; the given Rosette value from the given environment. 
@@ -75,10 +76,15 @@
      (let ([decls (env-decls env)]
            [v val])
        (or (dict-ref decls v #f)
-           (let ([id (smt-id 'c (dict-count decls))])
-             (dict-set! decls v id)
-             (declare-const id (smt-type v))
-             id)))]
+           (if (constant? v)
+               (let ([id (smt-id 'c (dict-count decls))])
+                 (dict-set! decls v id)
+                 (declare-const id (smt-type (term-type v)))
+                 id)
+               (let ([id (smt-id 'f (dict-count decls))])
+                 (dict-set! decls v id)
+                 (declare-fun id (map smt-type (function-domain v)) (smt-type (function-range v)))
+                 id))))]
     [(_ env val enc)
      (let ([defs (env-defs env)]
            [v val])
@@ -86,6 +92,6 @@
            (match enc 
              [(? pair? e) (let ([id (smt-id 'e (dict-count defs))])
                             (dict-set! defs v id)
-                            (define-const id (smt-type v) e)
+                            (define-const id (smt-type (type-of v)) e)
                             id)]
              [e e])))]))

@@ -2,7 +2,7 @@
 
 (require "env.rkt" 
          (prefix-in $ "smtlib2.rkt") 
-         (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
+         (only-in "../../base/core/term.rkt" expression expression? constant? get-type uninterpreted?)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
          (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=>)
          (only-in "../../base/core/real.rkt" 
@@ -56,6 +56,8 @@
      ($bv->nat (enc v env) (bitvector-size (get-type v)))]
     [(expression (app rosette->smt (? procedure? $op)) es ...) 
      (apply $op (for/list ([e es]) (enc e env)))]
+    [(expression (? uninterpreted? f) es ...)
+     ($app (ref! env f) (for/list ([e es]) (enc e env)))] 
     [_ (error 'enc "cannot encode ~a to SMT" v)]))
 
 (define (enc-const v env) (ref! env v))

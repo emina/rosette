@@ -4,10 +4,14 @@
                   check-sat get-model get-unsat-core
                   read-solution true false)
          "env.rkt" "enc.rkt"
-         (only-in "../../base/core/term.rkt" type-of)
+         (only-in "../../base/core/term.rkt"
+                  constant? term-type type-of type-cast
+                  function-domain function-range)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
+         (only-in "../../base/core/equality.rkt" @equal?)
+         (only-in "../../base/form/control.rkt" @if)
          "../solution.rkt")
 
 (provide encode encode-for-proof decode)
@@ -62,11 +66,15 @@
 (define (decode env)
   (match (read-solution)
     [(? hash? sol) 
-     (sat (for/hash ([(const id) (in-dict (decls env))])
-            (values const 
-                    (if (hash-has-key? sol id)
-                        (decode-binding const (hash-ref sol id))
-                        (default-binding const)))))]
+     (sat (for/hash ([(decl id) (in-dict (decls env))])
+            (values decl
+                    (if (constant? decl)
+                        (if (hash-has-key? sol id)
+                            (decode-value (term-type decl) (hash-ref sol id))
+                            (default-binding decl))
+                        (if (hash-has-key? sol id)
+                            (decode-function decl (hash-ref sol id))
+                            (default-function decl))))))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
@@ -76,13 +84,12 @@
 
 (define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
 
-(define (decode-binding const val)
-  (match (type-of const)
+(define (decode-value type val)
+  (match type
     [(== @boolean?)
      (match val
        [(== true) #t]
-       [(== false) #f]
-       [_ (error 'decode-binding "expected 'true or 'false binding for ~a, given ~a" const val)])]
+       [(== false) #f])]
     [(== @integer?) 
      (match val
        [(? integer?) val]
@@ -93,10 +100,64 @@
        [(list '- (list '/ a b)) (- (/ (to-exact-int a) (to-exact-int b)))]
        [(list '- v) (- v)]
        [(list '/ a b) (/ (to-exact-int a) (to-exact-int b))]
-       [(list '/ (list '- a) b) (/ (- (to-exact-int b)) (to-exact-int b))])]
+       [(list '/ (list '- a) b) (/ (- (to-exact-int a)) (to-exact-int b))])]
     [(? bitvector? t)
      (match val
        [(? number?) (bv val t)]
        [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
         (bv n t)])]
     [other other]))
+
+(define (decode-function f val)
+  (define tbl
+    (match val
+      [(list (== 'define-fun) _ params _ body)
+       (decode-body (map car params) (function-domain f) (function-range f) body)]))
+  (procedure-rename
+   (procedure-reduce-arity
+    (lambda args
+      (define typed-args (for/list ([a args][t (function-domain f)])
+                           (type-cast t a)))
+      (let loop ([tbl tbl])
+        (match tbl
+          [(list (list '_ v)) v]
+          [(list (list k v) rest ...)
+           (@if (@equal? k typed-args) v (loop rest))]))) 
+    (length (function-domain f)))
+   (string->symbol (~a f))))
+  
+
+(define (decode-body params dom ran body)
+  (match body
+    [(list (== 'ite) args v0 (and rest (list (== 'ite) _ ...)))
+     (cons (list (decode-args params dom args) (decode-value ran v0))
+           (decode-body params dom ran rest))]
+    [(list (== 'ite) args v0 v1)
+     (list (list (decode-args params dom args) (decode-value ran v0))
+           (list '_ (decode-value ran v1)))]))
+
+(define (decode-args params types args)
+  (for/list ([p params][t types])
+    (decode-value
+     t 
+     (match args
+       [(list (== 'and) _ ... (list (== '=) (== p) y) _ ...) y]
+       [(list (== 'and) _ ... (list (== '=) x (== p)) _ ...) x]
+       [(list (== '=) x y)
+        (or (and (equal? p x) y)
+            (and (equal? p y) x))]))))
+  
+
+(define (default-function f)
+  (procedure-rename
+   (procedure-reduce-arity
+    (const
+     (match (function-range f)
+       [(== @boolean?) #f]
+       [(? bitvector? t) (bv 0 t)]
+       [_ 0]))
+    (length (function-domain f)))
+   (string->symbol (~a f))))
+  
+
+

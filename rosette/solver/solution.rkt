@@ -31,7 +31,7 @@
   [(define (write-proc self port mode)
      (match (solution-result self)
        [(? dict? model) 
-        (let ([bindings (sort (dict->list model) term<? #:key car)])
+        (let ([bindings (sort (dict->list model) <? #:key car)])
           (fprintf port "(model")
           (unless (null? bindings)
             (for ([binding bindings])
@@ -43,6 +43,8 @@
         (for ([assertion (sort core term<?)]) 
           (fprintf port "\n ~a" assertion))
         (fprintf port ")")]))])
+
+(define (<? a b) (and (term? a) (term? b) (term<? a b)))
 
 (define (sat? sol) (and (solution? sol) (dict? (solution-result sol))))
 

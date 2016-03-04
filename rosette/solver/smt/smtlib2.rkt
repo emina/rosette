@@ -21,8 +21,11 @@
      (let loop ()
        (match (read port)
          [(list (== 'objectives) _ ...) (loop)]
-         [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
-          (for/hash ([c const] [v val]) (values c v))]
+         [(list (== 'model) def ...)
+          (for/hash ([d def])
+            (match d
+              [(list (== 'define-fun) c '() _ v) (values c v)]
+              [(list (== 'define-fun) c _ ...) (values c d)]))]
          [other (error 'solution "expected model, given ~a" other)]))]
     [(== 'unsat) 
      (match (read port) 
@@ -60,8 +63,15 @@
 (define (declare-const id type)
   (printf-smt "(declare-const ~a ~a)" id type))
 
+(define (declare-fun id domain range)
+  (printf-smt "(declare-fun ~a ~a ~a)" id domain range))
+                     
 (define (define-const id type body)
   (printf-smt "(define-fun ~a () ~a ~a)" id type body))
+
+; Applications of uninterpreted functions.
+(define (app f args)
+  `(,f ,@args))
 
 (define-syntax-rule (define-ops id ...)
   (define-values (id ...)
