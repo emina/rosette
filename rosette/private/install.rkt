@@ -32,7 +32,7 @@
         "https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/z3-4.4.1-x64-win.zip"
         "z3-4.4.1-x64-win")]))
   (define z3-port (get-pure-port (string->url z3-url) #:redirections 10))
-  (define bin-path (build-path ".." "bin"))
+  (define bin-path (build-path racl-path ".." "bin"))
   (make-directory* bin-path)
   (parameterize ([current-directory bin-path])
     (unless (directory-exists? "z3")
