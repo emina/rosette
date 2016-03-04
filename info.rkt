@@ -10,3 +10,5 @@
 (define compile-omit-paths '("sdsl"
                              "test"
                              "bin"))
+
+;; XXX Move doc/ to rosette-doc/ when docs are written to build docs.
