@@ -1,5 +1,8 @@
 #lang info
 
+;; Controls setup for the 'rosette' collection.
+
+
 (define collection 'multi)
 
 (define deps '("base"))
