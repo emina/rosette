@@ -8,7 +8,7 @@ env:
     - RACKET_DIR=~/racket
     - RACKET_URL="https://www.cs.utah.edu/plt/installers/6.4/racket-6.4-x86_64-linux-ubuntu-precise.sh"
 
-install:
+before_install:
   - if [[ ! -e "$RACKET_DIR/bin/racket" ]]; then
       rm -rf $RACKET_DIR;
       curl -L -o racket.sh $RACKET_URL;
@@ -28,14 +28,16 @@ install:
   - cp $Z3_DIR/build/z3 bin/
   - bin/z3 --version
   - cd $Z3_DIR && git rev-parse HEAD && cd $TRAVIS_BUILD_DIR
+  - export PATH="${RACKET_DIR}/bin:${PATH}"
+
+install: raco pkg install --auto $TRAVIS_BUILD_DIR/rosette
 
 script:
-  - ~/racket/bin/raco link rosette
-  - ~/racket/bin/raco setup -l rosette
-  - time ~/racket/bin/raco make test/all-rosette-tests.rkt
-  - ~/racket/bin/raco test test/all-rosette-tests.rkt
-  - time ~/racket/bin/raco make test/all-sdsl-tests.rkt
-  - ~/racket/bin/raco test test/all-sdsl-tests.rkt
+  - raco test 
+  - time raco make test/all-rosette-tests.rkt
+  - raco test test/all-rosette-tests.rkt
+  - time raco make test/all-sdsl-tests.rkt
+  - raco test test/all-sdsl-tests.rkt
 
 cache:
   directories:

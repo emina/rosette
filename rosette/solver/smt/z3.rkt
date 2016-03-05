@@ -15,7 +15,10 @@
 (define-runtime-path z3-path (build-path ".." ".." ".." "bin" "z3"))
 (define z3-opts '("-smt2" "-in"))
 
-(define (make-z3) (z3 (server z3-path z3-opts) '() '() '() (env)))
+(define (make-z3)
+  (unless (file-exists? z3-path)
+    (raise-user-error 'make-z3 "Failed to locate z3 binary at '~a'" z3-path))
+  (z3 (server z3-path z3-opts) '() '() '() (env)))
   
 (struct z3 (server [asserts #:mutable] [mins #:mutable] [maxs #:mutable] [env #:mutable])
   #:methods gen:solver
