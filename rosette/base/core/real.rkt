@@ -171,17 +171,18 @@
     #:unsafe int?
     #:safe int?)
 
-(define $=  (compare @= $= = sort/expression))
-(define $<= (compare @<= $<= <= expression))
-(define $<  (compare @< $< < expression))
+(define $=  (compare @= $= = sort/expression #t))
+(define $<= (compare @<= $<= <= expression #t))
+(define $<  (compare @< $< < expression #f))
 (define $>= (case-lambda [(x y) ($<= y x)] [xs (apply $<= (reverse xs))]))
 (define $>  (case-lambda [(x y) ($< y x)] [xs (apply $< (reverse xs))]))
 
-(define-syntax-rule (compare @op $op op expr)
+(define-syntax-rule (compare @op $op op expr same=true?)
   (case-lambda 
     [(x y)
      (match* (x y)
        [((? real?) (? real?)) (op x y)]
+       [(_ (== x)) same=true?]
        [((expression (== ite) a (? real? b) (? real? c)) (? real? d)) (merge a (op b d) (op c d))]
        [((? real? d) (expression (== ite) a (? real? b) (? real? c))) (merge a (op d b) (op d c))]
        [((expression (== ite) a (? real? b) (? real? c)) 

@@ -223,6 +223,7 @@
 (define (bveq x y) 
   (match* (x y)
     [((bv u _) (bv v _)) (= u v)]
+    [(_ (== x)) #t]
     [((expression (== ite) a (bv b _) (bv c _)) (bv d _))
      (|| (&& a (= b d)) (&& (! a) (= c d)))]
     [((bv d t) (expression (== ite) a (bv b _) (bv c _)))
@@ -237,7 +238,8 @@
     [(_ _) (sort/expression @bveq x y)]))
 
 (define bvslt
-  (bitwise-comparator (x y) < @bvslt 
+  (bitwise-comparator (x y) < @bvslt
+   [(_ (== x)) #f]
    [(_ (? bvsmax?)) (! (bveq x y))]
    [((? bvsmax?) _) #f]
    [(_ (? bvsmin?)) #f]
@@ -245,6 +247,7 @@
 
 (define bvsle
   (bitwise-comparator (x y) <= @bvsle
+    [(_ (== x)) #t]
     [(_ (? bvsmax?)) #t]
     [((? bvsmax?) _) (bveq x y)]
     [(_ (? bvsmin?)) (bveq x y)]
@@ -255,11 +258,13 @@
    ([finitize (syntax-rules () [(_ e t) (ufinitize e (bitvector-size t))])])
    (values
     (bitwise-comparator (x y) < @bvult
+     [(_ (== x)) #f]
      [(_ (bv -1 _)) (! (bveq x y))]
      [((bv -1 _) _) #f]
      [(_ (bv 0 _)) #f]
      [((bv 0 _) _) (! (bveq x y))])
     (bitwise-comparator (x y) <= @bvule
+     [(_ (== x)) #t]
      [(_ (bv -1 _)) #t]
      [((bv -1 _) _) (bveq x y)]
      [(_ (bv 0 _)) (bveq x y)]
