@@ -105,10 +105,10 @@
 ; We use the word 'operator' to refer to functions with fixed interpretations
 ; (e.g., +, -, etc.).
 ;
-; Each function has a domain and a range. The domain of an uninterpreted function (UF)
-; is a list of type?, and the range of a UF is a type?.  The domain and range of an
-; operator may not be explicitly representable, since operators need not have fixed
-; arity and they may be polymorphic. Two operators are equal? iff they are eq?. Two
+; Each function has a domain and a range. If the function does not have a fixed arity
+; or it is polymorphic, its domain is #f and its range is a procedure that returns
+; a type?.  Otherwise, the domain of a function is a list of type?, and the range
+; is a type?. By default, two functions are equal? iff they are eq?. Two
 ; UFs are equal? iff they have the same identifier, domain, and range.
 ;
 ; All functions have a 'safe' and 'unsafe' version.  The 'safe' version checks that
