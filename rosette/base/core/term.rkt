@@ -8,7 +8,7 @@
  (rename-out [a-term term] [an-expression expression] [a-constant constant] [uf uninterpreted]) 
  term-type term<? sublist?
  function? function-domain function-range function-unsafe
- uninterpreted? operator? define-operator
+ uninterpreted? define-operator
  (all-from-out "type.rkt"))
 
 #|-----------------------------------------------------------------------------------|#
@@ -105,11 +105,11 @@
 ; We use the word 'operator' to refer to functions with fixed interpretations
 ; (e.g., +, -, etc.).
 ;
-; Each function has a domain and a range.  The range of every function is a type?.
-; The domain of an uninterpreted function (UF) is a list of type?.  The domain
-; of an operator may not be explicitly representable, since operators need not
-; have fixed arity and they may be polymorphic. Two operators are equal? iff they are eq?.
-; Two UFs are equal? iff they have the same identifier, domain, and range.
+; Each function has a domain and a range. The domain of an uninterpreted function (UF)
+; is a list of type?, and the range of a UF is a type?.  The domain and range of an
+; operator may not be explicitly representable, since operators need not have fixed
+; arity and they may be polymorphic. Two operators are equal? iff they are eq?. Two
+; UFs are equal? iff they have the same identifier, domain, and range.
 ;
 ; All functions have a 'safe' and 'unsafe' version.  The 'safe' version checks that
 ; the functions are arguments are in its domain (by emitting appropriate assertions),
@@ -124,10 +124,8 @@
   [(define (write-proc self port mode)
      (fprintf port "~a" (id->string (function-identifier self))))])
 
-(struct operator function ())
-
 (define (make-operator #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
-  (operator (string->symbol (~s name)) #f type safe unsafe))
+  (function (string->symbol (~s name)) #f type safe unsafe))
 
 (define-syntax-rule (define-operator id arg ...)
   (define id (make-operator arg ...)))
