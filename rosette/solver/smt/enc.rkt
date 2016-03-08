@@ -2,8 +2,9 @@
 
 (require "env.rkt" 
          (prefix-in $ "smtlib2.rkt") 
-         (only-in "../../base/core/term.rkt" expression expression? constant? get-type uninterpreted?)
+         (only-in "../../base/core/term.rkt" expression expression? constant? get-type)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
+         (only-in "../../base/core/uninterpreted.rkt" uninterpreted?)
          (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=>)
          (only-in "../../base/core/real.rkt" 
                   @integer? @real? @= @< @<= @>= @> 

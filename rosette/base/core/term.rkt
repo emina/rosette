@@ -1,14 +1,14 @@
 #lang racket
 
-(require racket/syntax (for-syntax racket racket/syntax) "type.rkt")
+(require racket/syntax (for-syntax racket racket/syntax) racket/generic "type.rkt")
 
 (provide
  term-cache clear-terms!
  term? constant? expression? 
- (rename-out [a-term term] [an-expression expression] [a-constant constant] [uf uninterpreted]) 
- term-type term<? sublist?
- function? function-domain function-range function-unsafe
- uninterpreted? define-operator
+ (rename-out [a-term term] [an-expression expression] [a-constant constant]) 
+ term-type term<? sublist? id->string
+ gen:function function? function-identifier function-domain function-range function-unsafe
+ define-operator operator?
  (all-from-out "type.rkt"))
 
 #|-----------------------------------------------------------------------------------|#
@@ -117,60 +117,31 @@
 ; that all of its preconditions are met.  Client code sees only the 'safe' version.
 ; The 'unsafe' variant is used internally by Rosette for efficiency.
 #|-----------------------------------------------------------------------------------|#
-(struct function (identifier domain range safe unsafe)
+(define-generics function  
+  [function-identifier function] 
+  [function-domain function]    
+  [function-range function]                
+  [function-unsafe function])         
+
+(struct operator (identifier domain range safe unsafe)
   #:property prop:procedure 
   (struct-field-index safe)
   #:methods gen:custom-write
   [(define (write-proc self port mode)
-     (fprintf port "~a" (id->string (function-identifier self))))])
+     (fprintf port "~a" (id->string (operator-identifier self))))]
+  #:methods gen:function
+  [(define (function-identifier self) (operator-identifier self))
+   (define (function-domain self) (operator-domain self))
+   (define (function-range self) (operator-range self))
+   (define (function-unsafe self) (operator-unsafe self))])
 
 (define (make-operator #:unsafe unsafe #:safe [safe unsafe]
                        #:domain [dom #f] #:range ran
                        #:identifier [name (object-name unsafe)] )
-  (function (string->symbol (~s name)) dom ran safe unsafe))
+  (operator (string->symbol (~s name)) dom ran safe unsafe))
 
 (define-syntax-rule (define-operator id arg ...)
   (define id (make-operator arg ...)))
-
-(struct uninterpreted function ()
-  #:methods gen:equal+hash
-  [(define (equal-proc u1 u2 rec=?)
-     (and (rec=? (function-identifier u1) (function-identifier u2))
-          (rec=? (function-range u1) (function-range u2))
-          (rec=? (function-domain u1) (function-domain u2))))
-   (define (hash-proc u1 rec-hash)
-     (rec-hash (list (function-identifier u1)
-                     (function-domain u1)
-                     (function-range u1))))
-   (define (hash2-proc u1 rec-hash)
-     (rec-hash (list (function-identifier u1)
-                     (function-domain u1)
-                     (function-range u1))))])
-
-(define (make-uninterpreted id dom ran)
-  (define k (length dom))
-  (define name (string->symbol (id->string id)))
-  (define f
-    (uninterpreted id dom ran 
-                   (procedure-rename
-                    (procedure-reduce-arity
-                     (lambda args
-                       (apply make-expr f (for/list ([a args][t dom]) (type-cast t a name))))
-                     k)
-                    name)
-                   (procedure-reduce-arity
-                    (lambda args
-                      (apply make-expr f args))
-                    k)))
-  f)
-
-(define-match-expander uf
-  (lambda (stx)
-    (syntax-case stx ()
-      [(_ pat ...) #'(uninterpreted pat ... _ _)]))
-  (syntax-id-rules ()
-    [(_ id dom ran) (make-uninterpreted id dom ran)]
-    [_ make-uninterpreted]))
                              
 #|-----------------------------------------------------------------------------------|#
 ; The following procedures convert symbolic values to strings.
