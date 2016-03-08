@@ -26,8 +26,8 @@
 ; Polymorphic operators and procedures that are shared by 
 ; multiple primitive types.
 (define-operator =? 
-  #:name '=? 
-  #:type T*->boolean?
+  #:identifier '=? 
+  #:range T*->boolean?
   #:unsafe (lambda (x y)
              (match* (x y)
                [((not (? term?)) (not (? term?))) (eq? x y)] 
@@ -44,8 +44,8 @@
 ; type T. This operator is intended only for internal use and should not 
 ; be called by client code. 
 (define-operator ite 
-  #:name   'ite  
-  #:type   (lambda (b t f) (type-of t f))
+  #:identifier   'ite  
+  #:range   (lambda (b t f) (type-of t f))
   #:unsafe (lambda (b t f)
              (match* (b t f)
                [((? boolean?) _ _) (if b t f)]
@@ -62,8 +62,8 @@
 (define (make-guarded g v) (expression ⊢ g v))
 
 (define-operator ⊢
-  #:name '⊢
-  #:type (lambda (g v) (type-of v))
+  #:identifier '⊢
+  #:range (lambda (g v) (type-of v))
   #:unsafe make-guarded)
 
 (define-match-expander guarded
@@ -90,8 +90,8 @@
 ; guard and wraps the resulting list into an expression with ite* as the 
 ; operator.
 (define-operator ite*
-  #:name   'ite*
-  #:type   (lambda gvs (apply type-of gvs))
+  #:identifier   'ite*
+  #:range   (lambda gvs (apply type-of gvs))
   #:unsafe (lambda gvs 
              (match gvs
                [(list (cons _ a)) a]

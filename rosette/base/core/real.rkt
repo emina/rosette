@@ -158,16 +158,16 @@
 
 (define-syntax-rule (define-lifted-operator @op $op type)
   (define-operator @op
-    #:name (string->symbol (substring (symbol->string '@op) 1))
-    #:type type
+    #:identifier (string->symbol (substring (symbol->string '@op) 1))
+    #:range type
     #:unsafe $op
     #:safe (lift-op $op)))
     
 ;; ----------------- Predicates ----------------- ;; 
 
 (define-operator @int?
-    #:name 'int?
-    #:type T*->boolean?
+    #:identifier 'int?
+    #:range T*->boolean?
     #:unsafe int?
     #:safe int?)
 
@@ -293,8 +293,8 @@
   
 (define-syntax-rule (define-lifted-int-operator @op $op op)
   (define-operator @op
-    #:name 'op
-    #:type T*->integer?
+    #:identifier 'op
+    #:range T*->integer?
     #:unsafe $op
     #:safe (lambda (x y)
              (let ([a (type-cast @integer? x 'op)]
@@ -313,8 +313,8 @@
 (define T*->real? (const @real?))
 
 (define-operator @/
-  #:name '/
-  #:type T*->real?
+  #:identifier '/
+  #:range T*->real?
   #:unsafe $/
   #:safe (case-lambda 
            [(x) (@/ 1 x)]
@@ -347,14 +347,14 @@
     [(? term?) (expression @real->integer r)]))
 
 (define-operator @integer->real 
-  #:name 'integer->real
-  #:type T*->real?
+  #:identifier 'integer->real
+  #:range T*->real?
   #:unsafe integer->real
   #:safe (lambda (n) (integer->real (type-cast @integer? n 'integer->real))))
 
 (define-operator @real->integer 
-  #:name 'real->integer 
-  #:type T*->integer?
+  #:identifier 'real->integer 
+  #:range T*->integer?
   #:unsafe real->integer 
   #:safe (lambda (n) (real->integer (type-cast @real? n 'real->integer))))
 

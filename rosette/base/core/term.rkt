@@ -124,8 +124,10 @@
   [(define (write-proc self port mode)
      (fprintf port "~a" (id->string (function-identifier self))))])
 
-(define (make-operator #:unsafe unsafe #:safe [safe unsafe] #:type type #:name [name (object-name unsafe)] )
-  (function (string->symbol (~s name)) #f type safe unsafe))
+(define (make-operator #:unsafe unsafe #:safe [safe unsafe]
+                       #:domain [dom #f] #:range ran
+                       #:identifier [name (object-name unsafe)] )
+  (function (string->symbol (~s name)) dom ran safe unsafe))
 
 (define-syntax-rule (define-operator id arg ...)
   (define id (make-operator arg ...)))

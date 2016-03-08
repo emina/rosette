@@ -46,8 +46,8 @@
 
 (define-syntax-rule (define-lifted-operator @op $op)
   (define-operator @op
-    #:name '$op
-    #:type boolean?*->boolean?
+    #:identifier '$op
+    #:range boolean?*->boolean?
     #:unsafe $op
     #:safe (lift-op $op)))
 

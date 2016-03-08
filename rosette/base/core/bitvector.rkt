@@ -212,8 +212,8 @@
 
 (define-syntax-rule (define-lifted-operator @bvop bvop type)
   (define-operator @bvop
-    #:name 'bvop
-    #:type type
+    #:identifier 'bvop
+    #:range type
     #:unsafe bvop
     #:safe (lift-op bvop)))
     
@@ -541,8 +541,8 @@
     [(x . ys) (for/fold ([out x]) ([y ys]) (concat out y))]))
 
 (define-operator @concat
-  #:name 'concat
-  #:type (lambda xs (bitvector-type (for/sum ([x xs]) (bitvector-size (get-type x)))))
+  #:identifier 'concat
+  #:range (lambda xs (bitvector-type (for/sum ([x xs]) (bitvector-size (get-type x)))))
   #:unsafe concat 
   #:safe (case-lambda
            [(x) (bvcoerce x 'concat)]
@@ -573,8 +573,8 @@
     [(_ _ _) (expression @extract i j x)]))
         
 (define-operator @extract
-  #:name 'extract
-  #:type (lambda (i j x) (bitvector-type (add1 (- i j))))
+  #:identifier 'extract
+  #:range (lambda (i j x) (bitvector-type (add1 (- i j))))
   #:unsafe extract
   #:safe 
   (local [(define-syntax-rule (extract*-err x i j) 
@@ -646,14 +646,14 @@
 (define (zero-extend v t) (extend v t ufinitize @zero-extend))
 
 (define-operator @sign-extend
-  #:name 'sign-extend
-  #:type coercion-type
+  #:identifier 'sign-extend
+  #:range coercion-type
   #:unsafe sign-extend
   #:safe (@extend sign-extend))
        
 (define-operator @zero-extend
-  #:name 'zero-extend
-  #:type coercion-type
+  #:identifier 'zero-extend
+  #:range coercion-type
   #:unsafe zero-extend
   #:safe (@extend zero-extend))
 
@@ -681,8 +681,8 @@
       [v (bvop v)])))
 
 (define-operator @integer->bitvector
-  #:name 'integer->bitvector
-  #:type coercion-type
+  #:identifier 'integer->bitvector
+  #:range coercion-type
   #:unsafe integer->bitvector
   #:safe 
   (lambda (@v @t)
@@ -695,14 +695,14 @@
       [(_ _) (assert #f (arguments-error "expected a bitvector type t" "t" @t))])))
 
 (define-operator @bitvector->integer
-  #:name 'bitvector->integer
-  #:type T*->integer?
+  #:identifier 'bitvector->integer
+  #:range T*->integer?
   #:unsafe bitvector->integer
   #:safe (@bv->* bitvector->integer))
              
 (define-operator @bitvector->natural
-  #:name 'bitvector->natural
-  #:type T*->integer?
+  #:identifier 'bitvector->natural
+  #:range T*->integer?
   #:unsafe bitvector->natural
   #:safe (@bv->* bitvector->natural))
 
