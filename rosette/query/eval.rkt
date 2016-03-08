@@ -22,6 +22,7 @@
       (let ([result
              (match expr
                [(? constant?) (sol expr)]
+               [(? function?) (sol expr)]
                [(expression (== ite) b t f) 
                 (match (eval-rec b sol cache)
                   [#t (eval-rec t sol cache)]
@@ -32,7 +33,8 @@
                     (eval-guarded gvs sol cache car cdr)
                     (eval-guarded gvs sol cache guarded-test guarded-value))]
                [(expression op child ...)  
-                (apply (function-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
+                (apply (function-unsafe (sol op))
+                       (for/list ([e child]) (eval-rec e sol cache)))]
                [(? list?)                
                 (for/list ([e expr]) (eval-rec e sol cache))]
                [(cons x y)               

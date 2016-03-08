@@ -25,7 +25,10 @@
   #:property prop:procedure 
   (lambda (self arg)
     (match self
-      [(solution (? dict? model)) (dict-ref model arg arg)]
+      [(solution (? dict? model))
+       (if (dict-has-key? model arg)
+           (dict-ref model arg)
+           arg)]
       [else (error 'solution "cannot query an unsat solution: ~s" self)]))
   #:methods gen:custom-write
   [(define (write-proc self port mode)
