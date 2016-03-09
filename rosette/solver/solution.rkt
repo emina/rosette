@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../base/core/term.rkt"
+(require "../base/core/term.rkt" "../base/core/uninterpreted.rkt"
          (only-in "../base/core/term.rkt" type-of)
          (only-in "../base/core/bool.rkt" @boolean?)
          (only-in "../base/core/bitvector.rkt" bitvector? bv)
@@ -40,7 +40,8 @@
             (for ([binding bindings])
               (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
           (fprintf port ")"))]
-       [(or #f (list #f)) (fprintf port "(core #f)")]
+       [#f (fprintf port "(unsat)")]
+       [(list #f) (fprintf port "(core #f)")]
        [core 
         (fprintf port "(core")
         (for ([assertion (sort core term<?)]) 
@@ -101,9 +102,14 @@
                          (error 'unsat "expected a non-empty list, given ~s" core))
                        (solution core)]))
 
-; Returns a default binding (value) for the given constant, based on its type.
-(define (default-binding const)
-  (match (term-type const)
+; Returns a default binding (value) for the given constant or function, based on its type.
+(define (default-binding unknown)
+  (match unknown
+    [(constant _ t) (default-value t)]
+    [(uninterpreted _ _ ran) (LUT unknown '() (default-value ran))]))
+
+(define (default-value t)
+  (match t
     [(== @boolean?) #f]
     [(or (== @integer?) (== @real?)) 0]
     [(? bitvector? t) (bv 0 t)]))

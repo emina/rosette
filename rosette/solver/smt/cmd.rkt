@@ -67,13 +67,11 @@
     [(? hash? sol) 
      (sat (for/hash ([(decl id) (in-dict (decls env))])
             (values decl
-                    (if (constant? decl)
-                        (if (hash-has-key? sol id)
+                    (if (hash-has-key? sol id)
+                        (if (constant? decl)
                             (decode-value (term-type decl) (hash-ref sol id))
-                            (default-binding decl))
-                        (if (hash-has-key? sol id)
-                            (decode-function decl (hash-ref sol id))
-                            (default-function decl))))))]
+                            (decode-function decl (hash-ref sol id)))
+                        (default-binding decl)))))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
@@ -106,13 +104,6 @@
        [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
         (bv n t)])]
     [other other]))
-
-(define (default-function f)
-  (LUT f '() 
-       (match (function-range f)
-         [(== @boolean?) #f]
-         [(? bitvector? t) (bv 0 t)]
-         [_ 0])))
 
 (define (decode-function f val)
   (define default+tbl

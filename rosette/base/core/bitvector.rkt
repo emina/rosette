@@ -6,7 +6,7 @@
 (require (only-in "real.rkt" @>= @> @= @integer? T*->integer?))
 
 (provide 
- (rename-out [@bv bv]) bv? 
+ (rename-out [@bv bv]) bv? bv-value bv-type
  (rename-out [@bitvector bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr

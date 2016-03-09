@@ -6,6 +6,7 @@
   (only-in "../base/core/term.rkt" constant? get-type term? term-cache clear-terms! term<?)
   (only-in "../base/core/equality.rkt" @equal?)
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
+  (only-in "../base/core/uninterpreted.rkt" uninterpreted?)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
   "../solver/solver.rkt"
@@ -43,34 +44,7 @@
   (with-handlers ([exn:fail? return-#f])
     (with-asserts-only (closure))))
 
-; Takes as input a solution and a finitization map 
-; produced by calling the finitize proceudre in rosette/base/core/finitize, 
-; and returns a new solution that applies the inverse 
-; of the given to the provided solution.   
-(define (unfinitize sol fmap)
-  (match sol
-    [(model m)
-     (sat (for/hash ([(k fk) fmap] #:when (dict-has-key? m fk))
-            (match* ((get-type k) (dict-ref m fk))
-              [((or (== @integer?) (== @real?)) (bv v _)) (values k v)]
-              [(_ v) (values k v)])))]
-    [(core #f) sol] ; no core extracted
-    [(core φs)
-     (unsat (for/list ([(k v) fmap] #:when (member v φs)) k))]))
 
-; Takes as input a solution and a finitization map 
-; produced by calling the finitize proceudre in rosette/base/core/finitize, 
-; and returns a solution that is complete with respect to the given map.  
-; That is, if the given solution is satisfiable but has no mapping for a
-; constant in fmap, the returned solution has a default binding  
-; for that constant (and same bindings as sol for other constants).  If 
-; the given solution is unsat, it is simply returned.
-(define (complete sol fmap)
-  (match sol
-    [(model m)
-     (sat (for/hash ([(k fk) fmap] #:when (constant? k))
-            (values fk (dict-ref m fk (default-binding fk)))))]
-    [_ sol]))
   
 
 ; Searches for a model, if any, for the conjunction 
@@ -227,7 +201,11 @@
     (solver-clear checker)
     (solver-assert checker (evaluate ¬φ sol))
     (match (solver-check checker)
-      [(? sat? m) (sat (for/hash ([i inputs]) (values i (value-for (m i)))))]
+      [(? sat? m) (sat (for/hash ([i inputs])
+                         (values i (let ([v (m i)])
+                                     (if (eq? v i)
+                                         (default-binding i)
+                                         v)))))]
       [other other]))
     
   (let loop ([candidate (begin0 (guess (sat)) (solver-clear guesser))])
@@ -240,13 +218,4 @@
             [else (set! trial (add1 trial))
                   (loop (guess cex))]))])))
              
-
-(define (value-for v)
-  (if (constant? v)
-      (match (get-type v)
-        [(== @boolean?) #f]
-        [(or (== @integer?) (== @real?)) 0]
-        [(? bitvector? t) (bv 0 t)])
-      v))
-        
         
