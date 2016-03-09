@@ -2,9 +2,9 @@
 
 (require racket/provide)
 
-(require "eval.rkt" 
-         "form.rkt")
+(require "eval.rkt" "finitize.rkt" "form.rkt")
 
 (provide (all-from-out 
-          "eval.rkt"  
+          "eval.rkt"
+          "finitize.rkt"
           "form.rkt"))

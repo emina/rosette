@@ -5,7 +5,7 @@
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" 
-  "core/equality.rkt" "core/finitize.rkt" "core/reflect.rkt" 
+  "core/equality.rkt" "core/reflect.rkt" 
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/procedure.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
@@ -34,8 +34,6 @@
      @integer->bitvector @bitvector->integer @bitvector->natural
      ; core/equality.rkt
      @eq? @equal?
-     ; core/finitize.rkt
-     finitize current-bitwidth 
      ; core/reflect.rkt
      symbolics type? type-of type-cast for/all for*/all
      term? constant? expression? 

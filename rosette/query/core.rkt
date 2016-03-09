@@ -2,13 +2,12 @@
 
 (require 
   racket/generator
-  "eval.rkt" 
+  "eval.rkt" "finitize.rkt"
   (only-in "../base/core/term.rkt" constant? get-type term? term-cache clear-terms! term<?)
   (only-in "../base/core/equality.rkt" @equal?)
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
-  (only-in "../base/core/finitize.rkt" finitize current-bitwidth)
   "../solver/solver.rkt"
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
   (only-in "../solver/smt/z3.rkt" z3))

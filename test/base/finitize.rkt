@@ -5,7 +5,7 @@
          rosette/lib/roseunit 
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real (except-in rosette/base/core/bitvector bv)
-         rosette/base/core/finitize
+         rosette/query/finitize
          rosette/base/core/polymorphic rosette/base/core/merge 
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/equality @equal?)

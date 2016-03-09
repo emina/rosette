@@ -1,9 +1,13 @@
 #lang racket
 
 (require racket/syntax 
-         "term.rkt" "real.rkt" "bitvector.rkt"  
-         "polymorphic.rkt" "merge.rkt" "union.rkt"
-         (only-in "term.rkt" [function-unsafe unsafe]))
+         "../base/core/term.rkt"
+         "../base/core/real.rkt"
+         "../base/core/bitvector.rkt"  
+         "../base/core/polymorphic.rkt"
+         "../base/core/merge.rkt"
+         "../base/core/union.rkt"
+         (only-in "../base/core/term.rkt" [function-unsafe unsafe]))
 
 (provide finitize current-bitwidth)
 
