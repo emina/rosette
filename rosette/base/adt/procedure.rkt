@@ -27,6 +27,7 @@
         @procedure? 
         @any/c))
    (define (type-applicable? self) #t)
+   (define (type-eq? self v0 v1) (equal? v0 v1))
    (define (type-cast self v [caller 'type-cast])
      (match v
        [(union _ (== @procedure?)) v]
