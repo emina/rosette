@@ -40,12 +40,12 @@
 ; produced by calling the finitize proceudre in finitize.rkt, 
 ; and returns a new solution that applies the inverse 
 ; of the given to the provided solution.   
-(define (unfinitize sol fmap)
+(define (unfinitize sol fmap) 
   (match sol
     [(model m)
      (sat (for/hash ([(k fk) fmap] #:when (dict-has-key? m fk))
             (values k
-                    (cond [(eq? k fk)    (dict-ref m fk)]
+                    (cond [(equal? k fk) (dict-ref m fk)]
                           [(constant? k) (bv-value (dict-ref m fk))]
                           [else          (unfinitize-fun k (dict-ref m fk))]))))]
     [(core #f) sol] ; no core extracted
@@ -58,6 +58,7 @@
 (define (unfinitize-fun f lut)
   (match-define (LUT sig tbl default) lut)
   (match-define (uninterpreted _ dom ran) f)
+  (printf "UNFINITIZE\nf: ~a\nmap: ~a\ndefault: ~a\n" f (LUT-map lut) (LUT-default lut))
   (LUT f
        (for/list ([io tbl])
            (cons (for/list ([i (car io)][t dom])
@@ -73,7 +74,7 @@
 ; constant or a function in fmap, the returned solution has a default binding  
 ; for that constant or function (and same bindings as sol for other constants).  If 
 ; the given solution is unsat, it is simply returned.
-(define (complete sol fmap)
+(define (complete sol fmap) 
   (match sol
     [(model m)
      (sat (for/hash ([(k fk) fmap] #:when (or (constant? k) (uninterpreted? k)))
@@ -89,12 +90,13 @@
 ; The environment will be modified (if needed) to include an encoding for 
 ; the given value and all of its subexpressions (if any).
 (define (finitize-any v env)
-  (or (hash-ref env v #f)
-      (hash-ref! env v 
-                 (match v
-                   [(? expression?) (finitize-expr v env)]
-                   [(? constant?)   (finitize-const v env)]
-                   [_               (finitize-lit v env)]))))
+  (hash-ref! env v
+             (lambda ()
+               (match v
+                 [(? expression?)    (finitize-expr v env)]
+                 [(? constant?)      (finitize-const v env)]
+                 [(? uninterpreted?) (finitize-fun v env)]
+                 [_                  (finitize-lit v env)]))))
 
 (define (finitize-expr v env)
   (match v
@@ -135,7 +137,7 @@
          [(union) (error 'finitize "all finitizations infeasible: ~a" v)]
          [_ e])))
     [(expression (? uninterpreted? f) xs ...)
-     ((unsafe (finitize-fun f)) (for/list ([x xs]) (finitize-any x env)))]
+     (apply (unsafe (finitize-any f env)) (for/list ([x xs]) (finitize-any x env)))]
     [(expression op x)     
      ((unsafe op) (finitize-any x env))]
     [(expression op x y)   

@@ -36,7 +36,7 @@
 ; Prints all smt commands to current-output-port.
 (define-syntax-rule (printf-smt arg ...)
   (begin 
-    ;(fprintf (current-error-port) arg ...)
+    ;(fprintf (current-error-port) arg ...)(fprintf (current-error-port) "\n")
     (printf arg ...)))
 
 ; Commands

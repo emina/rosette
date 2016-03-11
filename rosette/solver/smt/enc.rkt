@@ -65,8 +65,8 @@
 
 (define (enc-lit v env)
   (match v 
-    [#t true]
-    [#f false]
+    [#t $true]
+    [#f $false]
     [(? integer?) (inexact->exact v)]
     [(? real?) (if (exact? v) ($/ (numerator v) (denominator v)) v)]
     [(bv lit t) ($bv lit (bitvector-size t))]

@@ -75,9 +75,9 @@
   [(define (write-proc self port mode)
      (fprintf port "~a" (LUT-sig self)))]
   #:methods gen:function
-  [(define (function-identifier self) (function-identifier (LUT-sig self)))
-   (define (function-domain self) (function-domain (LUT-sig self)))
-   (define (function-range self) (function-range (LUT-sig self)))
+  [(define (function-identifier self) (uninterpreted-identifier (LUT-sig self)))
+   (define (function-domain self) (uninterpreted-domain (LUT-sig self)))
+   (define (function-range self) (uninterpreted-range (LUT-sig self)))
    (define (function-unsafe self) (LUT-unsafe self))])
 
 ; Creates a lookup table interpretation for the given uninterpreted function,
