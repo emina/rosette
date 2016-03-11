@@ -6,7 +6,7 @@
   (only-in "../base/core/term.rkt" constant? get-type term? term-cache clear-terms! term<?)
   (only-in "../base/core/equality.rkt" @equal?)
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
-  (only-in "../base/core/uninterpreted.rkt" uninterpreted?)
+  (only-in "../base/core/uninterpreted.rkt" uninterpreted? LUT-map)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
   "../solver/solver.rkt"
@@ -75,7 +75,7 @@
              (define sol (unfinitize fsol fmap)) 
              (cond 
                [(or (unsat? sol) (all-true? φs sol)) sol]
-               [else (solver-assert solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+               [else (solver-assert solver (list (¬solution fsol)))
                      (loop)])))]
         [else 
          (solver-assert solver φs)
@@ -115,7 +115,7 @@
                       sol]
                      [(all-true? φs sol) (outer (yield sol))]
                      [else  
-                      (solver-assert solver (list (apply || (for/list ([(c v) (model fsol)]) (! (@equal? c v))))))
+                      (solver-assert solver (list (¬solution fsol)))
                       (inner)]))))))                      
       (generator (φs)
        (let loop ([φs φs])
@@ -217,5 +217,13 @@
             [(unsat? cex) candidate]
             [else (set! trial (add1 trial))
                   (loop (guess cex))]))])))
+
+(define (¬solution sol)
+  (apply || (for/list ([(c v) (model sol)])
+              (if (constant? c)
+                  (! (@equal? c v))
+                  (apply || (for/list ([io (LUT-map v)])
+                              (! (@equal? (apply c (car io)) (cdr io)))))))))
+                  
              
         

@@ -58,7 +58,6 @@
 (define (unfinitize-fun f lut)
   (match-define (LUT sig tbl default) lut)
   (match-define (uninterpreted _ dom ran) f)
-  (printf "UNFINITIZE\nf: ~a\nmap: ~a\ndefault: ~a\n" f (LUT-map lut) (LUT-default lut))
   (LUT f
        (for/list ([io tbl])
            (cons (for/list ([i (car io)][t dom])
