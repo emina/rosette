@@ -81,8 +81,7 @@
              (real->integer x)]
             [((cons gi xi) (cons gr xr))
              (let ([gr (&& (int? xr) gr)])
-               (unless (= (length xs) 2)
-                 (assert (|| gi gr) (numeric-type-error caller @integer? v)))
+               (assert (|| gi gr) (numeric-type-error caller @integer? v))
                (merge* i (cons gr (real->integer xr))))]
             [(_ _) (assert #f (numeric-type-error caller @integer? v))]))]
        [_ (assert #f (numeric-type-error caller @integer? v))]))

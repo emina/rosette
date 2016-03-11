@@ -80,6 +80,39 @@
   (define-symbolic f (-> boolean? real?))
   (check-pred unsat? (solve (assert (= (f #f) .5)))))
 
+(define-syntax-rule (check-state actual expected-value expected-asserts)
+  (let-values ([(e ignore) (with-asserts expected-value)]
+               [(v a) (with-asserts actual)])
+    (check-equal? v e)
+    (check-equal? (apply set a) (apply set expected-asserts))))
+
+(define (check-types)
+  (define-symbolic a boolean?)
+  (define-symbolic b integer?)
+  (define-symbolic c real?)
+  (define-symbolic f (-> boolean? boolean?))
+  (define-symbolic g (-> integer? integer?))
+  (define-symbolic h (-> real? real?))
+  (check-exn #px"boolean\\?" (thunk (f 3)))
+  (check-exn #px"boolean\\?" (thunk (f b)))
+  (check-exn #px"boolean\\?" (thunk (f (if a b c))))
+  (check-exn #px"integer\\?" (thunk (g a)))
+  (check-exn #px"integer\\?" (thunk (g (if a 'b 'c))))
+  (check-exn #px"real\\?" (thunk (h a)))
+  (check-exn #px"real\\?" (thunk (h (if a 'b 'c))))
+  (check-exn #px"arity" (thunk (f)))
+  (clear-asserts!)
+  (check-state (g b) (expression g b) '())
+  (check-state (g (if a b 'b)) (expression g b) (list a))
+  (check-state (g (if a b c)) (expression g (type-cast integer? (if a b c))) (list (|| a (&& (! a) (int? c)))))
+  (check-state (g c) (expression g (real->integer c)) (list (int? c)))
+  (check-state (h c) (expression h c) '())
+  (check-state (h b) (expression h (integer->real b)) '())
+  (check-state (h (if a b 'b)) (expression h (integer->real b)) (list a))
+  (check-state (h (if a b c)) (expression h (type-cast real? (if a b c))) '())
+  )
+  
+
 (define tests:basic
   (test-suite+
    "UF tests with no finitization"
@@ -100,7 +133,11 @@
    (check-int-real-no-finite-solution)
    ))
 
-   
+(define tests:lifted
+  (test-suite+
+   "UF tests for lifted applications"
+   (check-types)))
 
 (time (run-tests tests:basic))
 (time (run-tests tests:finitized))
+(time (run-tests tests:lifted))

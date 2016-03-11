@@ -135,7 +135,8 @@
   (check-cast (@integer? (merge a xi '())) (a xi))
   (check-cast (@integer? (merge a xr '())) ((&& a (@int? xr)) (@real->integer xr)))
   (check-cast (@integer? (merge a xi xr)) 
-              (#t (merge* (cons a xi) (cons (&& (! a) (@int? xr)) (@real->integer xr)))))
+              ((|| a (&& (! a) (@int? xr)))
+               (merge* (cons a xi) (cons (&& (! a) (@int? xr)) (@real->integer xr)))))
   (check-cast (@integer? (merge* (cons a xi) (cons b xr) (cons c '()))) 
               ((|| a (&& b (@int? xr))) 
                (merge* (cons a xi) (cons (&& b (@int? xr)) (@real->integer xr)))))
@@ -305,7 +306,7 @@
                (@integer->real (merge* (cons a xi)
                                        (cons (&& (! a) (@int? xr)) 
                                              (@real->integer xr))))
-               (list))
+               (list (|| a (&& (! a) (@int? xr)))))
   (check-state (@integer->real (merge* (cons a xi) (cons b xr) (cons c 'a))) 
                (@integer->real (merge* (cons a xi)
                                        (cons (&& b (@int? xr)) 
@@ -474,7 +475,8 @@
   (test-suite+
    "Tests for integer? in rosette/base/real.rkt"
    (check-integer?)
-   (check-integer-cast)))
+   (check-integer-cast)
+   ))
 
 (define tests:=
   (test-suite+
