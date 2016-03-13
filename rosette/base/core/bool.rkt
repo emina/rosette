@@ -13,7 +13,7 @@
   #:base boolean?
   #:is-a? (instance-of? boolean? @boolean?)
   #:methods
-  [(define (default-value self) #f)
+  [(define (solvable-default self) #f)
    (define (type-eq? self u v) (<=> u v)) 
    (define (type-equal? self u v) (<=> u v))
    (define (type-cast self v [caller 'type-cast])

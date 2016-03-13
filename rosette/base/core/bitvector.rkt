@@ -59,7 +59,7 @@
    (define (type-construct self vs)   (car vs))
    (define (type-deconstruct self v)  (list v))]
   #:methods gen:solvable
-  [(define (default-value self) (bv 0 self))]
+  [(define (solvable-default self) (bv 0 self))]
   #:methods gen:custom-write
   [(define (write-proc self port m) 
      (fprintf port "(bitvector? ~a)" (bitvector-size self)))])

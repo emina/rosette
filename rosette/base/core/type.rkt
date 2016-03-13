@@ -15,17 +15,23 @@
  subtype?
 
  gen:solvable
- solvable? default-value
+ solvable? solvable-default solvable-domain solvable-range
  
  type-of @any/c lifted-type define-lifted-type)
 
 #|-----------------------------------------------------------------------------------|#
-; The type generic interface defines a symbolic type.  Each value has a type.  Structures that 
-; implement the typed? generic interface attach type information directly to their 
-; instances.  Types of other values are calculated on the fly.
+; The type generic interface defines a symbolic type.  Each value has a type.
+; Structures that implement the typed? generic interface attach type information
+; directly to their instances.  Types of other values are calculated on the fly.
 ;
 ; The solvable generic interface acts as a marker for types that are supported by
-; the underlying constraint solver.
+; the underlying constraint solver.  The solvable-default method of a solvable type T
+; returns a default value of type T that may be used for binding constants that are
+; otherwise unconstrained.  The solvable-domain method returns a list of solvable?
+; types that are not applicable; that is, (type-applicable? T) returns #f.  The
+; solvable-range method returns a single solvable? non-applicable type.  If the type
+; T is not applicable, then solvable-range returns T itself and solvable-domain returns
+; the empty list.
 #|-----------------------------------------------------------------------------------|#
 
 (define-generics typed 
@@ -46,7 +52,9 @@
   (eq? t1 (least-common-supertype t0 t1)))
 
 (define-generics solvable
-  [default-value solvable])
+  [solvable-default solvable] ; (-> (and/c solvable? type?) any/c)
+  [solvable-domain solvable]  ; (-> (and/c solvable? type?) (listof (and/c solvable? type?)))
+  [solvable-range solvable])  ; (-> (and/c solvable? type?) (and/c solvable? type?))
 
 ; Defines a new lifted type for the given Racket built-in type, using the 
 ; following arguments:
@@ -54,7 +62,7 @@
 ;   #:base base                      ; Racket type being lifted.
 ;   #:is-a? is-a?                    ; Predicate that recognizes concrete and symbolic values of the lifted type.
 ;   #:methods ([method-id expr] ...) ; Definitions of gen:type methods, including at least cast. This can
-;                                    ; optionally include the solvable-default method for solvable? types.
+;                                    ; optionally include gen:solvable methods.
 ; A given Racket type cannot be lifted more than once.  That is, multiple attempts to 
 ; call define-lifted-type with the same base type as argument will result in an error.
 ; Only these Racket types are expected to be lifted:
@@ -86,8 +94,11 @@
              #:property prop:procedure [struct-field-index pred]
              #:methods gen:custom-write
              [(define (write-proc self port mode) (fprintf port "~a" 'base))]
-             #,@(if (hash-has-key? methods 'default-value)
-                    #`(#:methods gen:solvable [(define default-value #,(hash-ref methods 'default-value))])
+             #,@(if (hash-has-key? methods 'solvable-default)
+                    #`(#:methods gen:solvable
+                        [(define solvable-default #,(hash-ref methods 'solvable-default))
+                         (define solvable-domain  #,(hash-ref methods 'solvable-domain #'(lambda (self) null)))
+                         (define solvable-range   #,(hash-ref methods 'solvable-range #'(lambda (self) self)))])
                     #`())
              #:methods gen:type
              [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 

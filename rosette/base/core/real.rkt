@@ -30,7 +30,7 @@
   #:methods
   [(define (least-common-supertype self t)
      (if (or (equal? self t) (equal? @integer? t)) self @any/c))
-   (define (default-value self) 0)
+   (define (solvable-default self) 0)
    (define (type-eq? self u v) ($= u v)) 
    (define (type-equal? self u v) ($= u v))
    (define (type-cast self v [caller 'type-cast])
@@ -62,7 +62,7 @@
   #:methods 
   [(define (least-common-supertype self t)
      (if (or (equal? self t) (equal? @real? t)) t @any/c))
-   (define (default-value self) 0)
+   (define (solvable-default self) 0)
    (define (type-eq? self u v) ($= u v)) 
    (define (type-equal? self u v) ($= u v))
    (define (type-cast self v [caller 'type-cast])
