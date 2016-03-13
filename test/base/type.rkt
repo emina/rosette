@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui rosette/lib/roseunit
          rosette/base/core/term
-         rosette/base/adt/procedure
+         rosette/base/core/procedure
          rosette/base/adt/list
          rosette/base/struct/struct
          (only-in rosette/base/form/define define-symbolic))
