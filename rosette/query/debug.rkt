@@ -54,8 +54,8 @@
 (define relax?
   (make-parameter none/c
                   (lambda (pred)
-                    (unless (or (type? pred) (and (list? pred) (andmap type? pred)))
-                      (error 'relax? "expected a type or list of types, given ~s" pred))
+                    (unless (or (solvable? pred) (and (list? pred) (andmap solvable? pred)))
+                      (error 'debug "expected a solvable type or list of solvable types, given ~s" pred))
                     (match pred
                       [(or (? type? p) (list p)) (lambda (v) (eq? (type-of v) p))]
                       [_ (lambda (v) (not (false? (memq (type-of v) pred))))]))))

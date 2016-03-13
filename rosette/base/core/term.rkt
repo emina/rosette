@@ -70,8 +70,8 @@
           (hash-ref! (term-cache) val (term-constructor val type ord))))))
            
 (define (make-const id t)
-  (unless (type? t)
-    (error 'constant "expected a symbolic type, given ~a" t))
+  (unless (solvable? t)
+    (error 'constant "expected a solvable type, given ~a" t))
   (make-term constant id t))
 
 (define (make-expr op . vs)

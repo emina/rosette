@@ -13,6 +13,9 @@
  type-construct type-deconstruct 
  least-common-supertype 
  subtype?
+
+ gen:solvable
+ solvable? default-value
  
  type-of @any/c lifted-type define-lifted-type)
 
@@ -20,6 +23,9 @@
 ; The type generic interface defines a symbolic type.  Each value has a type.  Structures that 
 ; implement the typed? generic interface attach type information directly to their 
 ; instances.  Types of other values are calculated on the fly.
+;
+; The solvable generic interface acts as a marker for types that are supported by
+; the underlying constraint solver.
 #|-----------------------------------------------------------------------------------|#
 
 (define-generics typed 
@@ -39,13 +45,16 @@
 (define (subtype? t0 t1)
   (eq? t1 (least-common-supertype t0 t1)))
 
+(define-generics solvable
+  [default-value solvable])
 
 ; Defines a new lifted type for the given Racket built-in type, using the 
-; following argumets:
+; following arguments:
 ;   id                               ; Identifier for the lifted type.
 ;   #:base base                      ; Racket type being lifted.
 ;   #:is-a? is-a?                    ; Predicate that recognizes concrete and symbolic values of the lifted type.
-;   #:methods ([method-id expr] ...) ; Definitions of gen:type methods, including at least cast.
+;   #:methods ([method-id expr] ...) ; Definitions of gen:type methods, including at least cast. This can
+;                                    ; optionally include the solvable-default method for solvable? types.
 ; A given Racket type cannot be lifted more than once.  That is, multiple attempts to 
 ; call define-lifted-type with the same base type as argument will result in an error.
 ; Only these Racket types are expected to be lifted:
@@ -62,8 +71,8 @@
            (hash-set! types base id))]))
 
 (define-syntax (make-lifted-type stx)
-  (syntax-case stx (define)
-    [(_ #:base base #:is-a? is-a? #:methods defs)       
+  (syntax-case stx ()
+    [(_ #:base base #:is-a? is-a? #:methods defs)
      (let* ([methods (for/hash ([expr (syntax->list #'defs)])
                       (with-syntax ([(define (method arg ...) body ...) expr])
                         (values (syntax->datum #'method) #'(lambda (arg ...) body ...))))]
@@ -71,11 +80,15 @@
                                       (raise-syntax-error 
                                        'define-lifted-type 
                                        (format "missing required method definition ~a" m))))])
+                              
        #`(let ()
            (struct lifted (pred)
              #:property prop:procedure [struct-field-index pred]
              #:methods gen:custom-write
              [(define (write-proc self port mode) (fprintf port "~a" 'base))]
+             #,@(if (hash-has-key? methods 'default-value)
+                    #`(#:methods gen:solvable [(define default-value #,(hash-ref methods 'default-value))])
+                    #`())
              #:methods gen:type
              [(define least-common-supertype #,(hash-ref methods 'least-common-supertype 
                                                          #'(lambda (self other) (if (equal? self other) self @any/c))))
@@ -94,7 +107,7 @@
 (define @any/c 
   (make-lifted-type
    #:base any/c 
-   #:is-a? (const #t) 
+   #:is-a? (const #t)
    #:methods
    [(define (least-common-supertype self other) self)
     (define (type-cast self v [caller 'type-cast]) v)]))
