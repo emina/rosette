@@ -5,8 +5,8 @@
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" 
-  "core/equality.rkt" "core/reflect.rkt" 
-  "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/procedure.rkt" 
+  "core/procedure.rkt" "core/equality.rkt" "core/reflect.rkt" 
+  "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
 

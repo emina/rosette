@@ -3,11 +3,11 @@
 (require rackunit rackunit/text-ui rosette/lib/roseunit
          rosette/base/core/term
          rosette/base/core/bool
-         rosette/base/core/real 
+         rosette/base/core/real
+         rosette/base/core/procedure
          rosette/base/core/polymorphic
-         (only-in rosette/base/adt/list @list?)
-         rosette/base/adt/procedure
          rosette/base/core/merge
+         (only-in rosette/base/adt/list @list?)         
          rosette/base/struct/struct
          (only-in rosette/base/form/define define-symbolic)
          "common.rkt")

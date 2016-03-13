@@ -6,7 +6,7 @@
          "../core/term.rkt"  "../core/lift.rkt" "../core/safe.rkt"
          (only-in "../core/bool.rkt" || && and-&&)
          (only-in "../core/type.rkt" @any/c type-cast)
-         (only-in "../adt/procedure.rkt" @procedure?)
+         (only-in "../core/procedure.rkt" @procedure?)
          (only-in "../core/merge.rkt" merge merge*)
          (only-in "../core/union.rkt" union union? in-union-guards)
          (only-in "../core/equality.rkt" @equal? @eq?)

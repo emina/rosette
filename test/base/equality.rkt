@@ -5,8 +5,8 @@
          rosette/base/core/term
          rosette/base/core/bool
          rosette/base/core/real
+         rosette/base/core/procedure
          rosette/base/adt/box
-         rosette/base/adt/procedure
          rosette/base/adt/list
          rosette/base/adt/vector
          (only-in rosette/base/struct/struct struct)

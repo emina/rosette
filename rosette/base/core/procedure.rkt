@@ -2,13 +2,12 @@
 
 (require 
   racket/provide 
-  (for-syntax racket/syntax (only-in "../core/lift.rkt" with@)) 
-  (only-in "../core/type.rkt" define-lifted-type typed? get-type subtype? type-applicable? @any/c)
-  (only-in "../core/bool.rkt" ||)
-  (only-in "../core/union.rkt" union union? in-union-guards union-filter union-guards)
-  (only-in "../core/safe.rkt" assert argument-error)
-  (only-in "../core/forall.rkt" guard-apply)
-  (only-in "../form/control.rkt" @not))
+  (for-syntax racket/syntax (only-in "lift.rkt" with@)) 
+  (only-in "type.rkt" define-lifted-type typed? get-type subtype? type-applicable? @any/c)
+  (only-in "bool.rkt" || @false?)
+  (only-in "union.rkt" union union? in-union-guards union-filter union-guards)
+  (only-in "safe.rkt" assert argument-error)
+  (only-in "forall.rkt" guard-apply))
 
 (provide (filtered-out with@ (all-defined-out)))
 
@@ -80,10 +79,10 @@
   (unless (@procedure? f) (raise-argument-error 'negate "procedure?" f))
   (let-values ([(arity) (procedure-arity f)] [(_ kwds) (procedure-keywords f)])
     (case (and (null? kwds) arity) ; optimize some simple cases
-      [(0) (lambda () (@not (f)))]
-      [(1) (lambda (x) (@not (f x)))]
-      [(2) (lambda (x y) (@not (f x y)))]
-      [else (compose1 @not f)])))
+      [(0) (lambda () (@false? (f)))]
+      [(1) (lambda (x) (@false? (f x)))]
+      [(2) (lambda (x y) (@false? (f x y)))]
+      [else (compose1 @false? f)])))
 
 (define (@void? v)
   (match v
