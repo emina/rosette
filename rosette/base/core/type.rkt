@@ -16,6 +16,7 @@
 
  gen:solvable
  solvable? solvable-default solvable-domain solvable-range
+ primitive-solvable?
  
  type-of @any/c lifted-type define-lifted-type)
 
@@ -53,8 +54,11 @@
 
 (define-generics solvable
   [solvable-default solvable] ; (-> (and/c solvable? type?) any/c)
-  [solvable-domain solvable]  ; (-> (and/c solvable? type?) (listof (and/c solvable? type?)))
-  [solvable-range solvable])  ; (-> (and/c solvable? type?) (and/c solvable? type?))
+  [solvable-domain solvable]  ; (-> (and/c solvable? type?) (listof primitive-solvable?))
+  [solvable-range solvable])  ; (-> (and/c solvable? type?) primitive-solvable?)
+
+(define (primitive-solvable? t)
+  (and (solvable? t) (type? t) (not (type-applicable? t))))
 
 ; Defines a new lifted type for the given Racket built-in type, using the 
 ; following arguments:
