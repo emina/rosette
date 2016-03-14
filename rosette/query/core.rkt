@@ -3,14 +3,14 @@
 (require 
   racket/generator
   "eval.rkt" "finitize.rkt"
-  (only-in "../base/core/term.rkt" constant? get-type term? term-cache clear-terms! term<?)
+  (only-in "../base/core/term.rkt" constant? term-type get-type term? term-cache clear-terms! term<? solvable-default)
   (only-in "../base/core/equality.rkt" @equal?)
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
-  (only-in "../base/core/uninterpreted.rkt" uninterpreted? LUT-map)
+  (only-in "../base/core/function.rkt" fv)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
   "../solver/solver.rkt"
-  (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
+  (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
   (only-in "../solver/smt/z3.rkt" z3))
 
 (provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug eval/asserts 
@@ -204,7 +204,7 @@
       [(? sat? m) (sat (for/hash ([i inputs])
                          (values i (let ([v (m i)])
                                      (if (eq? v i)
-                                         (default-binding i)
+                                         (solvable-default (term-type i))
                                          v)))))]
       [other other]))
     
@@ -219,11 +219,13 @@
                   (loop (guess cex))]))])))
 
 (define (¬solution sol)
-  (apply || (for/list ([(c v) (model sol)])
-              (if (constant? c)
-                  (! (@equal? c v))
-                  (apply || (for/list ([io (LUT-map v)])
-                              (! (@equal? (apply c (car io)) (cdr io)))))))))
-                  
+  (apply ||
+         (for/list ([(c v) (model sol)])
+           (match v
+             [(fv ios o type)
+              ; TODO:  introduce skolems to negate the else case
+              (apply || (for/list ([io ios]) (! (@equal? (apply c (car io)) (cdr io)))))]
+             [_ (! (@equal? c v))]))))
+
              
         

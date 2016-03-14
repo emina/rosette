@@ -6,9 +6,8 @@
  term-cache clear-terms!
  term? constant? expression? 
  (rename-out [a-term term] [an-expression expression] [a-constant constant]) 
- term-type term<? sublist? id->string
- gen:function function? function-identifier function-domain function-range function-unsafe
- define-operator operator?
+ term-type term<? sublist? @app
+ define-operator operator? operator-unsafe
  (all-from-out "type.rkt"))
 
 #|-----------------------------------------------------------------------------------|#
@@ -87,8 +86,8 @@
       (make-term constant id t)))
 
 (define (make-expr op . vs)
-  (define ran (function-range op))
-  (make-term expression (cons op vs) (if (type? ran) ran (apply ran vs))))
+  (define ran (operator-range op))
+  (make-term expression (cons op vs) (apply ran vs)))
 
 (define-match-expander a-constant
   (lambda (stx)
@@ -111,46 +110,26 @@
     [(_ val-pat type-pat) (term val-pat type-pat _)]))
 
 #|-----------------------------------------------------------------------------------|#
-; A function is a special kind of procedure that can appear as the first element of
-; a term expression.  Functions can have fixed interpretation or they can be
-; uninterpreted, in which case their interpretation is determined by the solver.
-; We use the word 'operator' to refer to functions with fixed interpretations
-; (e.g., +, -, etc.).
+; An operator is a special kind of procedure that can appear as the first element of
+; a term expression.  The range of an operator is given by a procedure that takes as input
+; as many arguments as the operator and that returns the type? of the resulting value. 
 ;
-; Each function has a domain and a range. If the function does not have a fixed arity
-; or it is polymorphic, its domain is #f and its range is a procedure that returns
-; a type?.  Otherwise, the domain of a function is a list of type?, and the range
-; is a type?. By default, two functions are equal? iff they are eq?. Two
-; UFs are equal? iff they have the same identifier, domain, and range.
-;
-; All functions have a 'safe' and 'unsafe' version.  The 'safe' version checks that
-; the functions are arguments are in its domain (by emitting appropriate assertions),
+; All operators have a 'safe' and 'unsafe' version.  The 'safe' version checks that
+; the operator's arguments are in its domain (by emitting appropriate assertions),
 ; while the 'unsafe' version assumes that all of its arguments are properly typed and
 ; that all of its preconditions are met.  Client code sees only the 'safe' version.
 ; The 'unsafe' variant is used internally by Rosette for efficiency.
 #|-----------------------------------------------------------------------------------|#
-(define-generics function  
-  [function-identifier function] 
-  [function-domain function]    
-  [function-range function]                
-  [function-unsafe function])         
-
-(struct operator (identifier domain range safe unsafe)
+(struct operator (identifier range safe unsafe)
   #:property prop:procedure 
   (struct-field-index safe)
   #:methods gen:custom-write
   [(define (write-proc self port mode)
-     (fprintf port "~a" (id->string (operator-identifier self))))]
-  #:methods gen:function
-  [(define (function-identifier self) (operator-identifier self))
-   (define (function-domain self) (operator-domain self))
-   (define (function-range self) (operator-range self))
-   (define (function-unsafe self) (operator-unsafe self))])
+     (fprintf port "~a" (id->string (operator-identifier self))))])
 
 (define (make-operator #:unsafe unsafe #:safe [safe unsafe]
-                       #:domain [dom #f] #:range ran
-                       #:identifier [name (object-name unsafe)] )
-  (operator (string->symbol (~s name)) dom ran safe unsafe))
+                       #:range ran #:identifier [name (object-name unsafe)] )
+  (operator (string->symbol (~s name)) ran safe unsafe))
 
 (define-syntax-rule (define-operator id arg ...)
   (define id (make-operator arg ...)))
@@ -160,12 +139,16 @@
   #:range  (lambda (f . args)
              (solvable-range (get-type f)))
   #:unsafe (lambda (f . args)
-             (apply make-expr @app f args))
+             (if (constant? f)
+                 (apply make-expr @app f args)
+                 (apply f args)))
   #:safe   (lambda (f . args)
-             (define name (string->symbol (~a f)))
-             (apply make-expr @app f
-                    (for/list ([a args][t (solvable-domain (get-type f))])
-                      (type-cast t a name)))))
+             (if (constant? f)
+                 (let ([name (string->symbol (~a f))])
+                   (apply make-expr @app f
+                          (for/list ([a args][t (solvable-domain (get-type f))])
+                            (type-cast t a name))))
+                 (apply f args))))
                              
 #|-----------------------------------------------------------------------------------|#
 ; The following procedures convert symbolic values to strings.
@@ -194,7 +177,7 @@
   (match-let ([o (current-output-port)]
               [(an-expression op child ...) val])
     (display "(")
-    (display (id->string (function-identifier op)))
+    (display (id->string (operator-identifier op)))
     (display " ")
     (let ([n (for/sum ([(e i) (in-indexed child)]
                        #:break (>= (file-position o) max-length))

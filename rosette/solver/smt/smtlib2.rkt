@@ -70,7 +70,7 @@
   (printf-smt "(define-fun ~a () ~a ~a)" id type body))
 
 ; Applications of uninterpreted functions.
-(define (app f args)
+(define (app f . args)
   `(,f ,@args))
 
 (define-syntax-rule (define-ops id ...)

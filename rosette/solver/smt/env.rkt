@@ -43,7 +43,7 @@
     [(== @integer?) Int]
     [(== @real?) Real]
     [(? bitvector? t) (BitVec (bitvector-size t))]
-    [_ (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
+    [_ (error 'smt-type "expected primitive-solvable? type, given ~a" t)]))
 
 ; The ref! macro retrieves the SMT encoding for 
 ; the given Rosette value from the given environment. 
@@ -75,16 +75,12 @@
     [(_ env val) 
      (let ([decls (env-decls env)]
            [v val])
-       (or (dict-ref decls v #f)
-           (if (constant? v)
-               (let ([id (smt-id 'c (dict-count decls))])
-                 (dict-set! decls v id)
-                 (declare-const id (smt-type (term-type v)))
-                 id)
-               (let ([id (smt-id 'f (dict-count decls))])
-                 (dict-set! decls v id)
-                 (declare-fun id (map smt-type (function-domain v)) (smt-type (function-range v)))
-                 id))))]
+       (or (dict-ref decls v #f)         
+           (let ([id (smt-id 'c (dict-count decls))]
+                 [t (term-type v)])
+             (dict-set! decls v id)
+             (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
+             id)))]
     [(_ env val enc)
      (let ([defs (env-defs env)]
            [v val])

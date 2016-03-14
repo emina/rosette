@@ -4,12 +4,12 @@
          "../base/core/term.rkt"
          "../base/core/real.rkt"
          "../base/core/bitvector.rkt"
-         "../base/core/uninterpreted.rkt"  
+         "../base/core/function.rkt"  
          "../base/core/polymorphic.rkt"
          "../base/core/merge.rkt"
          "../base/core/union.rkt"
-         (only-in "../solver/solution.rkt" model core sat unsat sat? unsat? default-binding)
-         (only-in "../base/core/term.rkt" [function-unsafe unsafe]))
+         (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
+         (only-in "../base/core/term.rkt" [operator-unsafe unsafe]))
 
 (provide finitize current-bitwidth unfinitize complete)
 
@@ -37,49 +37,48 @@
     env))
 
 ; Takes as input a solution and a finitization map 
-; produced by calling the finitize proceudre in finitize.rkt, 
+; produced by calling the finitize procedure, 
 ; and returns a new solution that applies the inverse 
-; of the given to the provided solution.   
+; of the given map to the provided solution.   
 (define (unfinitize sol fmap) 
   (match sol
     [(model m)
      (sat (for/hash ([(k fk) fmap] #:when (dict-has-key? m fk))
-            (values k
-                    (cond [(equal? k fk) (dict-ref m fk)]
-                          [(constant? k) (bv-value (dict-ref m fk))]
-                          [else          (unfinitize-fun k (dict-ref m fk))]))))]
+            (let ([t (term-type k)])
+              (values k (cond [(equal? k fk) (dict-ref m fk)]
+                              [(function? t) (unfinitize-fun t (dict-ref m fk))]
+                              [else (bv-value (dict-ref m fk))])))))]
     [(core #f) sol] ; no core extracted
-    [(core φs)
-     (unsat (for/list ([(k v) fmap] #:when (member v φs)) k))]))
+    [(core φs) (unsat (for/list ([(k v) fmap] #:when (member v φs)) k))]))
 
 (define (unfinitize-value t v)
   (if (infinite? t) (bv-value v) v))
 
-(define (unfinitize-fun f lut)
-  (match-define (LUT sig tbl default) lut)
-  (match-define (uninterpreted _ dom ran) f)
-  (LUT f
-       (for/list ([io tbl])
-           (cons (for/list ([i (car io)][t dom])
-                   (unfinitize-value t i))
-                 (unfinitize-value ran (cdr io))))
-       (unfinitize-value ran default)))
+(define (unfinitize-fun t fval)
+  (match-define (fv ios o type) fval)
+  (match-define (function dom ran) t)
+  (fv (for/list ([io ios])
+        (cons (for/list ([i (car io)][d dom])
+                (unfinitize-value d i))
+              (unfinitize-value ran (cdr io))))
+      (unfinitize-value ran o)
+      t))
        
                        
 ; Takes as input a solution and a finitization map 
 ; produced by calling the finitize procedure in finitize.rkt, 
 ; and returns a solution that is complete with respect to the given map.  
 ; That is, if the given solution is satisfiable but has no mapping for a
-; constant or a function in fmap, the returned solution has a default binding  
-; for that constant or function (and same bindings as sol for other constants).  If 
+; constant in fmap, the returned solution has a default binding  
+; for that constant (and same bindings as sol for other constants).  If 
 ; the given solution is unsat, it is simply returned.
 (define (complete sol fmap) 
   (match sol
     [(model m)
-     (sat (for/hash ([(k fk) fmap] #:when (or (constant? k) (uninterpreted? k)))
+     (sat (for/hash ([(k fk) fmap] #:when (constant? k))
             (values fk (if (dict-has-key? m fk)
                            (dict-ref m fk)
-                           (default-binding fk)))))]
+                           (solvable-default (term-type fk))))))]
     [_ sol]))
 
 ; The finitize-any procedure takes a value (a term or a literal), 
@@ -94,7 +93,6 @@
                (match v
                  [(? expression?)    (finitize-expr v env)]
                  [(? constant?)      (finitize-const v env)]
-                 [(? uninterpreted?) (finitize-fun v env)]
                  [_                  (finitize-lit v env)]))))
 
 (define (finitize-expr v env)
@@ -135,8 +133,6 @@
        (match e 
          [(union) (error 'finitize "all finitizations infeasible: ~a" v)]
          [_ e])))
-    [(expression (? uninterpreted? f) xs ...)
-     (apply (unsafe (finitize-any f env)) (for/list ([x xs]) (finitize-any x env)))]
     [(expression op x)     
      ((unsafe op) (finitize-any x env))]
     [(expression op x y)   
@@ -147,22 +143,18 @@
 (define (finitize-const v env)
   (match v
     [(constant id (? infinite?))
-     (constant (finitize-identifier id) (bitvector (current-bitwidth)))] 
+     (constant (finitize-identifier id) (bitvector (current-bitwidth)))]
+    [(constant id (function dom ran))
+     (if (or (infinite? ran) (ormap infinite? dom))
+         (constant (finitize-identifier id) (function (map finitize-type dom) (finitize-type ran)))
+         v)]
     [_ v]))
                               
 (define (finitize-lit v env)
   (match v 
     [(? real?) (bv v (current-bitwidth))]
     [_ v]))
-
-(define (finitize-fun v env)
-  (match-define (uninterpreted id dom ran) v)
-  (if (or (infinite? ran) (ormap infinite? dom))
-      (uninterpreted (finitize-identifier id)
-                     (map finitize-type dom)
-                     (finitize-type ran))
-      v))
-     
+    
 (define (convert v src tgt @extend)
   (cond [(= src tgt) v]
         [(> src tgt) ((unsafe @extract) (- tgt 1) 0 v)]

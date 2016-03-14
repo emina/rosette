@@ -4,10 +4,8 @@
                   check-sat get-model get-unsat-core
                   read-solution true false)
          "env.rkt" "enc.rkt"
-         (only-in "../../base/core/term.rkt"
-                  constant? term-type type-of type-cast
-                  function-domain function-range)
-         (only-in "../../base/core/uninterpreted.rkt" LUT)
+         (only-in "../../base/core/term.rkt" constant? term-type solvable-default)
+         (only-in "../../base/core/function.rkt" fv function? function-domain function-range)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
@@ -66,12 +64,13 @@
   (match (read-solution)
     [(? hash? sol) 
      (sat (for/hash ([(decl id) (in-dict (decls env))])
-            (values decl
-                    (if (hash-has-key? sol id)
-                        (if (constant? decl)
-                            (decode-value (term-type decl) (hash-ref sol id))
-                            (decode-function decl (hash-ref sol id)))
-                        (default-binding decl)))))]
+            (let ([t (term-type decl)])
+              (values decl
+                      (if (hash-has-key? sol id)
+                          (if (function? t)
+                              (decode-function t (hash-ref sol id))
+                              (decode-value t (hash-ref sol id)))
+                          (solvable-default t))))))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
@@ -105,13 +104,13 @@
         (bv n t)])]
     [other other]))
 
-(define (decode-function f val)
+(define (decode-function type val)
   (define default+tbl
     (reverse
      (match val
       [(list (== 'define-fun) _ params _ body)
-       (decode-body (map car params) (function-domain f) (function-range f) body)])))
-  (LUT f (reverse (cdr default+tbl)) (car default+tbl)))
+       (decode-body (map car params) (function-domain type) (function-range type) body)])))
+  (fv (reverse (cdr default+tbl)) (car default+tbl) type))
   
 (define (decode-body params dom ran body)
   (match body

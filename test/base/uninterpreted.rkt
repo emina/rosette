@@ -1,11 +1,11 @@
 #lang rosette
 
 (require rackunit rackunit/text-ui rosette/lib/roseunit
-         rosette/base/core/term rosette/base/core/uninterpreted)
+         rosette/base/core/term rosette/base/core/function)
 
 
 (define (check-equivalent impl spec)
-  (define inputs (for/list ([t (function-domain impl)])
+  (define inputs (for/list ([t (function-domain (get-type impl))])
                    (define-symbolic* in t)
                    t))
   (verify (assert (equal? (apply impl inputs) (apply spec inputs)))))
@@ -102,14 +102,14 @@
   (check-exn #px"real\\?" (thunk (h (if a 'b 'c))))
   (check-exn #px"arity" (thunk (f)))
   (clear-asserts!)
-  (check-state (g b) (expression g b) '())
-  (check-state (g (if a b 'b)) (expression g b) (list a))
-  (check-state (g (if a b c)) (expression g (type-cast integer? (if a b c))) (list (|| a (&& (! a) (int? c)))))
-  (check-state (g c) (expression g (real->integer c)) (list (int? c)))
-  (check-state (h c) (expression h c) '())
-  (check-state (h b) (expression h (integer->real b)) '())
-  (check-state (h (if a b 'b)) (expression h (integer->real b)) (list a))
-  (check-state (h (if a b c)) (expression h (type-cast real? (if a b c))) '())
+  (check-state (g b) (expression @app g b) '())
+  (check-state (g (if a b 'b)) (expression @app g b) (list a))
+  (check-state (g (if a b c)) (expression @app g (type-cast integer? (if a b c))) (list (|| a (&& (! a) (int? c)))))
+  (check-state (g c) (expression @app g (real->integer c)) (list (int? c)))
+  (check-state (h c) (expression @app h c) '())
+  (check-state (h b) (expression @app h (integer->real b)) '())
+  (check-state (h (if a b 'b)) (expression @app h (integer->real b)) (list a))
+  (check-state (h (if a b c)) (expression @app h (type-cast real? (if a b c))) '())
   )
   
 
