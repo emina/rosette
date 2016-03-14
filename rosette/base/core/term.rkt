@@ -57,8 +57,10 @@
   [(define (write-proc self port mode)
      (fprintf port "~a" (term->string self)))])
 
-(struct constant term (λ)
-  #:property prop:procedure [struct-field-index λ])
+(struct constant term ())
+
+(struct λconstant constant (procedure)
+  #:property prop:procedure [struct-field-index procedure])
 
 (struct expression term ())
    
@@ -76,13 +78,13 @@
 (define (make-const id t) 
   (unless (and (type? t) (solvable? t))
     (error 'constant "expected a solvable type, given ~a" t))
-  (define c 
-    (make-term constant id t
-               (and (type-applicable? t)
-                    (procedure-reduce-arity
-                     (lambda args (apply @app c args))
-                     (length (solvable-domain t))))))
-  c)
+  (if (type-applicable? t)      
+      (letrec ([c (make-term λconstant id t 
+                             (procedure-reduce-arity
+                              (lambda args (apply @app c args))
+                              (length (solvable-domain t))))])
+        c)
+      (make-term constant id t)))
 
 (define (make-expr op . vs)
   (define ran (function-range op))
@@ -91,7 +93,7 @@
 (define-match-expander a-constant
   (lambda (stx)
     (syntax-case stx ()
-      [(_ id-pat type-pat) #'(constant id-pat type-pat _ _)]))
+      [(_ id-pat type-pat) #'(constant id-pat type-pat _)]))
   (syntax-id-rules ()
     [(_ id type) (make-const id type)]
     [_ make-const]))
