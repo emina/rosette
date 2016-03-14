@@ -57,22 +57,32 @@
   [(define (write-proc self port mode)
      (fprintf port "~a" (term->string self)))])
 
-(struct constant term ())
+(struct constant term (λ)
+  #:property prop:procedure [struct-field-index λ])
+
 (struct expression term ())
    
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
-(define-syntax-rule (make-term term-constructor args type) 
+(define-syntax-rule (make-term term-constructor args type rest ...) 
   (let ([val args]) 
     (or (hash-ref (term-cache) val #f)
-        (let ([ord (term-count)]) 
+        (let* ([ord (term-count)]
+               [out (term-constructor val type ord rest ...)])
           (term-count (add1 ord))
-          (hash-ref! (term-cache) val (term-constructor val type ord))))))
+          (hash-set! (term-cache) val out)
+          out))))
            
-(define (make-const id t)
-  (unless (solvable? t)
+(define (make-const id t) 
+  (unless (and (type? t) (solvable? t))
     (error 'constant "expected a solvable type, given ~a" t))
-  (make-term constant id t))
+  (define c 
+    (make-term constant id t
+               (and (type-applicable? t)
+                    (procedure-reduce-arity
+                     (lambda args (apply @app c args))
+                     (length (solvable-domain t))))))
+  c)
 
 (define (make-expr op . vs)
   (define ran (function-range op))
@@ -81,7 +91,7 @@
 (define-match-expander a-constant
   (lambda (stx)
     (syntax-case stx ()
-      [(_ id-pat type-pat) #'(constant id-pat type-pat _)]))
+      [(_ id-pat type-pat) #'(constant id-pat type-pat _ _)]))
   (syntax-id-rules ()
     [(_ id type) (make-const id type)]
     [_ make-const]))
@@ -142,6 +152,18 @@
 
 (define-syntax-rule (define-operator id arg ...)
   (define id (make-operator arg ...)))
+
+(define-operator @app
+  #:identifier 'app
+  #:range  (lambda (f . args)
+             (solvable-range (get-type f)))
+  #:unsafe (lambda (f . args)
+             (apply make-expr @app f args))
+  #:safe   (lambda (f . args)
+             (define name (string->symbol (~a f)))
+             (apply make-expr @app f
+                    (for/list ([a args][t (solvable-domain (get-type f))])
+                      (type-cast t a name)))))
                              
 #|-----------------------------------------------------------------------------------|#
 ; The following procedures convert symbolic values to strings.

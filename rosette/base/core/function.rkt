@@ -65,7 +65,9 @@
   #:methods gen:solvable
   [(define/generic generic-solvable-default solvable-default)
    (define (solvable-default self)
-     (fv null (generic-solvable-default (function-range self)) self))]
+     (fv null (generic-solvable-default (function-range self)) self))
+   (define (solvable-domain self) (function-domain self))
+   (define (solvable-range self) (function-range self))]
   #:methods gen:custom-write
   [(define (write-proc self port m)
      (match-define (function dom ran) self)
