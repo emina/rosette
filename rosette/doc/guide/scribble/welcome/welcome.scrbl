@@ -23,31 +23,16 @@ The name "Rosette" refers both to the language and the whole system.
 Rosette is built on top of Racket, and it ships with a Java-based solver. 
 To install Rosette, you will need to
 
-@itemlist[@item{@hyperlink["http://docs.racket-lang.org"]{Download} and install Racket (version 6.1 or later).}
-           @item{Make sure that the default Java installation on your machine is a 64-bit server VM, version 1.7x:
-                 @nested{
-                         @verbatim{> java -version
-                                   java version "1.7.0_25"
-                                   Java(TM) SE Runtime Environment (build 1.7.0_25-b15)
-                                   Java HotSpot(TM) 64-Bit Server VM (build 23.25-b01, mixed mode)}}}
+@itemlist[@item{Download and install @hyperlink["http://racket-lang.org"]{Racket} (version 6.4).}
            @item{Obtain the Rosette source code from GitHub:
                  @nested{
-                         @verbatim|{> git clone git@github.com:emina/rosette.git
-                                    > ls rosette
-                                    LICENSE README.md bin guide rosette sdsl test}|}}
-           @item{Use Racket's @tt{raco} tool to install Rosette as one of your Racket collections:
+                         @verbatim|{> git clone https://github.com/emina/rosette.git}|}}
+           @item{Use Racket's @tt{raco} tool to install Rosette:
                  @nested{
                          @verbatim|{> cd rosette
-                                    > raco link rosette
-                                    > raco setup -l rosette}|}}]
-
-Your Rosette installation includes binaries for the
-@hyperlink["http://alloy.mit.edu/kodkod/"]{Kodkod} 
-constraint solver, and it is ready for use as-is. If you 
-want to experiment with different solvers, you can also
-(optionally) install the the @hyperlink["http://z3.codeplex.com"]{Z3} 
-solver from Microsoft Research, or the @hyperlink["http://cvc4.cs.nyu.edu/web/"]{CVC4}
-solver from NYU:  simply place the solver binary into the @tt{rosette/bin} folder.
+                                    > git submodule init
+                                    > git submodule update
+                                    > raco pkg install ./rosette}|}}]
 
 @section[#:tag "sec:run"]{Interacting with Rosette}
 
