@@ -2,10 +2,10 @@
 
 @(require (for-label racket)
           (for-label  
-           rosette/base/define (only-in rosette/base/safe assert)
-           rosette/query/tools 
+           rosette/base/form/define ;(only-in rosette/base/core/safe assert)
+           rosette/query/query 
            (except-in rosette/query/debug false true) rosette/query/eval
-           (only-in rosette/lib/meta/constructs ??) rosette/lib/meta/display rosette/lib/tools/render))
+           (only-in rosette/lib/synthax ??) rosette/lib/render))
 
 @(require racket/sandbox  racket/runtime-path  
           scribble/eval scriblib/footnote 
@@ -38,7 +38,9 @@ formulate queries about these behaviors.
 
 This chapter illustrates the basics of solver-aided programming with a 
 few simple examples. More advanced tutorials, featuring extended examples, can be found 
-in Section 2 of @~cite[rosette:onward13 rosette:pldi14]. 
+in Section 2 of @~cite[rosette:onward13 rosette:pldi14].@footnote{The code examples in these
+references are written in Rosette 1.0.  While Rosette 2.0 is 
+not backward compatible with Rosette 1.0, the key concepts remain the same.} 
 
 The following chapters describe the subset 
 of Racket that can be @seclink["sec:langs"]{safely} used with solver-aided facilities, including the 
@@ -63,7 +65,7 @@ You can think of a symbolic constant as a placeholder for a concrete constant of
 Symbolic values, including constants, can be used just like concrete values of the same type.  They can be stored in data structures or passed to procedures to obtain other values, either concrete or symbolic:
 @interaction[#:eval rosette-eval
 (boolean? b)     
-(number? b)
+(integer? b)
 (vector b 1)
 (not b) 
 (boolean? (not b))]
@@ -72,7 +74,7 @@ In our example, all but the fourth expression produce concrete values.  The four
 
 Rosette provides one more construct for creating symbolic constants besides @racket[define-symbolic]:
 @def+int[#:eval rosette-eval
-(define-symbolic* n number?)]
+(define-symbolic* n integer?)]
 The two constructs differ in how they bind variables to constants when evaluated more than once.
 The @racket[define-symbolic] form binds the variable to the same (unique) constant every time it is evaluated. The @racket[define-symbolic*] form, in contrast, creates a stream of (unique) constants, binding the variable to the next constant from its stream whenever the form is evaluated. The following example illustrates the difference:
 @defs+int[#:eval rosette-eval
@@ -81,7 +83,7 @@ The @racket[define-symbolic] form binds the variable to the same (unique) consta
   x)
 
 (define (dynamic) 
-  (define-symbolic* y number?) (code:comment "creates a different constant when evaluated")
+  (define-symbolic* y integer?) (code:comment "creates a different constant when evaluated")
   y))
 
 (eq? (static) (static))
@@ -111,7 +113,7 @@ When given a symbolic boolean value, however, a Rosette assertion has no immedia
 @interaction[#:eval rosette-eval
 (assert (not b))  (code:comment "pushes the asserted property onto the solver's worklist and returns void")]
 
-@(rosette-eval '(clear-asserts))
+@(rosette-eval '(clear-asserts!))
 
 @section[#:tag "sec:queries"]{Solver-Aided Queries}
 
@@ -136,9 +138,9 @@ We will illustrate the queries on the following toy example, where the @racket[f
 
 @subsection[#:tag "sec:verify"]{Verification}
 
-To verify that @racket[poly] and @racket[factored] behave identically, we could simply enumerate all k-bit integers and apply the @racket[same] check to each.  This naive approach to verification would, of course, be very slow for a large k. A better approach is to delegate such checks to a constraint solver, which can search large input spaces more effectively.  In Rosette, this is done with the help of the @racket[verify] query:
+To verify that @racket[poly] and @racket[factored] behave identically, we could simply enumerate all k-bit integers and apply the @racket[same] check to each.  This naive approach to verification would, of course, be very slow for a large k---and impossible for infinite precision integers. A better approach is to delegate such checks to a constraint solver, which can search large (or infinite) input spaces more effectively.  In Rosette, this is done with the help of the @racket[verify] query:
 @interaction[#:eval rosette-eval
-(define-symbolic i number?)
+(define-symbolic i integer?)
 (define cex (verify (same poly factored i)))] 
 
 The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{binding} from symbolic constants to concrete values that causes the evaluation of @var[expr] to fail when the bound symbolic constants are replaced with the corresponding concrete values. If such a binding exists, as it does in our case, it is called a @emph{counterexample}. 
@@ -149,7 +151,7 @@ Bindings are first-class values in Rosette, and they can be freely manipulated b
 (same poly factored 4)]
 In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input 4 (thus causing the assertion in the @racket[same] procedure to fail).
 
-@(rosette-eval '(clear-asserts))
+@(rosette-eval '(clear-asserts!))
 @(rosette-eval '(require (only-in racket/draw read-bitmap)))
 
 @subsection[#:tag "sec:debug"]{Debugging}
@@ -157,7 +159,7 @@ In our example, evaluating @racket[i] with respect to @racket[cex] reveals that 
 Now that we have an input on which @racket[factored] differs from @racket[poly], the next step is to debug it, by figuring out which of its subexpressions are responsible for the fault.  Rosette provides a query for this as well.  To access it, we import the debugging facilities, mark @racket[factored] as a candidate for debugging, and issue a @racket[debug] query: 
 
 @racketblock[
-(require rosette/query/debug rosette/lib/tools/render)
+(require rosette/query/debug rosette/lib/render)
  
  (define (poly x)
   (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
@@ -168,7 +170,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
 (define (same p f x)
   (assert (= (p x) (f x))))
 
-#, @elem{>} (define core (debug [number?] (same poly factored 4)))
+#, @elem{>} (define core (debug [integer?] (same poly factored 4)))
 #, @elem{>} (render core)
 #,(call-with-input-file dbg (lambda (in) (read-bitmap in 'png)))]
 
@@ -179,11 +181,11 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
        (* x (+ x 1) (+ x 2) (+ x 2))))
 @(rosette-eval '(define (same p f x)
        (assert (= (p x) (f x)))))
-@(rosette-eval '(define core (debug [number?] (same poly factored 4))))
+@(rosette-eval '(define core (debug [integer?] (same poly factored 4))))
 
-The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?] and @racket[number?]) and @seclink["sec:enum"]{enumeration} types are supported.}
+The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bitvector?]) types can be used in @racket[debug] forms.}
 
-The output of a @racket[debug] query is a minimal set of program expressions, called a @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
+The output of a @racket[debug] query is a minimal set of program expressions, called an @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
 
 Like bindings, cores are first-class values. In our example, we simply visualize the core using the utility procedure @racket[render].@footnote{@racket[render] can only visualize cores for code that has been saved to a file.} The visualization reveals that the grayed-out subexpression @racket[(+ x 1)] is irrelevant to the failure of @racket[factored] on the input 4.  To repair this failure, we have to modify at least one of the remaining expressions, which are highlighted in red.  
 
@@ -193,7 +195,7 @@ The solver can not only find failure-inducing inputs and localize faults, it can
 
 The following code snippet shows the sketch for our buggy @racket[factored] procedure.  We obtained it by replacing the constants in the @seclink["sec:debug"]{minimal core} with @racket[(??)] holes, which are filled with numerical constants.@footnote{This simple replacement strategy is sufficient since we know that a factorization of an @var{n}-degree polynomial takes the form @tt{(* (+ x @var[c]@subscript{0}) ... (+ x @var[c]@subscript{@var{n}}))}, where @var[c]@subscript{@var{i}} is a constant.}
 @defs+int[#:eval rosette-eval
-((require rosette/lib/meta/meta) 
+((require rosette/lib/synthax) 
  
  (define (poly x)
   (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
@@ -204,12 +206,12 @@ The following code snippet shows the sketch for our buggy @racket[factored] proc
  (define (same p f x)
   (assert (= (p x) (f x)))))]
 
-The @racket[(??)] construct is imported from the @racket[rosette/lib/meta/meta] library, which also provides constructs for specifying more complex holes.  For example, you can specify a hole that is filled with an expression, drawn from a grammar you define.   
+The @racket[(??)] construct is imported from the @racket[rosette/lib/synthax] library, which also provides constructs for specifying more complex holes.  For example, you can specify a hole that is filled with an expression, drawn from a grammar you define.   
 
 
 We query the solver for a correct completion of our sketch as follows:
 @interaction[#:eval rosette-eval
-(define-symbolic i number?)
+(define-symbolic i integer?)
 (define binding 
   (synthesize #:forall (list i)
               #:guarantee (same poly factored i)))
@@ -222,7 +224,7 @@ Rosette supports one more solver-aided query, which we call "angelic execution."
 
 Angelic execution can be used to solve puzzles, to run incomplete code, or to "invert" a program, by searching for inputs that produce a desired output.  For example, we can ask the solver to find two distinct input values, which are not zeros of the @racket[poly] function, but which @racket[poly] still maps to the same output: 
 @interaction[#:eval rosette-eval
-(define-symbolic x y number?)
+(define-symbolic x y integer?)
 (define sol 
   (solve (begin (assert (not (= x y)))
                 (assert (< (abs x) 10))

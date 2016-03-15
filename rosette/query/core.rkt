@@ -132,7 +132,7 @@
 ; current-solver and current-bitwidth.  This procedure assumes 
 ; that the formulas are unsatisfiable.  If not, an error is thrown. 
 ; The procedure clears the solver's state before and after use.
-(define (∃-debug φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)])
+(define (∃-debug φs #:solver [solver (current-solver)] #:bitwidth [bw (current-bitwidth)] #:muc [muc? #t])
   (solver-clear solver)
   (begin0
     (with-handlers ([exn? (lambda (e) (solver-shutdown solver) (raise e))])
@@ -141,12 +141,30 @@
          (parameterize ([term-cache (hash-copy (term-cache))])
            (define fmap (finitize φs bw))
            (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
-           (unfinitize (solver-debug solver) fmap))]
+           (define sol (solver-debug solver)) 
+           (unfinitize (if muc? (minimize-core solver sol) sol) fmap))]
         [else 
          (solver-assert solver φs)
-         (solver-debug solver)]))
+         (define sol (solver-debug solver))
+         (if muc? (minimize-core solver sol) sol)]))
     (solver-clear solver)))
-  
+
+(define (minimize-core solver sol)
+  (match (core sol)
+    [(list _) sol]
+    [k       
+     (let loop ([k k][m (set)])
+       (define u (for/or ([u k] #:unless (set-member? m u)) u))
+       (cond
+         [u 
+          (solver-clear solver)
+          (solver-assert solver (remove u k))
+          (define s (with-handlers ([exn? (lambda (e) (sat))]) (solver-debug solver)))
+          (if (unsat? s)
+              (loop (core s) (set-union m (list->set (remove* (core s) k))))
+              (loop k (set-add m u)))]
+         [else (unsat k)]))]))
+
 ; Solves the exists-forall problem for the provided list of inputs, assumptions and assertions. 
 ; That is, if I is the set of all input symbolic constants, 
 ; and H is the set of the remaining (non-input) constants appearing 

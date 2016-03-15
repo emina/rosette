@@ -1,22 +1,41 @@
 #lang racket
 
 (require rosette/solver/solution 
-         (only-in rosette symbolics) (only-in rosette/query/debug debug-origin)
+         (only-in rosette symbolics expression = bveq <=>)
+         (only-in rosette/query/debug debug-origin)
          rosette/lib/util/syntax (only-in racket/syntax format-id)
          slideshow/code (only-in slideshow vl-append current-font-size))
          
 (provide render)
 
 (define (render sol [font-size 16])
-  (unless (unsat? sol)
-    (error 'render "expected an unsatisfiable solution, given ~a" sol))
-  (let* ([core (filter-map location (remove-duplicates (filter-map debug-origin (symbolics (core sol)))))]
-         [debugged (debugged-forms (remove-duplicates (map location-source core)) core)]
-         [core (apply set core)])
-    (parameterize ([code-colorize-enabled #t]
-                   [current-font-size font-size])
-      (apply vl-append (for/list ([stx debugged])
-                         (eval #`(code #,(colorize-code stx core))))))))
+  (match (core sol)
+    [(or #f (list #f)) #f]
+    [uc
+      (let* ([uc (filter-map location (relaxers uc))]
+             [debugged (debugged-forms (remove-duplicates (map location-source uc)) uc)]
+             [uc (apply set uc)])
+        (parameterize ([code-colorize-enabled #t]
+                       [current-font-size font-size])
+          (apply vl-append (for/list ([stx debugged])
+                         (eval #`(code #,(colorize-code stx uc)))))))]))
+
+(define (relaxers cs)
+  (define rs (mutable-set))
+  (define seen? (mutable-set))
+  (define (extract-relaxers e)
+    (unless (set-member? seen? e)
+      (match e
+        [(app debug-origin (and (not (? false?)) origin))
+         (set-add! rs origin)]
+        [(expression (or (== =) (== bveq) (== <=>)) (app debug-origin origins) ...)
+         (for ([origin origins] #:when origin)
+           (set-add! rs origin))]
+        [(expression _ es ...)
+         (for ([e es]) (extract-relaxers e))]
+        [_ (void)])))
+  (for ([c cs]) (extract-relaxers c))
+  (set->list rs))
 
 (define (debugged-forms paths core)
   (define (debugged? loc)
