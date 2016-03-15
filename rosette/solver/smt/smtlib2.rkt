@@ -7,26 +7,34 @@
 
 ; Reads the SMT solution from current-input-port.
 ; The solution consist of 'sat or 'unsat, followed by  
-; followed by a suitably formatted s-expression.  The 
-; output of this procedure is a hashtable from constant 
-; identifiers to their values (if the solution is 'sat);
-; a non-empty list of assertion identifiers that form an
-; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); or #f (if the solution is 
-; 'unsat and no core was extracted).
+; followed by a suitably formatted s-expression.
+; If the solution is 'sat, the output of this procedure is a pair of
+; hashtables, where the first table represents the model as a
+; map from constant identifiers to their values, and the second table
+; maps objective terms to values.  If the solution is 'unsat
+; and a core was extracted, the procedure outputs a non-empty 
+; list of assertion identifiers that form an
+; unsatisfiable core.  If the solution is 'unsat and no core was
+; extracted, the output is #f.
 (define (read-solution)
   (define port (current-input-port))
   (match (read port)
     [(== 'sat)
+     (define model (make-hash))
+     (define objectives (make-hash))
      (let loop ()
        (match (read port)
-         [(list (== 'objectives) _ ...) (loop)]
+         [(list (== 'objectives) (list term val) ...)
+          (for ([t term] [v val])
+            (hash-set! objectives t v))
+          (loop)]
          [(list (== 'model) def ...)
-          (for/hash ([d def])
+          (for ([d def])
             (match d
-              [(list (== 'define-fun) c '() _ v) (values c v)]
-              [(list (== 'define-fun) c _ ...) (values c d)]))]
-         [other (error 'solution "expected model, given ~a" other)]))]
+              [(list (== 'define-fun) c '() _ v) (hash-set! model c v)]
+              [(list (== 'define-fun) c _ ...)   (hash-set! model c d)]))]
+         [other (error 'solution "expected model, given ~a" other)]))
+     (cons model objectives)]
     [(== 'unsat) 
      (match (read port) 
        [(list (? symbol? name) ...) name]

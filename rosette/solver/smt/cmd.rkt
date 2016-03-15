@@ -4,7 +4,7 @@
                   check-sat get-model get-unsat-core
                   read-solution true false)
          "env.rkt" "enc.rkt"
-         (only-in "../../base/core/term.rkt" constant? term-type solvable-default)
+         (only-in "../../base/core/term.rkt" constant? term-type solvable-default type-of)
          (only-in "../../base/core/function.rkt" fv function? function-domain function-range)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
@@ -62,7 +62,7 @@
 ; declared or defined in P is bound in (decls env) or (defs env), respectively.
 (define (decode env)
   (match (read-solution)
-    [(? hash? sol) 
+    [(cons (? hash? sol) (? hash? objs))
      (sat (for/hash ([(decl id) (in-dict (decls env))])
             (let ([t (term-type decl)])
               (values decl
@@ -70,13 +70,20 @@
                           (if (function? t)
                               (decode-function t (hash-ref sol id))
                               (decode-value t (hash-ref sol id)))
-                          (solvable-default t))))))]
+                          (solvable-default t)))))
+          (if (hash-empty? objs)
+              (hash)
+              (for/hash ([(obj id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
+                         #:when (hash-has-key? objs id))
+                (values obj
+                        (decode-objective (type-of obj) (hash-ref objs id))))))]                
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
                           #:when (set-member? core id)) 
                  bool)))]
     [#f (unsat)]))
+
 
 (define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
 
@@ -132,7 +139,51 @@
         (or (and (equal? p x) y)
             (and (equal? p y) x))]))))
   
+(define (decode-objective type expr)
+  (match expr
+    [(app decode-objective-value (cons val ε))
+     (if (bitvector? type)
+         (interval (bv val type) #t (bv val type) #t)
+         (cond [(zero? ε) (interval val #t val #t)]
+               [(positive? ε) (interval val #f +inf.0 #f)]
+               [else (interval -inf.0 #f val #f)]))]
+    [(list (app decode-objective-value (cons min-val minε))
+           (app decode-objective-value (cons max-val maxε)))
+     (if (bitvector? type)
+         (interval (bv min-val type) #t (bv max-val type) #t)
+         (interval min-val (zero? minε) max-val (zero? maxε)))]))
 
+(define (decode-objective-value expr)
+  (match (normalize-objective-value expr)
+    [(? real? r) (cons r 0)]
+    [(== 'epsilon) (cons 0 1)]
+    [(list (== '*) (? real? r) (== 'epsilon)) (cons 0 r)]
+    [(list (== '+) (? real? r) (== 'epsilon)) (cons r 1)]
+    [(list (== '+) (? real? r) (list (== '*) (? real? s) (== 'epsilon))) (cons r s)]
+    [_ #f]))
+
+(define (normalize-objective-value expr)
+  (match expr
+    [(or (? real?) (== 'epsilon)) expr]
+    [(== 'oo) +inf.0]
+    [(list (== 'to_real) r) r]
+    [(list (== '-) r) (- r)]
+    [(list (== '+) e0 e1)
+     (match* ((normalize-objective-value e0) (normalize-objective-value e1))
+       [((? real? r0) (? real? r1)) (+ r0 r1)]
+       [((? real? r) other) `(+ ,r ,other)]
+       [(other (? real? r)) `(+ ,r ,other)])]
+    [(list (== '*) e0 e1)
+     (match* ((normalize-objective-value e0) (normalize-objective-value e1))
+       [((? real? r0) (? real? r1)) (* r0 r1)]
+       [((? real? r) other) `(* ,r ,other)]
+       [(other (? real? r)) `(* ,r ,other)])]
+    [_ #f]))
+    
+    
+
+  
+     
 
   
 
