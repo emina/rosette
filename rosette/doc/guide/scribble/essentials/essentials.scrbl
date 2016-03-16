@@ -3,7 +3,7 @@
 @(require (for-label racket)
           (for-label  
            rosette/base/form/define ;(only-in rosette/base/core/safe assert)
-           rosette/query/query 
+           rosette/query/query (only-in rosette asserts clear-asserts!)
            (except-in rosette/query/debug false true) rosette/query/eval
            (only-in rosette/lib/synthax ??) rosette/lib/render))
 
@@ -106,12 +106,18 @@ Printed constant names, such as @symbolic{x} or @symbolic{b}, are just comments.
 
 Like many other languages, Rosette provides a construct for expressing @emph{assertions}---important properties of programs that are checked in every execution.  Rosette assertions work just like Java or Racket assertions when given a concrete value:  if the value is false, the execution terminates with a runtime error.  Otherwise, the execution proceeds normally.  
 @interaction[#:eval rosette-eval
-(assert #t) (code:comment "passes and returns void")
-(assert #f) (code:comment "fails with an exception")]
+(assert #t) 
+(assert #f)]
 
 When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, its effect (whether it passes or fails) is eventually determined by the solver.
 @interaction[#:eval rosette-eval
-(assert (not b))  (code:comment "pushes the asserted property onto the solver's worklist and returns void")]
+(code:comment "push the assertion onto the stack of assertions to be solved")
+(assert (not b))
+(code:comment "retrieve the assertion stack")
+(asserts)
+(code:comment "clear the assertion stack")
+(clear-asserts!)
+(asserts)]
 
 @(rosette-eval '(clear-asserts!))
 
@@ -237,6 +243,56 @@ Angelic execution can be used to solve puzzles, to run incomplete code, or to "i
 (evaluate (poly y) sol)]
 
 You can find more examples of angelic execution and other solver-aided queries in the @hyperlink["https://github.com/emina/rosette/blob/master/sdsl/"]{@racket[sdsl]} folder of your Rosette distribution.
+
+@(rosette-eval '(clear-asserts!))
+
+@section[#:tag "sec:notes"]{Symbolic Reasoning}
+
+Rosette implements solver-aided queries by translating them to the input language of an SMT solver.
+This translation is performed using a given @deftech[#:key "reasoning precision"]{reasoning precision}, as specified
+by the @racket[current-bitwidth] parameter.  Setting @racket[current-bitwidth]
+to a positive integer @var{k} instructs Rosette to approximate both reals and integers with @var{k}-bit words.
+Setting it to @racket[#f] instructs Rosette to use infinite precision for real and integer operations.
+
+The following snippet shows the effect of different @racket[current-bitwdth] settings on query behavior:
+@interaction[#:eval rosette-eval
+(define-symbolic x integer?)
+(current-bitwidth 5)  (code:comment "no 5-bit solution or counterexample exists")
+(solve (assert (= x 64)))
+(verify (assert (not (= x 64)))) 
+(current-bitwidth #f) (code:comment "but an integer solution and counterexample do exist")
+(solve (assert (= x 64)))
+(verify (assert (not (= x 64))))]
+
+By default, @racket[current-bitwidth] is set to 5.  Beware that using a large @var{k} or @racket[#f]
+ may have a negative effect on solver performance.  In the worst case, using @racket[#f] can cause the underlying solver to run forever.@footnote{Technically, Rosette translates solver-aided queries to the theory of bitvectors when @racket[current-bitwidth] is set to an integer @var{k}. In particular, it uses @var{k}-bit bitvectors to represent integers and reals, with smaller bitvectors leading to better performance.  When @racket[current-bitwidth] is @racket[#f], Rosette uses the theories of integers and reals instead.  These theories work well for linear constraints, but reasoning about non-linear integer arithmetic is undecidable.}
+                                                               
+Non-termination can also be caused by passing symbolic values to recursive procedures.  In particular, the expression that determines whether a recursion (or a loop) terminates must be executed on concrete values.   
+
+@(kill-evaluator rosette-eval)
+@(set! rosette-eval (rosette-evaluator '(2 #f)))
+@interaction[#:eval rosette-eval
+(code:comment "while sandboxed evaluation of (ones x) times out,")
+(code:comment "normal evaluation would not terminate")
+(define-symbolic x integer?)
+(letrec ([ones (lambda (n)
+                  (if (<= n 0)
+                      (list)
+                      (cons 1 (ones (- n 1)))))])
+  (printf "~a" (ones 3))
+  (printf "~a" (ones x)))]
+
+It is, however, safe to apply recursive procedures to symbolic values if they are not used in termination checks.  
+@interaction[#:eval rosette-eval
+(define-symbolic x integer?)
+(letrec ([adder (lambda (vs n)
+                  (if (null? vs)
+                      (list)
+                      (cons (+ (car vs) n) (adder (cdr vs) n))))])
+  (adder '(1 2 3) x))]
+
+See Chapters @seclink["ch:symbolic-reflection"]{7} and @seclink["ch:unsafe"]{8} to
+learn more about common patterns and anti-patterns for effective symbolic reasoning.
 
 @(kill-evaluator rosette-eval)
 

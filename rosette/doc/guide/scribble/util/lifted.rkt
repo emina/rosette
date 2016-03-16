@@ -27,12 +27,12 @@
     [(? symbol?) (printf "'~a" v)]
     [_  (printf "~a" v)]))
 
-(define (rosette-evaluator)
+(define (rosette-evaluator [eval-limits #f])
    (parameterize ([sandbox-output 'string]
                   [sandbox-error-output 'string]
                   [sandbox-path-permissions `((execute ,(byte-regexp #".*")))]
                   [sandbox-memory-limit #f]
-                  [sandbox-eval-limits #f]
+                  [sandbox-eval-limits eval-limits]
                   [current-print rosette-printer])
      (make-evaluator 'rosette/safe)))
 
