@@ -1,11 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label  
-           rosette/base/define rosette/query/tools rosette/query/eval rosette/solver/solution
-           rosette/base/term (only-in rosette/query/debug define/debug debug)
-           (only-in rosette/base/safe assert) 
-           (only-in rosette/base/assert asserts)
-           (only-in rosette/base/enum enum?))
+@(require (for-label rosette/base/form/define)
           (for-label racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")

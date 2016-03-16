@@ -22,7 +22,7 @@ Chapters @seclink["ch:syntactic-forms"]{3}-@seclink["ch:libraries"]{6} define th
 
 @include-section["welcome/welcome.scrbl"]
 @include-section["essentials/essentials.scrbl"]
-@;@include-section["forms/forms.scrbl"]
+@include-section["forms/forms.scrbl"]
 @;@include-section["datatypes/builtin-datatypes.scrbl"]
 @;@include-section["datatypes/defined-datatypes.scrbl"]
 @;@include-section["libs/libraries.scrbl"]
