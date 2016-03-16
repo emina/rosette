@@ -2,7 +2,7 @@
 
 (define collection 'use-pkg-name)
 
-(define deps '("base"))
+(define deps '("base" "racket"))
 (define build-deps '("scribble-lib"
                      "racket-doc"))
 (define compile-omit-paths '("sdsl"
