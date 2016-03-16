@@ -138,7 +138,7 @@ We will illustrate the queries on the following toy example, where the @racket[f
 
 @subsection[#:tag "sec:verify"]{Verification}
 
-To verify that @racket[poly] and @racket[factored] behave identically, we could simply enumerate all k-bit integers and apply the @racket[same] check to each.  This naive approach to verification would, of course, be very slow for a large k---and impossible for infinite precision integers. A better approach is to delegate such checks to a constraint solver, which can search large (or infinite) input spaces more effectively.  In Rosette, this is done with the help of the @racket[verify] query:
+To verify that @racket[poly] and @racket[factored] behave identically, we could simply enumerate all k-bit integers and apply the @racket[same] check to each.  This naive approach to verification would, of course, be very slow for a large k---and impossible for infinite precision integers. A better approach is to delegate such checks to a constraint solver, which can search large input spaces more effectively.  In Rosette, this is done with the help of the @racket[verify] query:
 @interaction[#:eval rosette-eval
 (define-symbolic i integer?)
 (define cex (verify (same poly factored i)))] 
@@ -148,8 +148,8 @@ The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{bindi
 Bindings are first-class values in Rosette, and they can be freely manipulated by programs.  We can also interpret any Rosette value with respect to a binding using the built-in @racket[evaluate] procedure:
 @interaction[#:eval rosette-eval
 (evaluate i cex) 
-(same poly factored 4)]
-In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input 4 (thus causing the assertion in the @racket[same] procedure to fail).
+(same poly factored 12)]
+In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input 12 (thus causing the assertion in the @racket[same] procedure to fail).
 
 @(rosette-eval '(clear-asserts!))
 @(rosette-eval '(require (only-in racket/draw read-bitmap)))
@@ -170,7 +170,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
 (define (same p f x)
   (assert (= (p x) (f x))))
 
-#, @elem{>} (define core (debug [integer?] (same poly factored 4)))
+#, @elem{>} (define core (debug [integer?] (same poly factored 12)))
 #, @elem{>} (render core)
 #,(call-with-input-file dbg (lambda (in) (read-bitmap in 'png)))]
 
@@ -181,13 +181,13 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
        (* x (+ x 1) (+ x 2) (+ x 2))))
 @(rosette-eval '(define (same p f x)
        (assert (= (p x) (f x)))))
-@(rosette-eval '(define core (debug [integer?] (same poly factored 4))))
+@(rosette-eval '(define core (debug [integer?] (same poly factored 12))))
 
 The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bitvector?]) types can be used in @racket[debug] forms.}
 
-The output of a @racket[debug] query is a minimal set of program expressions, called an @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
+The output of a @racket[debug] query is a minimal set of program expressions, called a @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
 
-Like bindings, cores are first-class values. In our example, we simply visualize the core using the utility procedure @racket[render].@footnote{@racket[render] can only visualize cores for code that has been saved to a file.} The visualization reveals that the grayed-out subexpression @racket[(+ x 1)] is irrelevant to the failure of @racket[factored] on the input 4.  To repair this failure, we have to modify at least one of the remaining expressions, which are highlighted in red.  
+Like bindings, cores are first-class values. In our example, we simply visualize the core using the utility procedure @racket[render].@footnote{@racket[render] can only visualize cores for code that has been saved to a file.} The visualization reveals that the grayed-out subexpression @racket[(+ x 1)] is irrelevant to the failure of @racket[factored] on the input 12.  To repair this failure, we have to modify at least one of the remaining expressions, which are highlighted in red.  
 
 @subsection[#:tag "sec:synthesize"]{Synthesis}
 

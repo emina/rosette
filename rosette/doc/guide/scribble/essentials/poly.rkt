@@ -1,6 +1,6 @@
 #lang rosette/safe
 
-(current-bitwidth #f)
+;(current-bitwidth #f)
 
 (require rosette/query/debug rosette/lib/render) 
  
@@ -19,7 +19,7 @@
 
 (evaluate i cex)
 
-(define c (debug [integer?] (same poly factored -6)))
+(define c (debug [integer?] (same poly factored 12)))
 (render c)
 
 (require rosette/lib/synthax)
