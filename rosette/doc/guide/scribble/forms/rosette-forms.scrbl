@@ -273,7 +273,7 @@ the @racket[debug] form.}
 
   Formally, when @racket[current-bitwidth] is a positive integer @racket[k],
   Rosette translates queries over reals and integers into constraints in the 
-  the @hyperlink["http://rise4fun.com/z3/tutorial"]{theory of bitvectors}
+  @hyperlink["http://rise4fun.com/z3/tutorial"]{theory of bitvectors}
   (of size @racket[k]), which can be efficiently decided by SMT solvers.
   When this form of translation is used, a @racket[solve] or @racket[verify]
   query will produce a satisfiable result if and only if there is a
