@@ -3,9 +3,11 @@
 @(require (for-label  
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
            rosette/base/core/term (only-in rosette/query/debug define/debug debug)
-           (only-in rosette/query/query current-bitwidth)
+           (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/safe assert) 
-           (only-in rosette/base/core/bool asserts clear-asserts!))
+           (only-in rosette/base/core/bool asserts clear-asserts!)
+           (only-in rosette/base/core/bitvector bv?)
+           (only-in rosette/base/core/function function?))
           (for-label racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
@@ -20,11 +22,13 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
                    rosette/query/form 
                    rosette/base/core/safe
                    rosette/base/core/bool
+                   rosette/query/finitize
                    #:use-sources 
                    (rosette/base/form/define 
                    rosette/query/form
                    rosette/base/core/safe
-                   rosette/base/core/bool)]
+                   rosette/base/core/bool
+                   rosette/query/finitize)]
 
 @section[#:tag "sec:symbolic-constants"]{Symbolic Constants}
 
@@ -157,7 +161,7 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
             maybe-assume
             #:guarantee guarantee-expr)
           #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)])
-          #:contracts [(input-expr (listof? constant?))]]{
+          #:contracts [(input-expr (listof constant?))]]{
   Searches for a binding of symbolic constants 
   to concrete values that has the following properties: 
   @itemlist[#:style 'ordered
@@ -186,6 +190,106 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 
 @section{Optimization}
 
+@defform[(optimize
+            maybe-minimize
+            maybe-maximize
+            #:guarantee guarantee-expr)
+          #:grammar ([maybe-minimize (code:line) (code:line #:minimize minimize-expr)]
+                     [maybe-maximize (code:line) (code:line #:maximize maximize-expr)])
+          #:contracts [(minimize-expr (listof (or/c integer? real? bv?)))
+                       (maximize-expr (listof (or/c integer? real? bv?)))]]{
+  Searches for a binding of symbolic constants to concrete values that satisfies all assertions encountered
+  before the invocation of @racket[optimize] and during the evaluation of @racket[minimize-expr],
+  @racket[maximize-expr], and @racket[guarantee-expr].  
+  If such a binding exists, it is returned in the form of a satisfiable @racket[solution?]; otherwise, 
+  the result is an unsatisfiable solution.  Any satisfiable solution returned by @racket[optimize] is optimal with respect
+  to the cost terms provided in the @racket[minimize-expr] and @racket[maximize-expr] lists.  Specifically, these
+  terms take on the minimum or maximum values when evaluated with respect to a satisfiable solution.  For more details on
+  solving optimization problems, see the
+  @hyperlink["http://rise4fun.com/z3opt/tutorialcontent/guide"]{Z3 optimization tutorial}.
+
+  As is the case for other solver-aided queries, the assertions encountered while 
+  evaluating @racket[minimize-expr],
+  @racket[maximize-expr], and @racket[guarantee-expr] are removed from the global @tech["assertion stack"] once
+  the query returns.  As a result, 
+  @racket[optimize] has no observable effect on the @tech["assertion stack"]. 
+  The solver's ability to find solutions (as well as their optimality) depends on the current @tech["reasoning precision"],
+  as determined by the @racket[current-bitwidth] parameter.
+  
+  @examples[#:eval rosette-eval
+  (code:line (current-bitwidth #f) (code:comment "use infinite-precision arithmetic"))
+  (define-symbolic x y integer?)
+  (assert (< x 2))
+  (code:line (asserts)   (code:comment "assertion pushed on the stack")) 
+  (define sol
+    (optimize #:maximize (list (+ x y))
+              #:guarantee (assert (< (- y x) 1))))
+  (code:line (asserts)   (code:comment "assertion stack same as before"))
+  (code:line (evaluate x sol) (code:comment "x + y is maximal at x = 1"))
+  (code:line (evaluate y sol) (code:comment "and y = 1"))]
+}
+
+@(rosette-eval '(clear-asserts!))
+@(rosette-eval '(current-bitwidth 5))
+
 @section{Debugging}
+
+@defmodule[rosette/query/debug #:use-sources (rosette/query/debug)]
+
+@defform[(define/debug head body ...)
+         #:grammar
+         ([head id (id ...)])]{
+  Defines a procedure or an expression, and marks it as a candidate for debugging.  
+  When a @racket[debug] query is applied to a failing execution, 
+  forms that are not marked in this way are considered 
+  correct.  The solver will apply the debugging algorithm only to 
+  expressions and procedures marked as potentially faulty using 
+  @racket[define/debug].
+}
+
+@defform[(debug [type ...+] expr)
+         #:contracts
+         ([type (and/c solvable? type? (not/c function?))])]{
+Searches for a minimal set of @racket[define/debug] expressions of 
+the given @tech["solvable type"](s) that are collectively responsible for the observed failure of @racket[expr]. 
+If no expressions of the specified types are relevent to the failure, an error is thrown.  The 
+returned expressions, if any, are called a minimal unsatisfiable core. The core expressions 
+are relevant to the observed failure in that preventing the failure requries modifying at least one 
+core expression. In particular, if all of the non-core expressions were replaced with 
+fresh constants created using @racket[define-symbolic*], @racket[(solve expr)] would still fail.  It 
+can only execute successfully if at least one of the core expressions is also
+replaced with a fresh constant. See the @seclink["ch:essentials"]{Essentials} chapter for example uses of
+the @racket[debug] form.}
+
+@section{Reasoning Precision}
+
+@defparam[current-bitwidth k (or/c #f positive-integer?)
+          #:value 5]{
+  A parameter that defines the current @deftech[#:key "reasoning precision"]{reasoning precision}
+  for solver-aided queries over @racket[integer?] and @racket[real?] constants.
+  Setting @racket[current-bitwidth] to a positive integer @racket[k] instructs Rosette to approximate
+  both reals and integers with @racket[k]-bit words. Setting it to @racket[#f] instructs Rosette to use
+  infinite precision for real and integer operations.
+
+  Formally, when @racket[current-bitwidth] is a positive integer @racket[k],
+  Rosette translates queries over reals and integers into constraints in the 
+  the @hyperlink["http://rise4fun.com/z3/tutorial"]{theory of bitvectors}
+  (of size @racket[k]), which can be efficiently decided by SMT solvers.
+  When this form of translation is used, a @racket[solve] or @racket[verify]
+  query will produce a satisfiable result if and only if there is a
+  solution under @racket[k]-bit semantics that is also correct under infinite-precision semantics.  
+  Rosette does not provide such a soundness guarantee for other queries (because it is 
+  computationally expensive or impossible to provide).  A @racket[synthesize] query, for example, 
+  may produce a solution that is correct under @racket[k]-bit semantics, but incorrect under
+  infinite-precision semantics. 
+
+  When  @racket[current-bitwidth] is @racket[#f], Rosette translates queries over
+  reals and integers into constraints in the @hyperlink["http://rise4fun.com/z3/tutorial"]{theories of reals and integers}. 
+  These theories are not effectively (or at all) decidable for non-linear constraints,
+  so setting  @racket[current-bitwidth] to @racket[#f] should be done by applications that emit only linear constraints.
+}
+
+ 
+
 
 @(kill-evaluator rosette-eval)

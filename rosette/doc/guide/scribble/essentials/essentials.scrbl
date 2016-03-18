@@ -249,7 +249,7 @@ You can find more examples of angelic execution and other solver-aided queries i
 @section[#:tag "sec:notes"]{Symbolic Reasoning}
 
 Rosette implements solver-aided queries by translating them to the input language of an SMT solver.
-This translation is performed using a given @deftech[#:key "reasoning precision"]{reasoning precision}, as specified
+This translation is performed using a given @tech["reasoning precision"], as specified
 by the @racket[current-bitwidth] parameter.  Setting @racket[current-bitwidth]
 to a positive integer @var{k} instructs Rosette to approximate both reals and integers with @var{k}-bit words.
 Setting it to @racket[#f] instructs Rosette to use infinite precision for real and integer operations.
