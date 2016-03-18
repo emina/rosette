@@ -26,7 +26,7 @@
      @add1 @sub1 @sgn @truncate @floor @ceiling @min @max
      @exact->inexact @inexact->exact @expt 
      ; core/bitvector.rkt
-     bv bv? bitvector bitvector-size bitvector? 
+     bv @bv? bitvector bitvector-size bitvector? 
      @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
      @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
      @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod

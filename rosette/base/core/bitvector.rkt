@@ -6,7 +6,7 @@
 (require (only-in "real.rkt" @>= @> @= @integer? T*->integer?))
 
 (provide 
- (rename-out [@bv bv]) bv? bv-value bv-type
+ (rename-out [@bv bv]) @bv? bv? bv-value bv-type
  (rename-out [@bitvector bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
@@ -130,6 +130,15 @@
   (syntax-id-rules (set!)
     [(@bv v t) (make-bv v t)]
     [@bv make-bv]))
+
+(define (@bv? v)
+  (match v
+    [(? bv?) #t]
+    [(term _ (? bitvector?)) #t]
+    [(union _ (? bitvector?)) #t]
+    [(union xs (== @any/c))
+     (apply || (for/list ([gv xs] #:when (@bv? (cdr gv))) (car gv)))]
+    [_ #f]))
 
 
 ;; ----------------- Lifitng Utilities ----------------- ;;
