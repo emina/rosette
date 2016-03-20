@@ -2,9 +2,9 @@
 
 @(require (for-label racket)
           (for-label  
-           rosette/base/form/define ;(only-in rosette/base/core/safe assert)
+           rosette/base/form/define (only-in rosette/base/core/safe assert)
            rosette/query/query (only-in rosette asserts clear-asserts!)
-           (except-in rosette/query/debug false true) rosette/query/eval
+           (except-in rosette/query/debug false true assert) rosette/query/eval
            (only-in rosette/lib/synthax ??) rosette/lib/render))
 
 @(require racket/sandbox  racket/runtime-path  
