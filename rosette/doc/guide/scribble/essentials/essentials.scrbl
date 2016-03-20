@@ -269,9 +269,8 @@ By default, @racket[current-bitwidth] is set to 5.  Beware that using a large @v
                                                                
 Non-termination can also be caused by passing symbolic values to recursive procedures.  In particular, the expression that determines whether a recursion (or a loop) terminates must be executed on concrete values.   
 
-@(kill-evaluator rosette-eval)
-@(set! rosette-eval (rosette-evaluator '(2 #f)))
-@interaction[#:eval rosette-eval
+@(define limited-rosette-eval (rosette-evaluator '(2 #f)))
+@interaction[#:eval limited-rosette-eval
 (code:comment "while sandboxed evaluation of (ones x) times out,")
 (code:comment "normal evaluation would not terminate")
 (define-symbolic x integer?)
@@ -281,6 +280,7 @@ Non-termination can also be caused by passing symbolic values to recursive proce
                       (cons 1 (ones (- n 1)))))])
   (printf "~a" (ones 3))
   (printf "~a" (ones x)))]
+@(kill-evaluator limited-rosette-eval)
 
 It is, however, safe to apply recursive procedures to symbolic values if they are not used in termination checks.  
 @interaction[#:eval rosette-eval

@@ -261,17 +261,18 @@ can only execute successfully if at least one of the core expressions is also
 replaced with a fresh constant. See the @seclink["ch:essentials"]{Essentials} chapter for example uses of
 the @racket[debug] form.}
 
-@section{Reasoning Precision}
+@section[#:tag "sec:reasoning-precision"]{Reasoning Precision}
 
 @defparam[current-bitwidth k (or/c #f positive-integer?)
           #:value 5]{
   A parameter that defines the current @deftech[#:key "reasoning precision"]{reasoning precision}
   for solver-aided queries over @racket[integer?] and @racket[real?] constants.
   Setting @racket[current-bitwidth] to a positive integer @racket[k] instructs Rosette to approximate
-  both reals and integers with @racket[k]-bit words. Setting it to @racket[#f] instructs Rosette to use
-  infinite precision for real and integer operations.
+  both reals and integers with signed @racket[k]-bit words. Setting it to @racket[#f] instructs Rosette to use
+  infinite precision for real and integer operations.  As a general rule, @racket[current-bitwidth] should
+  be set once, before any numeric operations are evaluated. 
 
-  Formally, when @racket[current-bitwidth] is a positive integer @racket[k],
+  Technically, when @racket[current-bitwidth] is a positive integer @racket[k],
   Rosette translates queries over reals and integers into constraints in the 
   @hyperlink["http://rise4fun.com/z3/tutorial"]{theory of bitvectors}
   (of size @racket[k]), which can be efficiently decided by SMT solvers.
@@ -284,9 +285,21 @@ the @racket[debug] form.}
   infinite-precision semantics. 
 
   When  @racket[current-bitwidth] is @racket[#f], Rosette translates queries over
-  reals and integers into constraints in the @hyperlink["http://rise4fun.com/z3/tutorial"]{theories of reals and integers}. 
-  These theories are not effectively (or at all) decidable for non-linear constraints,
-  so setting  @racket[current-bitwidth] to @racket[#f] should be done by applications that emit only linear constraints.
+  reals and integers into constraints in the
+  @hyperlink["http://rise4fun.com/z3/tutorial"]{theories of reals and integers}. 
+  These theories are effectively decidable only for linear constraints,
+  so most applications will perform better when @racket[current-bitwidth] is
+  set to a positive integer.
+
+  @examples[
+ #:eval rosette-eval
+ (define-symbolic x real?)
+ (current-bitwidth 5)  
+ (code:line (solve (assert (= x 3.5))) (code:comment "there is no solution under"))
+ (code:line (solve (assert (= x 64)))  (code:comment "5-bit signed integer semantics")) 
+ (current-bitwidth #f)
+ (code:line (solve (assert (= x 3.5))) (code:comment "but there is a solution under"))
+ (code:line (solve (assert (= x 64)))  (code:comment "infinite-precision semantics"))]
 }
 
  
