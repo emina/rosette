@@ -57,7 +57,7 @@
            (assert (apply || (union-guards u)) (argument-error caller (~a self) v))
            u])]
        [_ (assert #f (argument-error caller (~a self) v))]))
-   (define (type-eq? self u v)        (equal? u v))
+   (define (type-eq? self u v)        (eq? u v))
    (define (type-equal? self u v)     (equal? u v))
    (define (type-compress self force? ps) ps)
    (define (type-construct self vs)   (car vs))
@@ -86,15 +86,6 @@
   [struct-field-index λ]
   #:methods gen:typed
   [(define (get-type self) (fv-type self))]
-  #:methods gen:equal+hash
-  [(define (equal-proc u1 u2 rec=?)
-     (and (rec=? (fv-type u1) (fv-type u2))
-          (rec=? (fv-else u1) (fv-else u2))
-          (rec=? (fv-cond u1) (fv-cond u2))))
-   (define (hash-proc u1 rec-hash)
-     (rec-hash (list (fv-type u1) (fv-cond u1) (fv-else u1))))
-   (define (hash2-proc u1 rec-hash)
-     (rec-hash (list (fv-type u1) (fv-cond u1) (fv-else u1))))]
   #:methods gen:custom-write
   [(define (write-proc self port m)
      (fprintf port "(fv ~a ~a ~a)" (fv-cond self) (fv-else self) (fv-type self)))])
