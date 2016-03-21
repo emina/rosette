@@ -71,7 +71,7 @@
   #:methods gen:custom-write
   [(define (write-proc self port m)
      (match-define (function dom ran) self)
-     (for ([t dom]) (fprintf port "~a~>" t))
+     (for ([t dom]) (fprintf port "~a~a" t "~>"))
      (fprintf port "~a" ran))])
 
 (define ~>
