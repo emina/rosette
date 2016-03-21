@@ -72,7 +72,7 @@
      @insert @replace
      ; adt/vector.rkt : Basic Functions
      @vector? @vector @vector-immutable 
-     @vector-length @vector-ref @vector-set! @vector->list @vector->immutable-vector 
+     @vector-length @vector-ref @vector-set! @vector->list @list->vector @vector->immutable-vector 
      @vector-fill! @vector-copy! 
      ; adt/vector.rkt : Additional Vector Functions
      @vector-append

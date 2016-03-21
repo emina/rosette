@@ -1,9 +1,9 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/define rosette/query/tools rosette/query/eval  
-           rosette/base/term rosette/base/primitive
-           (only-in rosette/base/safe assert) 
+           rosette/base/form/define rosette/query/query 
+           rosette/base/core/term  
+           (only-in rosette/base/core/safe assert) 
            racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
@@ -26,9 +26,9 @@ symbolic indices, respectively. Access time for symbolic vectors is given with
 respect to the longest possible concrete array to which any symbolic vector 
 could @racket[evaluate] under any @racket[solution?]. 
 
-Like @seclink["sec:pair"]{pairs and lists}, immutable vectors are values:  two such vectors are @racket[eq?] if 
-they have the same length and @racket[eq?] contents.  Mutable vectors are references 
-rather than values, and two mutable vectors are @racket[eq?] if and only if they 
+Like @seclink["sec:pair"]{pairs and lists}, immutable vectors are transparent immutable values:
+two such vectors are @racket[eq?] if they have the same length and @racket[eq?] contents.
+Mutable vectors are references rather than values, and two mutable vectors are @racket[eq?] if and only if they 
 point to the same array object.  Two vectors (regardless of mutability) are @racket[equal?] 
 if they have the same length and @racket[equal?] contents.
 
@@ -44,7 +44,7 @@ if they have the same length and @racket[equal?] contents.
 ]
 
 @examples[#:eval rosette-eval
-(define-symbolic x y z n number?)
+(define-symbolic x y z n integer?)
 (code:line (define xs (take (list x y z) n))        (code:comment "xs is a symbolic list"))
 (code:line (define vs (list->vector xs))            (code:comment "vs is a symbolic vector"))
 (define sol (solve (assert (= 4 (vector-ref vs (sub1 n))))))
