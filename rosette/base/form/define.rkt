@@ -1,16 +1,14 @@
 #lang racket
  
 (require (for-syntax racket)
-         "../util/array.rkt" "../core/term.rkt" "../core/function.rkt" "state.rkt")
+         "../util/array.rkt" "../core/term.rkt" "state.rkt")
 
 (provide define-symbolic define-symbolic*)
 
 #|--------------define forms--------------|#
 
 (define-syntax (define-symbolic stx)
-  (syntax-case stx (->)
-    [(_ fun (-> dom0 dom ... ran))
-     (syntax/loc stx (define-symbolic fun (function (list dom0 dom ...) ran)))]
+  (syntax-case stx ()
     [(_ var type)
      (identifier? #'var)
      (syntax/loc stx (define var (constant #'var type)))]
@@ -22,9 +20,7 @@
      (syntax/loc stx (define-values (v ...) (values (constant #'v type) ...)))]))
 
 (define-syntax (define-symbolic* stx)
-  (syntax-case stx (->)
-    [(_ fun (-> dom0 dom ... ran))
-     (syntax/loc stx (define-symbolic* fun (function (list dom0 dom ...) ran)))]
+  (syntax-case stx ()
     [(_ [var oracle] type)
      (identifier? #'var)
      (syntax/loc stx (define var (constant (list #'var (oracle #'var)) type)))]

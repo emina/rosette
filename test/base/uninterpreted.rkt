@@ -15,13 +15,13 @@
     (check = (apply impl (car p)) (cdr p))))
 
 (define (check-not)
-  (define-symbolic ¬ (-> boolean? boolean?))
+  (define-symbolic ¬ (~> boolean? boolean?))
   (define sol (solve (assert (equal? (¬ #t) #f))
                      (assert (equal? (¬ #f) #t))))
   (check-equivalent (sol ¬) !))
 
 (define (check-and)
-  (define-symbolic ∧ (-> boolean? boolean? boolean?))
+  (define-symbolic ∧ (~> boolean? boolean? boolean?))
   (define sol
     (solve (assert (equal? (∧ #t #t) #t))
            (assert (equal? (∧ #t #f) #f))
@@ -30,7 +30,7 @@
   (check-equivalent (sol ∧) &&))
 
 (define (check-boolean-mixed)
-  (define-symbolic ∧ (-> boolean? boolean? boolean?))
+  (define-symbolic ∧ (~> boolean? boolean? boolean?))
   (define-symbolic a b boolean?)
   (define sol
     (solve (assert (equal? a #t))
@@ -42,14 +42,14 @@
   (check-equivalent (sol ∧) &&))
   
 (define (check-bvnot)
-  (define-symbolic ~ (-> (bitvector 4) (bitvector 4)))
+  (define-symbolic ~ (~> (bitvector 4) (bitvector 4)))
   (define sol
     (solve (for ([i (in-range -8 8)])
              (assert (equal? (~ (bv i 4)) (bvnot (bv i 4)))))))
   (check-equivalent (sol ~) bvnot))
 
 (define (check-bvadd)
-  (define-symbolic ⊕ (-> (bitvector 4) (bitvector 4) (bitvector 4)))
+  (define-symbolic ⊕ (~> (bitvector 4) (bitvector 4) (bitvector 4)))
   (define sol
     (solve (for* ([i (in-range -8 8)][j (in-range -8 8)])
              (assert (equal? (⊕ (bv i 4) (bv j 4)) (bvadd (bv i 4) (bv j 4)))))))
@@ -68,7 +68,7 @@
 
 ; Basic tests for UFs over integers and reals.
 (define (check-int-real)
-  (define-symbolic ⊕ (-> integer? integer? real?))
+  (define-symbolic ⊕ (~> integer? integer? real?))
   (define-symbolic x integer?)
   (define sol (solve (assert (= x 1))
                      (assert (= (⊕ x 1) (+ x 1)))
@@ -77,7 +77,7 @@
   (test-equivalent (sol ⊕) '(((1 1) . 2) ((2 1) . 3) ((2 3) . 6))))
 
 (define (check-int-real-no-finite-solution)
-  (define-symbolic f (-> boolean? real?))
+  (define-symbolic f (~> boolean? real?))
   (check-pred unsat? (solve (assert (= (f #f) .5)))))
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
@@ -90,9 +90,9 @@
   (define-symbolic a boolean?)
   (define-symbolic b integer?)
   (define-symbolic c real?)
-  (define-symbolic f (-> boolean? boolean?))
-  (define-symbolic g (-> integer? integer?))
-  (define-symbolic h (-> real? real?))
+  (define-symbolic f (~> boolean? boolean?))
+  (define-symbolic g (~> integer? integer?))
+  (define-symbolic h (~> real? real?))
   (check-exn #px"boolean\\?" (thunk (f 3)))
   (check-exn #px"boolean\\?" (thunk (f b)))
   (check-exn #px"boolean\\?" (thunk (f (if a b c))))

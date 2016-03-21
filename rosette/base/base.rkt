@@ -4,7 +4,8 @@
 (require 
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide 
-  "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" 
+  "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt"
+  "core/function.rkt"
   "core/procedure.rkt" "core/equality.rkt" "core/reflect.rkt" 
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
@@ -32,6 +33,8 @@
      @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
      @concat @extract @sign-extend @zero-extend 
      @integer->bitvector @bitvector->integer @bitvector->natural
+     ; core/function.rkt
+     @fv? ~> function?
      ; core/equality.rkt
      @eq? @equal?
      ; core/reflect.rkt

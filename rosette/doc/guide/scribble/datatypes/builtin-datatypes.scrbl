@@ -18,7 +18,7 @@ Rosette distinguishes between two kinds of built-in datatypes:
 @deftech[#:key "solvable type"]{solvable} and @deftech[#:key "unsolvable type"]{unsolvable}.
 Solvable types are (efficiently) supported by SMT solvers, and they include booleans,
 integers, reals, bitvectors, and uninterpreted functions.  All other built-in types are
-unsolvable---that is, not efficiently supported by SMT solvers.   
+unsolvable---that is, not as well supported by SMT solvers.   
 
 Every lifted type is equipped with a predicate (e.g., @racket[boolean?]) that
 recognizes values of that type.  Solvable types are themselves recognized by
@@ -30,6 +30,7 @@ as introduced by @seclink["sec:symbolic-constants"]{@code{define-symbolic[*]}}.
 @(table-of-contents)
 @include-section["bools+ints+reals.scrbl"]
 @include-section["bitvectors.scrbl"]
+@include-section["uninterpreted.scrbl"]
 @;include-section["equality.scrbl"]
 @;include-section["pairs.scrbl"]
 @;include-section["vectors.scrbl"]

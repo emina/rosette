@@ -1,11 +1,11 @@
 #lang racket
 
 (require racket/generic
-         "type.rkt" "bool.rkt" "safe.rkt" "union.rkt"  "equality.rkt"  "merge.rkt"
+         "term.rkt" "bool.rkt" "safe.rkt" "union.rkt"  "equality.rkt"  "merge.rkt"
          (only-in "procedure.rkt" @procedure?))
 
-(provide (rename-out [fv-stx fv]) fv? fv-cond fv-else fv-type
-         function function? function-domain function-range)
+(provide (rename-out [fv-stx fv]) @fv? fv? fv-cond fv-else fv-type
+         ~> function function? function-domain function-range)
 
 #|-----------------------------------------------------------------------------------|#
 ; A function type is a solvable applicable type.  That is, it implements the solvable?
@@ -71,8 +71,14 @@
   #:methods gen:custom-write
   [(define (write-proc self port m)
      (match-define (function dom ran) self)
-     (for ([t dom]) (fprintf port "~a->" t))
+     (for ([t dom]) (fprintf port "~a~>" t))
      (fprintf port "~a" ran))])
+
+(define ~>
+  (case-lambda
+    [(d r) (function (list d) r)]
+    [(d0 d1 r) (function (list d0 d1) r)]
+    [(d0 d1 d2 . rest) (function `(,d0 ,d1 ,(drop-right rest 1)) (last rest))]))
 
 ; Represents a function value.
 (struct fv (cond else type λ)
@@ -112,3 +118,11 @@
     [(_ ios o type) (make-fv ios o type)]
     [_ make-fv])) 
 
+(define (@fv? v)
+  (match v
+    [(? fv?) #t]
+    [(term _ (? function?)) #t]
+    [(union _ (? function?)) #t]
+    [(union xs (or (== @procedure?) (== @any/c)))
+     (apply || (for/list ([gv xs] #:when (@fv? (cdr gv))) (car gv)))]
+    [_ #f]))
