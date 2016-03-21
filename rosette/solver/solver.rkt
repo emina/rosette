@@ -28,7 +28,7 @@
 ; 
 ; The solver-debug procedure searches for an unsatisfiable core for the current 
 ; set of constraints.  It throws an error if these constraints are 
-; satisfiable.  The server-localize procedure will only perform localization on  
+; satisfiable.  The solver-dbug procedure will only core perform extraction on  
 ; constraints that were added to the solver _after_ the most recent call to 
 ; solver-check (if any).  All constraints added prior to that call are ignored.
 ; 

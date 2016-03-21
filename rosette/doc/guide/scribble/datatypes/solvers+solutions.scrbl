@@ -1,12 +1,12 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/solver/solver rosette/solver/solution rosette/query/state
-           rosette/solver/kodkod/kodkod (only-in rosette/query/debug debug)
-           rosette/solver/smt/z3 rosette/solver/smt/cvc4
-           rosette/base/define rosette/query/tools rosette/query/eval rosette/solver/solution
-           rosette/base/term (only-in rosette/base/num current-bitwidth) rosette/base/primitive
-           (only-in rosette/base/safe assert) 
+           rosette/solver/solver rosette/solver/solution 
+           (only-in rosette/query/debug debug)
+           rosette/solver/smt/z3 
+           rosette/base/form/define rosette/query/query rosette/query/core
+           rosette/base/core/term (only-in rosette/base/base bv?)
+           (only-in rosette/base/core/safe assert) 
            racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
@@ -16,15 +16,17 @@
 
 @title[#:tag "sec:solvers-and-solutions"]{Solvers and Solutions}
 
-@declare-exporting[rosette/query/eval
+@declare-exporting[rosette/query/core
+                   rosette/query/eval
                    rosette/solver/solver
-                   rosette/solver/solution 
-                   rosette/query/state    
-                   rosette/solver/kodkod/kodkod 
-                   rosette/solver/smt/z3    
-                   rosette/solver/smt/cvc4
+                   rosette/solver/solution
+                   rosette/solver/smt/z3                   
                    #:use-sources 
-                   (rosette/query/eval rosette/solver/solver rosette/solver/solution rosette/query/state rosette/solver/kodkod/kodkod rosette/solver/smt/z3 rosette/solver/smt/cvc4)]
+                   (rosette/query/finitize
+                    rosette/query/eval
+                    rosette/solver/solver
+                    rosette/solver/solution
+                    rosette/solver/smt/z3)]
 
 A @deftech{solver} is an automatic reasoning engine, used to answer 
 @seclink["sec:queries"]{queries} about Rosette programs.  The result of
@@ -34,66 +36,79 @@ an @tech[#:key "MUC"]{unsatisfiable core}.
 Solvers and solutions may not be symbolic.  Two solvers (resp. solutions) are @racket[eq?]/@racket[equal?] 
 if they refer to the same object.
 
-@section{The Solver Interface and Classes}
+@section{The Solver Interface}
 
-
-@defparam[current-solver solver (is-a?/c solver<%>)]{
+@defparam[current-solver solver solver?]{
   The @racket[current-solver] parameter holds the solver object used for 
-  answering solver-aided queries.  If a query requires creation of additional 
-  temporary solvers, they all have the same @racket[class?] as the @racket[current-solver].
-  Supported solvers include @racket[kodkod%] and, if  
-  @seclink["sec:get"]{installed}, @racket[z3%] and @racket[cvc4%].
+  answering solver-aided queries.  Rosette's default solver is @racket[z3], although
+  new (SMT) solvers can be added well.  Rosette will work with any solver that implements the
+  @racket[gen:solver] generic interface.
   @examples[#:eval rosette-eval
-   (eval:alts (current-solver) (display (current-solver)))
-   (require rosette/solver/smt/z3 rosette/solver/smt/cvc4 (only-in racket new))
-   (code:line (current-solver (new z3%)) (code:comment "change the current solver"))
-   (eval:alts (current-solver) (display (current-solver)))
-   (code:line (current-solver (new cvc4%)) (code:comment "change it again"))
    (eval:alts (current-solver) (display (current-solver)))]
 }
 
-@(rosette-eval '(require rosette/solver/kodkod/kodkod))
-@(rosette-eval '(current-solver (new kodkod%)))
+@defthing[gen:solver solver?]{
+  A @hyperlink["https://docs.racket-lang.org/reference/struct-generics.html"]{generic interface}
+  that specifies the procedures provided by a solver.  These include
+  @racket[solver-assert],
+  @racket[solver-clear],
+  @racket[solver-minimize],
+  @racket[solver-maximize],
+  @racket[solver-check],
+  @racket[solver-debug], and
+  @racket[solver-shutdown].
+  Solvers are stateful.  Each solver contains the constraints that have been added to it
+  via @racket[solver-assert], and the numeric objective terms that have been added to it
+  via @racket[solver-minimize] and @racket[solver-maximize]. 
+}
 
-@definterface[solver<%> ()  
-@elem{The solver interface specifies basic operations for 
-      posing and answering questions about the satisfiability of a set of 
-      formulas, expressed as (symbolic) boolean values.  As a general rule,
-      Rosette programs should not invoke these operations directly.  The recommended
-      way to access the solver is by posing @seclink["sec:queries"]{solver-aided queries}.}
-@defmethod[(assert [formula boolean?]...) void?]{
-Adds the given formulas to the solver's worklist.}
-@defmethod[(clear) void?]{
-Clears the solver's worklist.}
-@defmethod[(solve) solution?]{
-Searches for a binding from symbolic constants to concrete values that 
-satisfies all assertions in the solver's worklist.  If such a binding---or, a @racket[model]---exists, 
-it is returned in the form of a satisfiable (@racket[sat?]) solution.  Otherwise, 
-an unsatisfiable (@racket[unsat?]) solution is returned, but without 
-computing an unsatisfiable core.  A solution with a core can be obtained by calling 
-@racket[debug] on @(this-obj). }
-@defmethod[(debug) solution?]{
-Searches for a minimal unsatisfiable core of the assertions in the solver's worklist.  
-If the worklist assertions are satisfiable, or @(this-obj) does 
+@defproc[(solver? [v any/c]) boolean?]{
+Returns true if @racket[v] is a concrete value that implements the @racket[gen:solver] interface.}
+
+@defproc[(solver-assert [solver solver?] [constraints (listof boolean?)]) void?]{
+Adds the given constraints to the given solver. These constraints take the form of boolean terms
+to be satisfied by subsequent calls to @racket[solver-check].}                                                                                   
+
+@defproc[(solver-clear [solver solver?]) void?]{
+Clears all constraints from the given solver.}
+
+@defproc*[([(solver-minimize [solver solver?] [objs (listof (or/c integer? real? bv?))]) void?]
+           [(solver-maximize [solver solver?] [objs (listof (or/c integer? real? bv?))]) void?])]{
+Adds the given optimization objectives to the given solver. These objectives take the form of
+numeric terms whose value is to be minimized or maximized by subsequent calls to @racket[solver-check],
+while satisfying all the boolean terms asserted via @racket[solver-assert].}  
+
+@defproc[(solver-check [solver solver?]) solution?]{
+Searches for a binding from symbolic constants to concrete values that satisfies the 
+constraints (boolean terms) added to the solver via @racket[solver-assert].
+If such a binding---or, a @racket[model]---exists, 
+it is returned in the form of a satisfiable (@racket[sat?]) solution, which optimizes
+the objective terms added to the solver via @racket[solver-minimize] and @racket[solver-maximize].
+Otherwise, an unsatisfiable (@racket[unsat?]) solution is returned, but without 
+computing an unsatisfiable @racket[core] (i.e., calling @racket[core] on the
+resulting solution produces @racket[#f]).
+}
+
+@defproc[(solver-debug [solver solver?]) solution?]{
+Searches for an unsatisfiable core of the constraints (boolean terms)
+added to the solver via @racket[solver-assert] @emph{after} the most recent call to 
+@racket[clear] or @racket[solver-check] (if any).
+If the constraints are satisfiable, or the given solver does 
 not support core extraction, an error is thrown.  Otherwise, the result is an 
-@racket[unsat?] solution with a minimal @racket[core].}                              
-]
+@racket[unsat?] solution with a unsatisfiable @racket[core], expressed as a
+list of boolean terms.   
+}
 
-@defmodule[#:multi (rosette/solver/kodkod/kodkod) #:no-declare #:use-sources (rosette/solver/kodkod/kodkod)] 
-@defclass[kodkod%  object% (solver<%>)  
-@elem{A Rosette front-end to the @hyperlink["http://alloy.mit.edu/kodkod/"]{Kodkod} solver.  This solver supports
-minimal core extraction.}]
+@defproc[(solver-shutdown [solver solver?]) void?]{
+Terminates the current solving process (if any), 
+clears all added constraints, and releases all system resources associated 
+with the given solver instance.  The solver must be able to reacquire these resources 
+if needed.  That is, the solver should behave as though its state was merely cleared
+(via @racket[solver-clear]) after a shutdown call.  
+}
 
-@defmodule[#:multi (rosette/solver/smt/z3) #:no-declare #:use-sources (rosette/solver/smt/z3)] 
-@defclass[z3%  object% (solver<%>)  
-@elem{A Rosette front-end to the @hyperlink["http://z3.codeplex.com"]{Z3} solver from Microsoft.
-This solver does not support minimal core extraction.}]
-
-@defmodule[#:multi (rosette/solver/smt/cvc4) #:no-declare #:use-sources (rosette/solver/smt/cvc4)] 
-@defclass[cvc4%  object% (solver<%>)  
-@elem{A Rosette front-end to the @hyperlink["http://cvc4.cs.nyu.edu/web/"]{CVC4} solver from NYU.
-This solver does not support minimal core extraction.}]
-
+@defproc[(z3) solver?]{
+Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.}
 
 @section{Satisfiable and Unsatisfiable Solutions}
 
@@ -108,52 +123,51 @@ the value itself.
 A solution supports the following operations:
 
 @defproc[(solution? [value any/c]) boolean?]{
-Returns true iff the given @racket[value] is a solution.}
+Returns true if the given @racket[value] is a solution.}
 
 @defproc[(sat? [solution solution?]) boolean?]{
-Returns true iff the given @racket[solution] is satisfiable.}
+Returns true if the given @racket[solution] is satisfiable.}
 
 @defproc[(unsat? [solution solution?]) boolean?]{
-Returns true iff the given @racket[solution] is unsatisfiable.}
+Returns true if the given @racket[solution] is unsatisfiable.}
 
-@defproc[(sat [binding (hash/c constant? any/c #:immutable #t)]) solution?]{
+@defproc*[([(sat) solution?]
+           [(sat [binding (hash/c constant? any/c #:immutable #t)]) solution?])]{
 Returns a satisfiable solution that holds the given binding from symbolic 
-constants to values.  The provided hashmap must bind every symbolic constant 
-in its keyset to a concrete value of the same type.
+constants to values, or that holds the empty binding.  The provided hash must
+bind every symbolic constant in its keyset to a concrete value of the same type.
 }
 
 @defproc*[([(unsat) solution?]
-           [(unsat [a-core (listof boolean?)]) solution?])]{
-Returns an unsatisfiable solution.  If @racket[a-core] is provided, 
-it must be a list of boolean values that are collectively unsatisfiable.  
-Otherwise, the @racket[core] of the produced solution is 
-set to #f, to indicate that there is no satisfying solution but
+           [(unsat [constraints (listof boolean?)]) solution?])]{
+Returns an unsatisfiable solution.  The @racket[constraints] list, if provided, 
+consist of boolean values that are collectively unsatisfiable.  If no constraints
+are provided, applying @racket[core] to the resulting solution produces @racket[#f],   
+indicating that there is no satisfying solution but
 core extraction was not performed.  (Core extraction is an expensive 
 operation that is not supported by all solvers; those that do support it 
-usually don't compute a core unless explicitly asked for one.)}
+usually don't compute a core unless explicitly asked for one via @racket[solver-debug].)}
 
-@defproc[(empty-solution) solution?]{
-Returns a satisfiable solution with an empty binding as a @racket[model].}
-
-@defproc[(model [solution solution?]) (or/c (hash/c constant? any/c #:immutable #t) #f)]{
-Returns the binding stored in the given solution.  If the solution is 
-@racket[sat?], the binding is an immutable hashmap from symbolic constants 
-to values.  Otherwise, the binding is @racket[#f].
+@defproc[(model [solution (and/c sat? solution?)]) (hash/c constant? any/c #:immutable #t)]{
+Returns the binding stored in the given satisfiable solution.  The binding is an immutable
+hashmap from symbolic constants to values.  Applying @racket[model] to an @racket[unsat?] solution
+results in an error. 
 }
 
-@defproc[(core [solution solution?]) (or/c (listof (and/c constant? boolean?)) #f)]{
-Returns unsatisfiable core stored in the given solution.  If the solution is 
+@defproc[(core [solution (and/c unsat? solution?)]) (or/c (listof (and/c constant? boolean?)) #f)]{
+Returns the unsatisfiable core stored in the given satisfiable solution.  If the solution is 
 @racket[unsat?] and a core was computed, the result is a list of boolean values that 
-are collectively unsatisfiable.  Otherwise, the result is @racket[#f].
+are collectively unsatisfiable.  Otherwise, the result is @racket[#f]. Applying @racket[core] to
+a @racket[sat?] solution results in an error. 
 }
 
-@defproc[(evaluate [value any/c] [solution (and/c solution? sat?)]) any/c]{
+@defproc[(evaluate [v any/c] [solution (and/c solution? sat?)]) any/c]{
 Given a Rosette value and a satisfiable solution, @racket[evaluate] produces a 
-new value obtained by replacing every symbolic constant @var[c] in @racket[value] 
+new value obtained by replacing every symbolic constant @var[c] in @racket[v] 
 with @racket[(solution #, @var[c])] and simplifying the result.
 @examples[#:eval rosette-eval                
 (define-symbolic a b boolean?)
-(define-symbolic x y number?)
+(define-symbolic x y integer?)
 (define sol 
   (solve (begin (assert a)
                 (assert (= x 1))
@@ -165,8 +179,7 @@ with @racket[(solution #, @var[c])] and simplifying the result.
 (code:line (eq? v (evaluate v sol)) (code:comment "evaluation produces a new vector"))
 (evaluate (+ x y) sol)
 (evaluate (and a b) sol) 
-]
-}
+]}
 
 @(kill-evaluator rosette-eval)
  
