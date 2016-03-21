@@ -1,9 +1,9 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/define rosette/query/tools rosette/query/eval  
-           rosette/base/term rosette/base/primitive
-           (only-in rosette/base/safe assert) 
+           rosette/base/form/define rosette/query/query  
+           rosette/base/core/term  
+           (only-in rosette/base/core/safe assert) 
            racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
@@ -23,19 +23,19 @@
 
 A pair combines two values, and a list is either the 
 constant @racket[null] or a pair whose second 
-element is a list.  Pairs and lists are immutable, and they may 
+element is a list.  Pairs and lists are transparent immutable values, and they may 
 be concrete or symbolic.  
-Two pairs are @racket[eq?] (resp. @racket[equal?])
+Two pairs or two lists are @racket[eq?] (resp. @racket[equal?])
 if their corresponding elements are @racket[eq?] (resp. @racket[equal?]).
 
-As values of @tech[#:key "composite datatype"]{composite datatypes}, symbolic pairs 
+As values of @tech[#:key "unsolvable type"]{unsolvable types}, symbolic pairs 
 and lists cannot be created 
-via @seclink["sec:symbolic-constants-and-assertions"]{@code{define-symbolic[*]}}. 
+via @seclink["sec:symbolic-constants"]{@code{define-symbolic[*]}}. 
 Instead, they are created by applying pair- or list-producing procedures to symbolic inputs, 
 or by controlling the application of such procedures with symbolic values.  This   
- pattern for creating non-primitive symbolic values generalizes to all non-primitive datatypes.
+ pattern for creating non-primitive symbolic values generalizes to all unsolvable datatypes.
 @examples[#:eval rosette-eval
-(define-symbolic x y z n number?)
+(define-symbolic x y z n integer?)
 (code:line (define xs (take (list x y z) n))        (code:comment "(1) xs is a symbolic list"))
 (define sol (solve (assert (null? xs))))
 (evaluate xs sol)
