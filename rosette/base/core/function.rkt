@@ -78,7 +78,7 @@
   (case-lambda
     [(d r) (function (list d) r)]
     [(d0 d1 r) (function (list d0 d1) r)]
-    [(d0 d1 d2 . rest) (function `(,d0 ,d1 ,(drop-right rest 1)) (last rest))]))
+    [(d0 d1 . rest) (function `(,d0 ,d1 ,@(drop-right rest 1)) (last rest))]))
 
 ; Represents a function value.
 (struct fv (cond else type λ)
