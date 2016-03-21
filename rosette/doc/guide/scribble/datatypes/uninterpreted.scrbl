@@ -4,7 +4,8 @@
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
            rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/union union?)
-           (only-in rosette/base/base bv bitvector ~> function? fv?)
+           (only-in rosette/base/core/function ~> function? fv?)
+           (only-in rosette/base/base bv bitvector)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts))
           (for-label racket)
