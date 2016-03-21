@@ -18,7 +18,7 @@
 
 @declare-exporting[rosette/base/base #:use-sources (rosette/base/core/function)]
 
-In Rosette, functions are special kinds of procedures that are pure
+In Rosette, functions are special kinds of @seclink["sec:proc"]{procedures} that are pure
 (have no side effects) and total (defined on every input value).
 A function type is recognized by the @racket[function?] predicate, and all
 function types are @tech[#:key "solvable type"]{solvable}.  The type of a
