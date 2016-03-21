@@ -4,6 +4,7 @@
           (for-label  
            rosette/base/form/define (only-in rosette/base/core/safe assert)
            rosette/query/query (only-in rosette asserts clear-asserts!)
+           (only-in rosette/base/base bv?)
            (except-in rosette/query/debug false true assert) rosette/query/eval
            (only-in rosette/lib/synthax ??) rosette/lib/render))
 
@@ -189,7 +190,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
        (assert (= (p x) (f x)))))
 @(rosette-eval '(define core (debug [integer?] (same poly factored 12))))
 
-The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bitvector?]) types can be used in @racket[debug] forms.}
+The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bv?]) types can be used in @racket[debug] forms.}
 
 The output of a @racket[debug] query is a minimal set of program expressions, called a @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
 
