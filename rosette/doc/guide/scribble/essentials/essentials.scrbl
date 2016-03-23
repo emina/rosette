@@ -9,7 +9,7 @@
            (only-in rosette/lib/synthax ??) rosette/lib/render))
 
 @(require racket/sandbox  racket/runtime-path  
-          scribble/eval scriblib/footnote 
+          scribble/eval scribble/html-properties ;scriblib/footnote 
           (only-in racket [unsyntax racket/unsyntax])
           (only-in racket/draw read-bitmap))
 
@@ -26,7 +26,22 @@
 
 
 @(rosette-eval '(require (only-in racket hash)))
-@(define-footnote footnote footnote-part)
+@(define seen '())
+@(define (footnote . xs)
+   (define ord (add1 (length seen)))
+   (define mark (superscript (format "~a" ord)))
+   (define t (format "footnote~a" ord))
+   (set! seen (cons (apply elemtag t mark xs) seen))
+   (elemref t mark))
+@(define (footnote-part)
+   (let ([ts (reverse seen)])
+     (if (null? ts)
+         null
+         (cons (para #:style (style #f (list (attributes '((class . "footnoteblock")))))
+                     (car ts))
+               (map para (cdr ts))))))
+   
+@;(define-footnote footnote footnote-part)
 
 @title[#:tag "ch:essentials"]{Rosette Essentials}
 
@@ -39,9 +54,10 @@ formulate queries about these behaviors.
 
 This chapter illustrates the basics of solver-aided programming with a 
 few simple examples. More advanced tutorials, featuring extended examples, can be found 
-in Section 2 of @~cite[rosette:onward13 rosette:pldi14].@footnote{The code examples in these
-references are written in Rosette 1.0.  While Rosette 2.0 is 
-not backward compatible with Rosette 1.0, the key concepts remain the same.} 
+in Section 2 of @~cite[rosette:onward13 rosette:pldi14].@footnote{Code examples in  
+these references are written in Rosette 1.0.
+While Rosette 2.0 is not backward compatible with Rosette 1.0,
+they share the same conceptual core.} 
 
 The following chapters describe the subset 
 of Racket that can be @seclink["sec:langs"]{safely} used with solver-aided facilities, including the 
@@ -296,5 +312,6 @@ See Chapters @seclink["ch:symbolic-reflection"]{7} and @seclink["ch:unsafe"]{8} 
 learn more about common patterns and anti-patterns for effective symbolic reasoning.
 
 @(kill-evaluator rosette-eval)
+
 
 @(footnote-part)
