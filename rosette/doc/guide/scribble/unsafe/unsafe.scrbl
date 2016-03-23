@@ -1,9 +1,9 @@
 #lang scribble/manual
 
 @(require (for-label racket) scribble/core scribble/eval)
-@(require (for-label rosette/base/define rosette/query/tools rosette/query/eval rosette/solver/solution
-                     rosette/base/term (only-in rosette/query/debug define/debug debug)
-                     (only-in rosette/base/safe assert) ))
+@(require (for-label rosette/base/form/define rosette/query/query rosette/solver/solution
+                     rosette/base/core/term (only-in rosette/query/debug define/debug debug)
+                     (only-in rosette/base/core/safe assert) ))
 @(require (only-in "../refs.scrbl" ~cite rosette:pldi14))
 @(require "../util/lifted.rkt")
 
@@ -40,7 +40,8 @@ perform in order to assign the expected meaning to Rosette code:
     (vector-set! y 2 4))
 
 (code:comment "The state of y correctly accounts for both possibilities:")
-(code:comment " * If the solver finds that b must be #t, then the contents of y will be #(0 3 2).")
+(code:comment " * If the solver finds that b must be #t, then the contents")
+(code:comment "   of y will be #(0 3 2).")
 (code:comment " * Otherwise, the contents of y will be #(0 1 4)")
 
 y
@@ -51,7 +52,7 @@ y
 (define env2 (solve (assert (not b))))
 (evaluate y env2)]
 
-Because the SVM only controls the execution of @racket[rosette/safe] code, 
+Because the SVM controls only the execution of @racket[rosette/safe] code, 
 it cannot, in general, guarantee the safety or correctness of arbitrary @racket[rosette] programs. 
 As soon as a @racket[rosette] program calls an @tech[#:key "lifted construct"]{unlifted} Racket construct  
 (that is, a procedure or a macro not implemented in or provided by the @racket[rosette/safe] language), 
@@ -68,7 +69,7 @@ Whenever they are invoked, the execution escapes to the Racket interpreter.
 @defs+int[#:eval rosette-eval
 
 [(define h (make-hash '((1 . 2))))
-(define-symbolic key number?)
+(define-symbolic key integer?)
 (define-symbolic b boolean?)]
 
 
