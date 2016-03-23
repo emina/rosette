@@ -128,11 +128,11 @@ Like many other languages, Rosette provides a construct for expressing @emph{ass
 
 When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, its effect (whether it passes or fails) is eventually determined by the solver.
 @interaction[#:eval rosette-eval
-(code:comment "push the assertion onto the stack of assertions to be solved")
+(code:comment "add (not b) to the stack of assertions to be solved")
 (assert (not b))
-(code:comment "retrieve the assertion stack")
+(code:comment "retrieve the assertion store")
 (asserts)
-(code:comment "clear the assertion stack")
+(code:comment "clear the assertion store")
 (clear-asserts!)
 (asserts)]
 

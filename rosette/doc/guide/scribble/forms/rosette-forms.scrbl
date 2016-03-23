@@ -70,35 +70,25 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
          [(expr (or/c string? procedure?))]]{
   Provides a mechanism for communicating desired
   program properties to the underlying solver.  Rosette keeps track of all
-  assertions evaluated during an execution via an @deftech[#:key "assertion stack"]{assertion stack}. 
+  assertions evaluated during an execution in an @tech{assertion store}. 
   If @racket[expr] evaluates to @racket[#f], an error is thrown using the 
-  optional failure message, and @racket[#f] is pushed onto the assertion stack.  The error message
+  optional failure message, and @racket[#f] is added to the assertion store.  The error message
   can be either a string or a no-argument procedure that throws an error when called.
-  If @racket[expr] evaluates to a symbolic boolean value, that value is pushed onto the assertion stack.
+  If @racket[expr] evaluates to a symbolic boolean value, that value is added to the assertion store.
   If @racket[expr] evaluates to any other value, @racket[assert] has no effect.  The contents
-  of the assertion stack can be examined using the @racket[asserts] procedure, and it can be
+  of the assertion store can be examined using the @racket[asserts] procedure, and they can be
   cleared using the @racket[clear-asserts!] procedure. 
   @examples[#:eval rosette-eval
   (code:line (assert #t) (code:comment "no effect"))
   (code:line (assert 1)  (code:comment "no effect"))
-  (code:line (asserts)   (code:comment "retrieve the assertion stack"))  
+  (code:line (asserts)   (code:comment "retrieve the assertion store"))  
   (define-symbolic x boolean?)
   (assert x)
-  (code:line (asserts)   (code:comment "x pushed onto the assertion stack"))  
+  (code:line (asserts)   (code:comment "x added to the assertion store"))  
   (assert #f "bad value")
   (asserts) 
-  (code:line (clear-asserts!)   (code:comment "clear the assertion stack"))
+  (code:line (clear-asserts!)   (code:comment "clear the assertion store"))
   (asserts)]
-}
-
-@defproc[(asserts) (listof boolean?)]{
- Returns the contents of the @tech["assertion stack"] as a list of symbolic
- boolean values (or @racket[#f]) that have been asserted so far. See the @racket[assert] form for examples.                                        
-}
-
-@defproc[(clear-asserts!) void?]{
- Clears the @tech["assertion stack"] from all symbolic
- boolean values (or @racket[#f]) that have been asserted so far. See the @racket[assert] form for examples.                         
 }
 
 @section{Angelic Execution}
@@ -108,16 +98,16 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   before the invocation of @racket[solve] and during the evaluation of @racket[expr]. 
   If such a binding exists, it is returned in the form of a satisfiable @racket[solution?]; otherwise, 
   the result is an unsatisfiable solution.  The assertions encountered while 
-  evaluating @racket[expr] are removed from the global @tech["assertion stack"] once @racket[solve] returns.  As a result, 
-  @racket[solve] has no observable effect on the @tech["assertion stack"]. 
+  evaluating @racket[expr] are removed from the global @tech["assertion store"] once @racket[solve] returns.  As a result, 
+  @racket[solve] has no observable effect on the @tech["assertion store"]. 
   The solver's ability to find solutions depends on the current @tech["reasoning precision"], as
   determined by the @racket[current-bitwidth] parameter.
   @examples[#:eval rosette-eval
   (define-symbolic x y boolean?)
   (assert x)
-  (code:line (asserts)   (code:comment "x pushed onto the assertion stack"))  
+  (code:line (asserts)   (code:comment "x added to the assertion store"))  
   (define sol (solve (assert y)))
-  (code:line (asserts)   (code:comment "assertion stack same as before")) 
+  (code:line (asserts)   (code:comment "assertion store same as before")) 
   (code:line (evaluate x sol) (code:comment "x must be true"))
   (code:line (evaluate y sol) (code:comment "y must be true"))
   (solve (assert (not x)))]
@@ -137,16 +127,16 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   assertions encountered before the invocation of @racket[verify] and during the evaluation of 
   @racket[assume-expr]. If such a binding exists, it is returned in the form of a
   satisfiable @racket[solution?]; otherwise, the result is an unsatisfiable solution.  The assertions encountered while 
-  evaluating @racket[assume-expr] and @racket[guarantee-expr] are removed from the global @tech["assertion stack"] once 
+  evaluating @racket[assume-expr] and @racket[guarantee-expr] are removed from the global @tech["assertion store"] once 
   @racket[verify] returns.   
   The solver's ability to find solutions depends on the current @tech["reasoning precision"], as
   determined by the @racket[current-bitwidth] parameter.
   @examples[#:eval rosette-eval
   (define-symbolic x y boolean?)
   (assert x)
-  (code:line (asserts)   (code:comment "x pushed onto the assertion stack")) 
+  (code:line (asserts)   (code:comment "x added to the assertion store")) 
   (define sol (verify (assert y)))
-  (code:line (asserts)   (code:comment "assertion stack same as before")) 
+  (code:line (asserts)   (code:comment "assertion store same as before")) 
   (code:line (evaluate x sol) (code:comment "x must be true"))
   (code:line (evaluate y sol) (code:comment "y must be false"))
   (verify #:assume (assert y) #:guarantee (assert (and x y)))]
@@ -171,17 +161,17 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   the assertions encountered before the invocation of @racket[synthesize] and during the evaluation of 
   @racket[assume-expr].}] 
   If no such binding exists, the result is an unsatisfiable @racket[solution?].  The assertions encountered while 
-  evaluating @racket[assume-expr] and @racket[guarantee-expr] are removed from the global @tech["assertion stack"] once 
+  evaluating @racket[assume-expr] and @racket[guarantee-expr] are removed from the global @tech["assertion store"] once 
   @racket[synthesize] returns.  The solver's ability to find solutions depends on the current @tech["reasoning precision"],
   as determined by the @racket[current-bitwidth] parameter.
   @examples[#:eval rosette-eval
   (define-symbolic x c integer?)
   (assert (even? x))
-  (code:line (asserts)   (code:comment "assertion pushed on the stack")) 
+  (code:line (asserts)   (code:comment "assertion pushed on the store")) 
   (define sol 
     (synthesize #:forall (list x) 
                 #:guarantee (assert (odd? (+ x c)))))
-  (code:line (asserts)   (code:comment "assertion stack same as before")) 
+  (code:line (asserts)   (code:comment "assertion store same as before")) 
   (code:line (evaluate x sol) (code:comment "x is unbound")) 
   (code:line (evaluate c sol) (code:comment "c must an odd integer"))]
 }
@@ -210,9 +200,9 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 
   As is the case for other solver-aided queries, the assertions encountered while 
   evaluating @racket[minimize-expr],
-  @racket[maximize-expr], and @racket[guarantee-expr] are removed from the global @tech["assertion stack"] once
+  @racket[maximize-expr], and @racket[guarantee-expr] are removed from the global @tech["assertion store"] once
   the query returns.  As a result, 
-  @racket[optimize] has no observable effect on the @tech["assertion stack"]. 
+  @racket[optimize] has no observable effect on the @tech["assertion store"]. 
   The solver's ability to find solutions (as well as their optimality) depends on the current @tech["reasoning precision"],
   as determined by the @racket[current-bitwidth] parameter.
   
@@ -220,11 +210,11 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   (code:line (current-bitwidth #f) (code:comment "use infinite-precision arithmetic"))
   (define-symbolic x y integer?)
   (assert (< x 2))
-  (code:line (asserts)   (code:comment "assertion pushed on the stack")) 
+  (code:line (asserts)   (code:comment "assertion added to the store")) 
   (define sol
     (optimize #:maximize (list (+ x y))
               #:guarantee (assert (< (- y x) 1))))
-  (code:line (asserts)   (code:comment "assertion stack same as before"))
+  (code:line (asserts)   (code:comment "assertion store same as before"))
   (code:line (evaluate x sol) (code:comment "x + y is maximal at x = 1"))
   (code:line (evaluate y sol) (code:comment "and y = 1"))]
 }
