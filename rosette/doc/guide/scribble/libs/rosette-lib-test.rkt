@@ -1,17 +1,16 @@
 #lang rosette
 
-(require rosette/lib/meta/meta)
+(require rosette/lib/synthax)
 
-(define (div2 x) ([choose >> >>> << + - *] x (??)))
-(define-symbolic i number?)
+(define (div2 x) ([choose bvshl bvashr bvlshr bvadd bvsub bvmul] x (?? (bitvector 8))))
+(define-symbolic i (bitvector 8))
 (define m1
  (synthesize #:forall (list i)
-             #:assume (assert (>= i 0))
-             #:guarantee (assert (= (div2 i) (quotient i 2)))))
+             #:guarantee (assert (equal? (div2 i) (bvsdiv i (bv 2 8))))))
 (print-forms m1)
-(generate-expressions m1)
 (generate-forms m1)
 
+#|
 (define-synthax [shift terminal ... k]
   #:assert (>= k 0)
   [choose
@@ -25,4 +24,4 @@
  (synthesize #:forall (list i)
              #:assume (assert (>= i 0))
              #:guarantee (assert (= (div2mul4 i) (* 4 (quotient i 2))))))
-(print-forms m2)
+(print-forms m2)|#

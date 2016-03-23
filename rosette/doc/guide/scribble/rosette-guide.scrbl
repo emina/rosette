@@ -28,7 +28,7 @@ Chapters @seclink["ch:syntactic-forms"]{3}-@seclink["ch:libraries"]{6} define th
 @include-section["forms/forms.scrbl"]
 @include-section["datatypes/builtin-datatypes.scrbl"]
 @include-section["datatypes/defined-datatypes.scrbl"]
-@;@include-section["libs/libraries.scrbl"]
+@include-section["libs/libraries.scrbl"]
 @;@include-section["reflection/symbolic-reflection.scrbl"]
 @;@include-section["unsafe/unsafe.scrbl"]
 

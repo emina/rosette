@@ -61,8 +61,8 @@
   (eval (syntax->datum stx) (make-base-namespace)))
      
 ; Defines a macro that introduces a new kind of hole in Rosette.
-; Recursive holes are defined with the #:depth keyword, specifying
-; the base and recursive case.  Plain holes can specify any number of 
+; Recursive holes are defined with the #:base and #:else keywords, specifying
+; the base and recursive case, respectively.  Plain holes can specify any number of 
 ; patterns, the same way as would be done for syntax-rules.  The 
 ; optional id-gen procedure takes as input an invocation of the id 
 ; macro and a solution, and produces the resulting syntax, based on 

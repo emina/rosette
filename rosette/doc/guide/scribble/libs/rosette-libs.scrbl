@@ -1,15 +1,13 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/define rosette/solver/solution rosette/query/tools rosette/query/eval 
-           rosette/base/term rosette/base/enum 
-           (except-in rosette/query/debug false true)
-           (only-in rosette/lib/meta/constructs ?? choose define-synthax)
-           (only-in rosette/lib/meta/generate generate-expressions generate-forms)
-           (only-in rosette/lib/meta/display print-expressions print-forms)
-           (only-in rosette/base/base << >> >>>)
-           (only-in rosette/base/safe assert) 
-           rosette/lib/tools/render
+           rosette/base/form/define rosette/solver/solution rosette/query/query rosette/query/eval 
+           rosette/base/core/term 
+           (except-in rosette/query/debug assert false true)
+           (only-in rosette/lib/synthax ?? choose define-synthax generate-forms print-forms)
+           (only-in rosette/base/core/safe assert)
+           (only-in rosette/base/base function? bitvector bvshl bvashr bvlshr bvadd bvsub bvmul)
+           rosette/lib/render
            racket (only-in pict pict?))
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
@@ -17,40 +15,63 @@
 
 @(define rosette-eval (rosette-evaluator))
 
-
-
 @title[#:tag "sec:rosette-libs"]{Solver-Aided Libraries}
 
 In principle, solver-aided programming requires only symbolic values and the basic constructs described in Chapter @seclink["ch:syntactic-forms:rosette"]{3}.  In practice, however, it is often convenient to work with richer constructs, which are built on top of these primitives.  Rosette ships with two libraries that provide such constructs, as well as utility procedures for turning the results of synthesis and debugging queries into code.
 
+
 @section{Synthesis Library}
 
-@defmodule[rosette/lib/meta/meta #:use-sources (rosette/lib/meta/constructs rosette/lib/meta/generate rosette/lib/meta/display)]
+@defmodule[rosette/lib/synthax #:use-sources (rosette/lib/synthax/core rosette/lib/synthax/form)]
 
-@defform[(??)]{
-Introduces an integer @tech{hole} into a program---a placeholder for a concrete integer constant. 
+@(rosette-eval '(require rosette/lib/synthax))
+@defform[(?? maybe-type)
+         #:grammar [(maybe-type (code:line)
+                                type-expr)]
+         #:contracts ([type-expr (and/c solvable? type? (not/c function?))])                                  
+         ]{
+Introduces a @tech{hole} into a program---a placeholder for a concrete constant of the given type.
+The default type for holes, if one is not provided, is @racket[integer?]. 
 Chapter @seclink["sec:synthesize"]{2.3.3} shows an example of using integer holes to @tech{sketch}
 a factored polynomial function, which is then completed with the help of a @racket[synthesize]  query.  
-The @racket[(??)] construct @seclink["sec:symbolic-constants-and-assertions"]{creates} 
-and returns a fresh symbolic constant of type @racket[number?].                
+The @racket[(??)] construct @seclink["sec:symbolic-constants"]{creates} 
+and returns a fresh symbolic constant of type @racket[type-expr] (or @racket[integer?]).                
 }
 
-@(rosette-eval '(require rosette/lib/meta/meta))
 @defform[(choose expr ...+)]{
 Introduces a choice @tech{hole} into a program---a placeholder to be filled with one of the given expressions. 
 This construct defines @var[n]-1 fresh boolean constants and uses them to conditionally select one of the @var[n] 
 provided expressions.    
 @examples[#:eval rosette-eval
-(define (div2 x) ([choose >> >>> << + - *] x (??)))
-(define-symbolic i number?)
+(define (div2 x)
+  ([choose bvshl bvashr bvlshr bvadd bvsub bvmul] x (?? (bitvector 8))))
+(define-symbolic i (bitvector 8))
 (eval:alts
 (print-forms 
  (synthesize #:forall (list i)
-             #:assume (assert (>= i 0))
-             #:guarantee (assert (= (div2 i) (quotient i 2)))))
-'(define (div2 x) (>> x 1)))
-] 
+             #:guarantee (assert (equal? (div2 i) (bvudiv i (bv 2 8))))))
+'(define (div2 x) (bvlshr x (bv 1 8))))] 
 }
+
+@defform*[((define-synthax id
+             ([pattern hole-expr] ...+))
+           (define-synthax (id p0 ... k)
+             #:base base-hole-expr
+             #:else else-hole-expr))]{
+Defines a grammar of expressions that can be used to 
+fill holes of the form @racket[(id e ...)].  That is, writing 
+@racket[(id expr ...)] introduces a @tech{hole} that is to 
+be filled with an expression from the @racket[id] grammar.
+The @racket[(define-synthax id ([pattern expr] ...+))] form
+works like Racket's @racket[syntax-rules] macro: it replaces
+an expression @racket[(id expr ...)] that matches a given
+@racket[pattern]  to an expansion that uses parts of the original syntax that match parts of the pattern.
+
+}
+
+@;{
+
+
 
 @defform[(define-synthax (id arg ...) maybe-guard body)
          #:grammar 
@@ -141,7 +162,7 @@ In the following example, @racket[generate-forms] returns a list that associates
 }
 
 @section{Debugging Library}
-@defmodule[rosette/lib/tools/render #:use-sources (rosette/lib/tools/render)]
+@defmodule[rosette/lib/render #:use-sources (rosette/lib/render)]
 
 @defproc[(render [solution solution?] [font-size natural/c 16]) pict?]{
 Given an unsatisfiable @racket[solution?] to a @racket[debug]  query, returns a 
@@ -150,6 +171,6 @@ debugged code, highlighting the faulty expressions (i.e., those in the @racket[s
 The optional @racket[font-size] parameter controls the size of the font used to typeset the code. 
 Visualizations can only be constructed for programs that have been saved to disk.  
 See Chapter @seclink["sec:debug"]{2.3.2} for an example of using @racket[render].
-}
+}}
 
 @(kill-evaluator rosette-eval)
