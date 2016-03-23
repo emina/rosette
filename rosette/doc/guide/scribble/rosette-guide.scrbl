@@ -1,10 +1,13 @@
 #lang scribble/manual
 
-@(require (for-label racket) (only-in racket match) scribble/core scribble/html-properties)
+@(require (for-label racket) (only-in racket match)
+           racket/runtime-path (only-in racket build-path)
+           scribble/core scribble/html-properties)
 
+@(define-runtime-path guide.css "util/guide.css")
 @(define guide-style
      (make-style "GuideStyle"
-                 (list (make-css-addition "util/guide.css"))))
+                 (list (make-css-addition guide.css))))
 
 @title[#:style guide-style]{The Rosette Guide}
 @author{Emina Torlak}

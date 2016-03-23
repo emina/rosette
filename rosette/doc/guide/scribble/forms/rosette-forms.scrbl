@@ -6,7 +6,7 @@
            (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts clear-asserts!)
-           (only-in rosette/base/core/bitvector bv?)
+           (only-in rosette/base/base bv?)
            (only-in rosette/base/core/function function?))
           (for-label racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
