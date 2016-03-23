@@ -38,7 +38,7 @@
      ; core/equality.rkt
      @eq? @equal?
      ; core/reflect.rkt
-     symbolics type? type-of type-cast for/all for*/all
+     symbolics type? solvable? type-of type-cast for/all for*/all
      term? constant? expression? 
      term expression constant term-type
      term=? term->datum clear-terms! term-cache

@@ -3,7 +3,7 @@
 (require (only-in "forall.rkt" for/all for*/all) 
          "term.rkt" "union.rkt")
 
-(provide type? type-of type-cast for/all for*/all
+(provide type? solvable? type-of type-cast for/all for*/all
          term? constant? expression? 
          term expression constant
          term-type term=? 
