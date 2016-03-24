@@ -2,26 +2,26 @@
 .container {
   width: 600px; }
 
-body.index li {
- list-style-position: inside;
+
+body.index div.row li {
+    list-style-position: inside;
     text-indent: -1em;
     padding-left: 1em;
 }
 
+img.logo {
+    width: 2.6rem;
+}
+
 .header {
   margin-top: 6rem; 
-  
   margin-bottom: 0rem;
   text-align: center; }
 
 .navbar {
   display: none; }
 
-/* Larger than phone */
-@media (min-width: 550px) {
-  .header {
-    margin-top: 6rem; }
-}
+
 
 a {
     text-decoration: none;
@@ -33,10 +33,9 @@ a {
     border-top: 1px solid #eee;
     font-size: 1.2rem;  
     
-}    
+}
 
-/* Larger than tablet */
-@media (min-width: 750px) {
+@media (min-width: 400px) {
   /* Navbar */
   .navbar  {
     border-top-width: 0; }

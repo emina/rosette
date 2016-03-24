@@ -2,7 +2,7 @@
 title: The Rosette Language
 ---
 
-## About {#about}
+## About <img src="images/rosette-gray.png" alt="Rosette" class="logo"> 
 
 Rosette is a solver-aided programming language that extends
 [Racket](http://racket-lang.org/) with language constructs for program
