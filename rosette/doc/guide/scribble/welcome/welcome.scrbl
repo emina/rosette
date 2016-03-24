@@ -20,19 +20,12 @@ The name "Rosette" refers both to the language and the whole system.
 
 @section[#:tag "sec:get"]{Installing Rosette}
 
-Rosette is built on top of Racket, and it ships with a Java-based solver. 
 To install Rosette, you will need to
 
 @itemlist[@item{Download and install @hyperlink["http://racket-lang.org"]{Racket} (version 6.4).}
-           @item{Obtain the Rosette source code from GitHub:
-                 @nested{
-                         @verbatim|{> git clone https://github.com/emina/rosette.git}|}}
            @item{Use Racket's @tt{raco} tool to install Rosette:
                  @nested{
-                         @verbatim|{> cd rosette
-                                    > git submodule init
-                                    > git submodule update
-                                    > raco pkg install ./rosette}|}}]
+                         @verbatim|{> raco pkg install rosette}|}}]
 
 @section[#:tag "sec:run"]{Interacting with Rosette}
 

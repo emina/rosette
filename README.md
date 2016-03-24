@@ -1,12 +1,24 @@
 The Rosette Language
 ====================
 
-[![Build Status](https://travis-ci.org/emina/rosette.svg?branch=refactor-ops)](https://travis-ci.org/emina/rosette)
+[![Build Status](https://travis-ci.org/emina/rosette.svg?branch=master)](https://travis-ci.org/emina/rosette)
 
 This repository includes the source code for the Rosette solver-aided host language, as well as several example
 solver-aided DSLs.
 
 ## Installing Rosette
+
+The easiest way to install Rosette is from Racket's package manager:
+
+* Download and install Racket 6.4 from http://racket-lang.org
+
+* Use Racket's `raco` tool to install Rosette:
+
+  `$ raco pkg install rosette`   
+
+### Installing from source
+
+Alternatively, you can install Rosette from source:
 
 * Download and install Racket 6.4 from http://racket-lang.org
 
@@ -14,22 +26,16 @@ solver-aided DSLs.
 
   `$ git clone https://github.com/emina/rosette.git`
 
+* Uninstall any previous versions of Rosette:
+
+  `$ raco pkg remove rosette`
+  
 * Use Racket's `raco` tool to install Rosette as one of your Racket collections:
 
   `$ cd rosette`  
   `$ raco link rosette`  
   `$ raco setup -l rosette`  
-
-* Create a `bin` subdirectory in the `rosette` directory:
-
-	`$ mkdir bin`  
-	`$ ls`  
-	`bin doc rosette sdsl test LICENSE README.md`
-	
-* Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  
-
-* Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
-
+  
 ## Executing Rosette programs
 
 * Open the target program in DrRacket (e.g., [`rosette/sdsl/fsm/demo.rkt`](https://github.com/emina/rosette/blob/master/sdsl/fsm/demo.rkt))
@@ -71,3 +77,7 @@ solver-aided DSLs.
   
 [1]: http://emina.github.io/rosette/doc/rosette-guide/index.html
 [2]: http://dl.acm.org/citation.cfm?id=2594340
+
+
+  
+  
