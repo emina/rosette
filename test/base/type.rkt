@@ -1,28 +1,11 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
-         rosette/base/type
-         rosette/base/equality 
-         rosette/base/term
-         rosette/base/procedure
-         rosette/base/bool
-         rosette/base/box
-         rosette/base/num 
-         rosette/base/enum
-         rosette/base/list
-         rosette/base/vector
-         rosette/base/struct
-         rosette/base/any
-         rosette/base/merge
-         (only-in rosette/base/define define-symbolic))
-
-(define-symbolic x @number?)
-(define-symbolic y @number?)
-(define-symbolic z @number?)
-
-(define-symbolic a @boolean?)
-(define-symbolic b @boolean?)
-(define-symbolic c @boolean?)
+(require rackunit rackunit/text-ui rosette/lib/roseunit
+         rosette/base/core/term
+         rosette/base/core/procedure
+         rosette/base/adt/list
+         rosette/base/struct/struct
+         (only-in rosette/base/form/define define-symbolic))
 
 ; transparent immutable structs 
 (struct i0 (x) #:transparent)
@@ -54,20 +37,19 @@
 (struct m1 p2 ([m #:mutable]))
 (struct m2 i0 (m) #:mutable #:transparent)
 
-; enums
-(define-enum e (list 1 #t #f 4 identity "foo" 'bar))
+(define types (map lifted-type (list boolean? integer? real? list? pair? procedure? vector? box?)))
 
 (define (least-common-supertype-tests)
   (for ([t types])
     (check-eq? (least-common-supertype t t) t)
-    (check-eq? (least-common-supertype t @any?) @any?))
-  (check-eq? (least-common-supertype @list? @pair?) @pair?)
-  (check-eq? (least-common-supertype @procedure? @pair?) @any?)
+    (check-eq? (least-common-supertype t @any/c) @any/c))
+  (check-eq? (least-common-supertype @list? @pair?) @any/c)
+  (check-eq? (least-common-supertype @procedure? @pair?) @any/c)
   (check-eq? (least-common-supertype p1? p2?) @procedure?)
   (check-eq? (least-common-supertype p1? p0?) p0?)
   (check-eq? (least-common-supertype p1? p3?) p0?)
   (check-eq? (least-common-supertype h1? h2?) h0?)
-  (check-eq? (least-common-supertype h1? p1?) @any?)
+  (check-eq? (least-common-supertype h1? p1?) @any/c)
   )
 
 (define (subtype?-tests)
@@ -78,21 +60,18 @@
          (check-false (subtype? r t)))]
       [_ (void)]))
   (for ([t types]) 
-    (check-true (subtype? t @any?)))
-  (check-true (subtype? @list? @pair?))
-  (check-true (subtype? i0? @any?))
+    (check-true (subtype? t @any/c)))
+  (check-false (subtype? @list? @pair?))
+  (check-true (subtype? i0? @any/c))
   (check-true (subtype? p1? @procedure?))
-  (check-true (subtype? e? e?))
-  (check-true (subtype? e? @any?))
   (check-true (subtype? i0? i0?))
   (check-true (subtype? i1? i0?))
   (check-true (subtype? i2? i0?))
   (check-true (subtype? i2? i1?)))
 
 (define type-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for rosette types"
-   #:before (lambda () (printf "Testing rosette types\n"))
    (least-common-supertype-tests)
    (subtype?-tests)))
 

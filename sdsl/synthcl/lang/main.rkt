@@ -1,11 +1,9 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax "typecheck.rkt" "types.rkt" 
                      (only-in rosette in-dict dict-keys)
                      (only-in "sugar.rkt" desugar)
                      (only-in "env.rkt" bind current-env [env make-env]))
-         (only-in rosette/solver/smt/z3 z3%)
-         (only-in rosette/lib/meta/meta choose)
          "types.rkt" "operators.rkt" "forms.rkt" "queries.rkt"
          "builtins.rkt" "sugar.rkt")
 

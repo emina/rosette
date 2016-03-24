@@ -1,6 +1,6 @@
-#lang s-exp rosette
+#lang rosette
 
-(require rosette/lib/reflect/match "value.rkt" "instruction.rkt")
+(require rosette/lib/match "value.rkt" "instruction.rkt")
 
 (provide machine machine? halted? halted∩low? init all
          LOC step push peek pop pop-until read write goto next 
@@ -26,13 +26,13 @@
 ; 0@⊥, an empty stack, and a memory with M cells set to 0@⊥.  The default 
 ; value for M is 2. 
 ; (-> (listof instruction?) machine?)
-; (-> (listof instruction?) number? machine?)
+; (-> (listof instruction?) integer? machine?)
 (define (init program [M 2])
   (machine 0@⊥ '() (make-list M 0@⊥) program))
 
 ; Returns a fresh machine initialized with the given program, an arbitrary
 ; pc, an arbitrary stack of depth S, and an arbitrary memory with M cells. 
-; (-> (listof instruction?) number? number? machine?)
+; (-> (listof instruction?) integer? integer? machine?)
 (define (all program S M)
   (machine (@ (?int) (?label)) 
            (for/list ([i S]) (if (?bool) 
@@ -58,14 +58,14 @@
 ; Returns the ith value from the top of the machine's stack, without removing it,
 ; where the default value for i is 0.
 ; (-> machine? value?)
-; (-> machine? number? value?)
+; (-> machine? integer? value?)
 (define (peek m [i 0]) 
   (list-ref (machine-stack m) i))
 
 ; Functionally inserts the given value at the ith slot in the machine's stack, 
 ; where the default value for i is 0.
 ; (-> machine? value? machine?)
-; (-> machine? number? value? machine?)
+; (-> machine? integer? value? machine?)
 (define push
   (case-lambda 
     [(m v)   (struct-copy machine m [stack (cons v (machine-stack m))])]
@@ -73,7 +73,7 @@
 
 ; Functionally removes k values from the top of the machine's stack, where 
 ; the default value for k is 1.
-; (-> machine? number? machine?)
+; (-> machine? integer? machine?)
 ; (-> machine? machine?)
 (define (pop m [k 1])
   (struct-copy machine m [stack (drop (machine-stack m) k)]))
@@ -86,12 +86,12 @@
   (struct-copy machine m [stack (memf pred (machine-stack m))]))
 
 ; Returns the value at the given address in the machine's memory.
-; (-> machine? number? value?)
+; (-> machine? integer? value?)
 (define (read m idx)    
   (list-ref (machine-mem m) idx))
 
 ; Functionally stores the given value at the given index in the machine's memory.
-; (-> machine? number? value? machine?)
+; (-> machine? integer? value? machine?)
 (define (write m idx v) 
   (struct-copy machine m [mem (replace (machine-mem m) idx v)]))
 
@@ -108,7 +108,7 @@
 ; Executes k steps of the machine, returning the resulting machine, where the 
 ; default value for k is 1.
 ; (-> machine? machine?)
-; (-> machine? number? machine?)
+; (-> machine? integer? machine?)
 (define (step m [k 1])
   ;(printf "step ~a, stack ~a\n" k (machine-stack m))
   (cond [(or (= k 0) (halted? m)) m]

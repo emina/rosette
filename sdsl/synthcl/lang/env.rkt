@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require syntax/id-table "types.rkt" "builtins.rkt")
 

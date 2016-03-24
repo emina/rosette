@@ -1,9 +1,13 @@
 #lang racket
 
 (require racket/syntax 
-         (only-in "smtlib2.rkt" Int Bool BitVec declare-const define-const assert [< Int<] [<= Int<=]) 
-         "../../base/term.rkt" 
-         "../../base/bool.rkt" "../../base/num.rkt" "../../base/enum.rkt")
+         (only-in "smtlib2.rkt" Int Real Bool BitVec
+                  declare-const declare-fun define-const assert
+                  [< smt/<] [<= smt/<=]) 
+         "../../base/core/term.rkt" 
+         (only-in "../../base/core/bool.rkt" @boolean?)
+         (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size)
+         (only-in "../../base/core/real.rkt" @integer? @real?))
 
 (provide (rename-out [make-env env] 
                      [env-decls decls]
@@ -33,12 +37,13 @@
 
 (define (smt-id base n) (format-symbol "~a~a" base n))
 
-(define (smt-type val)
-  (match (type-of val)
+(define (smt-type t)
+  (match t
     [(== @boolean?) Bool]
-    [(== @number?) (BitVec (current-bitwidth))]
-    [(? enum?) Int]
-    [t (error 'smt-type "expected a type that is translatable to SMTLIB, given ~a" t)]))
+    [(== @integer?) Int]
+    [(== @real?) Real]
+    [(? bitvector? t) (BitVec (bitvector-size t))]
+    [_ (error 'smt-type "expected primitive-solvable? type, given ~a" t)]))
 
 ; The ref! macro retrieves the SMT encoding for 
 ; the given Rosette value from the given environment. 
@@ -70,11 +75,11 @@
     [(_ env val) 
      (let ([decls (env-decls env)]
            [v val])
-       (or (dict-ref decls v #f)
-           (let ([id (smt-id 'c (dict-count decls))])
+       (or (dict-ref decls v #f)         
+           (let ([id (smt-id 'c (dict-count decls))]
+                 [t (term-type v)])
              (dict-set! decls v id)
-             (declare-const id (smt-type v))
-             (assert-invariant id v)
+             (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
              id)))]
     [(_ env val enc)
      (let ([defs (env-defs env)]
@@ -83,12 +88,6 @@
            (match enc 
              [(? pair? e) (let ([id (smt-id 'e (dict-count defs))])
                             (dict-set! defs v id)
-                            (define-const id (smt-type v) e)
+                            (define-const id (smt-type (type-of v)) e)
                             id)]
              [e e])))]))
-
-(define (assert-invariant id v)
-  (let ([t (type-of v)]) 
-    (when (enum? t) 
-      (assert (Int<= 0 id))
-      (assert (Int< id (enum-size t))))))

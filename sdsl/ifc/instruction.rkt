@@ -1,6 +1,6 @@
-#lang s-exp rosette
+#lang rosette
 
-(require rosette/lib/reflect/match rosette/lib/tools/angelic "value.rkt")
+(require rosette/lib/match rosette/lib/angelic "value.rkt")
 
 (provide program instruction
          (rename-out [inst? instruction?]
@@ -53,16 +53,16 @@
     [(instruction proc arg ...) (make-inst proc arg ...)]
     [instruction                make-inst]))
 
-; Returns a list of fresh symbolic instructions. If given a list of k 
-; procedures, the output list contains k instructions such that the ith 
+; Returns thunk that prodcues a list of fresh symbolic instructions. If given a list of k 
+; procedures, the thunk's output list contains k instructions such that the ith 
 ; instruction wraps the ith procedure.  If given an integer LOC and a list
-; of procedures procs, the output list contains LOC instructions such 
+; of procedures procs, the thunk's output list contains LOC instructions such 
 ; that the ith instruction wraps any of the procedures in procs. 
 (define program
   (case-lambda 
-    [(procs)     (map instruction procs)]
-    [(LOC procs) (for/list ([i LOC])
-                   (instruction (apply choose* procs)))])) 
+    [(procs)     (thunk (map instruction procs))]
+    [(LOC procs) (thunk (for/list ([i LOC])
+                          (instruction (apply choose* procs))))])) 
  
 
 

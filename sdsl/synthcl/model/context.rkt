@@ -1,6 +1,6 @@
-#lang s-exp rosette
+#lang rosette
 
-(require "memory.rkt" rosette/lib/reflect/match)
+(require "memory.rkt" rosette/lib/match)
 
 (provide clCreateContext context? 
          context-global-memory current-context)

@@ -1,24 +1,20 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
+(require rackunit rackunit/text-ui rosette/lib/roseunit
          racket/fixnum
-         rosette/base/term
-         rosette/base/list
-         rosette/base/bool
-         rosette/base/num
-         rosette/base/any
-         rosette/base/merge
-         rosette/base/union
-         (only-in rosette/base/define define-symbolic)
+         rosette/base/core/term
+         rosette/base/adt/list
+         rosette/base/core/bool
+         rosette/base/core/real
+         rosette/base/core/merge
+         rosette/base/core/union
+         (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
-(define-symbolic x @number?)
-(define-symbolic y @number?)
-(define-symbolic z @number?)
+(define-symbolic x y z @integer?)
 
-(define-symbolic a @boolean?)
-(define-symbolic b @boolean?)
-(define-symbolic c @boolean?)
+(define-symbolic a b c @boolean?)
+
 
 (define l0 (merge a (list 1 2 3) (list 4 5 6)))
 (define l1 (merge b (list 1) (list 2 3 4 5)))
@@ -99,9 +95,8 @@
  
 
 (define list-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for rosette/base/list.rkt"
-   #:before (lambda () (printf "Testing rosette/base/list.rkt\n"))
    
    (check-null?)
    (check-cons)

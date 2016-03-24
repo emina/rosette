@@ -1,31 +1,45 @@
 #lang racket
 
-(require (for-syntax racket/syntax) 
-         racket/stxparam 
-         "../lib/util/syntax-properties.rkt"  
-         "../base/define.rkt" "../base/assert.rkt" "state.rkt" "../base/state.rkt" 
-         "../solver/solver.rkt" "../solver/solution.rkt" 
-         "../base/equality.rkt" "../base/term.rkt")
+(require (for-syntax racket/syntax) racket/stxparam 
+         (only-in "core.rkt" current-solver ∃-debug eval/asserts)
+         "../lib/util/syntax-properties.rkt"
+         (only-in "../base/form/app.rkt" app)
+         "../base/core/bool.rkt"  "../base/form/state.rkt" 
+         "../base/core/equality.rkt" "../base/core/term.rkt")
 
-(provide relax? relate relaxer? relaxed-by debug define/debug protect true false)
+(provide relax? relate debug-origin debug define/debug protect assert true false)
 
 (define-syntax debug
   (syntax-rules ()
     [(debug form) 
      (parameterize ([current-oracle (oracle)])
-       (let ([asserts (with-asserts-only form)])
-         (send/apply (current-solver) assert asserts)
-         (let ([sol (send/handle-breaks (current-solver) debug)])
-           (send (current-solver) clear)
-           (unless (unsat? sol)
-             (error 'debug "found a solution instead of a minimal core: ~a" sol))
-           sol)))]
+       (∃-debug (eval/asserts (thunk form))))]
     [(debug [pred other ...] form)
      (parameterize ([relax? (list pred other ...)])
        (debug form))]))
 
 (define-syntax-rule (define/debug head body ...) 
-  (define head (syntax-parameterize ([relax relax/assert]) body ...)))
+  (define head
+    (syntax-parameterize
+     ([app app-track])
+     body ...)))
+
+(define-syntax (assert stx)
+  (syntax-case stx ()
+    [(_ expr) (syntax/loc stx (@assert (protect expr) #f))]
+    [(_ expr msg) (syntax/loc stx (@assert (protect expr) (protect msg)))]))
+
+
+(define-for-syntax (app-track stx)
+  (syntax-case stx ()
+    [(_ proc arg ...) 
+     (quasisyntax/loc stx
+       (call-with-values (thunk (#%app proc arg ...))
+                         (relax-values (syntax/source proc))))]))
+
+(define-syntax-rule (protect expr)
+  (syntax-parameterize ([app (syntax-rules () [(_ proc arg (... ...)) (#%app proc arg (... ...))])])
+                       expr))
 
 (define-syntax true
   (syntax-id-rules (set!)
@@ -37,14 +51,11 @@
     [(set! false e) (error 'set! "cannot reassign the constant false")]
     [false (relax #f false)]))
 
-(define-syntax-rule (protect expr)
-  (syntax-parameterize ([relax (syntax-rules () [(_ form loc) form])]) expr))
-
 (define relax?
   (make-parameter none/c
                   (lambda (pred)
-                    (unless (or (type? pred) (and (list? pred) (andmap type? pred)))
-                      (error 'relax? "expected a type or list of types, given ~s" pred))
+                    (unless (or (solvable? pred) (and (list? pred) (andmap solvable? pred)))
+                      (error 'debug "expected a solvable type or list of solvable types, given ~s" pred))
                     (match pred
                       [(or (? type? p) (list p)) (lambda (v) (eq? (type-of v) p))]
                       [_ (lambda (v) (not (false? (memq (type-of v) pred))))]))))
@@ -56,33 +67,28 @@
                       (error 'relate "expected a 2 argument procedure, given ~s" rel))
                     rel)))
 
-(define-for-syntax (relax/assert stx)
-  (syntax-case stx ()
-    [(_ val origin) 
-;     #`(call-with-values 
-;        (lambda () val) 
-;        (relax-values #'origin))]))
-     #`(call-with-values 
-        (lambda () val) 
-        (relax-values (syntax/source origin)))]))
-
 (define (relax-values origin)
   (lambda rs 
     (apply values 
            (map (lambda (r) 
                   (if (and ((relax?) r) (not (relaxer? r)))
-                      (local [(define-symbolic* relaxer (type-of r))
-                              (define tracked 
-                                (term-property 
-                                 (term-track-origin relaxer origin)
-                                 'relaxer? #t))]
-                        (@assert (term-property ((relate) tracked r) 'relaxed-by relaxer) 
-                                    "" origin)
+                      (let ([tracked (constant (list relaxer origin) (type-of r))])
+                        (@assert ((relate) tracked r))
                         tracked)
                       r))
                 rs))))
 
-(define (relaxer? val)   (term-property val 'relaxer?))
-(define (relaxed-by val) (term-property val 'relaxed-by))
+(define relaxer #'relaxer)
+
+(define (relaxer? val)
+  (match val
+    [(constant (list (== relaxer) _) _) #t]
+    [_ #f]))
+
+(define (debug-origin val)
+  (match val
+    [(constant (list (== relaxer) origin) _) origin]
+    [_ #f]))
+
 
 

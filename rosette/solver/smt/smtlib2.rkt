@@ -2,18 +2,10 @@
 
 (require racket/syntax (only-in racket [< racket/<] [- racket/-]))
 
-(provide (except-out (all-defined-out) define-ops smt-port print-cmd))
+(provide (except-out (all-defined-out) define-ops printf-smt))
 
-; All command functions from this module (e.g., set-logic)
-; write their SMT command to smt-port.
-(define smt-port 
-  (make-parameter (current-output-port)
-                  (lambda (port)
-                    (unless (output-port? port)
-                      (error 'smt-port "expected an output-port?, given ~a" port))
-                    port)))
 
-; Reads the SMT solution from the given input port.
+; Reads the SMT solution from current-input-port.
 ; The solution consist of 'sat or 'unsat, followed by  
 ; followed by a suitably formatted s-expression.  The 
 ; output of this procedure is a hashtable from constant 
@@ -22,52 +14,64 @@
 ; unsatisfiable core (if the solution is 'unsat and a 
 ; core was extracted); or #f (if the solution is 
 ; 'unsat and no core was extracted).
-(define (read-solution port)
+(define (read-solution)
+  (define port (current-input-port))
   (match (read port)
-    [(== 'sat) 
-     (match (read port)
-       [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
-        (for/hash ([c const] [v val]) (values c v))]
-       [other (error 'solution "expected model, given ~a" other)])]
-    [(== 'unsat) (read port) #f] ; TODO: deal with cores
-    [other (error 'smt-solution "unrecognized solver output: ~a" other)]))
+    [(== 'sat)
+     (let loop ()
+       (match (read port)
+         [(list (== 'objectives) _ ...) (loop)]
+         [(list (== 'model) def ...)
+          (for/hash ([d def])
+            (match d
+              [(list (== 'define-fun) c '() _ v) (values c v)]
+              [(list (== 'define-fun) c _ ...) (values c d)]))]
+         [other (error 'solution "expected model, given ~a" other)]))]
+    [(== 'unsat) 
+     (match (read port) 
+       [(list (? symbol? name) ...) name]
+       [_ #f])]
+    [other (error 'solution "unrecognized solver output: ~a" other)]))
 
-; Reads the response to get-info command from the given input port.
-(define (read-info port)
-  (match (read port)
-    [(list _ info) info]
-    [other (error 'read-info "expected info, given ~a" other)]))
-
-(define-syntax-rule (print-cmd arg ...)
+; Prints all smt commands to current-output-port.
+(define-syntax-rule (printf-smt arg ...)
   (begin 
-    ;(printf  arg ...)
-    (fprintf (smt-port) arg ...)))
-
-; Prints all SMT commands issued during the dynamic
-; extent of the given expressions to the provided port.
-(define-syntax-rule (cmd [port] expr ...)
-  (parameterize ([smt-port port])
-    expr ...
-    (flush-output port)))
+    ;(fprintf (current-error-port) arg ...)(fprintf (current-error-port) "\n")
+    (printf arg ...)))
 
 ; Commands
-(define (set-logic l) (print-cmd "(set-logic ~a)" l))
-(define (check-sat)   (print-cmd "(check-sat)\n"))
-(define (get-model)   (print-cmd "(get-model)\n"))
-(define (get-info kw) (print-cmd "(get-info ~a)\n" kw))
+(define (set-option opt val) (printf-smt "(set-option ~a ~a)" opt val))
 
-(define (reset)       (print-cmd "(reset)\n"))
+(define (set-logic l)    (printf-smt "(set-logic ~a)" l))
+(define (check-sat)      (printf-smt "(check-sat)\n"))
+(define (get-model)      (printf-smt "(get-model)\n"))
+(define (get-unsat-core) (printf-smt "(get-unsat-core)\n"))
+(define (get-info kw)    (printf-smt "(get-info ~a)\n" kw))
 
-(define (push n)      (print-cmd "(push ~a)\n" n))
-(define (pop n)       (print-cmd "(pop ~a)\n" n))
-(define (assert expr) (print-cmd "(assert ~a)" expr))
+(define (reset)          (printf-smt "(reset)\n"))
+(define (push n)         (printf-smt "(push ~a)\n" n))
+(define (pop n)          (printf-smt "(pop ~a)\n" n))
+
+(define assert 
+  (case-lambda [(e)     (printf-smt "(assert ~a)" e)]
+               [(e id)  (printf-smt "(assert (! ~a :named ~a))" e id)]))
+
+(define (minimize t)    (printf-smt "(minimize ~a)" t))
+(define (maximize t)    (printf-smt "(maximize ~a)" t))
 
 ; Declarations and definitions
 (define (declare-const id type)
-  (print-cmd "(declare-const ~a ~a)" id type))
+  (printf-smt "(declare-const ~a ~a)" id type))
 
+(define (declare-fun id domain range)
+  (printf-smt "(declare-fun ~a ~a ~a)" id domain range))
+                     
 (define (define-const id type body)
-  (print-cmd "(define-fun ~a () ~a ~a)" id type body))
+  (printf-smt "(define-fun ~a () ~a ~a)" id type body))
+
+; Applications of uninterpreted functions.
+(define (app f . args)
+  `(,f ,@args))
 
 (define-syntax-rule (define-ops id ...)
   (define-values (id ...)
@@ -94,6 +98,16 @@
 (define (extract i j s)
   `((_ extract ,i ,j) ,s))
 
-; Int theory
+(define (zero_extend i b)
+  `((_ zero_extend ,i) ,b))
+
+(define (sign_extend i b)
+  `((_ sign_extend ,i) ,b))
+
+; Int and Real theories
 (define Int 'Int)
-(define-ops < <=)
+(define Real 'Real)
+(define-ops
+  + - * / div mod abs 
+  < <= 
+  is_int to_int to_real )

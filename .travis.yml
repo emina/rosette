@@ -1,0 +1,45 @@
+language: java
+sudo: false
+
+env:
+  global:
+    - Z3_DIR=~/z3
+    - Z3_REV="4cf72e23e6d51df47ed67c35ea9a90016d9b69d5"
+    - RACKET_DIR=~/racket
+    - RACKET_URL="https://www.cs.utah.edu/plt/installers/6.4/racket-6.4-x86_64-linux-ubuntu-precise.sh"
+
+before_install:
+  - if [[ ! -e "$RACKET_DIR/bin/racket" ]]; then
+      rm -rf $RACKET_DIR;
+      curl -L -o racket.sh $RACKET_URL;
+      sh ./racket.sh --in-place --dest $RACKET_DIR;
+    else echo "using racket from cache"; fi
+  - if [[ ! -e "$Z3_DIR/build/z3" ]]; then
+      rm -rf $Z3_DIR;
+      git clone https://github.com/z3prover/z3.git $Z3_DIR;
+      cd $Z3_DIR;
+      git checkout $Z3_REV;
+      python scripts/mk_make.py;
+      cd $Z3_DIR/build;
+      make -j2;
+      cd $TRAVIS_BUILD_DIR;
+    else echo "using z3 from cache"; fi
+  - mkdir bin/
+  - cp $Z3_DIR/build/z3 bin/
+  - bin/z3 --version
+  - cd $Z3_DIR && git rev-parse HEAD && cd $TRAVIS_BUILD_DIR
+  - export PATH="${RACKET_DIR}/bin:${PATH}"
+
+install: raco pkg install --auto $TRAVIS_BUILD_DIR/rosette
+
+script:
+  - raco test 
+  - time raco make test/all-rosette-tests.rkt
+  - raco test test/all-rosette-tests.rkt
+  - time raco make test/all-sdsl-tests.rkt
+  - raco test test/all-sdsl-tests.rkt
+
+cache:
+  directories:
+    - $Z3_DIR
+    - $RACKET_DIR

@@ -1,24 +1,23 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "dom.rkt")
-(provide (except-out (all-defined-out) tag-type))
+(provide (except-out (all-defined-out) tags))
 
-(require rosette/solver/smt/z3)
-(current-solver (new z3%))
+(define-syntax-rule (define-tags ts)
+  (tags ts))
 
-(define-syntax-rule (define-tags tags)
-  (begin
-    (define-enum tag (cons "" tags))
-    (tag-type tag?)))
+(define tag? integer?)
 
-(define tag-type (make-parameter #f))
+(define tags (make-parameter (cons (hash "" 0) (vector ""))
+                             (lambda (vs)
+                               (cons
+                                (for/hash ([(s i) (in-indexed (cons "" vs))])
+                                 (values s i))
+                                (list->vector (cons "" vs))))))
 
-(define (tag str) (enum-value (tag-type) str))
+(define (tag str) (hash-ref (car (tags)) str))
 
-(define-syntax tag?
-  (syntax-id-rules ()
-    [tag? (tag-type)]
-    [(tag? v) ((tag-type) v)]))
+(define (label i) (vector-ref (cdr (tags)) i))
 
 ; Maximum depth of the DOM, so we know how many variables
 ; to allocate. (Writen by Emina Torlak)
@@ -49,12 +48,10 @@
 
 ; Mask function
 (define (generate-mask zpath1 zpath2 mask depth)
-  (if (= (length zpath1) 0)
-      null
-      (begin
-        (assert (eq? (car mask) 
-                   (eq? (car zpath1) (car zpath2))))
-        (generate-mask (cdr zpath1) (cdr zpath2) (cdr mask) depth))))
+  (unless (= (length zpath1) 0)
+    (assert (eq? (car mask) 
+                 (eq? (car zpath1) (car zpath2))))
+    (generate-mask (cdr zpath1) (cdr zpath2) (cdr mask) depth)))
 
 ; Zip
 ; Found at http://jeremykun.wordpress.com/2011/10/02/a-taste-of-racket/ in the comments.

@@ -1,5 +1,0 @@
-[2015.10.07 12:55:55] [rosette/test/all-tests.rkt base] [cpu=5120, real=2561, gc=1200]
-[2015.10.07 12:55:57] [rosette/test/all-tests.rkt forms] [cpu=3025, real=1678, gc=2020]
-[2015.10.07 12:56:05] [rosette/test/all-tests.rkt kodkod] [cpu=9415, real=8070, gc=1799]
-[2015.10.07 12:56:17] [rosette/test/all-tests.rkt z3] [cpu=4981, real=12173, gc=158]
-[2015.10.07 12:56:22] [rosette/test/all-tests.rkt bv-semantics] [cpu=2226, real=4976, gc=120]

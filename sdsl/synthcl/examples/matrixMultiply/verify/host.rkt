@@ -66,6 +66,11 @@
 (procedure int* (mmulVector [int* A] [int* B] [int n] [int p] [int m])
   (mmulHost "mmulVectorKernel" 4 A B n p m))
 
+; An optimized vector parallel implementation of matrix multiplication.  The dimensions 
+; n and m must be evenly divisible by 4.
+(procedure int* (mmulVectorOpt [int* A] [int* B] [int n] [int p] [int m])
+  (mmulHost "mmulVectorKernelOpt" 4 A B n p m))
+
 ; Given two arrays of the same size, checks that they hold the same 
 ; values at each index.
 (procedure void (check [int* actual] [int* expected] [int SIZE])
@@ -92,8 +97,19 @@
           #:ensure (check (mmulVector A B n p m) 
                           (mmulSequential A B n p m)
                           (* n m))))
+
+(procedure void (verify_vector_opt [int from] [int to])
+  (verify #:forall [(: int n in (range from to 4))
+                    (: int p in (range from to 4))
+                    (: int m in (range from to 4))       
+                    (: int[(* n p)] A) 
+                    (: int[(* p m)] B)] 
+          #:ensure (check (mmulVectorOpt A B n p m) 
+                          (mmulSequential A B n p m)
+                          (* n m))))
 ; (verify_scalar 1 5)
 ; (verify_vector 4 9)
+; (verify_vector_opt 4 9)
 
 ;(: int n p m)
 ;(= n 8) (= p 4) (= m 4)

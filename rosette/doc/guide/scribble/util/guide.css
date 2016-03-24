@@ -1,0 +1,62 @@
+.versionbox {
+  left: 0em;
+  height: 0em;
+  width: 0em;
+  margin: 0em;
+  padding: 0em;
+  display: none;
+}
+
+.maincolumn {
+  margin-top: -2em;
+}
+
+
+/*#lifted tr:nth-child(even) {background: #ffffff}*/
+#lifted  {
+ width: 100%;
+ font-size: small; 
+ }
+
+#lifted td {vertical-align: top; padding-bottom: 1em;}
+
+#lifted tr td:first-child {
+ /*border-right: 1px solid black;*/
+ padding-right: .75em;
+ font-weight: bold;
+}
+
+.headcol {
+font-weight: bold;
+}
+
+/*.boxed { 
+ border-bottom: 1px solid #99b;
+}*/
+
+.invisible {
+display: none;
+}
+
+.bib {
+ font-size: medium;
+ width: 100%;}
+
+.bib p {
+  padding-left: 1em;
+  text-indent: -1em;
+}
+
+.bib td {
+  vertical-align: text-top;
+}
+
+li p {
+  margin: 0em;
+  padding: 0.1em;
+}
+
+.footnoteblock {
+  margin-top: 1em;
+  border-top: 1px solid black;
+}

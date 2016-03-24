@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax (only-in rosette make-list)) (only-in racket/syntax format-symbol)
          "types.rkt" 

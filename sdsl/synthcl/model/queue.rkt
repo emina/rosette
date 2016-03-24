@@ -1,9 +1,9 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "context.rkt" "buffer.rkt" "kernel.rkt" 
          "work.rkt" "runtime.rkt" "memory.rkt"
          "pointers.rkt" "errors.rkt" 
-         rosette/lib/reflect/match)
+         rosette/lib/match)
 
 (provide clCreateCommandQueue clEnqueueReadBuffer clEnqueueWriteBuffer clEnqueueNDRangeKernel command-queue?)
 

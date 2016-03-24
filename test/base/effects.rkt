@@ -1,8 +1,8 @@
 #lang racket
 
 (require rackunit/text-ui racket/splicing)
-(require rackunit rosette/base/effects)
-(require rosette/base/struct rosette/base/vector rosette/base/box)
+(require rackunit rosette/base/core/effects rosette/lib/roseunit)
+(require rosette/base/struct/struct rosette/base/adt/vector rosette/base/adt/box)
 
 (splicing-let ([&x (@box 0)]
                [&y (@box 10)])
@@ -19,9 +19,8 @@
 (define (y-set! val) (set! y val))
 
 (define minimized
-  (test-suite 
+  (test-suite+ 
    "Minimized tests for rosette/base/speculate.rkt"
-   #:before (lambda () (printf "Basic tests for box mutatation in rosette/base/speculate.rkt\n"))
    
    (let* ([z (@box 10)]
           [z-set! (lambda (val) (@set-box! z val))])
@@ -35,10 +34,8 @@
        ))))
 
 (define tests
-  (test-suite
-   "Tests for rosette/base/speculate.rkt"
-   #:before (lambda () (printf "Advanced tests for box mutatation in rosette/base/speculate.rkt\n"))
-   
+  (test-suite+
+   "Tests for rosette/base/speculate.rkt"   
  
    (let-values ([(o s) (speculate 1)])
      (check-equal? o 1))
@@ -205,9 +202,8 @@
 (define p (pos 0 1))
 
 (define struct-tests
-  (test-suite
+  (test-suite+
    "Tests for struct handling in rosette/base/speculate.rkt"
-   #:before (lambda () (printf "Tests for struct field mutation in rosette/base/speculate.rkt\n"))
      
    (let-values ([(o s) (speculate (begin (set-pos-x! p 3) (pos-x p)))])
      (check-equal? o 3)
@@ -256,9 +252,8 @@
 (define v (make-vector 3 0))
 
 (define vector-tests
-  (test-suite
+  (test-suite+
    "Tests for vector handling in rosette/base/speculate.rkt"
-   #:before (lambda () (printf "Tests for vector mutation in rosette/base/speculate.rkt\n"))
    
    (let-values ([(o s) (speculate (begin (@vector-set! v 2 3) (@vector-ref v 2)))])
      (check-equal? o 3)

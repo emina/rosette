@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "type.rkt" "reals.rkt" "errors.rkt" 
          (for-syntax (only-in racket/syntax format-id)))

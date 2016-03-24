@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in html read-html-as-xml) xml rosette/lib/data/ord-dict net/url net/uri-codec)
+(require (only-in html read-html-as-xml) xml rosette/base/util/ord-dict net/url net/uri-codec)
 
 (provide 
  read-DOMNode fetch-DOMNode

@@ -1,26 +1,21 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
-         rosette/base/equality 
-         rosette/base/term
-         rosette/base/bool
-         rosette/base/box
-         rosette/base/num 
-         rosette/base/procedure
-         rosette/base/enum
-         rosette/base/list
-         rosette/base/vector
-         (only-in rosette/base/struct struct)
-         rosette/base/merge
-         (only-in rosette/base/define define-symbolic))
+(require rackunit rackunit/text-ui rosette/lib/roseunit
+         rosette/base/core/equality 
+         rosette/base/core/term
+         rosette/base/core/bool
+         rosette/base/core/real
+         rosette/base/core/procedure
+         rosette/base/adt/box
+         rosette/base/adt/list
+         rosette/base/adt/vector
+         (only-in rosette/base/struct/struct struct)
+         rosette/base/core/merge
+         (only-in rosette/base/form/define define-symbolic))
 
-(define-symbolic x @number?)
-(define-symbolic y @number?)
-(define-symbolic z @number?)
+(define-symbolic x y z @integer?)
 
-(define-symbolic a @boolean?)
-(define-symbolic b @boolean?)
-(define-symbolic c @boolean?)
+(define-symbolic a b c @boolean?)
 
 ; transparent immutable structs 
 (struct i0 (x) #:transparent)
@@ -167,9 +162,8 @@
   (check-equal? (equal-hash-code (h0 1)) (equal-hash-code (h0 1))))
 
 (define equality-tests
-  (test-suite 
+  (test-suite+ 
    "Tests for rosette/base/equality.rkt"
-   #:before (lambda () (printf "Testing rosette/base/equality.rkt\n"))
    
    ; eq? and equal? behave the same on transparent immutable values
    (primitive-equality-tests @eq?)

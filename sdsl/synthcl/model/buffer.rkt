@@ -1,7 +1,7 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "flags.rkt" "type.rkt" "pointers.rkt" "memory.rkt" "context.rkt" "work.rkt"
-         rosette/lib/reflect/match)
+         rosette/lib/match)
 
 (provide clCreateBuffer buffer? buffer-context buffer-copy!)
 

@@ -1,9 +1,9 @@
-#lang s-exp rosette
+#lang rosette
 
 (require 
  "automaton.rkt" "lib.rkt"
- rosette/query/debug rosette/lib/tools/render 
- rosette/lib/meta/meta)
+ rosette/query/debug rosette/lib/render 
+ rosette/lib/synthax)
 
 (provide define/debug debug-automaton 
          verify-automaton solve-automaton 
@@ -12,12 +12,12 @@
 ; Returns a symbolic word of length k, drawn from the given alphabet.
 (define (word k alphabet)
   (for/list ([i k])
-    (define-symbolic* idx number?)
+    (define-symbolic* idx integer?)
     (list-ref alphabet idx)))
 
 ; Returns a symbolic word of length up to k, drawn from the given alphabet.
 (define (word* k alphabet)
-  (define-symbolic* n number?)
+  (define-symbolic* n integer?)
   (take (word k alphabet) n))
 
 (define (word->string w)

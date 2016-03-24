@@ -1,15 +1,15 @@
-#lang s-exp rosette
+#lang rosette
 
 (require racket/stxparam racket/splicing
          (for-syntax "types.rkt" "errors.rkt" (only-in racket make-list) (only-in syntax/stx stx-null?))
          "types.rkt" "util.rkt"
          (prefix-in rosette/ (only-in rosette if assert void))
-         (only-in rosette/lib/meta/meta define-synthax define-synthesis-rule)
+         (only-in rosette/lib/synthax define-synthax [?? @??] choose)
          (only-in "../model/runtime.rkt" address-of malloc)
          (only-in "builtins.rkt" NULL clCreateProgramWithSource))
 
 (provide assert 
-         print procedure kernel grammar ??
+         print procedure kernel grammar ?? choose
          sizeof @ : = 
          app-or-ref locally-scoped if-statement for-statement range)
 
@@ -153,33 +153,19 @@
 
 ; Grammar syntax.
 (define-syntax (grammar stx)
-  (syntax-case stx (assert)
-    [(grammar out (id [type param] ...) (assert guard) expr)
-     (syntax/loc stx
-       (define-synthax (id param ...)
-         #:assert guard
-         expr))]
-    [(grammar out (id [type param] ...) (assert guard) expr exprs ...)
-     (syntax/loc stx
-       (define-synthax (id param ...)
-         #:assert guard
-         (locally-scoped expr exprs ...)))]
+  (syntax-case stx ()
+    [(grammar out (id [type param] ... [type-depth depth])
+      #:base expr0
+      #:else exprk)
+     (quasisyntax/loc stx
+       (define-synthax (id param ... depth) #:base expr0 #:else exprk))]
     [(grammar out (id [type param] ...) expr)
      (quasisyntax/loc stx
-       (define-synthax (id param ...)
-         expr))]
-    [(grammar out (id [type param] ...) expr exprs ...)
-     (quasisyntax/loc stx
-       (define-synthax (id param ...)
-         (locally-scoped expr exprs ...)))]))
+       (define-synthax id ([(_ param ...) expr])))]))
 
 ; Constant syntax.
-(define-synthesis-rule (?? t)
-  #:declare [v (type-base t)]
-  #:compile v
-  #:generate (lambda (gen)
-               (let ([val (evaluate v)])
-                 (and (not (term? val)) (gen #`#,val)))))
+(define-synthax ??
+  ([(_ t) (@?? (type-base t))]))
 
 ; Syntax for creating a local scope for a sequence of statements. 
 (define-syntax (locally-scoped stx)

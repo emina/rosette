@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "memory.rkt" "reals.rkt" "type.rkt" "pointers.rkt")
 

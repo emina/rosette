@@ -1,6 +1,6 @@
-#lang s-exp rosette
+#lang rosette
 
-(require rosette/lib/reflect/match)
+(require rosette/lib/match)
 
 (provide ⊥ ⊤ 0@⊥ let@ R ?int ?label ?bool value? return? 
          (rename-out [boolean? label?] [|| ∨] [=> ⊑]
@@ -45,9 +45,9 @@
      (let@ (bind0) (let@ (bind ...) body ...))]))
 
 ; Returns a fresh symbolic integer.
-; (-> void? number?)
+; (-> void? integer?)
 (define (?int)
-  (define-symbolic* n number?)
+  (define-symbolic* n integer?)
   n)
 
 ; Returns a fresh symbolic label.

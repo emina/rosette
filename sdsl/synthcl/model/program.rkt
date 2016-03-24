@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require (for-syntax (only-in rosette/lib/util/syntax read-module)
                      (only-in racket filter-map))
@@ -27,27 +27,28 @@
 ; from the file identified by the provided string literal.  The source 
 ; code specified by the file must be a module in the OpenCL DSL.  For 
 ; the full interface, see Ch. 5.6.1 of opencl-1.2 specification.
-(define-syntax-rule (clCreateProgramWithSource context filename)
-  (program context (load-kernel-procedures filename)))
-
-(define-syntax (load-kernel-procedures stx)
+(define-syntax (clCreateProgramWithSource stx)
   (syntax-case stx ()
-    [(_ filename)
-     (with-syntax ([(id ...) (map syntax-local-introduce (parse-kernel-identifiers #'filename))])
-       (quasisyntax/loc stx 
-         (let ()
-           (local-require filename)
-           (list (cons (~a (quote id)) id) ...))))]))
+    [(_ context filename)
+     (with-syntax ([(id ...) (parse-kernel-identifiers #'filename #'filename)])
+       (quasisyntax/loc stx
+         (program
+          context
+          (let ()
+            (local-require filename)          
+            (list (cons (~a (quote id)) id) ...)))))]))
 
-(define-for-syntax (parse-kernel-identifiers path)
-  (define source (read-module (syntax->datum path)))
+(define-for-syntax (parse-kernel-identifiers stx path)
+  (define-values (base name must-be-dir?) (split-path (syntax-source path)))
+  (define absolute-path (build-path base (syntax->datum path)))
+  (define source (read-module absolute-path))
   (syntax-case source ()
     [(mod id lang (mod-begin forms ...))
      (filter-map (lambda (form)
                    (syntax-case form ()
                      [(kernel _ (id _ ...) _ ...) 
                       (and (identifier? #'kernel) (eq? 'kernel (syntax->datum #'kernel))) 
-                      #'id]
+                      (datum->syntax stx (syntax->datum #'id))]
                      [_ #f]))
                  (syntax->list #'(forms ...)))]
     [_ (raise-syntax-error #f "expected a full path to a kernel module" path)]))

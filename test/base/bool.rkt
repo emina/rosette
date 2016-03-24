@@ -1,9 +1,9 @@
 #lang racket
 
-(require rackunit rackunit/text-ui
-         rosette/base/term
-         rosette/base/bool
-         (only-in rosette/base/define define-symbolic)
+(require rackunit rackunit/text-ui rosette/lib/roseunit
+         rosette/base/core/term
+         rosette/base/core/bool
+         (only-in rosette/base/form/define define-symbolic)
          "common.rkt")
 
 (define-symbolic a @boolean?)
@@ -27,9 +27,8 @@
   (check-equal? (op (co a b c) (co a b) a) a))
 
 (define bool-tests
-  (test-suite 
-   "Tests for rosette/base/bool.rkt"
-   #:before (lambda () (printf "Testing rosette/base/bool.rkt\n"))
+  (test-suite+ 
+   "Tests for rosette/base/bool.rkt" 
    
    (check-equal? (! (! a)) a)
    (check-equal? (! #t) #f)

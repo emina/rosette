@@ -1,8 +1,9 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "type.rkt" "errors.rkt"
-         rosette/lib/reflect/match (only-in racket/syntax format-symbol)
+         rosette/lib/match (only-in racket/syntax format-symbol)
          (for-syntax (only-in racket/syntax format-id)) 
+         (only-in rosette/base/core/type subtype? type-cast)
          (only-in rosette [void rosette-void]))
 
 (provide real-type? real-type-length 
@@ -95,10 +96,6 @@
 ;----------- SCALAR TYPES ----------- 
 
 ; We represent OpenCL scalar values as Rosette concrete or symbolic values.
-; Since Rosette's symbolic number type does not distinguish between different 
-; kinds of number representations (e.g., fixed-point vs. floating point), we 
-; rely on compile-time typechecking to enforce this distinction in user code
-; where needed. 
 ;
 ; When given a symbolic value of type (type-base t) as an argument, a  
 ; constructor for a scalar type t simply returns that value. 
@@ -114,6 +111,11 @@
     #:construct [(v) (match v
                        [(? primitive) v]
                        [(term _ (== base)) v]
+                       [(union (list _ (... ...) (cons g (or (? primitive p) 
+                                                             (and (term _ (== base)) p))) 
+                                     _ (... ...)) _)
+                        (assert g (thunk  (raise-argument-error 'id (~a 'id) v)))
+                        p]
                        [_ (raise-argument-error 'id (~a 'id) v)])]))
 
 (define-scalar-type bool
@@ -123,16 +125,20 @@
              [(? number? v)  (! (= v 0))]))
 
 (define-scalar-type int
-  #:base number?
+  #:base integer?
   #:primitive fixnum?
   #:convert ([(? boolean? v) (if v 1 0)]
-             [(? number? v)  (inexact->exact (truncate v))]))
+             [(? fixnum? v) v]
+             [(? flonum? v) (exact-truncate v)]
+             [v (real->integer v)]))
 
 (define-scalar-type float
-  #:base number?
+  #:base real?
   #:primitive flonum?
   #:convert ([(? boolean? v) (if v 1.0 0.0)]
-             [(? number? v)  (exact->inexact v)]))
+             [(? fixnum? v) (exact->inexact v)]
+             [(? flonum? v) v]
+             [v (type-cast real? v 'float)]))
 
 (define void 
   (let ()
@@ -174,7 +180,7 @@
            (define-real-type id
              #:base base #:length length
              #:convert  ([(? boolean? v) (apply id (make-list length (if v ((base) -1) ((base) 0))))]
-                         [(? number? v)  (apply id (make-list length ((base) v)))]
+                         [(? real? v)  (apply id (make-list length ((base) v)))]
                          [(and (? has-vector-type?) (app vector-type (== id)) v) v])
              #:construct [(arg ...) (chaperone-vector (vector-immutable (base arg) ...) 
                                                       vector-access vector-access
@@ -229,10 +235,11 @@
 (define (real-type-of v)
   (match v
     [(? boolean?) bool]
-    [(term _ (== number?)) int]
+    [(? has-vector-type?) (vector-type v)]
+    [(term _ (== integer?)) int]
+    [(term _ (== real?)) float]
     [(? integer?) int]
     [(? real?) float]
-    [(? has-vector-type?) (vector-type v)]
     [_ #f]))
 
 ; Returns true when given a scalar value, otherwise returns false.

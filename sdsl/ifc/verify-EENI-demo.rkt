@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require "machine.rkt" "indistinguishable.rkt" "verify.rkt"
          "basic.rkt" "jump.rkt" "call.rkt")
@@ -31,20 +31,15 @@
 ; reached in n steps.  If n is not specified, the default value of 
 ; n = (length prog) is used.
 
-
-; Uncomment the following two lines to use Z3 instead of Kodkod:
-;(require rosette/solver/smt/z3)
-;(current-solver (new z3%))
-
 ; Shows counterexamples for bugs in basic semantics. 
 ;
-;     mem≈ (sec)                  |
-; --------------------------------|
-; (Fig. 1) kodkod = 0.3, z3 = 0.5 |
-; (Fig. 2) kodkod = 0.4, z3 = 0.4 |
-; (Fig. 3) kodkod = 2.6, z3 = 2.9 |
-; (Fig. 4) kodkod = 9.2, z3 = 12  |
-; --------------------------------|
+;     mem≈ (sec)    |
+; ------------------|
+; (Fig. 1) z3 = 0.5 |
+; (Fig. 2) z3 = 0.4 |
+; (Fig. 3) z3 = 2.9 |
+; (Fig. 4) z3 = 12  |
+; ------------------|
 (define (basic-bugs [≈ mem≈])
   #|1|# (verify-EENI init halted? ≈ (program 3 (list Halt Noop Push Pop Add* Load* Store*AB))) 
   #|2|# (verify-EENI init halted? ≈ (program 3 (list Halt Noop Push Pop Add* Load* Store*B)))  
@@ -53,11 +48,11 @@
 
 ; Shows absence of bounded counterexamples for correct basic semantics.
 ;
-;     mem≈ (sec)             |
-; ---------------------------|
-; (*) kodkod = 10, z3 = 12   |
-; (+) kodkod = 20, z3 = 24   |
-; ---------------------------|
+;  mem≈ (sec)   |
+; --------------|
+; (*) z3 = 12   |
+; (+) z3 = 24   |
+; --------------|
 (define (basic-correct [≈ mem≈])
   #|*|# (verify-EENI init halted? ≈ (program 7 (list Halt Noop Push Pop Add Load Store)))  
   #|+|# (verify-EENI init halted? ≈ (program 8 (list Halt Noop Push Pop Add Load Store))))  
@@ -65,22 +60,22 @@
 ; Shows counterexamples for bugs in jump+basic semantics.  Note that these are quite different
 ; from the corresponding counterexamples in the paper.
 ;
-;     mem≈ (sec)                   | 
-; ---------------------------------| 
-; (Fig. 11) kodkod = 6.9, z3 = 7.7 | 
-; (Fig. 12) kodkod = 1.6, z3 = 1.8 | 
-; ---------------------------------|
+;     mem≈ (sec)     | 
+; -------------------| 
+; (Fig. 11) z3 = 7.7 | 
+; (Fig. 12) z3 = 1.8 | 
+; -------------------|
 (define (jump-bugs [≈ mem≈])
   #|11|# (verify-EENI init halted? ≈ (program 6 (list Halt Noop Push Pop Add Load Store Jump*AB)))  
   #|12|# (verify-EENI init halted? ≈ (program 4 (list Halt Noop Push Pop Add Load Store Jump*B)))) 
 
 ; Shows absence of bounded counterexamples for correct jump+basic semantics.
 ;
-;     mem≈ (sec)             | 
-; ---------------------------| 
-; (*) kodkod = 17, z3 = 21   |  
-; (+) kodkod = 43, z3 = 52   | 
-; ---------------------------|
+;   mem≈ (sec)  | 
+; --------------| 
+; (*) z3 = 21   |  
+; (+) z3 = 52   | 
+; --------------|
 (define (jump-correct [≈ mem≈])
   #|*|# (verify-EENI init halted? ≈ (program 7 (list Halt Noop Push Pop Add Load Store Jump)))    
   #|+|# (verify-EENI init halted? ≈ (program 8 (list Halt Noop Push Pop Add Load Store Jump))))    
@@ -88,13 +83,13 @@
 ; Shows counterexamples to buggy call+return+basic semantics. Note that call/return uses a different
 ; EENI property (with halted∩low?), as in the paper.  We find different (some shorter) counterexamples. 
 ;
-;     mem≈ (sec)                 | 
-; ---------------------------------| 
-; (Fig. 13) kodkod = 32, z3 = 37   |   
-; (Fig. 15) kodkod = 58, z3 = 90   |
-; (Fig. 16) kodkod = 51, z3 = 62   |
-; (Fig. 17) kodkod = 349, z3 = 492 |
-; ---------------------------------|
+;     mem≈ (sec)     | 
+; -------------------| 
+; (Fig. 13) z3 = 37  |   
+; (Fig. 15) z3 = 90  |
+; (Fig. 16) z3 = 62  |
+; (Fig. 17) z3 = 492 |
+; -------------------|
 (define (call-return-bugs [≈ mem≈])
   #|13|# (verify-EENI init halted∩low? ≈ (program 7 (list Halt Noop Push Pop Add Load Store Call*B Return*AB)))
   #|15|# (verify-EENI init halted∩low? ≈ (program 8 (list Halt Noop Push Pop Add Load StoreCR Call*B Return*AB)))
@@ -103,10 +98,10 @@
 
 ; Shows absence of bounded counterexamples for correct call/retrn + modified basic semantics.
 ;
-;     mem≈ (sec)               | 
-; -----------------------------| 
-; (*) kodkod > 1200, z3 > 1200 |   
-; -----------------------------|
+;     mem≈ (sec)  | 
+; ----------------| 
+; (*) z3 > 1200   |   
+; ----------------|
 (define (call-return-correct [≈ mem≈])
   #|*|# (verify-EENI init halted∩low? ≈ (program 10 (list Halt Noop Push PopCR Add Load StoreCR Call Return))))
   

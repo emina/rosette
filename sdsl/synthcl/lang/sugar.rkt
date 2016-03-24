@@ -1,4 +1,4 @@
-#lang s-exp rosette
+#lang rosette
 
 (require racket/syntax syntax/id-table "operators.rkt" "forms.rkt"
          (for-template (only-in rosette #%app) "operators.rkt" "forms.rkt"))

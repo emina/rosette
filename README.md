@@ -1,25 +1,18 @@
-rosette
-=======
+The Rosette Language
+====================
 
-This repository includes the source code and default solver binaries
-for the Rosette solver-aided host language, as well as several example
+[![Build Status](https://travis-ci.org/emina/rosette.svg?branch=refactor-ops)](https://travis-ci.org/emina/rosette)
+
+This repository includes the source code for the Rosette solver-aided host language, as well as several example
 solver-aided DSLs.
 
-### Installing Rosette
+## Installing Rosette
 
-* Download and install Racket 6.1 from http://racket-lang.org
-
-* Make sure that the default Java installation on your system is a
-  64-bit server VM, version 1.7x:
-
-  `$ java -version`  
-  `java version "1.7.0_25"`  
-  `Java(TM) SE Runtime Environment (build 1.7.0_25-b15)`  
-  `Java HotSpot(TM) 64-Bit Server VM (build 23.25-b01, mixed mode)`
+* Download and install Racket 6.4 from http://racket-lang.org
 
 * Clone the rosette repository:
 
-  `$ git clone git@github.com:emina/rosette.git`
+  `$ git clone https://github.com/emina/rosette.git`
 
 * Use Racket's `raco` tool to install Rosette as one of your Racket collections:
 
@@ -27,12 +20,17 @@ solver-aided DSLs.
   `$ raco link rosette`  
   `$ raco setup -l rosette`  
 
-* Rosette ships with the [Kodkod](http://alloy.mit.edu/kodkod/) solver 
-  binaries, but it also supports [Z3](http://z3.codeplex.com) and 
-  [CVC4](http://cvc4.cs.nyu.edu/web/).  To use Z3 or CVC4, 
-  download (or build) the binaries for your system and put them in the `rosette/bin` directory.
+* Create a `bin` subdirectory in the `rosette` directory:
 
-### Executing Rosette programs
+	`$ mkdir bin`  
+	`$ ls`  
+	`bin doc rosette sdsl test LICENSE README.md`
+	
+* Download or build a copy of the [Z3](https://github.com/Z3Prover/z3) solver, version 4.4.2.  
+
+* Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
+
+## Executing Rosette programs
 
 * Open the target program in DrRacket (e.g., [`rosette/sdsl/fsm/demo.rkt`](https://github.com/emina/rosette/blob/master/sdsl/fsm/demo.rkt))
   and hit run!
@@ -41,11 +39,11 @@ solver-aided DSLs.
   need to use the command line, make sure to first compile the program:
 
   `$ raco make <your program>`  
-  `$ racket -r <your program>`  
+  `$ racket <your program>`  
 
-### Available languages
+## Available languages
 
-* Rosette ships with two languages: `#lang s-exp rosette/safe` and  `#lang s-exp rosette`.
+* Rosette ships with two languages: `#lang rosette/safe` and  `#lang rosette`.
 
 * The `rosette/safe` language includes only constructs that are safe to
   use with symbolic values.  This (for now) excludes some nice Racket
@@ -69,11 +67,7 @@ solver-aided DSLs.
   incorrect semantics or cause more serious problems (e.g., data loss if 
   it writes to a file).
 
-* For more on Rosette, see:
-
-  - Emina Torlak.  [_The Rosette Guide_](http://homes.cs.washington.edu/~emina/rosette/guide/index.html).
-  - Emina Torlak and Rastislav Bodik. [_A lightweight symbolic
-  virtual machine for solver-aided host languages._](http://people.csail.mit.edu/emina/pubs/rosette.pldi14.pdf) In PLDI'14.
-
-  - Emina Torlak and Rastislav Bodik. [_Growing solver-aided
-  languages with rosette._](http://people.csail.mit.edu/emina/pubs/rosette.onward13.pdf) In Onward!'13.
+* For more on using Rosette, see [_The Rosette Guide_][1].  Rosette's internals are described in [PLDI'14][2].
+  
+[1]: http://emina.github.io/rosette/doc/rosette-guide/index.html
+[2]: http://dl.acm.org/citation.cfm?id=2594340
