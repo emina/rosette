@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>{{ page.title }}</title>
+
+  <meta name="description" content="The Rosette Language">
+  <meta name="author" content="Emina Torlak">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/normalize.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/skeleton.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/custom.css">
+
+  <!-- Scripts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/github-prettify-theme.css">
+  <script src="{{ site.baseurl }}/js/site.js"></script>
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="{{ site.baseurl }}/images/rosette-black.png">
+
+</head>
+<body>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container">
+
+    <div class="navbar-spacer"></div>
+     <div class="header">
+      <h1 class="title">The Rosette Language</h1>
+     </div>
+    <nav class="navbar">
+      <div class="container">
+        <ul class="navbar-list">
+          <li class="navbar-item"><a class="navbar-link" href="index.html">About</a></li>
+          <li class="navbar-item"><a class="navbar-link"
+	  href="https://github.com/emina/rosette">Download</a></li>
+	  <li class="navbar-item"> <a class="navbar-link" href="#" data-popover="#docNavPopover">Docs</a>
+            <div id="docNavPopover" class="popover">
+              <ul class="popover-list">
+                <li class="popover-item">
+                  <a class="popover-link" href="{{site.doc_dir}}/index.html">User Guide</a>
+                </li>
+                <li class="popover-item">
+                  <a class="popover-link" href="{{site.doc_dir}}/refs.html">Publications</a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="navbar-item"><a class="navbar-link" href="apps.html">Applications</a></li>       
+          <li class="navbar-item"><a class="navbar-link" href="acks.html">Thanks</a></li> 
+        </ul>
+      </div>
+    </nav>
+    <div class="row">
+      <div class="twelve columns" style="margin-top: 4rem;">
+        {{ content }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="twelve columns footer">
+	&copy; <a href="http://homes.cs.washington.edu/~emina/">Emina Torlak</a>.
+	Built on the <a href="http://getskeleton.com/">Skeleton</a> framework.
+      </div>
+    </div>  
+  </div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>

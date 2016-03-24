@@ -1,0 +1,36 @@
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely need to edit after that.
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'jekyll serve'. If you change this file, please restart the server process.
+
+# Site settings
+title: "The Rosette Language"
+email: emina@cs.washington.edu
+description: > # this means to ignore newlines until "baseurl:"
+  The Rosette Language
+baseurl: "/rosette" # the subpath of your site, e.g. /blog
+url: "http://emina.github.io" # the base hostname & protocol for your site
+github_username:  emina
+
+# Build settings
+
+source:       .
+destination:  ./site
+layouts_dir:  ./layouts
+exclude:      ["layouts", "Makefile", "*.key"]
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      layout: "default"
+
+doc_dir: ./doc/rosette-guide
