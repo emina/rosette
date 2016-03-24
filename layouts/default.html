@@ -36,7 +36,7 @@
   <link rel="icon" type="image/png" href="{{ site.baseurl }}/images/rosette-black.png">
 
 </head>
-<body>
+<body class="{{ page.path | replace:'.md','' | replace:'/','-' }}">
 
   <!-- Primary Page Layout
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -50,20 +50,8 @@
       <div class="container">
         <ul class="navbar-list">
           <li class="navbar-item"><a class="navbar-link" href="index.html">About</a></li>
-          <li class="navbar-item"><a class="navbar-link"
-	  href="https://github.com/emina/rosette">Download</a></li>
-	  <li class="navbar-item"> <a class="navbar-link" href="#" data-popover="#docNavPopover">Docs</a>
-            <div id="docNavPopover" class="popover">
-              <ul class="popover-list">
-                <li class="popover-item">
-                  <a class="popover-link" href="{{site.doc_dir}}/index.html">User Guide</a>
-                </li>
-                <li class="popover-item">
-                  <a class="popover-link" href="{{site.doc_dir}}/refs.html">Publications</a>
-                </li>
-              </ul>
-            </div>
-          </li>
+          <li class="navbar-item"><a class="navbar-link" href="https://github.com/emina/rosette">Download</a></li>
+	  <li class="navbar-item"><a class="navbar-link" href="{{site.doc_dir}}/index.html">Docs</a></li>
           <li class="navbar-item"><a class="navbar-link" href="apps.html">Applications</a></li>       
           <li class="navbar-item"><a class="navbar-link" href="acks.html">Thanks</a></li> 
         </ul>

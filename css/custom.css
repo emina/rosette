@@ -2,6 +2,12 @@
 .container {
   width: 600px; }
 
+body.index li {
+ list-style-position: inside;
+    text-indent: -1em;
+    padding-left: 1em;
+}
+
 .header {
   margin-top: 6rem; 
   

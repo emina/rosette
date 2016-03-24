@@ -15,6 +15,14 @@ languages.  You simply write an interpreter for your language in
 Rosette, and you get the tools for free!
 
 To learn more, take a look at [The Rosette Guide]({{site.doc_dir}}/index.html),
-[applications](apps.html), or [publications]({{site.doc_dir}}/refs.html).
+[applications](apps.html), or publications:
+
+* Emina Torlak and Rastislav
+  Bodik. A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages.
+PLDI 2014. [ [pdf](http://homes.cs.washington.edu/~emina/pubs/rosette.onward13.pdf)  | [ACM](http://dl.acm.org/citation.cfm?id=2594340) ]
+* Emina Torlak and Rastislav Bodik. Growing Solver-Aided Languages
+  with Rosette. Onward! 2013. [ [pdf](http://homes.cs.washington.edu/~emina/pubs/rosette.onward13.pdf)
+  | [ACM](http://dl.acm.org/citation.cfm?id=2509586) ]
+
 
 
