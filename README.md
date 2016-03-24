@@ -1,12 +1,12 @@
-rosette
-=======
+The Rosette Language
+====================
 
 [![Build Status](https://travis-ci.org/emina/rosette.svg?branch=refactor-ops)](https://travis-ci.org/emina/rosette)
 
 This repository includes the source code for the Rosette solver-aided host language, as well as several example
 solver-aided DSLs.
 
-### Installing Rosette
+## Installing Rosette
 
 * Download and install Racket 6.4 from http://racket-lang.org
 
@@ -30,7 +30,7 @@ solver-aided DSLs.
 
 * Copy the `z3` executable (with no filename extension) to the `rosette/bin` directory.
 
-### Executing Rosette programs
+## Executing Rosette programs
 
 * Open the target program in DrRacket (e.g., [`rosette/sdsl/fsm/demo.rkt`](https://github.com/emina/rosette/blob/master/sdsl/fsm/demo.rkt))
   and hit run!
@@ -41,7 +41,7 @@ solver-aided DSLs.
   `$ raco make <your program>`  
   `$ racket <your program>`  
 
-### Available languages
+## Available languages
 
 * Rosette ships with two languages: `#lang rosette/safe` and  `#lang rosette`.
 
@@ -67,5 +67,7 @@ solver-aided DSLs.
   incorrect semantics or cause more serious problems (e.g., data loss if 
   it writes to a file).
 
-* For more on using Rosette, see [_The Rosette Guide_](http://homes.cs.washington.edu/~emina/rosette/guide/index.html).  Rosette's internals are described in [_A lightweight symbolic
-  virtual machine for solver-aided host languages._](http://homes.cs.washington.edu/~emina/pubs/rosette.pldi14.pdf) (PLDI'14).
+* For more on using Rosette, see [_The Rosette Guide_][1].  Rosette's internals are described in [PLDI'14][2].
+  
+[1]: http://emina.github.io/rosette/doc/rosette-guide/index.html
+[2]: http://dl.acm.org/citation.cfm?id=2594340
