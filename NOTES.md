@@ -2,7 +2,7 @@
 
 ## Version 2.0
 
-This is a major release with significant features to the language and
+This is a major release with significant changes to the language and
 the symbolic evaluator.  Rosette 2.0 is *not backward compatible* with
 Rosette 1.x.
 
