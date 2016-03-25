@@ -30,11 +30,10 @@ Alternatively, you can install Rosette from source:
 
   `$ raco pkg remove rosette`
   
-* Use Racket's `raco` tool to install Rosette as one of your Racket collections:
+* Use Racket's `raco` tool to install Rosette:
 
   `$ cd rosette`  
-  `$ raco link rosette`  
-  `$ raco setup -l rosette`  
+  `$ raco pkg install`  
   
 ## Executing Rosette programs
 
