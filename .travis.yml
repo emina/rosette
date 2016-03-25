@@ -5,7 +5,7 @@ env:
   global:
     - RACKET_DIR=~/racket
     - RACKET_URL="https://www.cs.utah.edu/plt/installers/6.4/racket-6.4-x86_64-linux-ubuntu-precise.sh"
-    - Z3_URL="https://github.com/uwpc/rosette/releases/download/v2.0/z3-d89c39cb-x64-ubuntu-12.04.zip"
+    - Z3_URL="https://github.com/emina/rosette/releases/download/v2.0/z3-d89c39cb-x64-ubuntu-12.04.zip"
 
 before_install:
   - if [[ ! -e "$RACKET_DIR/bin/racket" ]]; then
