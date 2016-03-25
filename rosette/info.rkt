@@ -1,6 +1,6 @@
 #lang info
 
-(define collection 'use-pkg-name)
+(define collection 'multi)
 
 (define deps '("base"))
 (define build-deps '("scribble-lib"
