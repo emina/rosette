@@ -47,6 +47,7 @@ a {
   .navbar > .container {    
     width: 100%; }
   .navbar-list {   
+     margin-left: 10%;
     list-style: none;
     margin-bottom: 0; }
   .navbar-item {  
