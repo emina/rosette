@@ -20,7 +20,7 @@ before_install:
   - rm z3.zip
 
 install: 
-  - raco pkg install --auto $TRAVIS_BUILD_DIR/rosette
+  - raco pkg install
 
 script:
   - raco test 
