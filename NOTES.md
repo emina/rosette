@@ -36,6 +36,8 @@ This release includes the following features:
 
 - Improved implementation for the `define-synthax` form and other
   high-level synthesis constructs.
+  
+- Improved printing of symbolic values by [James Bornholt](https://homes.cs.washington.edu/~bornholt/).
 
 - Ported sample SDSLs to Rosette 2.0.
 
