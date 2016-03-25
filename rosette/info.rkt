@@ -2,15 +2,6 @@
 
 (define collection 'use-pkg-name)
 
-(define deps '("base"))
-(define build-deps '("scribble-lib"
-                     "racket-doc"))
-(define compile-omit-paths '("sdsl"
-                             "test"
-                             "bin"))
-(define pkg-desc "Rosette solver-aided host language")
-(define version "2.0")
-
 ;;; The format for `scribblings` is documented here:
 ;;;    http://docs.racket-lang.org/raco/setup-info.html
 (define scribblings
