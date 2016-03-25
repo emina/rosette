@@ -8,33 +8,18 @@ solver-aided DSLs.
 
 ## Installing Rosette
 
-The easiest way to install Rosette is from Racket's package manager:
-
-* Download and install Racket 6.4 from http://racket-lang.org
-
-* Use Racket's `raco` tool to install Rosette:
-
-  `$ raco pkg install rosette`   
-
-### Installing from source
-
-Alternatively, you can install Rosette from source:
+To install Rosette from source:
 
 * Download and install Racket 6.4 from http://racket-lang.org
 
 * Clone the rosette repository:
 
   `$ git clone https://github.com/emina/rosette.git`
-
-* Uninstall any previous versions of Rosette:
-
-  `$ raco pkg remove rosette`
   
 * Use Racket's `raco` tool to install Rosette as one of your Racket collections:
 
   `$ cd rosette`  
-  `$ raco link rosette`  
-  `$ raco setup -l rosette`  
+  `$ raco pkg install ./rosette`  
   
 ## Executing Rosette programs
 
