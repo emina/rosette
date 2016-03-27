@@ -1,6 +1,6 @@
 /* stylesheet from http://getskeleton.com */
 .container {
-  width: 600px; }
+  max-width: 600px; }
 
 
 body.index div.row li {
@@ -52,7 +52,8 @@ a {
   .navbar > .container {    
     width: 100%; }
   .navbar-list {   
-     margin-left: 10%;
+    width: 80%;
+    margin-left: 10%;
     list-style: none;
     margin-bottom: 0; }
   .navbar-item {  
@@ -81,8 +82,17 @@ a {
   .has-docked-nav .navbar > .container {
     width: 80%; }
 
-@media (min-width: 400px) {
+@media (max-width: 400px) {
+  .navbar-list {   
+    width: 100%;
+    margin-left: 0%;
+    list-style: none;
+    margin-bottom: 0; }
+  .navbar-item {  
+      float: none;
+      margin-bottom: 0rem; 
+      padding: 0rem;
+      margin-top: 0rem;}
   .navbar-link {
-    margin-left: 15px; 
-    margin-right: 15px;
-    }}
+      line-height: 1.5rem;}
+}
