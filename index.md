@@ -14,15 +14,27 @@ makes it easy to develop synthesis and verification tools for new
 languages.  You simply write an interpreter for your language in
 Rosette, and you get the tools for free!
 
+```racket
+#lang rosette
+
+(define (interpret formula)
+  (match formula
+    [`(∧ ,expr ...) (apply && (map interpret expr))]
+    [`(∨ ,expr ...) (apply || (map interpret expr))]
+    [`(¬ ,expr)     (! (interpret expr))]
+    [lit            (constant lit boolean?)]))
+
+; This implements a SAT solver.
+(define (SAT formula) 
+  (solve (assert (interpret formula))))  
+
+(SAT `(∧ r o (∨ s e (¬ t)) t (¬ e)))
+```
+
 To learn more, take a look at [The Rosette Guide]({{site.doc_dir}}/index.html),
-[applications](apps.html), or publications:
+[applications](apps.html), or publications:  
 
-* Emina Torlak and Rastislav
-  Bodik. A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages.
-PLDI 2014. [ [pdf](http://homes.cs.washington.edu/~emina/pubs/rosette.onward13.pdf)  | [ACM](http://dl.acm.org/citation.cfm?id=2594340) ]
-* Emina Torlak and Rastislav Bodik. Growing Solver-Aided Languages
-  with Rosette. Onward! 2013. [ [pdf](http://homes.cs.washington.edu/~emina/pubs/rosette.onward13.pdf)
-  | [ACM](http://dl.acm.org/citation.cfm?id=2509586) ]
-
-
+* [1] Emina Torlak and Rastislav Bodik. A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages. PLDI 2014. 
+([ACM](http://dl.acm.org/citation.cfm?id=2594340), [PDF](http://homes.cs.washington.edu/~emina/pubs/rosette.pldi14.pdf))
+* [2] Emina Torlak and Rastislav Bodik. Growing Solver-Aided Languages with Rosette. Onward! 2013. ([ACM](http://dl.acm.org/citation.cfm?id=2509586), [PDF](http://homes.cs.washington.edu/~emina/pubs/rosette.onward13.pdf))
 

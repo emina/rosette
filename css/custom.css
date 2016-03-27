@@ -4,9 +4,14 @@
 
 
 body.index div.row li {
-    list-style-position: inside;
-    text-indent: -1em;
-    padding-left: 1em;
+  list-style-type: none;
+  list-style-position: inside;
+  text-indent: -1.7rem;
+  padding-left: 1.7rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0rem;
+  padding-top: 0rem;
+  margin-top: 0rem;
 }
 
 img.logo {
