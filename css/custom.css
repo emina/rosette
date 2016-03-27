@@ -90,9 +90,8 @@ a {
     margin-bottom: 0; }
   .navbar-item {  
       float: none;
-      margin-bottom: 0rem; 
-      padding: 0rem;
-      margin-top: 0rem;}
+      margin: 0rem;
+      padding: 0rem;}
   .navbar-link {
       line-height: 1.5rem;}
 }
