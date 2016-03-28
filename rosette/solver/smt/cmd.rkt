@@ -56,11 +56,11 @@
 ; the solution from current-input-port and converts it into a 
 ; Rosette solution object.  The port must be connected to a 
 ; solver working on a problem P such that every identifier 
-; declared or defined in P is bound in (decls env) or (defs env), respectively.
+; declared or defined in P is bound in env.
 (define (decode env)
   (match (read-solution)
     [(? hash? sol) 
-     (sat (for/hash ([(decl id) (in-dict (decls env))])
+     (sat (for/hash ([(decl id) (in-dict env)] #:when (constant? decl))
             (let ([t (term-type decl)])
               (values decl
                       (if (hash-has-key? sol id)
@@ -70,8 +70,7 @@
                           (solvable-default t))))))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
-              (for/list ([(bool id) (in-sequences (in-dict (decls env)) (in-dict (defs env)))]
-                          #:when (set-member? core id)) 
+              (for/list ([(bool id) (in-dict env)] #:when (set-member? core id)) 
                  bool)))]
     [#f (unsat)]))
 
