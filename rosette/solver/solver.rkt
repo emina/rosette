@@ -11,12 +11,21 @@
 ; The generic solver interface specifies the set of procedures that 
 ; should be provided by a Rosette solver. These include 
 ; solver-assert, solver-clear, solver-minimize, solver-maximize,
-; solver-check, solver-debug, and solver-shutdown. 
+; solver-check, solver-debug, and solver-shutdown. A solver may support
+; a subset of this functionality.  This interface loosely follows
+; the [SMTLib solver interface](http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.5-r2015-06-28.pdf).
 ;
+; A solver uses an assertion stack to keep track of all assertions added to it via
+; solver-assert. This stack is partitioned into levels, with each level containing
+; a set of assertions. The first (0) assertion level cannot be removed, but more levels
+; can be created and removed using the solver-push and solver-pop procedures.  
+; 
 ; The solver-assert procedure takes as input zero or more @boolean? 
-; values and adds them to the current state of the solver. 
-; The solver-clear procedure clears all constraints from the current 
-; state of the solver.
+; values and adds them to the current level in the assertion stack.
+; The solver-push procedure creates a new level in the assertion stack.
+; The solver-pop procedure pops the given number of levels off the stack. 
+; The solver-clear procedure clears the assertion stack of all levels,
+; all assertions, and all objectives.
 ;
 ; The solver-minimize and solver-maximize procedures accept 
 ; numeric terms (@integer?, @real?, or bitvector?) that represent objectives
@@ -38,6 +47,8 @@
 ; if needed.  That is, the solver should behave as specified above after a shutdown call.
 (define-generics solver
   [solver-assert solver bools]
+  [solver-push solver]
+  [solver-pop solver k]
   [solver-clear solver]
   [solver-minimize solver nums]
   [solver-maximize solver nums]
