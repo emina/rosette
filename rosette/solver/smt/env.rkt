@@ -49,12 +49,12 @@
 (define-syntax ref!
   (syntax-rules ()
     [(_ env val) 
-     (let ([decls env]
+     (let ([defs env]
            [v val])
-       (or (dict-ref decls v #f)         
-           (let ([id (smt-id 'c (dict-count decls))]
+       (or (dict-ref defs v #f)         
+           (let ([id (smt-id 'c (dict-count defs))]
                  [t (term-type v)])
-             (dict-set! decls v id)
+             (dict-set! defs v id)
              (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
              id)))]
     [(_ env val enc)
