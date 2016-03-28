@@ -4,7 +4,7 @@
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt" 
          (only-in racket [remove-duplicates unique])
-         (only-in "smtlib2.rkt" reset set-option)
+         (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core)
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
@@ -51,10 +51,12 @@
    (define (solver-check self)
      (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env) self)
      (cond [(ormap false? asserts) (unsat)]
-           [else (server-write server (encode env asserts mins maxs))
-                 (set-z3-asserts! self '())
-                 (set-z3-mins! self '())
-                 (set-z3-maxs! self '())
+           [else (solver-clear-stacks! self)
+                 (server-write
+                  server
+                  (begin (encode env asserts mins maxs)
+                         (check-sat)
+                         (get-model)))
                  (server-read server (decode env))]))
    
    (define (solver-debug self)
@@ -62,9 +64,12 @@
      (cond [(ormap false? asserts) (unsat (list #f))]
            [else (set-z3-env! self (env))
                  (server-write (z3-server self) (reset-core-options))
-                 (server-write server (encode-for-proof (z3-env self) asserts))
-                 (server-read server (decode (z3-env self)))]))
-   ])
+                 (server-write
+                  server
+                  (begin (encode-for-proof (z3-env self) asserts)
+                         (check-sat)
+                         (get-unsat-core)))
+                 (server-read server (decode (z3-env self)))]))])
 
 (define (reset-default-options)
   (reset)
@@ -83,3 +88,9 @@
     (match t
       [(term _ (or (== @integer?) (== @real?) (? bitvector?))) t]
       [_ (error caller "expected a numeric term, given ~s" t)])))
+
+(define (solver-clear-stacks! self)
+  (set-z3-asserts! self '())
+  (set-z3-mins! self '())
+  (set-z3-maxs! self '()))
+  
