@@ -48,7 +48,7 @@
 (define-generics solver
   [solver-assert solver bools]
   [solver-push solver]
-  [solver-pop solver k]
+  [solver-pop solver [k]]
   [solver-clear solver]
   [solver-minimize solver nums]
   [solver-maximize solver nums]

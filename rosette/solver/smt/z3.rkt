@@ -4,7 +4,7 @@
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt" 
          (only-in racket [remove-duplicates unique])
-         (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core)
+         (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core push pop)
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
@@ -18,9 +18,10 @@
 (define (make-z3)
   (unless (file-exists? z3-path)
     (raise-user-error 'make-z3 "Failed to locate z3 binary at '~a'" z3-path))
-  (z3 (server z3-path z3-opts) '() '() '() (env)))
+  (z3 (server z3-path z3-opts) '() '() '() (env) '()))
   
-(struct z3 (server [asserts #:mutable] [mins #:mutable] [maxs #:mutable] [env #:mutable])
+(struct z3 (server asserts mins maxs env level)
+  #:mutable
   #:methods gen:solver
   [
    (define (solver-assert self bools)
@@ -45,20 +46,40 @@
    (define (solver-shutdown self)
      (solver-clear self)
      (server-shutdown (z3-server self)))
+
+   (define (solver-push self)
+     (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env level) self)
+     (server-write
+      server
+      (begin
+        (encode env asserts mins maxs)
+        (push)))
+     (solver-clear-stacks! self)
+     (set-z3-level! self (cons (dict-count env) level)))
    
+   (define (solver-pop self [k 1])
+     (match-define (z3 server _ _ _ env level) self)
+     (when (or (<= k 0) (> k (length level)))
+       (error 'solver-pop "expected 1 < k <= ~a, given ~a" (length level) k))
+     (server-write server (pop k))
+     (solver-clear-stacks! self)
+     (for ([lvl level][i k])
+       (clear! env lvl))
+     (set-z3-level! self (drop level k)))
+     
    (define (solver-check self)
-     (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env) self)
+     (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env _) self)
      (cond [(ormap false? asserts) (unsat)]
-           [else (solver-clear-stacks! self)
-                 (server-write
+           [else (server-write
                   server
                   (begin (encode env asserts mins maxs)
                          (check-sat)
                          (get-model)))
+                 (solver-clear-stacks! self)
                  (server-read server (decode env))]))
    
    (define (solver-debug self)
-     (match-define (z3 server (app unique asserts) _ _ _) self)
+     (match-define (z3 server (app unique asserts) _ _ _ _) self)
      (cond [(ormap false? asserts) (unsat (list #f))]
            [else (solver-clear-env! self)
                  (server-write (z3-server self) (reset-core-options))
@@ -93,5 +114,6 @@
   (set-z3-maxs! self '()))
 
 (define (solver-clear-env! self)
-  (set-z3-env! self (env)))
+  (set-z3-env! self (env))
+  (set-z3-level! self '()))
   

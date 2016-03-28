@@ -9,7 +9,7 @@
          (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size)
          (only-in "../../base/core/real.rkt" @integer? @real?))
 
-(provide (rename-out [make-hash env]) ref!)
+(provide (rename-out [make-hash env]) ref! clear!)
 
 (define (smt-id base n) (format-symbol "~a~a" base n))
 
@@ -20,6 +20,19 @@
     [(== @real?) Real]
     [(? bitvector? t) (BitVec (bitvector-size t))]
     [_ (error 'smt-type "expected primitive-solvable? type, given ~a" t)]))
+
+; Clears the given environment of bindings for all Rosette
+; values bound to an SMT identifier whose integer suffix is
+; greater or equal to the given value.  Note that every
+; Rosette value in the given dictionary has a unique integer
+; suffix if they are created via the ref! macro.
+(define (clear! env n)
+  (define to-evict
+    (for/list ([(k v) (in-hash env)]
+               #:when (>= (string->number (substring (symbol->string v) 1)) n))
+      k))
+  (for ([k to-evict])
+    (hash-remove! env k)))
 
 ; The ref! macro retrieves the SMT encoding for 
 ; the given Rosette value from the given environment. 
