@@ -24,6 +24,7 @@
  "query/solve+.rkt"
  "query/optimize.rkt"
  "query/synthax.rkt"
+ "query/push-pop.rkt"
  )
 
 #|
