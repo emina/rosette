@@ -38,10 +38,8 @@
      (set-z3-maxs! self (append (z3-maxs self) (numeric-terms nums 'solver-maximize))))
    
    (define (solver-clear self) 
-     (set-z3-asserts! self '())
-     (set-z3-mins! self '())
-     (set-z3-maxs! self '())
-     (set-z3-env! self (env))
+     (solver-clear-stacks! self)
+     (solver-clear-env! self)
      (server-write (z3-server self) (reset-default-options)))
    
    (define (solver-shutdown self)
@@ -62,7 +60,7 @@
    (define (solver-debug self)
      (match-define (z3 server (app unique asserts) _ _ _) self)
      (cond [(ormap false? asserts) (unsat (list #f))]
-           [else (set-z3-env! self (env))
+           [else (solver-clear-env! self)
                  (server-write (z3-server self) (reset-core-options))
                  (server-write
                   server
@@ -93,4 +91,7 @@
   (set-z3-asserts! self '())
   (set-z3-mins! self '())
   (set-z3-maxs! self '()))
+
+(define (solver-clear-env! self)
+  (set-z3-env! self (env)))
   
