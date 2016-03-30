@@ -32,10 +32,20 @@
     [(expression (== @expt) e (? integer? n)) 
      (let ([e^n (apply bvmul (make-list (abs n) (enc e env)))])
        (if (< n 0) (bvsdiv 1 e^n) e^n))]
-    [(expression (== @substring) str i j)
-     (str.++ (enc str env) (bv2nat (enc i env)) (bv2nat (enc j env)))]
     [(expression (== @string-length) str) 
      (nat2bv (str.len (enc str env)) (current-bitwidth))]
+    [(expression (== @substring) str i j)
+     (str.substr (enc str env) (bv2nat (enc i env)) (bv2nat (enc j env)))]
+    [(expression (== @string-contains?) str part)
+     (str.contains (enc str env) (enc part env))]
+    [(expression (== @string-prefix?) str part)
+     (str.prefixof (enc part env) (enc str env))]
+    [(expression (== @string-suffix?) str part)
+     (str.suffixof (env part env) (enc str env))]
+    [(expression (== @str-to-int) str) 
+     (nat2bv (str.to.int (enc str env)) (current-bitwidth))]
+    [(expression (== @int-to-str) int) 
+     (int.to.str (bv2nat (enc int env)))]
     [(expression (app rosette->smt (? procedure? smt/op)) es ...)
      (apply smt/op (for/list ([e es]) (enc e env)))]
     [_ (error 'encode "cannot encode expression ~a" v)]))
@@ -60,6 +70,7 @@
         [@<< bvshl] [@>>> bvlshr] [@>> bvashr]
         [@+ bvadd] [@* bvmul] [@quotient bvsdiv] [@remainder bvsrem]
         [@abs smt/abs] [@sgn smt/sgn] 
+        [@string-replace str.replace]
         [@string-append str.++]]
   [#:?  [enum-comparison-op? smt/<]])
 

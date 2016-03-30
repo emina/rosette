@@ -26,7 +26,8 @@
    + - * / quotient remainder expt abs sgn sqrt
    << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor 
    current-bitwidth 
-   string-length string-append substring)))
+   string-length str-to-int int-to-str string-append substring
+   string-contains? string-replace string-prefix? string-suffix?)))
 
 (define (impersonate-operator op origin)
   (impersonate-procedure 
@@ -81,7 +82,13 @@
   [bitwise-not @bitwise-not] [bitwise-and @bitwise-and] 
   [bitwise-ior @bitwise-ior] [bitwise-xor @bitwise-xor]
   [string-length @string-length] 
+  [int-to-str @int-to-str] 
+  [str-to-int @str-to-int] 
   [string-append @string-append] 
+  [string-contains? @string-contains?] 
+  [string-replace @string-replace] 
+  [string-prefix? @string-prefix?] 
+  [string-suffix? @string-suffix?] 
   [substring @substring])
 
 (define @boolean=? <=>)
