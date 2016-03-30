@@ -3,9 +3,12 @@
 (require (for-syntax racket racket/syntax)
          "../lib/data/array.rkt" "state.rkt" "term.rkt" )
 
-(provide define-symbolic define-symbolic*)
+(provide define-symbolic define-symbolic* make-symbolic)
 
 #|--------------define forms--------------|#
+
+(define (make-symbolic var type)
+  (constant (quasisyntax (unsyntax var)) type))
 
 (define-syntax (define-symbolic stx)
   (syntax-case stx ()
