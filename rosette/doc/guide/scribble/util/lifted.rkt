@@ -1,6 +1,6 @@
 #lang racket
 
-(provide select rosette-evaluator rosette-log-evaluator logfile)
+(provide select rosette-evaluator rosette-log-evaluator logfile opaque)
 
 (require 
   (for-label racket racket/generic)
@@ -39,9 +39,9 @@
     [(? pair?) (cons (serialize-for-logging (car v)) (serialize-for-logging (cdr v)))]
     [(? list?) (map serialize-for-logging v)]
     [(? vector?) (list->vector (map serialize-for-logging (vector->list v)))]
-    [(? custom-write?)
+    [(? struct?)
      (let ([output-str (open-output-string)])
-       ((custom-write-accessor v) v output-str 1)
+       (display v output-str)
        (opaque (get-output-string output-str)))]
     [_ v]))
 

@@ -8,11 +8,11 @@
            rosette/base/core/term (only-in rosette/base/base bv?)
            (only-in rosette/base/core/safe assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
-
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "solvers-log")))
 
 @title[#:tag "sec:solvers-and-solutions"]{Solvers and Solutions}
 
@@ -44,7 +44,7 @@ if they refer to the same object.
   new (SMT) solvers can be added well.  Rosette will work with any solver that implements the
   @racket[gen:solver] generic interface.
   @examples[#:eval rosette-eval
-   (eval:alts (current-solver) (display (current-solver)))]
+   (current-solver)]
 }
 
 @defthing[gen:solver solver?]{
@@ -174,9 +174,9 @@ with @racket[(solution #, @var[c])] and simplifying the result.
                 (assert (= y 2)))))
 (sat? sol)
 (evaluate (list 4 5 x) sol)
-(define v (vector a))
-(evaluate v sol)
-(code:line (eq? v (evaluate v sol)) (code:comment "evaluation produces a new vector"))
+(define vec (vector a))
+(evaluate vec sol)
+(code:line (eq? vec (evaluate vec sol)) (code:comment "evaluation produces a new vector"))
 (evaluate (+ x y) sol)
 (evaluate (and a b) sol) 
 ]}
