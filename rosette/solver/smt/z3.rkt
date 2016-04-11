@@ -22,6 +22,8 @@
   
 (struct z3 (server asserts mins maxs env level)
   #:mutable
+  #:methods gen:custom-write
+  [(define (write-proc self port mode) (fprintf port "#<z3>"))]
   #:methods gen:solver
   [
    (define (solver-assert self bools)
