@@ -1,0 +1,39 @@
+;; This file was created by make-log-based-eval
+((define-symbolic x y z n integer?)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define xs (take (list x y z) n))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define sol (solve (assert (null? xs))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate xs sol) ((3) 0 () 0 () () (q values ())) #"" #"")
+((define sol
+   (solve
+    (begin
+      (assert (= (length xs) 2))
+      (assert (not (equal? xs (reverse xs))))
+      (assert (equal? xs (sort xs <))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate xs sol) ((3) 0 () 0 () () (q values (1 4))) #"" #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define p (if b (cons 1 2) (cons 4 #f)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define sol (solve (assert (boolean? (cdr p)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate p sol) ((3) 0 () 0 () () (q values (4 . #f))) #"" #"")
+((define sol (solve (assert (odd? (car p)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate p sol) ((3) 0 () 0 () () (q values (1 . 2))) #"" #"")

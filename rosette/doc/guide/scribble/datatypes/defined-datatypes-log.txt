@@ -1,0 +1,91 @@
+;; This file was created by make-log-based-eval
+((require (only-in racket (struct racket/struct)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((racket/struct point (x y) #:transparent)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(#t ((3) 0 () 0 () () (q values #t)) #"" #"")
+(#f ((3) 0 () 0 () () (q values #f)) #"" #"")
+(#f ((3) 0 () 0 () () (q values #f)) #"" #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define p (if b (cons 1 2) (cons 3 4)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((car p)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(ite b 1 3)"))))
+ #""
+ #"")
+((cdr p)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(ite b 2 4)"))))
+ #""
+ #"")
+((define sol (solve (assert (= (car p) 3))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((point 3 4)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "#(struct:point 3 4)"))))
+ #""
+ #"")
+((racket/struct circle (radius) #:transparent)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define p (if b 2 3)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(p
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(ite b 2 3)"))))
+ #""
+ #"")
+((define sol (solve (assert (= p 3))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((circle 3)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "#(struct:circle 3)"))))
+ #""
+ #"")

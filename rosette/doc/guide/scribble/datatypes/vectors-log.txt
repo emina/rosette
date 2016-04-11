@@ -1,0 +1,30 @@
+;; This file was created by make-log-based-eval
+((define v1 (vector 1 2 #f)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define v2 (vector 1 2 #f)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((eq? v1 v2) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((equal? v1 v2) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((define v3 (vector-immutable 1 2 #f))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define v4 (vector-immutable 1 2 #f))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((eq? v3 v4) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((equal? v1 v3) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((define-symbolic x y z n integer?)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define xs (take (list x y z) n))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define vs (list->vector xs)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define sol (solve (assert (= 4 (vector-ref vs (sub1 n))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate vs sol) ((3) 0 () 0 () () (c values c (v! 0 4))) #"" #"")
+((evaluate xs sol) ((3) 0 () 0 () () (q values (0 4))) #"" #"")

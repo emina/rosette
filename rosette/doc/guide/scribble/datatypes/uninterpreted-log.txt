@@ -1,0 +1,195 @@
+;; This file was created by make-log-based-eval
+((define-symbolic f (~> integer? boolean?))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((f 1)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(app f 1)"))))
+ #""
+ #"")
+((define-symbolic x real?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((f x)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(app f (real->integer x))"))))
+ #""
+ #"")
+((asserts)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "(int? x)")))))
+ #""
+ #"")
+((define sol (solve (assert (not (equal? (f x) (f 1))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define g (evaluate f sol)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(g
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(fv (((1) . #f) ((0) . #t)) #f integer?~>boolean?)"))))
+ #""
+ #"")
+((evaluate x sol) ((3) 0 () 0 () () (q values 0)) #"" #"")
+((fv? f) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((fv? g) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((g 2) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((g x)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(= 0 (real->integer x))"))))
+ #""
+ #"")
+((define t (~> integer? real? boolean? (bitvector 4)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(t
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "integer?~>real?~>boolean?~>(bitvector? 4)"))))
+ #""
+ #"")
+((~> t integer?)
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "function: expected a list of primitive solvable types\n  domain: '(integer?~>real?~>boolean?~>(bitvector? 4))"))
+ #""
+ #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((~> integer? (if b boolean? real?))
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "function: expected a primitive solvable type\n  range: {[b boolean?] [(! b) real?]}"))
+ #""
+ #"")
+((~> real?)
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "~>: arity mismatch;\n the expected number of arguments does not match the given number\n  given: 1\n  arguments...:\n   real?"))
+ #""
+ #"")
+((define t0? (~> integer? real? boolean? (bitvector 4)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define t1? (~> integer? real?))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((function? t0?) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((function? t1?) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((function? (if b t0? t1?)) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((function? integer?) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((function? 3) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic f (~> boolean? boolean?))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((fv? f) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((fv? (lambda (x) x)) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((fv? (if b f 1))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "b"))))
+ #""
+ #"")
+((define sol (solve (begin (assert (not (f #t))) (assert (f #f)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define g (evaluate f sol)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(g
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0 (u . "(fv (((#f) . #t) ((#t) . #f)) #t boolean?~>boolean?)"))))
+ #""
+ #"")
+((fv? g) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((verify (assert (equal? (g b) (not b))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")

@@ -1,0 +1,37 @@
+;; This file was created by make-log-based-eval
+((current-solver)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "#<z3>"))))
+ #""
+ #"")
+((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define sol (solve (begin (assert a) (assert (= x 1)) (assert (= y 2)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((sat? sol) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((evaluate (list 4 5 x) sol) ((3) 0 () 0 () () (q values (4 5 1))) #"" #"")
+((define vec (vector a)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((evaluate vec sol) ((3) 0 () 0 () () (c values c (v! #t))) #"" #"")
+((eq? vec (evaluate vec sol)) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((evaluate (+ x y) sol) ((3) 0 () 0 () () (q values 3)) #"" #"")
+((evaluate (and a b) sol)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "b"))))
+ #""
+ #"")

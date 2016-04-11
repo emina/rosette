@@ -1,0 +1,257 @@
+;; This file was created by make-log-based-eval
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(b
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "b"))))
+ #""
+ #"")
+((boolean? b) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((integer? b) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((vector b 1)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (v! (0 (u . "b")) 1)))
+ #""
+ #"")
+((not b)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(! b)"))))
+ #""
+ #"")
+((boolean? (not b)) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((define-symbolic* n integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (static) (define-symbolic x boolean?) x)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (dynamic) (define-symbolic* y integer?) y)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((eq? (static) (static)) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((eq? (dynamic) (dynamic))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(= y$0 y$1)"))))
+ #""
+ #"")
+((define (yet-another-x) (define-symbolic x boolean?) x)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((eq? (static) (yet-another-x))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(<=> x x)"))))
+ #""
+ #"")
+((assert #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((assert #f) ((3) 0 () 0 () () (q exn "assert: failed")) #"" #"")
+((assert (not b)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((asserts)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "(! b)")) q #f)))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((asserts) ((3) 0 () 0 () () (q values ())) #"" #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (poly x) (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (factored x) (* x (+ x 1) (+ x 2) (+ x 2)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (same p f x) (assert (= (p x) (f x))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((same poly factored 0) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((same poly factored -1) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((same poly factored -2) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic i integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define cex (verify (same poly factored i)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate i cex) ((3) 0 () 0 () () (q values 12)) #"" #"")
+((same poly factored 12) ((3) 0 () 0 () () (q exn "assert: failed")) #"" #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((require (only-in racket/draw read-bitmap))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((require rosette/query/debug) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (poly x) (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define/debug (factored x) (* x (+ x 1) (+ x 2) (+ x 2)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (same p f x) (assert (= (p x) (f x))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define core (debug (integer?) (same poly factored 12)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((require rosette/lib/synthax) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (poly x) (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (factored x) (* (+ x (??)) (+ x 1) (+ x (??)) (+ x (??))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (same p f x) (assert (= (p x) (f x))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic i integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define binding
+   (synthesize #:forall (list i) #:guarantee (same poly factored i)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+('(define (factored x) (* (+ x 0) (+ x 1) (+ x 2) (+ x 3)))
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q values (define (factored x) (* (+ x 0) (+ x 1) (+ x 2) (+ x 3)))))
+ #""
+ #"")
+((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define sol
+   (solve
+    (begin
+      (assert (not (= x y)))
+      (assert (< (abs x) 10))
+      (assert (< (abs y) 10))
+      (assert (not (= (poly x) 0)))
+      (assert (= (poly x) (poly y))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate x sol) ((3) 0 () 0 () () (q values -5)) #"" #"")
+((evaluate y sol) ((3) 0 () 0 () () (q values 2)) #"" #"")
+((evaluate (poly x) sol) ((3) 0 () 0 () () (q values 120)) #"" #"")
+((evaluate (poly y) sol) ((3) 0 () 0 () () (q values 120)) #"" #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((current-bitwidth 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((solve (assert (= x 64)))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((verify (assert (not (= x 64))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((solve (assert (= x 64)))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 64])"))))
+ #""
+ #"")
+((verify (assert (not (= x 64))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 64])"))))
+ #""
+ #"")
+((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((letrec ((adder
+           (lambda (vs n)
+             (if (null? vs) (list) (cons (+ (car vs) n) (adder (cdr vs) n))))))
+   (adder '(1 2 3) x))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (c (0 (u . "(+ 1 x)")) c (0 (u . "(+ 2 x)")) c (0 (u . "(+ 3 x)")))))
+ #""
+ #"")
