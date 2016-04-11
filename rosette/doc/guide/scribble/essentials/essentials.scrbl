@@ -17,10 +17,9 @@
           "../util/lifted.rkt")
  
 @(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "essentials-log")))
 
 @(define (symbolic s) @racketresultfont[s]) 
-
-@(define rosette-eval (rosette-log-evaluator (logfile root "essentials-log")))
 
 @(define seen '())
 @(define (footnote . xs)
