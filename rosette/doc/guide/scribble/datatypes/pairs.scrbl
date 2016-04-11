@@ -5,11 +5,12 @@
            rosette/base/core/term  
            (only-in rosette/base/core/safe assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "pairs-log")))
 
 @(define pairs:constructors+selectors (select '(pair? null? cons car cdr null list? list list* build-list)))
 @(define list-operations (select '(length list-ref list-tail append reverse)))
