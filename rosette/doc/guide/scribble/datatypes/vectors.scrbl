@@ -5,11 +5,12 @@
            rosette/base/core/term  
            (only-in rosette/base/core/safe assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "vectors-log")))
 
 @(define vector-ops (select '(vector? make-vector vector vector-immutable vector-length vector-ref vector-set! vector->list list->vector vector->immutable-vector vector-fill! vector-copy! vector->values build-vector immutable?)))
 @(define more-vector-ops (select '(vector-set*! vector-map vector-map! vector-append vector-take vector-take-right vector-drop vector-drop-right vector-split-at vector-split-at-right vector-copy vector-filter vector-filter-not vector-count vector-argmin vector-argmax vector-member vector-memv vector-memq)))
