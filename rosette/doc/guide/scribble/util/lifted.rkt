@@ -25,12 +25,8 @@
                   [sandbox-eval-limits eval-limits])
      (make-evaluator 'rosette/safe)))
 
-(define logfile
-  (let ([files (make-hash)])
-    (lambda (root [base "log"])
-      (let ([cnt (hash-ref files root 0)])
-        (hash-set! files root (add1 cnt))
-        (build-path root (format "~a-~a.txt" base cnt))))))
+(define (logfile root [filename "log"])
+  (build-path root (format "~a.txt" filename)))
 
 (define (serialize-for-logging v)
   (match v
