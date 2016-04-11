@@ -1,12 +1,13 @@
 #lang scribble/manual
 
 @(require (for-label rosette/base/form/define racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 @(define box-ops (select '(box? box box-immutable unbox set-box! box-cas!)))
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "boxes-log")))
 
 @title[#:tag "sec:box"]{Boxes}
 
