@@ -8,6 +8,9 @@
 ehthumbs.db
 Thumbs.db
 
+**/doc/*.css
+**/doc/*.html
+**/doc/*.js
 **/rosette-guide/**
 **/bin/**
 **/compiled
