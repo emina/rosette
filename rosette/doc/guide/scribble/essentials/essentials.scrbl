@@ -8,24 +8,20 @@
            (except-in rosette/query/debug false true assert) rosette/query/eval
            (only-in rosette/lib/synthax ??) rosette/lib/render))
 
-@(require racket/sandbox  racket/runtime-path  
+@(require racket/sandbox  racket/runtime-path  scribble/core
           scribble/eval scribble/html-properties ;scriblib/footnote 
           (only-in racket [unsyntax racket/unsyntax])
           (only-in racket/draw read-bitmap))
 
-@(require (only-in "../refs.scrbl" ~cite rosette:onward13 rosette:pldi14))
-@(require "../util/lifted.rkt")
-
-@(define-runtime-path dbg   "pict.png")
-
-@(require scribble/core) 
+@(require (only-in "../refs.scrbl" ~cite rosette:onward13 rosette:pldi14)
+          "../util/lifted.rkt")
+ 
+@(define-runtime-path root ".")
 
 @(define (symbolic s) @racketresultfont[s]) 
 
-@(define rosette-eval (rosette-evaluator))
+@(define rosette-eval (rosette-log-evaluator (logfile root)))
 
-
-@(rosette-eval '(require (only-in racket hash)))
 @(define seen '())
 @(define (footnote . xs)
    (define ord (add1 (length seen)))
@@ -68,8 +64,6 @@ and @seclink["ch:programmer-defined-datatypes"]{programmer-defined}),
 @section[#:tag "sec:symbolic-values"]{Symbolic Values}
 
 The Rosette language includes two kinds of values: concrete and symbolic.  Concrete values are plain Racket values (@racket[#t], @racket[#f], @racket[0], @racket[1], etc.), and Rosette programs that operate only on concrete values behave just like Racket programs.  Accessing the solver-aided features of Rosette---such as code synthesis or verification---requires the use of symbolic values.
-
-
 
 @deftech[#:key "symbolic constant"]{Symbolic constants} are the simplest kind of symbolic value.  They can be created using the @racket[define-symbolic] form:
 @def+int[#:eval rosette-eval
@@ -195,7 +189,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
 
 #, @elem{>} (define core (debug [integer?] (same poly factored 12)))
 #, @elem{>} (render core)
-#,(call-with-input-file dbg (lambda (in) (read-bitmap in 'png)))]
+#,(call-with-input-file (build-path root "pict.png") (lambda (in) (read-bitmap in 'png)))]
 
 @(rosette-eval '(require rosette/query/debug))
 @(rosette-eval '(define (poly x)
@@ -286,18 +280,20 @@ By default, @racket[current-bitwidth] is set to 5.  Beware that using a large @v
                                                                
 Non-termination can also be caused by passing symbolic values to recursive procedures.  In particular, the expression that determines whether a recursion (or a loop) terminates must be executed on concrete values.   
 
-@(define limited-rosette-eval (rosette-evaluator '(2 #f)))
-@interaction[#:eval limited-rosette-eval
+@interaction[
 (code:comment "while sandboxed evaluation of (ones x) times out,")
 (code:comment "normal evaluation would not terminate")
-(define-symbolic x integer?)
+(eval:alts (define-symbolic x integer?) (void))
+(eval:alts 
 (letrec ([ones (lambda (n)
                   (if (<= n 0)
                       (list)
                       (cons 1 (ones (- n 1)))))])
   (printf "~a" (ones 3))
-  (printf "~a" (ones x)))]
-@(kill-evaluator limited-rosette-eval)
+  (printf "~a" (ones x)))
+(begin (printf "(1 1 1)")
+       (fprintf (current-error-port) "with-limit: out of time")))]
+
 
 It is, however, safe to apply recursive procedures to symbolic values if they are not used in termination checks.  
 @interaction[#:eval rosette-eval
