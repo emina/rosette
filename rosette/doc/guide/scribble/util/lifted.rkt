@@ -30,7 +30,7 @@
     (lambda (root [base "log"])
       (let ([cnt (hash-ref files root 0)])
         (hash-set! files root (add1 cnt))
-        (build-path root (format "~a~a.txt" base cnt))))))
+        (build-path root (format "~a-~a.txt" base cnt))))))
 
 (define (serialize-for-logging v)
   (match v

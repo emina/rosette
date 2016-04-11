@@ -9,10 +9,11 @@
            (only-in rosette/base/base bv?)
            (only-in rosette/base/core/function function?))
           (for-label racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox  racket/runtime-path 
           "../util/lifted.rkt")
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "rosette-forms-log")))
 
 @title[#:tag "ch:syntactic-forms:rosette"]{Solver-Aided Forms}
 
@@ -268,9 +269,11 @@ the @racket[debug] form.}
   (of size @racket[k]), which can be efficiently decided by SMT solvers.
   When this form of translation is used, a @racket[solve] or @racket[verify]
   query will produce a satisfiable result if and only if there is a
-  solution under @racket[k]-bit semantics that is also correct under infinite-precision semantics.  
-  Rosette does not provide such a soundness guarantee for other queries (because it is 
-  computationally expensive or impossible to provide).  A @racket[synthesize] query, for example, 
+  solution under @racket[k]-bit semantics that is also correct under infinite-precision semantics.
+  (Note that this guarantee is limited in the case of unsatisfiability---it says only
+   that no @racket[k]-bit solution corresponds to an infinite-precision solution.)
+  Rosette does not provide such a soundness guarantee for other queries because it is 
+  computationally expensive or impossible to provide.  A @racket[synthesize] query, for example, 
   may produce a solution that is correct under @racket[k]-bit semantics, but incorrect under
   infinite-precision semantics. 
 
