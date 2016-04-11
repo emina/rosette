@@ -27,10 +27,10 @@
 
 (define logfile
   (let ([files (make-hash)])
-    (lambda (root)
+    (lambda (root [base "log"])
       (let ([cnt (hash-ref files root 0)])
         (hash-set! files root (add1 cnt))
-        (build-path root (format "log~a.txt" cnt))))))
+        (build-path root (format "~a~a.txt" base cnt))))))
 
 (define (serialize-for-logging v)
   (match v
