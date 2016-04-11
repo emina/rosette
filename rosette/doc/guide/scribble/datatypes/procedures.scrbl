@@ -5,11 +5,12 @@
            rosette/base/core/term  
            (only-in rosette/base/core/safe assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "procedures-log")))
 
 @(define proc-ops (select '(procedure? apply compose compose1 procedure-rename procedure->method procedure-closure-contents-eq? )))
 @(define more-proc-ops (select '(identity const thunk thunk* negate curry curryr normalized-arity? normalize-arity arity=? arity-includes? prop:procedure)))
