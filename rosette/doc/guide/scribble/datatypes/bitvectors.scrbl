@@ -66,7 +66,8 @@ into a programming language.
    (code:line (bitvector? integer?) (code:comment "not a bitvector type"))
    (code:line (bitvector? 3) (code:comment "not a type"))]}
 
-@defproc[(bv [size (and/c (or/c bitvector? (and/c integer? positive?))
+@defproc[(bv [val (and/c integer? (not/c term?) (not/c union?))]
+             [size (and/c (or/c bitvector? (and/c integer? positive?))
                           (not/c term?) (not/c union?))]) bv?]{
   Returns a bitvector literal of the given @racket[size], which may be given either as a
   concrete @racket[bitvector?] type or a concrete positive integer.}
