@@ -20,7 +20,7 @@
 
 @(define (symbolic s) @racketresultfont[s]) 
 
-@(define rosette-eval (rosette-log-evaluator (logfile root)))
+@(define rosette-eval (rosette-log-evaluator (logfile root "essentials-log")))
 
 @(define seen '())
 @(define (footnote . xs)
