@@ -3,11 +3,13 @@
 @(require (for-label racket) scribble/core scribble/eval)
 @(require (for-label rosette/base/form/define rosette/query/query rosette/solver/solution
                      rosette/base/core/term (only-in rosette/query/debug define/debug debug)
-                     (only-in rosette/base/core/safe assert) ))
+                     (only-in rosette/base/core/safe assert) )
+          racket/runtime-path)
 @(require (only-in "../refs.scrbl" ~cite rosette:pldi14))
 @(require "../util/lifted.rkt")
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "unsafe-log")))
 
 @title[#:tag "ch:unsafe"]{Unsafe Operations}
 
