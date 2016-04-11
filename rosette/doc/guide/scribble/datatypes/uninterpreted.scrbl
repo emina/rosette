@@ -8,11 +8,12 @@
            (only-in rosette/base/base bv bitvector)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts))
-          (for-label racket)
+          (for-label racket) racket/runtime-path
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "uninterpreted-log")))
 
 @title{Uninterpreted Functions}
 
