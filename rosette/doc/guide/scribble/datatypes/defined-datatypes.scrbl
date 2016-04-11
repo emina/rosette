@@ -4,10 +4,11 @@
            rosette/base/form/define rosette/query/query rosette/query/eval  
            rosette/base/core/term (only-in rosette/base/core/safe assert) 
            racket racket/generic)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "defined-datatypes-log")))
 @(define prop-facilities (select '(make-struct-type-property struct-type-property? struct-type-property-accessor-procedure?)))
 @(define props (select '(prop:arity-string prop:blame prop:chaperone-contract prop:chaperone-unsafe-undefined prop:checked-procedure prop:contract prop:contracted prop:custom-print-quotable prop:custom-write prop:dict prop:dict/contract prop:equal+hash prop:evt prop:exn:missing-module prop:exn:srclocs prop:flat-contract prop:impersonator-of prop:input-port prop:legacy-match-expander prop:liberal-define-context prop:match-expander prop:output-port prop:place-location prop:procedure prop:provide-pre-transformer prop:provide-transformer prop:rename-transformer prop:require-transformer prop:sequence prop:serializable prop:set!-transformer prop:stream prop:struct-auto-info prop:struct-info)))
 @(define generics-facilities (select '(define-generics raise-support-error exn:fail:support define/generic generic-instance/c impersonate-generics chaperone-generics redirect-generics )))
