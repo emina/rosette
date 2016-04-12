@@ -81,8 +81,10 @@ Rosette translates queries over reals and integers into constraints in the
 When this form of translation is used, a <span class="RktSym"><a href="#%28form._%28%28lib._rosette%2Fquery%2Fform..rkt%29._solve%29%29" class="RktStxLink" data-pltdoc="x">solve</a></span> or <span class="RktSym"><a href="#%28form._%28%28lib._rosette%2Fquery%2Fform..rkt%29._verify%29%29" class="RktStxLink" data-pltdoc="x">verify</a></span>
 query will produce a satisfiable result if and only if there is a
 solution under <span class="RktVar">k</span>-bit semantics that is also correct under infinite-precision semantics.
-Rosette does not provide such a soundness guarantee for other queries (because it is
-computationally expensive or impossible to provide).  A <span class="RktSym"><a href="#%28form._%28%28lib._rosette%2Fquery%2Fform..rkt%29._synthesize%29%29" class="RktStxLink" data-pltdoc="x">synthesize</a></span> query, for example,
+(Note that this guarantee is limited in the case of unsatisfiability&#8212;<wbr></wbr>it says only
+ that no <span class="RktVar">k</span>-bit solution corresponds to an infinite-precision solution.)
+Rosette does not provide such a soundness guarantee for other queries because it is
+computationally expensive or impossible to provide.  A <span class="RktSym"><a href="#%28form._%28%28lib._rosette%2Fquery%2Fform..rkt%29._synthesize%29%29" class="RktStxLink" data-pltdoc="x">synthesize</a></span> query, for example,
 may produce a solution that is correct under <span class="RktVar">k</span>-bit semantics, but incorrect under
 infinite-precision semantics.</p><p>When  <span class="RktSym"><a href="#%28def._%28%28lib._rosette%2Fquery%2Ffinitize..rkt%29._current-bitwidth%29%29" class="RktValLink" data-pltdoc="x">current-bitwidth</a></span> is <span class="RktVal">#f</span>, Rosette translates queries over
 reals and integers into constraints in the
