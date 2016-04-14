@@ -25,7 +25,7 @@ first-time users of Rosette in just a few days or weeks.
 [Chlorophyll]: http://pl.eecs.berkeley.edu/projects/chlorophyll/
 [GA144]: http://www.greenarraychips.com/
 [Ferrite]: http://sandcat.cs.washington.edu/ferrite/
-[Greenthumb]: https://github.com/mangpo/greenthumb/
+[Greenthumb]: http://pl.eecs.berkeley.edu/projects/greenthumb/
 [Neutrons]: http://neutrons.uwplse.org
 [EPICS]: http://www.aps.anl.gov/epics/
 [CNTS]: https://staff.washington.edu/jon/cnts/
