@@ -3,8 +3,7 @@ The Rosette Language
 
 [![Build Status](https://travis-ci.org/emina/rosette.svg?branch=master)](https://travis-ci.org/emina/rosette)
 
-This repository includes the source code for the Rosette solver-aided host language, as well as several example
-solver-aided DSLs.
+[Rosette](http://emina.github.io/rosette/) is a solver-aided programming language that extends [Racket](http://racket-lang.org) with language constructs for program synthesis, verification, and more. This repository includes the source code for Rosette, as well as several example solver-aided DSLs.
 
 ## Installing Rosette
 
