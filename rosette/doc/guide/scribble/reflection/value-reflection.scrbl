@@ -237,7 +237,7 @@ Experimenting is the best way to determine whether and where to insert
 performance-guiding @racket[for/all]s.
 }]}
 
-@defform[(for/all* ([id val-expr] ...+) body)]{
+@defform[(for*/all ([id val-expr] ...+) body)]{
 Expands to a nested use of @racket[for/all], 
 just like @racket[let*] expands to a nested use of @racket[let].}                                             
                                     
