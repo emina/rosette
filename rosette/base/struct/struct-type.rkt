@@ -1,67 +1,112 @@
 #lang racket
 
 
-(require (for-syntax "../core/lift.rkt" racket/syntax) 
+(require (for-syntax "../core/lift.rkt" racket/syntax)
+         (only-in racket/private/generic-methods generic-property)
          (only-in "../core/effects.rkt" apply!)
          "../core/term.rkt"  "../core/lift.rkt" "../core/safe.rkt"
          (only-in "../core/bool.rkt" || && and-&&)
-         (only-in "../core/type.rkt" @any/c type-cast)
+         (only-in "../core/type.rkt" @any/c type-cast gen:typed get-type)
          (only-in "../core/procedure.rkt" @procedure?)
          (only-in "../core/merge.rkt" merge merge*)
          (only-in "../core/union.rkt" union union? in-union-guards)
          (only-in "../core/equality.rkt" @equal? @eq?)
          (only-in "../adt/generic.rkt" adt-type-cast))
 
-(provide @struct-predicate @make-struct-field-accessor @make-struct-field-mutator)
+(provide @make-struct-type
+         @make-struct-field-accessor
+         @make-struct-field-mutator)
 
-(define (@make-struct-field-mutator lifted? i field-id)
-  (let ([native? (struct-type-native? lifted?)]
-        [setter (make-struct-field-mutator (struct-type-set! lifted?) i field-id)]
-        [getter (make-struct-field-accessor (struct-type-ref lifted?) i field-id)])
+(define (@make-struct-type
+         name super-type init-field-cnt auto-field-cnt
+         [auto-v #f]
+         [props '()]
+         [inspector (current-inspector)]	 
+         [proc-spec #f]
+         [immutables '()]
+         [guard #f]
+         [constructor-name #f])
+
+;  (printf "@make-struct-type:\n")
+;  (printf " name: ~a\n" name)
+;  (printf " super-type: ~a\n" super-type)
+;  (printf " init-field-cnt: ~a\n" init-field-cnt)
+;  (printf " auto-field-cnt: ~a\n" auto-field-cnt)
+;  (printf " props: ~a\n" props)
+;  (printf " inspector: ~a\n" inspector)
+;  (printf " proc-spec: ~a\n" proc-spec)
+;  (printf " immutables: ~a\n" immutables)
+  
+  (define-values (struct:t make-t t? t-ref t-set!)
+    (make-struct-type
+     name super-type init-field-cnt auto-field-cnt auto-v
+     (cons (cons (generic-property gen:typed)
+                 (vector (lambda (self) @struct:t)))
+           props) ; all struct values are typed
+     inspector proc-spec immutables
+     guard constructor-name))
+  
+  (define (@t? v)
+    (match v
+      [(? t?) #t] 
+      [(and (? typed? v) (app get-type t)) 
+       (or (and t (subtype? t @struct:t)) 
+           (and (union? v) (apply || (for/list ([g (in-union-guards v @struct:t)]) g))))]
+      [_ #f]))
+
+  (define super        (and super-type (typed? super-type) (get-type super-type)))
+  (define field-count  (- init-field-cnt auto-field-cnt))
+  (define immutable?   (and (= init-field-cnt (length immutables)) (zero? auto-field-cnt)))  
+  (define transparent? (not inspector))
+  (define equal+hash   (let ([e+h (assoc (generic-property gen:equal+hash) props)])
+                         (and e+h (cdr e+h))))
+  (define procedure?   (or proc-spec (not (false? (assoc prop:procedure props)))))
+
+;  (printf " super: ~a\n" super)
+;  (printf " field-count: ~a\n" field-count)
+;  (printf " immutable?: ~a\n" immutable?)
+;  (printf " transparent?: ~a\n" transparent?)
+;  (printf " procedure?: ~a\n" procedure?)
+;  (printf " equal+hash?: ~a\n" equal+hash?)
+  
+  (define @struct:t
+    (struct-type 
+     (procedure-rename @t? (object-name t?))
+     super t? make-t t-ref t-set! field-count 
+     (and immutable? (implies super (struct-type-immutable? super))) 
+     (and transparent? (implies super (struct-type-transparent? super))) 
+     (or procedure? (and super (struct-type-procedure? super)))
+     equal+hash))
+  
+  (values struct:t make-t @struct:t t-ref t-set!))
+
+(define (@make-struct-field-mutator struct:t i field-id)
+  (let* ([@struct:t (get-type struct:t)]
+         [native? (struct-type-native? @struct:t)]
+         [setter (make-struct-field-mutator (struct-type-set! @struct:t) i field-id)]
+         [getter (make-struct-field-accessor (struct-type-ref @struct:t) i field-id)])
     (procedure-rename 
      (lambda (receiver value) 
        (if (native? receiver)
            (apply! setter getter receiver value) 
-           (match (type-cast lifted? receiver (object-name setter))
+           (match (type-cast @struct:t receiver (object-name setter))
              [(? native? r) (apply! setter getter receiver value)]
              [(union rs) (for ([r rs]) 
                            (apply! setter getter (cdr r) (merge (car r) value (getter (cdr r)))))])))
      (object-name setter))))
 
-(define (@make-struct-field-accessor lifted? i field-id)
-  ;(printf "@make-struct-field-accessor ~a ~a ~a\n" lifted? i field-id)
-  (let ([native? (struct-type-native? lifted?)]
-        [getter (make-struct-field-accessor (struct-type-ref lifted?) i field-id)])
+(define (@make-struct-field-accessor struct:t i field-id)
+  (let* ([@struct:t (get-type struct:t)]
+         [native? (struct-type-native? @struct:t)]
+         [getter (make-struct-field-accessor (struct-type-ref @struct:t) i field-id)])
     (procedure-rename 
      (lambda (receiver) 
        (if (native? receiver)
            (getter receiver)
-           (match (type-cast lifted? receiver (object-name getter))
+           (match (type-cast @struct:t receiver (object-name getter))
              [(? native? r) (getter r)]
              [(union r) (merge** r getter)])))
      (object-name getter))))
-
-(define (@struct-predicate struct:super is-a? make ref set! field-count immutable? transparent? procedure? equal+hash)
-  ;(printf "@struct-type:\n")
-  ;(printf "  super=~a, ?=~a, make=~a\n  ref=~a, set!=~a, field-count=~a\n" struct:super is-a? make ref set! field-count)
-  ;(printf "  immutable?=~a, transparent?=~a, procedure?=~a\n  equal+hash=~a\n" immutable? transparent? procedure? equal+hash) 
-  (define (t? v)
-    (match v
-      [(? is-a?) #t] 
-      [(and (? typed? v) (app get-type t)) 
-       (or (and t (subtype? t st)) 
-           (and (union? v) (apply || (for/list ([g (in-union-guards v st)]) g))))]
-      [_ #f]))
-  (define super (and struct:super (typed? struct:super) (get-type struct:super)))
-  (define st
-    (struct-type 
-     (procedure-rename t? (object-name is-a?))
-     super is-a? make ref set! field-count 
-     (and immutable? (implies super (struct-type-immutable? super))) 
-     (and transparent? (implies super (struct-type-transparent? super))) 
-     (or procedure? (and super (struct-type-procedure? super)))
-     equal+hash))
-  st)
 
 (struct struct-type (pred super native? make ref set! fields immutable? transparent? procedure? equal+hash)
   #:property prop:procedure
@@ -157,7 +202,6 @@
              (outer (struct-type-super t0))))))
          
          
-          
 
     
            

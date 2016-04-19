@@ -4,8 +4,9 @@
 
 (require racket/stxparam "struct-type.rkt" 
          (only-in "../core/type.rkt" gen:typed get-type)
-         (except-in racket/private/generic-methods define/generic) 
-         (for-syntax racket/base racket/struct-info racket/syntax))
+         racket/private/generic-methods; (except-in racket/private/generic-methods define/generic) 
+         (for-syntax racket/base racket/struct-info racket/syntax
+                     racket/private/procedure-alias "struct-type.rkt"))
 
 (provide struct struct-field-index define/generic define-struct)
 
@@ -24,42 +25,32 @@
             (identifier? #'super-id))
        (if (not (config-has-name? #'config))
            (syntax/loc stx
-             (define-struct/typed orig (id super-id) fields  #:constructor-name id . config))
+             (define-struct/derived orig (id super-id) fields  #:constructor-name id . config))
            (syntax/loc stx
-             (define-struct/typed orig (id super-id) fields . config)))]
+             (define-struct/derived orig (id super-id) fields . config)))]
       [(_ id fields . config)
        (identifier? #'id)
        (if (not (config-has-name? #'config))
            (syntax/loc stx
-             (define-struct/typed orig id fields  #:constructor-name id . config))
+             (define-struct/derived orig id fields  #:constructor-name id . config))
            (syntax/loc stx
-             (define-struct/typed orig id fields . config)))]
+             (define-struct/derived orig id fields . config)))]
       [(_ id . rest)
        (identifier? #'id)
        (syntax/loc stx
-         (define-struct/typed orig id . rest))]
+         (define-struct/derived orig id . rest))]
       [(_ thing . _)
        (raise-syntax-error #f
                            "expected an identifier for the structure type name"
                            stx
                            #'thing)])))
 
-(define-syntax (define-struct stx)
-  (syntax-case stx ()
-    [(_ id (field ...) struct-option ...)
-     (syntax/loc stx (struct id (field ...) struct-option ...))]
-    [(_ (id super) (field ...) struct-option ...)
-     (syntax/loc stx (struct id super (field ...) struct-option ...))]))
-
-
-(define-syntax (define-struct/typed stx)
-  (syntax-case stx ()
-    [(_ orig head rest ...) 
-     (let* ([id (if (identifier? #'head) #'head (car (syntax->list #'head)))]
-            [id? (format-id id "~a?" (syntax-e id))])
-       #`(define-struct/derived orig head rest ...
-           #:methods gen:typed
-           [(define (get-type s) #,id?)]))])) 
+(#%provide define-struct*
+           define-struct/derived
+           struct-field-index
+           struct-copy
+           (for-syntax
+            (rename checked-struct-info-rec? checked-struct-info?)))
 
 (define-values-for-syntax
   (struct:struct-auto-info 
@@ -102,12 +93,21 @@
     (datum->syntax orig (syntax-e orig) stx orig))
   (syntax-case stx ()
     [(self arg ...) (datum->syntax stx
-                                   (cons (syntax-property (transfer-srcloc orig #'self)
-                                                          'constructor-for
-                                                          (syntax-local-introduce #'self))
-                                         (syntax-e (syntax (arg ...))))
+                                   (cons 
+                                    (syntax-property
+                                     (syntax-property (transfer-srcloc orig #'self)
+                                                      'constructor-for
+                                                      (syntax-local-introduce #'self))
+                                     alias-of (syntax-local-introduce #'self))
+                                    (syntax-e (syntax (arg ...))))
                                    stx
                                    stx)]
+    [self (identifier? #'self)
+          (syntax-property
+           (syntax-property (transfer-srcloc orig #'self)
+                            'constructor-for
+                            (syntax-local-introduce #'self))
+           alias-of (syntax-local-introduce #'self))]
     [_ (transfer-srcloc orig stx)]))
 
 (define-values-for-syntax (make-self-ctor-struct-info)
@@ -150,10 +150,11 @@
     (raise-argument-error name "symbol?" what))
   what)
 
-(define-syntax-parameter define/generic
-  (lambda (stx)
-    (raise-syntax-error 'define/generic "only allowed inside methods" stx)))
-
+(define-syntax (define-struct* stx)
+  (syntax-case stx ()
+    [(_ . rest)
+     (with-syntax ([stx stx])
+       #'(define-struct/derived stx . rest))]))
 
 (define-syntax (define-struct/derived full-stx)
   (define make-field list)
@@ -318,7 +319,7 @@
          ;; #:methods gen:foo [(define (meth1 x ...) e ...) ...]
          (check-exprs 2 p "argument")
          (define gen-id (cadr p))
-         (define gen-defs (caddr p)) 
+         (define gen-defs (caddr p))
          (define args (cdddr p))
          (define gen-val
            (and (identifier? gen-id)
@@ -356,7 +357,7 @@
          (when (lookup config '#:constructor-name)
            (bad "multiple" "#:constructor-name or #:extra-constructor-name" "s" (car p)))
          (unless (identifier? (cadr p))
-           (bad "need an identifier after" (car p) (cadr p)))
+           (bad "need an identifier after" (car p) "" (cadr p)))
          (loop (cddr p)
                (extend-config (extend-config config '#:constructor-name (cadr p))
                               '#:only-constructor?
@@ -395,15 +396,6 @@
               "expected a struct-specification keyword")
           stx
           (car p))])))
-  
-  (define (prop:procedure? p) 
-    (and (identifier? (car p))
-         (free-identifier=? (car p) #'prop:procedure)))
-  
-  (define (gen:equal+hash? p)
-    (and (not (identifier? (car p)))
-         (free-identifier=? (cadr (syntax->list (car p))) 
-                            #'gen:equal+hash)))
   
   (define stx (syntax-case full-stx ()
                 [(_ stx . _) #'stx]))
@@ -513,19 +505,6 @@
                                   (build-name id ; (field-id f) 
                                               id "-" (field-id f)))
                                 fields)]
-                     [sets (let loop ([fields fields])
-                             (cond
-                               [(null? fields) null]
-                               [(not (or mutable? (field-mutable? (car fields))))
-                                (loop (cdr fields))]
-                               [else
-                                (cons (build-name id ; (field-id (car fields))
-                                                  "set-"
-                                                  id
-                                                  "-"
-                                                  (field-id (car fields))
-                                                  "!")
-                                      (loop (cdr fields)))]))]
                      [super-struct: (if super-info
                                         (or (car super-info)
                                             (raise-syntax-error
@@ -534,73 +513,145 @@
                                              stx
                                              super-id))
                                         (and super-expr
-                                             #`(check-struct-type 'fm #,super-expr)))]
-                     [prune 
-                      (lambda (stx) 
-                        (identifier-prune-lexical-context stx
-                                                          (list (syntax-e stx) '#%top)))]
+                                             #`(let ([the-super #,super-expr])
+                                                 (if (struct-type? the-super)
+                                                     the-super
+                                                     (check-struct-type 'fm the-super)))))]
+                     [prune (lambda (stx) (identifier-prune-lexical-context stx
+                                                                            (list (syntax-e stx) '#%top)))]
                      [reflect-name-expr (if reflect-name-expr
                                             (quasisyntax (check-reflection-name 'fm #,reflect-name-expr))
-                                            (quasisyntax '#,id))]
-                     [proc? (for/or ([p props]) (prop:procedure? p))]
-                     [equal+hash (for/first ([p props] #:when (gen:equal+hash? p)) (cdr p))]
-                     [props 
-                      (if (null? props)
-                          #'null
-                          #`(list #,@(for/list ([p props]); #:unless (gen:equal+hash? p))
-                                       #`(cons #,(car p) #,(cdr p)))))])
+                                            (quasisyntax '#,id))])
+                 
+                 (define struct-name-size (string-length (symbol->string (syntax-e id))))
+                 (define struct-name/locally-introduced (syntax-local-introduce id))
+                 (define struct-name-to-predicate-directive
+                   (vector (syntax-local-introduce ?)
+                           0
+                           struct-name-size
+                           struct-name/locally-introduced
+                           0
+                           struct-name-size))
+                 
+                 (define struct-name-to-old-style-maker-directive
+                   (if ctor-name
+                       #f
+                       (vector (syntax-local-introduce make-)
+                               5
+                               struct-name-size
+                               struct-name/locally-introduced
+                               0
+                               struct-name-size)))
+                 
+                 (define (struct-name-to-selector/mutator-directive id-stx selector?)
+                   (vector (syntax-local-introduce id-stx)
+                           (if selector? 0 4)
+                           struct-name-size
+                           struct-name/locally-introduced
+                           0
+                           struct-name-size))
+                 (define (field-to-selector/mutator-directive field id-stx selector?)
+                   (define fld-size (string-length (symbol->string (syntax-e (field-id field)))))
+                   (vector (syntax-local-introduce id-stx)
+                           (+ (if selector? 1 5) struct-name-size)
+                           fld-size
+                           (syntax-local-introduce (field-id field))
+                           0
+                           fld-size))
+                 
+                 (define-values (sets field-to-mutator-directives)
+                   (let loop ([fields fields])
+                     (cond
+                       [(null? fields) (values null null)]
+                       [(not (or mutable? (field-mutable? (car fields))))
+                        (loop (cdr fields))]
+                       [else
+                        (define-values (other-sets other-directives)
+                          (loop (cdr fields)))
+                        (define this-set
+                          (build-name id ; (field-id (car fields))
+                                      "set-"
+                                      id
+                                      "-"
+                                      (field-id (car fields))
+                                      "!"))
+                        (values (cons this-set other-sets)
+                                (cons (field-to-selector/mutator-directive (car fields)
+                                                                           this-set
+                                                                           #f)
+                                      other-directives))])))
+                 
+                 (define all-directives
+                   (append 
+                    (list struct-name-to-predicate-directive)
+                    (if struct-name-to-old-style-maker-directive
+                        (list struct-name-to-old-style-maker-directive)
+                        '())
+                    field-to-mutator-directives
+                    (map (λ (field sel)
+                           (field-to-selector/mutator-directive field sel #t))
+                         fields
+                         sels)
+                    (map (λ (sel)
+                           (struct-name-to-selector/mutator-directive
+                            sel
+                            #t))
+                         sels)
+                    (map (λ (mut)
+                           (struct-name-to-selector/mutator-directive
+                            mut
+                            #f))
+                         sets)))
+                 
                  (let ([run-time-defns
                         (lambda ()
                           (quasisyntax/loc stx
                             (define-values (#,struct: #,make- #,? #,@sels #,@sets)
-                              (let*-values 
-                                  ([(struct: make- ? -ref -set!)
-                                    (syntax-parameterize 
-                                     ([struct-field-index
-                                       (lambda (stx)
-                                         (syntax-case stx #,(map field-id fields)
-                                           #,@(let loop ([fields fields][pos 0])
-                                                (cond
-                                                  [(null? fields) null]
-                                                  [else (cons #`[(_ #,(field-id (car fields))) #'#,pos]
-                                                              (loop (cdr fields) (add1 pos)))]))
-                                           [(_ name) (raise-syntax-error #f "no such field" stx #'name)]))])
-                                     (make-struct-type #,reflect-name-expr
-                                                       #,super-struct:
-                                                       #,(- (length fields) auto-count)
-                                                       #,auto-count
-                                                       #,auto-val
-                                                       #,props
-                                                       #,(or inspector #`(current-inspector))
-                                                       #f
-                                                       '#,(let loop ([i 0]
-                                                                     [fields fields])
-                                                            (cond
-                                                              [(null? fields) null]
-                                                              [(field-auto? (car fields)) null]
-                                                              [(not (or mutable? (field-mutable? (car fields))))
-                                                               (cons i (loop (add1 i) (cdr fields)))]
-                                                              [else (loop (add1 i) (cdr fields))]))
-                                                       #,guard
-                                                       '#,(if ctor-only? ctor-name id)))]
-                                   [(@?) 
-                                    (@struct-predicate #,super-struct: ? make- -ref -set!  
-                                                           #,(- (length fields) auto-count) 
-                                                           #,(null? sets) (eq? #f #,(or inspector #`(current-inspector)))
-                                                           #,proc? #,equal+hash)])
-                                
-                                (values struct: make- @?
+                              (let-values ([(struct: make- ? -ref -set!)
+                                            (syntax-parameterize ([struct-field-index
+                                                                   (lambda (stx)
+                                                                     (syntax-case stx #,(map field-id fields)
+                                                                       #,@(let loop ([fields fields][pos 0])
+                                                                            (cond
+                                                                              [(null? fields) null]
+                                                                              [else (cons #`[(_ #,(field-id (car fields))) #'#,pos]
+                                                                                          (loop (cdr fields) (add1 pos)))]))
+                                                                       [(_ name) (raise-syntax-error #f "no such field" stx #'name)]))])
+                                                                 (@make-struct-type #,reflect-name-expr
+                                                                                   #,super-struct:
+                                                                                   #,(- (length fields) auto-count)
+                                                                                   #,auto-count
+                                                                                   #,auto-val
+                                                                                   #,(if (null? props)
+                                                                                         #'null
+                                                                                         #`(list #,@(map (lambda (p)
+                                                                                                           #`(cons #,(car p) #,(cdr p)))
+                                                                                                         props)))
+                                                                                   #,(or inspector
+                                                                                         #`(current-inspector))
+                                                                                   #f
+                                                                                   '#,(let loop ([i 0]
+                                                                                                 [fields fields])
+                                                                                        (cond
+                                                                                          [(null? fields) null]
+                                                                                          [(field-auto? (car fields)) null]
+                                                                                          [(not (or mutable? (field-mutable? (car fields))))
+                                                                                           (cons i (loop (add1 i) (cdr fields)))]
+                                                                                          [else (loop (add1 i) (cdr fields))]))
+                                                                                   #,guard
+                                                                                   '#,(if ctor-only? ctor-name id)))])
+                                (values struct: make- ?
                                         #,@(let loop ([i 0][fields fields])
                                              (if (null? fields)
                                                  null
-                                                 (cons #`(@make-struct-field-accessor @? #,i '#,(field-id (car fields)))
+                                                 (cons #`(@make-struct-field-accessor struct: #,i '#,(field-id (car fields)))
                                                        (loop (add1 i) (cdr fields)))))
                                         #,@(let loop ([i 0][fields fields])
                                              (if (null? fields)
                                                  null
                                                  (if (not (or mutable? (field-mutable? (car fields))))
                                                      (loop (add1 i) (cdr fields))
-                                                     (cons #`(@make-struct-field-mutator @? #,i '#,(field-id (car fields)))
+                                                     (cons #`(@make-struct-field-mutator struct: #,i '#,(field-id (car fields)))
                                                            (loop (add1 i) (cdr fields)))))))))))]
                        [compile-time-defns
                         (lambda ()
@@ -691,20 +742,22 @@
                                      #,(run-time-defns))
                                  ;; Other contexts: order should't matter:
                                  #`(begin 
-                                     
-                                     #,(compile-time-defns)
-                                     #,(run-time-defns) ))]
+                                     #,(run-time-defns) 
+                                     #,(compile-time-defns)))]
                             [omit-define-syntaxes?
                              (run-time-defns)]
                             [omit-define-values?
                              (compile-time-defns)]
                             [else #'(begin)])])
                      (syntax-protect
-                      (if super-id
-                          (syntax-property result 
-                                           'disappeared-use 
-                                           (syntax-local-introduce super-id))
-                          result))))))))))]
+                      (syntax-property
+                       (if super-id
+                           (syntax-property result 
+                                            'disappeared-use 
+                                            (syntax-local-introduce super-id))
+                           result)
+                       'sub-range-binders
+                       all-directives))))))))))]
     [(_ _ id . _)
      (not (or (identifier? #'id)
               (and (syntax->list #'id)
@@ -738,4 +791,156 @@
       #f
       "bad syntax"
       stx)]))
+
+(define-syntax (struct-copy stx)
+  (if (not (eq? (syntax-local-context) 'expression))
+      (quasisyntax/loc stx (#%expression #,stx))
+      (syntax-case stx ()
+        [(form-name info struct-expr field+val ...)
+         (let ([ans (syntax->list  #'(field+val ...))])
+           ;; Check syntax:
+           (unless (identifier? #'info)
+             (raise-syntax-error #f "not an identifier for structure type" stx #'info))
+           (for-each (lambda (an)
+                       (syntax-case an ()
+                         [(field val)
+                          (unless (identifier? #'field)
+                            (raise-syntax-error #f 
+                                                "not an identifier for field name" 
+                                                stx
+                                                #'field))]
+                         [(field #:parent p val)
+                          (unless (identifier? #'field)
+                            (raise-syntax-error #f 
+                                                "not an identifier for field name" 
+                                                stx
+                                                #'field))
+                          (unless (identifier? #'p)
+                            (raise-syntax-error #f 
+                                                "not an identifier for parent struct name" 
+                                                stx
+                                                #'field))]
+                         [_
+                          (raise-syntax-error #f
+                                              (string-append
+                                               "bad syntax;\n"
+                                               " expected a field update of the form (<field-id> <expr>)\n"
+                                               " or (<field-id> #:parent <parent-id> <expr>)")
+                                              stx
+                                              an)]))
+                     ans)
+           (let-values ([(construct pred accessors parent)
+                         (let ([v (syntax-local-value #'info (lambda () #f))])
+                           (unless (struct-info? v)
+                             (raise-syntax-error #f "identifier is not bound to a structure type" stx #'info))
+                           (let ([v (extract-struct-info v)])
+                             (values (cadr v)
+                                     (caddr v)
+                                     (cadddr v)
+                                     (list-ref v 5))))])
+             
+             (let* ([ensure-really-parent
+                     (λ (id)
+                       (let loop ([parent parent])
+                         (cond
+                           [(eq? parent #t)
+                            (raise-syntax-error #f "identifier not bound to a parent struct" stx id)]
+                           [(not parent)
+                            (raise-syntax-error #f "parent struct information not known" stx id)]
+                           [(free-identifier=? id parent) (void)]
+                           [else
+                            (let ([v (syntax-local-value parent (lambda () #f))])
+                              (unless (struct-info? v)
+                                (raise-syntax-error #f "unknown parent struct" stx id)) ;; probably won't happen(?)
+                              (let ([v (extract-struct-info v)])
+                                (loop (list-ref v 5))))])))]
+                    [new-fields
+                     (map (lambda (an)
+                            (syntax-case an ()
+                              [(field expr)
+                               (list (datum->syntax #'field
+                                                    (string->symbol
+                                                     (format "~a-~a"
+                                                             (syntax-e #'info)
+                                                             (syntax-e #'field)))
+                                                    #'field)
+                                     #'expr
+                                     (car (generate-temporaries (list #'field))))]
+                              [(field #:parent id expr)
+                               (begin
+                                 (ensure-really-parent #'id)
+                                 (list (datum->syntax #'field
+                                                      (string->symbol
+                                                       (format "~a-~a"
+                                                               (syntax-e #'id)
+                                                               (syntax-e #'field)))
+                                                      #'field)
+                                       #'expr
+                                       (car (generate-temporaries (list #'field)))))]))
+                          ans)]
+                    
+                    ;; new-binding-for : syntax[field-name] -> (union syntax[expression] #f)
+                    [new-binding-for 
+                     (lambda (f)
+                       (ormap (lambda (new-field)
+                                (and (free-identifier=? (car new-field) f)
+                                     (caddr new-field)))
+                              new-fields))])
+               
+               (unless construct
+                 (raise-syntax-error #f
+                                     "constructor not statically known for structure type"
+                                     stx
+                                     #'info))
+               (unless pred
+                 (raise-syntax-error #f
+                                     "predicate not statically known for structure type"
+                                     stx
+                                     #'info))
+               (unless (andmap values accessors)
+                 (raise-syntax-error #f
+                                     "not all accessors are statically known for structure type"
+                                     stx
+                                     #'info))
+               
+               
+               (let ([dests
+                      (map (lambda (new-field)
+                             (or (ormap (lambda (f2) 
+                                          (and f2
+                                               (free-identifier=? (car new-field) f2)
+                                               f2))
+                                        accessors)
+                                 (raise-syntax-error #f 
+                                                     "accessor name not associated with the given structure type" 
+                                                     stx
+                                                     (car new-field))))
+                           new-fields)])
+                 ;; Check for duplicates using dests, not as, because mod=? as might not be id=?
+                 (let ((dupe (check-duplicate-identifier dests)))
+                   (when dupe 
+                     (raise-syntax-error #f 
+                                         "duplicate field assignment" 
+                                         stx 
+                                         ;; Map back to an original field:
+                                         (ormap (lambda (nf)
+                                                  (and nf
+                                                       (free-identifier=? dupe (car nf))
+                                                       (car nf)))
+                                                (reverse new-fields)))))
+                 
+                 ;; the actual result
+                 #`(let ((the-struct struct-expr))
+                     (if (#,pred the-struct)
+                         (let #,(map (lambda (new-field)
+                                       #`[#,(caddr new-field) #,(cadr new-field)])
+                                     new-fields)
+                           (#,construct
+                            #,@(map 
+                                (lambda (field) (or (new-binding-for field) 
+                                                    #`(#,field the-struct)))
+                                (reverse accessors))))
+                         (raise-argument-error 'form-name 
+                                               #,(format "~a?" (syntax-e #'info))
+                                               the-struct)))))))])))
 
