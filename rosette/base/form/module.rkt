@@ -2,8 +2,10 @@
 
 (require (for-syntax racket/dict syntax/parse syntax/id-table (only-in racket pretty-print) 
                      (only-in "../core/lift.rkt" drop@))
-         racket/require racket/undefined 
+         racket/require racket/undefined
          (filtered-in drop@ "../adt/box.rkt")
+         (for-syntax (only-in "../struct/struct.rkt" [struct @struct]) (only-in "../struct/generics.rkt" @define-generics))
+         (only-in "../struct/struct.rkt" [struct @struct]) (only-in "../struct/generics.rkt" @define-generics)
          (only-in racket/splicing splicing-let splicing-let-values))
 
 (provide @#%module-begin @#%top-interaction
@@ -29,11 +31,27 @@
 
 (define-syntax (@#%top-interaction stx)
   (syntax-case stx ()
+    [(_ . (id rest ...))
+     (free-identifier=? #'id #'@define-generics)
+     (syntax/loc stx (id rest ...))]
+    [(_ . (id e ...))
+     (free-identifier=? #'id #'begin)
+     (syntax/loc stx (begin (@#%top-interaction . e) ...))]
     [(_ . form)
-     (let* ([core (local-expand #'form 'top-level '())]
-            [vars (find-mutated-vars core #t)]
-            [transformed (box-mutated-vars core vars)])
+     (let* ([core (local-expand #'form 'top-level (list))] 
+            [vars (find-mutated-vars core #f)]
+            [top-vars (for/list ([(var mutated?) (in-dict vars)]
+                                 #:unless (or (not mutated?)
+                                              (equal? 'lexical (identifier-binding var))))
+                        var)]
+            [transformed
+             (begin (unless (null? top-vars)
+                      (raise-syntax-error
+                       'set!
+                       "assignment disallowed;\n cannot set top-level variables" #'form #f top-vars))
+                    (box-mutated-vars core vars))])
        ;(printf "core:\n~a\n" core)
+       ;(printf "mutated vars\n~a\n" (dict->list vars))
        ;(printf "transformed: ~a\n" transformed)
        transformed)]))
      
