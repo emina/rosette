@@ -1,21 +1,22 @@
 ;; This file was created by make-log-based-eval
-((require (only-in racket (struct racket/struct)))
+((struct point (x y) #:transparent)
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((racket/struct point (x y) #:transparent)
+((struct pt (x y)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((struct pnt (x y) #:mutable #:transparent)
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-(#t ((3) 0 () 0 () () (q values #t)) #"" #"")
-(#f ((3) 0 () 0 () () (q values #f)) #"" #"")
-(#f ((3) 0 () 0 () () (q values #f)) #"" #"")
+((eq? (point 1 2) (point 1 2)) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((eq? (pt 1 2) (pt 1 2)) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((eq? (pnt 1 2) (pnt 1 2)) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define p (if b (cons 1 2) (cons 3 4)))
+((define p (if b (point 1 2) (point 3 4)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((car p)
+((point-x p)
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -27,7 +28,7 @@
   (c values c (0 (u . "(ite b 1 3)"))))
  #""
  #"")
-((cdr p)
+((point-y p)
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -39,11 +40,11 @@
   (c values c (0 (u . "(ite b 2 4)"))))
  #""
  #"")
-((define sol (solve (assert (= (car p) 3))))
+((define sol (solve (assert (= (point-x p) 3))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((point 3 4)
+((evaluate p sol)
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -55,13 +56,35 @@
   (c values c (0 (u . "#(struct:point 3 4)"))))
  #""
  #"")
-((racket/struct circle (radius) #:transparent)
+((define-generics viewable (view viewable))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((struct
+  square
+  (side)
+  #:methods
+  gen:viewable
+  ((define (view self) (square-side self))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((struct
+  circle
+  (radius)
+  #:transparent
+  #:methods
+  gen:viewable
+  ((define (view self) (circle-radius self))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define p (if b 2 3)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-(p
+((define p (if b (square 2) (circle 3)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((view p)
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -73,11 +96,11 @@
   (c values c (0 (u . "(ite b 2 3)"))))
  #""
  #"")
-((define sol (solve (assert (= p 3))))
+((define sol (solve (assert (= (view p) 3))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((circle 3)
+((evaluate p sol)
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")

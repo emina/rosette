@@ -59,13 +59,14 @@ Rosette lifts the following @seclink["syntax" #:doc '(lib "scribblings/reference
 
 Lifted forms have the same meaning in Rosette programs as they do in Racket programs. For example, the Racket expression @racket[(if #, @var[test-expr] #, @var[then-expr] #, @var[else-expr])] evaluates @var[test-expr] first and then, depending on the outcome, it returns the result of evaluating either @var[then-expr] or @var[else-expr]. Rosette preserves this interpretation of @racket[if] for concrete values, and also extends it to work with symbolic values:
 @interaction[#:eval rosette-eval
-(define y 0)
-(code:line (if #t (void) (set! y 3)) (code:comment "y unchanged"))
-y
-(code:line (if #f (set! y 3) (void)) (code:comment "y unchanged"))
-y 
-(define-symbolic x boolean?)
-(eval:alts (if x (void) (set! y 3)) (#%top-interaction . (if x (void) (set! y 3))))
-(code:line y (code:comment "y set to a symbolic value that is 0 if x is true, 3 otherwise"))]
+ (let ([y 0])
+   (if #t (void) (set! y 3))
+   (printf "y unchanged: ~a\n" y)
+   (if #f (set! y 3) (void)) 
+   (printf "y unchanged: ~a\n" y)
+   (define-symbolic x boolean?)
+   (if x (void) (set! y 3)) 
+   (printf "y symbolic: ~a\n" y))]
+                     
 
 @(kill-evaluator rosette-eval)

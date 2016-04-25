@@ -27,13 +27,10 @@ Structure types are defined  using the @racket[struct] syntax. Defining a
 structure type in this way also defines the necessary procedures for
 creating instances of that type and for accessing their fields. 
 
-@(rosette-eval '(require (only-in racket [struct racket/struct])))
-@(rosette-eval '(racket/struct point (x y) #:transparent))
-@(racketblock
+@interaction[#:eval rosette-eval
 (struct point (x y) #:transparent)         (code:comment "immutable transparent type")
 (struct pt (x y))                          (code:comment "opaque immutable type")
-(struct pnt (x y) #:mutable #:transparent) (code:comment "mutable transparent type")
-)
+(struct pnt (x y) #:mutable #:transparent) (code:comment "mutable transparent type")]
 
 Rosette structures can be concrete or symbolic.  Their semantics matches that of Racket, 
 with one important exception:  immutable transparent structures are treated as values 
@@ -43,9 +40,9 @@ Structures of opaque or mutable types are treated as references.  Two such struc
 @racket[eq?] only if the point to the same instance of the same type.
 
 @interaction[#:eval rosette-eval
-(eval:alts (code:line (eq? (point 1 2) (point 1 2))  (code:comment "point structures are values")) #t)
-(eval:alts (code:line (eq? (pt 1 2) (pt 1 2))        (code:comment "pt structures are references")) #f)
-(eval:alts (code:line (eq? (pnt 1 2) (pnt 1 2))      (code:comment "pnt structures are references")) #f)]
+(code:line (eq? (point 1 2) (point 1 2))  (code:comment "point structures are values"))
+(code:line (eq? (pt 1 2) (pt 1 2))        (code:comment "pt structures are references"))
+(code:line (eq? (pnt 1 2) (pnt 1 2))      (code:comment "pnt structures are references"))]
 
 Like @tech[#:key "unsolvable type"]{unsolvable built-in datatypes}, 
 symbolic structures cannot be created using @racket[define-symbolic].  Instead, 
@@ -55,12 +52,11 @@ together with a symbolic value.
 
 @interaction[#:eval rosette-eval
 (define-symbolic b boolean?)
-(eval:alts (code:line (define p (if b (point 1 2) (point 3 4))) (code:comment "p holds a symbolic structure"))
-           (define p (if b (cons 1 2) (cons 3 4))))
-(eval:alts (point-x p) (car p))
-(eval:alts (point-y p) (cdr p))
-(eval:alts (define sol (solve (assert (= (point-x p) 3)))) (define sol (solve (assert (= (car p) 3)))))
-(eval:alts (evaluate p sol) (point 3 4))]
+(code:line (define p (if b (point 1 2) (point 3 4))) (code:comment "p holds a symbolic structure"))
+(point-x p)
+(point-y p)
+(define sol (solve (assert (= (point-x p) 3))))
+(evaluate p sol)]
 
 As well as lifting the @racket[struct] syntax, Rosette also lifts the following structure 
 properties, generic interfaces, and facilities for defining new properties and interfaces:
@@ -71,8 +67,7 @@ properties, generic interfaces, and facilities for defining new properties and i
       (list @elem{Lifted Generics} @elem{@generics} ))]
 
 Lifted generics work as expected with symbolic values:
-@(rosette-eval '(racket/struct circle (radius) #:transparent))
-@(racketblock
+@interaction[#:eval rosette-eval
 (define-generics viewable (view viewable))
 
 (struct square (side) 
@@ -82,13 +77,12 @@ Lifted generics work as expected with symbolic values:
 (struct circle (radius)
   #:transparent
   #:methods gen:viewable
-  [(define (view self) (circle-radius self))]))
-@interaction[#:eval rosette-eval
+  [(define (view self) (circle-radius self))])
+
 (define-symbolic b boolean?)
-(eval:alts (code:line (define p (if b (square 2) (circle 3))) (code:comment "p holds a symbolic structure"))
-           (define p (if b 2 3)))
-(eval:alts (view p) p)
-(eval:alts (define sol (solve (assert (= (view p) 3)))) (define sol (solve (assert (= p 3)))))
-(eval:alts (evaluate p sol) (circle 3))]
+(code:line (define p (if b (square 2) (circle 3))) (code:comment "p holds a symbolic structure"))
+(view p)
+(define sol (solve (assert (= (view p) 3))))
+(evaluate p sol)]
 
 @(kill-evaluator rosette-eval)
