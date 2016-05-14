@@ -1,5 +1,16 @@
 # Release Notes
 
+## Version 2.1
+
+This release includes the following updates to Rosette 2.0:
+
+- Added support for the `push` / `pop` interface to Z3.
+- Switched to log-based evaluation for Rosette documentation.  Documentation generation no longer depends on Z3. 
+- Improved the implementation of the lifted `struct` construct. The new implementation is a minimal patch to the corresponding Racket implementation, and it enables creation and use of `struct`s in the REPL.
+- Improved the implementation of `#%top-interaction` to disallow mutation of top-level variables in the REPL.  This enables definition and use of recursive procedures in the REPL, as well as definition and use of generic interfaces.
+
+
+
 ## Version 2.0
 
 This is a major release with significant changes to the language and
