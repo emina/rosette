@@ -32,10 +32,10 @@
 (define-syntax (@#%top-interaction stx)
   (syntax-case stx ()
     [(_ . (id rest ...))
-     (free-identifier=? #'id #'@define-generics)
+     (and (identifier? #'id) (free-identifier=? #'id #'@define-generics))
      (syntax/loc stx (id rest ...))]
     [(_ . (id e ...))
-     (free-identifier=? #'id #'begin)
+     (and (identifier? #'id) (free-identifier=? #'id #'begin))
      (syntax/loc stx (begin (@#%top-interaction . e) ...))]
     [(_ . form)
      (let* ([core (local-expand #'form 'top-level (list))] 
