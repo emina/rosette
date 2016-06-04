@@ -26,7 +26,9 @@
                          (λ (dir)
                            (copy-directory/files (build-path dir "z3") z3-path)))
         ;; Unzipping loses file permissions, so we reset the z3 binary here
-        (file-or-directory-permissions z3-path #o755)))))
+        (file-or-directory-permissions 
+          z3-path 
+          (if (equal? (system-type) 'windows) #o777 #o755))))))
 
 
 ;; Currently unused, but will be useful if Rosette is using a stable z3 release
