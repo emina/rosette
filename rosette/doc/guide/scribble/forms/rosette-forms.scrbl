@@ -61,6 +61,16 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   (always-different) 
   (eq? (always-different) (always-different))]
 }
+@defform[(generate-symbolic type)
+         #:contracts
+         [(type (and/c solvable? type?))]]{
+  Returns a single @tech["symbolic constant"] of the given
+  @tech["solvable type"]. This constant is not bound to a variable, and
+  seperate invocations generate seperate constants.
+
+  This avoids needing to use @racket[define-symbolic*] inside a function
+  to generate new symbolic variables.
+}
 
 @section[#:tag "sec:assertions"]{Assertions}
 
