@@ -195,13 +195,13 @@
     [(_ _) ⊥]))
     
 (define (simplify-fp op co !iden xs)
-  (or 
+  (or
+   (and (> (length xs) 100) xs)
    (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
                             (match x
                               [(expression (== @!) y) (values (cons y !ys) ys)]
                               [_ (values !ys (cons x ys))]))])
      (for/first ([!y !ys] #:when (member !y ys)) (list !iden)))
-   (and (> (length xs) 100) xs)
    (let outer ([xs xs])
      (match xs
        [(list x rest ..1)
