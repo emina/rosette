@@ -64,7 +64,7 @@
    (define (solvable-range self) self)]
   #:methods gen:custom-write
   [(define (write-proc self port m) 
-     (fprintf port "(bitvector? ~a)" (bitvector-size self)))])
+     (fprintf port "(bitvector ~a)" (bitvector-size self)))])
 
 ; Pattern matching for bitvector types.
 (define-match-expander @bitvector
