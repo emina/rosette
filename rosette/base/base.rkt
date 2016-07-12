@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 ;; ------ Rosette (lifted) syntax and  procedures ------ ;; 
 (require 
@@ -12,12 +12,11 @@
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
 
 (provide
-  (rename-out [@|| ||]) ; The character sequence || does not play nicely with the filtered-out form.
   (filtered-out drop@ 
     (combine-out   
      ; core/bool.rkt
      pc with-asserts with-asserts-only asserts clear-asserts!
-     @assert @boolean? @false? @! @&& @=> @<=> 
+     @assert @boolean? @false? @! @&& @=> @<=> @||
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs

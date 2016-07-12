@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require "core.rkt" 
          (only-in "../base/core/reflect.rkt" symbolics)

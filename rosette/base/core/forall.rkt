@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require racket/splicing (for-syntax racket/syntax) 
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])

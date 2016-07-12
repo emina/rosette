@@ -1,4 +1,4 @@
-#lang s-exp "../lang/main.rkt"
+#lang no-vert-bar s-exp "../lang/main.rkt"
 
 (: int x)
 (: char* y)

@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
 (require "term.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 

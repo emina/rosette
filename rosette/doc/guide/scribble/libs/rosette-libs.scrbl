@@ -1,4 +1,4 @@
-#lang scribble/manual
+#lang no-vert-bar scribble/manual
 
 @(require (for-label 
            rosette/base/form/define rosette/solver/solution rosette/query/query rosette/query/eval 
@@ -89,7 +89,7 @@ The hole @racket[(id e ... k)] must specify the inlining bound
  (code:comment "The body of nnf=> is a hole to be filled with an")
  (code:comment "expression of depth (up to) 1 from the NNF grammar.")
  (define (nnf=> a b)
-   (nnf x y 1)))
+   (nnf a b 1)))
 (define-symbolic a b boolean?)
 (eval:alts
  (print-forms

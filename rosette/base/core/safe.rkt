@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require (only-in "type.rkt" type-cast)
          "bool.rkt"

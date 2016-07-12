@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 
 (require (for-syntax "../core/lift.rkt" racket/syntax)

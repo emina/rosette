@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require rackunit rackunit/text-ui rosette/lib/roseunit
          rosette/base/core/term
