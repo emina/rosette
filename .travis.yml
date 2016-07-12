@@ -20,7 +20,7 @@ before_install:
   - rm z3.zip
 
 install: 
-  - raco pkg install
+  - raco pkg install --deps search-auto
 
 script:
   - raco test 
