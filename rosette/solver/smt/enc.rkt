@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require "env.rkt" 
          (prefix-in $ "smtlib2.rkt") 

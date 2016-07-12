@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require racket/generic
          "term.rkt" "bool.rkt" "safe.rkt" "union.rkt"  "equality.rkt"  "merge.rkt"

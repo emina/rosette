@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require (for-syntax racket/syntax "../core/lift.rkt") 
          racket/splicing racket/stxparam

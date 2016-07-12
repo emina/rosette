@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require (only-in "../core/union.rkt" union union-filter union-guards union-contents)
          (only-in "../core/type.rkt" subtype?)

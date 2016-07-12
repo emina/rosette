@@ -1,4 +1,4 @@
-#lang racket
+#lang no-vert-bar racket
 
 (require (only-in rnrs/base-6 assert)
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
