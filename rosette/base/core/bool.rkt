@@ -196,7 +196,7 @@
     
 (define (simplify-fp op co !iden xs)
   (or
-   (and (> (length xs) 100) xs)
+   (and (> (length xs) 10) xs)
    (let-values ([(!ys ys) (for/fold ([!ys '()][ys '()]) ([x xs])
                             (match x
                               [(expression (== @!) y) (values (cons y !ys) ys)]
