@@ -14,6 +14,7 @@
  "base/equality.rkt"
  "base/merge.rkt"
  "base/uninterpreted.rkt"
+ "base/quantified.rkt"
  "base/finitize.rkt"
  "base/list.rkt"
  "base/vector.rkt"
