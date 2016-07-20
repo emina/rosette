@@ -96,7 +96,8 @@
   (reset)
   (set-option ':produce-unsat-cores 'false)
   (set-option ':auto-config 'true)
-  (set-option ':smt.relevancy 2))
+  (set-option ':smt.relevancy 2)
+  (set-option ':smt.mbqi.max_iterations 10000000))
 
 (define (reset-core-options)
   (reset)
