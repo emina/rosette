@@ -29,7 +29,7 @@
 (define (clear! env n)
   (define to-evict
     (for/list ([(k v) (in-hash env)]
-               #:when (>= (string->number (substring (symbol->string v) 1)) n))
+               #:when (>= (string->number (substring (symbol->string  (if (symbol? v) v (car v))) 1)) n))
       k))
   (for ([k to-evict])
     (hash-remove! env k)))
@@ -49,7 +49,7 @@
 ; the macro is called.
 ; * (ref! env val enc quantified) returns the SMT encoding that is
 ; bound to the Rosette value val in the environment env.  
-; If env has no encoding for val, and the macro evaluates 
+; If env has no encoding for (cons val quantified), and the macro evaluates 
 ; the provided encoding expression enc.  If the result of 
 ; evaluating enc is not an s-expression (a pair), that result 
 ; is returned. Otherwise, the macro uses define-const to 
@@ -71,20 +71,23 @@
              (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
              id)))]
     [(_ env val enc quantified)
-     (let ([defs env]
-           [v val])
-       (or (dict-ref defs v #f) 
+     (let* ([defs env]
+            [v val]
+            [k (cons v quantified)])
+       (or (dict-ref defs k #f) 
            (match enc 
              [(? pair? e)
               (let ([id (smt-id 'e (dict-count defs))])
-                (dict-set! defs v id)
                 (cond [(null? quantified)
+                       (dict-set! defs k id)
                        (define-const id (smt-type (type-of v)) e)
                        id]
                       [else 
                        (define-fun id (for/list ([q quantified]) (list (dict-ref defs q) (smt-type (type-of q))))
                          (smt-type (type-of v))
                          e)
-                       (cons id (for/list ([q quantified]) (dict-ref defs q)))]))]
+                       (define app-id (cons id (for/list ([q quantified]) (dict-ref defs q))))
+                       (dict-set! defs k app-id)
+                       app-id]))]
              [e e])))]))
 
