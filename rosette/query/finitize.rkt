@@ -2,6 +2,7 @@
 
 (require racket/syntax 
          "../base/core/term.rkt"
+         "../base/core/bool.rkt"
          "../base/core/real.rkt"
          "../base/core/bitvector.rkt"
          "../base/core/function.rkt"  
@@ -133,6 +134,9 @@
        (match e 
          [(union) (error 'finitize "all finitizations infeasible: ~a" v)]
          [_ e])))
+    [(expression (or (== @forall) (== @exists)) _ _)
+     (error 'finitize "cannot use (current-bitwidth ~a) with a quantified formula ~a; use (current-bitwidth #f) instead"
+            (current-bitwidth) v)]
     [(expression op x)     
      ((unsafe op) (finitize-any x env))]
     [(expression op x y)   
