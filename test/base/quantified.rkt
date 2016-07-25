@@ -84,6 +84,32 @@
    (unsat))
 )
 
+(define (check-eval)
+  (define-symbolic a b c d integer?)
+  (define-symbolic x y (bitvector 4))
+  (let ([f (forall (list a c) (exists (list b) (not (= (+ a c) b))))])
+    (check-equal? (evaluate f (solve (assert f))) f))
+  (let ([f  (exists (list c) (forall (list b) (not (= (+ b c) b))))])
+    (check-equal? (evaluate f (solve (assert f))) f))
+  (let ([f  (exists (list a) (forall (list b) (and (= a 0) (= (+ b c) (+ a b)))))])
+    (check-equal?
+     (evaluate f (solve (assert f)))
+     (exists (list a) (forall (list b) (and (= a 0) (= b (+ a b)))))))
+  (let* ([f (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b))))]
+         [g (forall (list a) (exists (list b c) (and (not (= a b)) (= (+ a c) b))))]
+         [s (solve (assert f) (assert g))])    
+    (check-equal?
+     (evaluate f s)
+     (forall (list a) (exists (list b) (and (= a b) (= a b)))))
+    (check-equal?
+     (evaluate g s)
+     g))
+  (let ([f (forall (list x) (bveq (bvadd x y) x))])
+    (check-equal?
+     (evaluate f (solve (assert f)))
+     (forall (list x) (bveq (bvadd x (bv 0 4)) x))))
+)
+
 (define tests:basic
   (test-suite+
    "Basic tests for quantified formulas"
@@ -104,6 +130,13 @@
    (current-bitwidth #f)
    (check-solve)))
 
+(define tests:eval
+  (test-suite+
+   "Tests for evaluating quantified formulas"
+   (current-bitwidth #f)
+   (check-eval)))
+
 (time (run-tests tests:basic))
 (time (run-tests tests:finitized))
 (time (run-tests tests:solving))
+(time (run-tests tests:eval))
