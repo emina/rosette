@@ -34,6 +34,56 @@
                                        (= 3 (+ b c))))
                (list)))
 
+(define (check-finitized op)
+  (define-symbolic a boolean?)
+  (define-symbolic b integer?)
+  (define-symbolic c real?)
+  (check-exn #px"cannot use \\(current-bitwidth 5\\) with a quantified formula"
+             (thunk (solve (assert (op (list b) (op (list c) (= 3 (+ b c))))))))
+  (check-exn #px"cannot use \\(current-bitwidth 5\\) with a quantified formula"
+             (thunk (verify (assert (&& a (op (list b) (op (list c) (= 3 (+ b c))))))))))
+
+(define (check-sol actual expected)
+  (check-equal? (sat? actual) (sat? expected))
+  (when (sat? expected)
+    (check-equal? (model actual) (model expected))))
+
+(define (check-solve)
+  (define-symbolic a b c d integer?)
+  (check-sol
+   (solve (assert (forall (list a c) (exists (list b) (not (= (+ a c) b))))))
+   (sat))
+  (check-sol
+   (solve (assert (exists (list c) (forall (list b) (not (= (+ b c) b))))))
+   (sat))
+  (check-sol
+   (solve (assert (exists (list a) (forall (list b) (and (= a 0) (= (+ b c) (+ a b)))))))
+   (sat (hash c 0)))
+  (check-sol
+   (solve (assert (exists (list a) (forall (list b) (< a (- b a))))))
+   (unsat))
+  (check-sol
+   (solve
+    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+    (assert (forall (list a) (exists (list b c) (and (not (= a b)) (= (+ a c) b))))))
+   (sat (hash c 0)))
+  (check-sol
+   (solve
+    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+    (assert (forall (list a c) (exists (list b c) (and (not (= a b)) (= (+ a c) b))))))
+   (sat (hash c 0)))
+  (check-sol
+   (solve
+    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+    (assert (forall (list a c) (exists (list b) (= (+ a c) b)))))
+   (sat (hash c 0)))
+  (check-sol
+   (solve
+    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+    (assert (forall (list a) (exists (list b) (and (not (= a b)) (= (+ a c) b))))))
+   (unsat))
+)
+
 (define tests:basic
   (test-suite+
    "Basic tests for quantified formulas"
@@ -41,4 +91,19 @@
    (check-pe exists)
    (check-pe forall)))
 
+(define tests:finitized
+  (test-suite+
+   "Tests for finitization of quantified formulas"
+   (current-bitwidth 5)
+   (check-finitized exists)
+   (check-finitized forall)))
+
+(define tests:solving
+  (test-suite+
+   "Tests for solving quantified formulas"
+   (current-bitwidth #f)
+   (check-solve)))
+
 (time (run-tests tests:basic))
+(time (run-tests tests:finitized))
+(time (run-tests tests:solving))
