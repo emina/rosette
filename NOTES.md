@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 2.2
+
+This release includes bug fixes and the following new features:
+
+- Support for quantified formulas.  Quantifiers can appear in assertions passed to `solve` and `verify` queries.  They should not be used with `synthesize` queries.  When using quantified formulas, `current-bitwidth` must be set to `#f`.  
+
 ## Version 2.1
 
 This release includes the following updates to Rosette 2.0:
@@ -8,8 +14,6 @@ This release includes the following updates to Rosette 2.0:
 - Switched to log-based evaluation for Rosette documentation.  Documentation generation no longer depends on Z3. 
 - Improved the implementation of the lifted `struct` construct. The new implementation is a minimal patch to the corresponding Racket implementation, and it enables creation and use of `struct`s in the REPL.
 - Improved the implementation of `#%top-interaction` to disallow mutation of top-level variables in the REPL.  This enables definition and use of recursive procedures in the REPL, as well as definition and use of generic interfaces.
-
-
 
 ## Version 2.0
 
