@@ -2,8 +2,8 @@
 
 (require "../base/core/term.rkt")
 
-(provide solution? sat? unsat?
-         (rename-out [make-sat sat] [make-unsat unsat])
+(provide solution? sat? unsat? unknown?
+         (rename-out [make-sat sat] [make-unsat unsat] [make-unknown unknown])
          model core)
 
 ; Represents the solution to a set of logical constraints.
@@ -46,6 +46,12 @@
           (fprintf port "\n ~a" assertion))
         (fprintf port ")")]))])
 
+; An unknown solution is returned when the solver doesn't have a complete
+; procedure for deciding a given set of constraints.
+(struct unknown solution ()
+  #:methods gen:custom-write
+  [(define (write-proc self port mode)
+     (fprintf port "(unknown)"))])
 
 (define-match-expander model
   (syntax-rules ()
@@ -63,23 +69,27 @@
     [(core s) (unsat-core s)]
     [core unsat-core]))
 
-(define empty-sat (sat (hash)))
-(define empty-unsat (unsat #f)) 
+(define sat0 (sat (hash)))
+(define unsat0 (unsat #f))
+(define unknown0 (unknown))
 
-; Creates and returns a satisfiable solution consisting of the given model.  The model
+; Returns a satisfiable solution consisting of the given model.  The model
 ; must be an immutable dictionary, with symbolic constants as keys.
 (define make-sat
   (case-lambda 
-    [() empty-sat]
+    [() sat0]
     [(model) (unless (and (dict? model) (not (dict-mutable? model)))
                (error 'sat "expected an immutable dictionary, given ~s" model))
              (sat model)]))
 
-; Creates and returns a new unsatisfiable solution that consists of the given core, if any, 
+; Returns an unsatisfiable solution that consists of the given core, if any, 
 ; or no core, if called with no arguments.  The must be a list of @boolean? values.
 (define make-unsat 
-  (case-lambda [() empty-unsat]
+  (case-lambda [() unsat0]
                [(core) (unless (and (list? core) (not (null? core)))
                          (error 'unsat "expected a non-empty list, given ~s" core))
                        (unsat core)]))
+
+; Returns an unknown solution.
+(define (make-unknown) unknown0)
   

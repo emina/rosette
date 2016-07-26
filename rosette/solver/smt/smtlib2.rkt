@@ -12,8 +12,8 @@
 ; identifiers to their values (if the solution is 'sat);
 ; a non-empty list of assertion identifiers that form an
 ; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); or #f (if the solution is 
-; 'unsat and no core was extracted).
+; core was extracted); #f (if the solution is 
+; 'unsat and no core was extracted); or 'unknown otherwise.
 (define (read-solution)
   (define port (current-input-port))
   (match (read port)
@@ -31,6 +31,7 @@
      (match (read port) 
        [(list (? symbol? name) ...) name]
        [_ #f])]
+    [(== 'unknown) 'unknown]
     [other (error 'solution "unrecognized solver output: ~a" other)]))
 
 ; Prints all smt commands to current-output-port.

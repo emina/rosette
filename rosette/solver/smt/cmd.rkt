@@ -71,7 +71,8 @@
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-dict env)] #:when (set-member? core id)) 
                  (if (constant? bool) bool (car bool)))))]
-    [#f (unsat)]))
+    [#f (unsat)]
+    ['unknown (unknown)]))
 
 (define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
 
