@@ -110,36 +110,39 @@ if needed.  That is, the solver should behave as though its state was merely cle
 @defproc[(z3) solver?]{
 Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.}
 
-@section{Satisfiable and Unsatisfiable Solutions}
+@section{Solutions}
 
-A solution to a set of formulas consists of either a @racket[model], 
-if the formulas are satisfiable, or a @racket[core], if they are not. 
-The @racket[sat?] and @racket[unsat?] predicates recognize 
-satisfiable and unsatisfiable solutions, respectively.  A satisfiable solution 
-can be used as a procedure:  when applied to a bound symbolic constant, it returns 
+A solution to a set of formulas may be satisfiable (@racket[sat?]), unsatisfiable  (@racket[unsat?]),
+or unknown (@racket[unknown?]). 
+A satisfiable solution can be used as a procedure:  when applied to a bound symbolic constant, it returns 
 a concrete value for that constant; when applied to any other value, it returns 
-the value itself.
+the value itself. 
+The solver returns an @racket[unknown?] solution if it cannot determine whether
+the given constraints are satisfiable or not.
 
 A solution supports the following operations:
 
 @defproc[(solution? [value any/c]) boolean?]{
 Returns true if the given @racket[value] is a solution.}
 
-@defproc[(sat? [solution solution?]) boolean?]{
-Returns true if the given @racket[solution] is satisfiable.}
+@defproc[(sat? [value any/c]) boolean?]{
+Returns true if the given @racket[value] is a satisfiable solution.}
 
-@defproc[(unsat? [solution solution?]) boolean?]{
-Returns true if the given @racket[solution] is unsatisfiable.}
+@defproc[(unsat? [value any/c]) boolean?]{
+Returns true if the given @racket[value] is an unsatisfiable solution.}
 
-@defproc*[([(sat) solution?]
-           [(sat [binding (hash/c constant? any/c #:immutable #t)]) solution?])]{
+@defproc[(unknown? [value any/c]) boolean?]{
+Returns true if the given @racket[value] is an unknown solution.}
+
+@defproc*[([(sat) sat?]
+           [(sat [binding (hash/c constant? any/c #:immutable #t)]) sat?])]{
 Returns a satisfiable solution that holds the given binding from symbolic 
 constants to values, or that holds the empty binding.  The provided hash must
 bind every symbolic constant in its keyset to a concrete value of the same type.
 }
 
-@defproc*[([(unsat) solution?]
-           [(unsat [constraints (listof boolean?)]) solution?])]{
+@defproc*[([(unsat) unsat?]
+           [(unsat [constraints (listof boolean?)]) unsat?])]{
 Returns an unsatisfiable solution.  The @racket[constraints] list, if provided, 
 consist of boolean values that are collectively unsatisfiable.  If no constraints
 are provided, applying @racket[core] to the resulting solution produces @racket[#f],   
@@ -148,20 +151,21 @@ core extraction was not performed.  (Core extraction is an expensive
 operation that is not supported by all solvers; those that do support it 
 usually don't compute a core unless explicitly asked for one via @racket[solver-debug].)}
 
-@defproc[(model [solution (and/c sat? solution?)]) (hash/c constant? any/c #:immutable #t)]{
+@defproc[(unknown) unknown?]{
+Returns an unknown solution.}
+
+@defproc[(model [solution sat?]) (hash/c constant? any/c #:immutable #t)]{
 Returns the binding stored in the given satisfiable solution.  The binding is an immutable
-hashmap from symbolic constants to values.  Applying @racket[model] to an @racket[unsat?] solution
-results in an error. 
+hashmap from symbolic constants to values.  
 }
 
-@defproc[(core [solution (and/c unsat? solution?)]) (or/c (listof (and/c constant? boolean?)) #f)]{
+@defproc[(core [solution unsat?]) (or/c (listof (and/c constant? boolean?)) #f)]{
 Returns the unsatisfiable core stored in the given satisfiable solution.  If the solution is 
 @racket[unsat?] and a core was computed, the result is a list of boolean values that 
-are collectively unsatisfiable.  Otherwise, the result is @racket[#f]. Applying @racket[core] to
-a @racket[sat?] solution results in an error. 
+are collectively unsatisfiable.  Otherwise, the result is @racket[#f]. 
 }
 
-@defproc[(evaluate [v any/c] [solution (and/c solution? sat?)]) any/c]{
+@defproc[(evaluate [v any/c] [solution sat?]) any/c]{
 Given a Rosette value and a satisfiable solution, @racket[evaluate] produces a 
 new value obtained by replacing every symbolic constant @var[c] in @racket[v] 
 with @racket[(solution #, @var[c])] and simplifying the result.

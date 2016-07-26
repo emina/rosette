@@ -2,9 +2,10 @@
 
 ## Version 2.2
 
-This release includes bug fixes and the following new features:
+This release includes bug fixes and the following updates:
 
-- Support for quantified formulas.  Quantifiers can appear in assertions passed to `solve` and `verify` queries.  They should not be used with `synthesize` queries.  When using quantified formulas, `current-bitwidth` must be set to `#f`.  
+- Added support for quantified formulas.  Quantifiers can appear in assertions passed to `solve` and `verify` queries.  They should not be used with `synthesize` queries.  When using quantified formulas, `current-bitwidth` must be set to `#f`.  
+- Added the `unknown` solution type. An `unknown` solution is returned if the underlying solver cannot decide if a given set of constraints is (un)satisfiable.
 
 ## Version 2.1
 
