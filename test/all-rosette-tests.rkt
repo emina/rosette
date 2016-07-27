@@ -16,6 +16,7 @@
  "base/uninterpreted.rkt"
  "base/quantified.rkt"
  "base/finitize.rkt"
+ "base/distinct.rkt"
  "base/list.rkt"
  "base/vector.rkt"
  "query/solve.rkt"
