@@ -4,6 +4,7 @@
          (prefix-in $ "smtlib2.rkt") 
          (only-in "../../base/core/term.rkt" expression expression? constant? get-type @app)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
+         (only-in "../../base/core/distinct.rkt" @distinct?)
          (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=> @forall @exists)
          (only-in "../../base/core/real.rkt" 
                   @integer? @real? @= @< @<= @>= @> 
@@ -90,6 +91,7 @@
 (define-encoder rosette->smt 
   ; core 
   [@app $app] [@! $not] [@&& $and] [@|| $or] [@=> $=>] [@<=> $<=>] [ite $ite] [=? $=]
+  [@distinct? $distinct]
   ; int and real
   [@= $=] [@< $<] [@<= $<=] 
   [@+ $+] [@* $*] [@- $-] [@/ $/]  

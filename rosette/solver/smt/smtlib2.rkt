@@ -85,7 +85,7 @@
 (define Bool 'Bool)
 (define true 'true)
 (define false 'false)
-(define-ops not and or xor => ite =)
+(define-ops not and or xor => ite = distinct)
 (define (<=> l r) (and (=> l r) (=> r l)))
 
 ; Bitvector theory
