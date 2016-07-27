@@ -2,7 +2,7 @@
 
 (require "env.rkt" 
          (prefix-in $ "smtlib2.rkt") 
-         (only-in "../../base/core/term.rkt" expression expression? constant? get-type @app)
+         (only-in "../../base/core/term.rkt" expression expression? constant? term? get-type @app)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
          (only-in "../../base/core/distinct.rkt" @distinct?)
          (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=> @forall @exists)
@@ -66,6 +66,9 @@
       (for/list ([v vars])
         (list (ref! env v) (smt-type (get-type v))))
       (enc body env (remove-duplicates (append vars quantified))))]
+    [(expression (== @distinct?) (? real? rs) ..1 (? term? es) ...)
+     (apply $distinct (append (if (equal? @real? (get-type (car es))) (map exact->inexact rs) rs)
+                              (for/list ([e es]) (enc e env quantified))))]
     [(expression (app rosette->smt (? procedure? $op)) es ...) 
      (apply $op (for/list ([e es]) (enc e env quantified)))]
     [_ (error 'enc "cannot encode ~a to SMT" v)]))
