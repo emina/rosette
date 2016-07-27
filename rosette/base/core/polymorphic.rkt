@@ -19,9 +19,6 @@
     [(x y) (or (and (typed? x) (get-type x)) (get-type y))]
     [xs (for/first ([x xs] #:when (typed? x)) (get-type x))]))
 
-; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
-; and returns a @boolean?. See term.rkt.
-(define (T*->boolean? . xs) @boolean?)
 
 ; Polymorphic operators and procedures that are shared by 
 ; multiple primitive types.

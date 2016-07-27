@@ -6,7 +6,8 @@
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only 
-         (rename-out [export-asserts asserts]) clear-asserts!)
+         (rename-out [export-asserts asserts]) clear-asserts!
+         T*->boolean?)
 
 ;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
@@ -43,7 +44,9 @@
                        [(x y) (op (type-cast @boolean? x caller) (type-cast @boolean? y caller))]
                        [xs (apply op (for/list ([x xs]) (type-cast @boolean? x caller)))])]))
 
-(define T*->boolean? (const @boolean?))
+; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
+; and returns a @boolean?. See term.rkt.
+(define (T*->boolean? . xs) @boolean?)
 
 (define-syntax-rule (define-lifted-operator @op $op)
   (define-operator @op
