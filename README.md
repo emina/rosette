@@ -9,7 +9,7 @@ The Rosette Language
 
 The easiest way to install Rosette is from Racket's package manager:
 
-* Download and install Racket 6.4 from http://racket-lang.org
+* Download and install Racket 6.6 from http://racket-lang.org
 
 * Use Racket's `raco` tool to install Rosette:
 
@@ -19,7 +19,7 @@ The easiest way to install Rosette is from Racket's package manager:
 
 Alternatively, you can install Rosette from source:
 
-* Download and install Racket 6.4 from http://racket-lang.org
+* Download and install Racket 6.6 from http://racket-lang.org
 
 * Clone the rosette repository:
 
@@ -71,7 +71,7 @@ Alternatively, you can install Rosette from source:
   incorrect semantics or cause more serious problems (e.g., data loss if 
   it writes to a file).
 
-* For more on using Rosette, see [_The Rosette Guide_][1].  Rosette's internals are described in [PLDI'14][2].
+* For more on using Rosette, see [_The Rosette Guide_][1].  Rosette's internals are described in [this PLDI'14 paper][2].
   
 [1]: http://emina.github.io/rosette/doc/rosette-guide/index.html
 [2]: http://dl.acm.org/citation.cfm?id=2594340

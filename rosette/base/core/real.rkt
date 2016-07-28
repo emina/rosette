@@ -97,6 +97,11 @@
       [(or (? real?) (term _ (== @real?))) (values i gx)]
       [_ (values i r)])))
 
+(define-match-expander ≈
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ v) #`(or v #,(exact->inexact (syntax->datum #'v)))]))) 
+
 (define (numeric-coerce v [caller 'numeric-coerce])
   (match v 
     [(? real?) v]
@@ -268,9 +273,9 @@
   (define ($op x y)
     (match* (x y)
       [((? integer?) (? integer?)) (op x y)]
-      [(_ 1) 0]
-      [(_ -1) 0]
-      [(0 _) 0]
+      [(_ (≈ 1)) 0]
+      [(_ (≈ -1)) 0]
+      [((≈ 0) _) 0]
       [(_ (== x)) 0]
       [(_ (expression (== @-) (== x))) 0]
       [((expression (== @-) (== y)) _) 0]
@@ -364,8 +369,8 @@
 (define (simplify-+ x y)
   (match* (x y)
     [((? real?) (? real?)) (+ x y)]
-    [(_ 0) x]
-    [(0 _) y]
+    [(_ (≈ 0)) x]
+    [((≈ 0) _) y]
     [((? expression?) (? expression?)) 
      (or (simplify-+:expr/term x y) (simplify-+:expr/term y x))]
     [((? expression?) _) (simplify-+:expr/term x y)]
@@ -413,12 +418,12 @@
 (define (simplify-* x y) 
   (match* (x y)
     [((? real?) (? real?)) (* x y)]
-    [(0 _) 0]
-    [(1 _) y]
-    [(-1 _) ($- y)]
-    [(_ 0) 0]
-    [(_ 1) x]
-    [(_ -1) ($- x)]
+    [((≈ 0) _) 0]
+    [((≈ 1) _) y]
+    [((≈ -1) _) ($- y)]
+    [(_ (≈ 0)) 0]
+    [(_ (≈ 1)) x]
+    [(_ (≈ -1)) ($- x)]
     [((? expression?) (? expression?)) 
      (or (simplify-*:expr/term x y) (simplify-*:expr/term y x))]
     [((? expression?) _) (simplify-*:expr/term x y)]
@@ -456,7 +461,7 @@
                    ; Pattern matching broken in 6.1 when the first rule is in the third position.
                    ; TODO: place the first rule in 3rd position and test with 6.2.
                    (match* (x ys) 
-                     [((expression (== @/) 1 c) (list a ... c b ...))
+                     [((expression (== @/) (≈ 1) c) (list a ... c b ...))
                       (append a b)]
                      [((? term?) (list a ... (expression (== @/) 1 (== x)) b ...)) (append a b)]
                      [((? real?) (list (? real? a) b ...)) (and (= 1 (* x a)) b)]  
@@ -466,9 +471,9 @@
   (lambda (x y)
     (match* (x y)
       [((? real?) (? real?)) (op x y)]
-      [(0 _) 0]
-      [(_ 1) x]
-      [(_ -1) ($- x)]
+      [((≈ 0) _) 0]
+      [(_ (≈ 1)) x]
+      [(_ (≈ -1)) ($- x)]
       [(_ (== x)) 1]
       [(_ (expression (== @-) (== x))) -1]
       [((expression (== @-) (== y)) _) -1]

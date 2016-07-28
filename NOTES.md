@@ -1,5 +1,13 @@
 # Release Notes
 
+## Version 2.2
+
+This release includes bug fixes and the following updates:
+
+- Added support for quantified formulas.  Quantifiers can appear in assertions passed to `solve` and `verify` queries.  They should not be used with `synthesize` queries.  When using quantified formulas, `current-bitwidth` must be set to `#f`.  
+- Added the `unknown` solution type. An `unknown` solution is returned if the underlying solver cannot decide if a given set of constraints is (un)satisfiable.
+- Added the `distinct?` predicate that returns true iff all of its arguments are pairwaise un-equal.  This has a direct (efficient) translation to Z3 if the arguments are primitive solvable values (booleans, integers, reals, or bitvectors).
+
 ## Version 2.1
 
 This release includes the following updates to Rosette 2.0:
@@ -8,8 +16,6 @@ This release includes the following updates to Rosette 2.0:
 - Switched to log-based evaluation for Rosette documentation.  Documentation generation no longer depends on Z3. 
 - Improved the implementation of the lifted `struct` construct. The new implementation is a minimal patch to the corresponding Racket implementation, and it enables creation and use of `struct`s in the REPL.
 - Improved the implementation of `#%top-interaction` to disallow mutation of top-level variables in the REPL.  This enables definition and use of recursive procedures in the REPL, as well as definition and use of generic interfaces.
-
-
 
 ## Version 2.0
 

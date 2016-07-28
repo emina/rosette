@@ -64,16 +64,13 @@
     [(_ name test ...)
      (test-suite+ name #:before void #:after void test ...)]))
     
-(define satisfiable? (and/c solution? sat?))
-(define unsatisfiable? (and/c solution? unsat?))
-
 (define-syntax-rule (check-sol pred test)
   (let ([sol test])
     (check-true (pred sol) (format "not ~a for ~a: ~a" (quote pred) (quote test) sol))
     sol))
 
-(define-syntax-rule (check-sat test) (check-sol satisfiable? test))
-(define-syntax-rule (check-unsat test) (check-sol unsatisfiable? test))
+(define-syntax-rule (check-sat test) (check-sol sat? test))
+(define-syntax-rule (check-unsat test) (check-sol unsat? test))
 
 (define-syntax-rule (test-sat name expr)
   (test-case name (check-sat expr "Not a satisfiable solution.")))

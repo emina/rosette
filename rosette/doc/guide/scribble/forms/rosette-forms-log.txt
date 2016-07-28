@@ -274,7 +274,7 @@
 ((evaluate y sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define-symbolic x real?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic x y real?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((solve (assert (= x 3.5)))
  ((3)
@@ -300,6 +300,18 @@
   (c values c (0 (u . "(unsat)"))))
  #""
  #"")
+((solve (assert (forall (list x) (= x (+ x y)))))
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "finitize: cannot use (current-bitwidth 5) with a quantified formula (forall (x) (= x (+ x y))); use (current-bitwidth #f) instead"))
+ #""
+ #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((solve (assert (= x 3.5)))
  ((3)
@@ -323,5 +335,17 @@
   ()
   ()
   (c values c (0 (u . "(model\n [x 64.0])"))))
+ #""
+ #"")
+((solve (assert (forall (list x) (= x (+ x y)))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [y 0.0])"))))
  #""
  #"")

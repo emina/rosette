@@ -2,7 +2,7 @@
 
 (require racket/syntax (only-in racket [< racket/<] [- racket/-]))
 
-(provide (except-out (all-defined-out) define-ops printf-smt))
+(provide (except-out (all-defined-out) quantified define-ops printf-smt))
 
 
 ; Reads the SMT solution from current-input-port.
@@ -12,8 +12,8 @@
 ; identifiers to their values (if the solution is 'sat);
 ; a non-empty list of assertion identifiers that form an
 ; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); or #f (if the solution is 
-; 'unsat and no core was extracted).
+; core was extracted); #f (if the solution is 
+; 'unsat and no core was extracted); or 'unknown otherwise.
 (define (read-solution)
   (define port (current-input-port))
   (match (read port)
@@ -31,6 +31,7 @@
      (match (read port) 
        [(list (? symbol? name) ...) name]
        [_ #f])]
+    [(== 'unknown) 'unknown]
     [other (error 'solution "unrecognized solver output: ~a" other)]))
 
 ; Prints all smt commands to current-output-port.
@@ -69,6 +70,9 @@
 (define (define-const id type body)
   (printf-smt "(define-fun ~a () ~a ~a)" id type body))
 
+(define (define-fun id args type body)
+  (printf-smt "(define-fun ~a ~a ~a ~a)" id args type body))
+
 ; Applications of uninterpreted functions.
 (define (app f . args)
   `(,f ,@args))
@@ -77,11 +81,11 @@
   (define-values (id ...)
     (values (lambda e `(id ,@e)) ...)))
 
-; Core theory
+; Core theoryRosette: Add support for quantifiers 
 (define Bool 'Bool)
 (define true 'true)
 (define false 'false)
-(define-ops not and or xor => ite =)
+(define-ops not and or xor => ite = distinct)
 (define (<=> l r) (and (=> l r) (=> r l)))
 
 ; Bitvector theory
@@ -111,3 +115,15 @@
   + - * / div mod abs 
   < <= 
   is_int to_int to_real )
+
+; Quantifiers
+(define (quantified quantifier vars body)
+  `(,quantifier ,vars ,body))
+
+(define (forall vars body)
+  (quantified 'forall vars body))
+
+(define (exists vars body)
+  (quantified 'exists vars body))
+
+

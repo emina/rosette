@@ -2,9 +2,10 @@
 
 (require "env.rkt" 
          (prefix-in $ "smtlib2.rkt") 
-         (only-in "../../base/core/term.rkt" expression expression? constant? get-type @app)
+         (only-in "../../base/core/term.rkt" expression expression? constant? term? get-type @app)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
-         (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=>)
+         (only-in "../../base/core/distinct.rkt" @distinct?)
+         (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=> @forall @exists)
          (only-in "../../base/core/real.rkt" 
                   @integer? @real? @= @< @<= @>= @> 
                   @+ @* @- @/ @quotient @remainder @modulo 
@@ -19,48 +20,62 @@
 
 (provide enc)
 
-; The enc procedure takes a value and an environment, and returns  
-; an SMTLIB identifier representing that value in the given environment.  If it 
-; cannot produce an encoding for the given value, an error is thrown. 
+; The enc procedure takes a value, an environment, and a list of quantified 
+; variables, and returns an SMTLIB identifier representing that value in
+; the given environment.  If it cannot produce an encoding for the given value,
+; an error is thrown. 
 ; The environment will be modified (if needed) to include an encoding for 
 ; the given value and all of its subexpressions (if any).
-(define (enc v env)
-  (ref! env v (match v
-                [(? expression?) (enc-expr v env)]
-                [(? constant?)   (enc-const v env)]
-                [_               (enc-lit v env)])))
+(define (enc v env [quantified '()])
+  (ref!
+   env v
+   (match v
+     [(? expression?) (enc-expr v env quantified)]
+     [(? constant?)   (enc-const v env quantified)]
+     [_               (enc-lit v env quantified)])
+   quantified))
 
-(define (enc-expr v env)  
+(define (enc-expr v env quantified)  
   (match v
     [(and (expression (== ite*) gvs ...) (app get-type t))
      (let-values ([($0 $op) (if (bitvector? t) 
                                 (values ($bv 0 (bitvector-size t)) $bvor) 
                                 (values 0 $+))])
        (apply $op (for/list ([gv gvs]) 
-                    ($ite (enc (guarded-test gv) env) 
-                          (enc (guarded-value gv) env) 
+                    ($ite (enc (guarded-test gv) env quantified) 
+                          (enc (guarded-value gv) env quantified) 
                           $0))))]
     [(expression (== @abs) x)
-     ($real-abs (enc x env) (get-type v))]
+     ($real-abs (enc x env quantified) (get-type v))]
     [(expression (== @extract) i j e)
-     ($extract i j (enc e env))]
+     ($extract i j (enc e env quantified))]
     [(expression (== @sign-extend) v t)
-     ($sign_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
+     ($sign_extend (- (bitvector-size t) (bitvector-size (get-type v)))
+                   (enc v env quantified))]
     [(expression (== @zero-extend) v t)
-     ($zero_extend (- (bitvector-size t) (bitvector-size (get-type v))) (enc v env))]
+     ($zero_extend (- (bitvector-size t) (bitvector-size (get-type v)))
+                   (enc v env quantified))]
     [(expression (== @integer->bitvector) v t) 
-     ($int->bv (enc v env) (bitvector-size t))]
+     ($int->bv (enc v env quantified) (bitvector-size t))]
     [(expression (== @bitvector->integer) v) 
-     ($bv->int (enc v env) (bitvector-size (get-type v)))]  
+     ($bv->int (enc v env quantified) (bitvector-size (get-type v)))]  
     [(expression (== @bitvector->natural) v) 
-     ($bv->nat (enc v env) (bitvector-size (get-type v)))]
+     ($bv->nat (enc v env quantified) (bitvector-size (get-type v)))]
+    [(expression (and (or (== @forall) (== @exists)) op) vars body)
+     ((if (equal? op @forall) $forall $exists)
+      (for/list ([v vars])
+        (list (ref! env v) (smt-type (get-type v))))
+      (enc body env (remove-duplicates (append vars quantified))))]
+    [(expression (== @distinct?) (? real? rs) ..1 (? term? es) ...)
+     (apply $distinct (append (if (equal? @real? (get-type (car es))) (map exact->inexact rs) rs)
+                              (for/list ([e es]) (enc e env quantified))))]
     [(expression (app rosette->smt (? procedure? $op)) es ...) 
-     (apply $op (for/list ([e es]) (enc e env)))]
+     (apply $op (for/list ([e es]) (enc e env quantified)))]
     [_ (error 'enc "cannot encode ~a to SMT" v)]))
 
-(define (enc-const v env) (ref! env v))
+(define (enc-const v env quantified) (ref! env v))
 
-(define (enc-lit v env)
+(define (enc-lit v env quantified)
   (match v 
     [#t $true]
     [#f $false]
@@ -79,6 +94,7 @@
 (define-encoder rosette->smt 
   ; core 
   [@app $app] [@! $not] [@&& $and] [@|| $or] [@=> $=>] [@<=> $<=>] [ite $ite] [=? $=]
+  [@distinct? $distinct]
   ; int and real
   [@= $=] [@< $<] [@<= $<=] 
   [@+ $+] [@* $*] [@- $-] [@/ $/]  
@@ -129,4 +145,6 @@
 (define ($bit v i n)
   (define bv0 ($bv 0 n))
   (define b (expt 2 i))
-  ($ite ($= bv0 ($bvand v ($bv b n))) 0 b)) 
+  ($ite ($= bv0 ($bvand v ($bv b n))) 0 b))
+
+

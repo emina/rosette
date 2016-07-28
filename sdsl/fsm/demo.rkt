@@ -1,4 +1,6 @@
-#lang s-exp "fsm.rkt"
+#lang rosette
+
+(require "fsm.rkt")
 
 (define m 
   (automaton init 

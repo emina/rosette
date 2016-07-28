@@ -60,19 +60,19 @@
 (define (decode env)
   (match (read-solution)
     [(? hash? sol) 
-     (sat (for/hash ([(decl id) (in-dict env)] #:when (constant? decl))
+     (sat (for/hash ([(decl id) (in-dict env)]
+                     #:when (and (constant? decl) (hash-has-key? sol id)))
             (let ([t (term-type decl)])
               (values decl
-                      (if (hash-has-key? sol id)
-                          (if (function? t)
-                              (decode-function t (hash-ref sol id))
-                              (decode-value t (hash-ref sol id)))
-                          (solvable-default t))))))]
+                      (if (function? t)
+                          (decode-function t (hash-ref sol id))
+                          (decode-value t (hash-ref sol id)))))))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-dict env)] #:when (set-member? core id)) 
-                 bool)))]
-    [#f (unsat)]))
+                 (if (constant? bool) bool (car bool)))))]
+    [#f (unsat)]
+    ['unknown (unknown)]))
 
 (define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
 

@@ -1,0 +1,160 @@
+;; This file was created by make-log-based-eval
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((boolean? b) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((boolean? #t) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((boolean? #f) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((boolean? 1) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((not b)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(! b)"))))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((! #f) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((! #t) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((! (if b #f 3)) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((asserts)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "b")))))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((&&) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((||) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((&& #f (begin (displayln "hello") #t))
+ ((3) 0 () 0 () () (q values #f))
+ #""
+ #"")
+((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((&& a (if b #t 1))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "a"))))
+ #""
+ #"")
+((asserts)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "b")))))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((=> #f (begin (displayln "hello") #f))
+ ((3) 0 () 0 () () (q values #t))
+ #""
+ #"")
+((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((<=> a (if b #t 1))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "a"))))
+ #""
+ #"")
+((asserts)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "b")))))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic a b integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((forall (list) (= a b))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(= a b)"))))
+ #""
+ #"")
+((define f (forall (list a) (exists (list b) (= a (+ a b)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((solve (assert f))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model)"))))
+ #""
+ #"")
+((define g (forall (list a) (= a (+ a b))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((solve (assert g))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [b 0])"))))
+ #""
+ #"")
+((define h (exists (list a) (forall (list a) (= a (+ a a)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((solve (assert h))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")

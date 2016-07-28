@@ -31,6 +31,13 @@
                 (if (union? expr)
                     (eval-guarded gvs sol cache car cdr)
                     (eval-guarded gvs sol cache guarded-test guarded-value))]
+               [(expression (and op (or (== @forall) (== @exists))) vars body)
+                ((operator-unsafe op)
+                 vars
+                 (eval-rec
+                  body
+                  (sat (for/hash ([(k v) (model sol)] #:unless (member k vars)) (values k v)))
+                  (make-hash)))]
                [(expression op child ...)  
                 (apply (operator-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
                [(? list?)                

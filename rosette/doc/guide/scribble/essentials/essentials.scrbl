@@ -6,7 +6,7 @@
            rosette/query/query (only-in rosette asserts clear-asserts!)
            (only-in rosette/base/base bv?)
            (except-in rosette/query/debug false true assert) rosette/query/eval
-           (only-in rosette/lib/synthax ??) rosette/lib/render))
+           (only-in rosette/lib/synthax ?? print-forms) rosette/lib/render))
 
 @(require racket/sandbox  racket/runtime-path  scribble/core
           scribble/eval scribble/html-properties ;scriblib/footnote 
@@ -177,7 +177,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
 @racketblock[
 (require rosette/query/debug rosette/lib/render)
  
- (define (poly x)
+(define (poly x)
   (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
 
 (define/debug (factored x)       (code:comment "define/debug marks a procedure as part of")
@@ -186,8 +186,9 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
 (define (same p f x)
   (assert (= (p x) (f x))))
 
-#, @elem{>} (define core (debug [integer?] (same poly factored 12)))
-#, @elem{>} (render core)
+(code:comment "Call after saving the above definitions to a file:")
+#, @elem{>} (define ucore (debug [integer?] (same poly factored 12)))
+#, @elem{>} (render ucore) 
 #,(call-with-input-file (build-path root "pict.png") (lambda (in) (read-bitmap in 'png)))]
 
 @(rosette-eval '(require rosette/query/debug))
@@ -197,7 +198,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
        (* x (+ x 1) (+ x 2) (+ x 2))))
 @(rosette-eval '(define (same p f x)
        (assert (= (p x) (f x)))))
-@(rosette-eval '(define core (debug [integer?] (same poly factored 12))))
+@(rosette-eval '(define ucore (debug [integer?] (same poly factored 12))))
 
 The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bv?]) types can be used in @racket[debug] forms.}
 
@@ -227,6 +228,7 @@ The @racket[(??)] construct is imported from the @racket[rosette/lib/synthax] li
 
 We query the solver for a correct completion of our sketch as follows:
 @interaction[#:eval rosette-eval
+(code:comment "Call after saving the above definitions to a file:")                    
 (define-symbolic i integer?)
 (define binding 
   (synthesize #:forall (list i)

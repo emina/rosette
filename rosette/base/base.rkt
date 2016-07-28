@@ -6,7 +6,7 @@
   racket/provide 
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt"
   "core/function.rkt"
-  "core/procedure.rkt" "core/equality.rkt" "core/reflect.rkt" 
+  "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt" 
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
@@ -17,7 +17,7 @@
     (combine-out   
      ; core/bool.rkt
      pc with-asserts with-asserts-only asserts clear-asserts!
-     @assert @boolean? @false? @! @&& @=> @<=> 
+     @assert @boolean? @false? @! @&& @=> @<=> @forall @exists
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs
@@ -35,6 +35,8 @@
      @integer->bitvector @bitvector->integer @bitvector->natural
      ; core/function.rkt
      @fv? ~> function?
+     ; core/distinct.rkt
+     @distinct?
      ; core/equality.rkt
      @eq? @equal?
      ; core/reflect.rkt

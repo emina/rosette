@@ -3,10 +3,11 @@
 (require "term.rkt" "union.rkt")
 
 (provide @boolean? @false? 
-         ! && || => <=> @! @&& @|| @=> @<=> 
+         ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only 
-         (rename-out [export-asserts asserts]) clear-asserts!)
+         (rename-out [export-asserts asserts]) clear-asserts!
+         T*->boolean?)
 
 ;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
@@ -43,14 +44,34 @@
                        [(x y) (op (type-cast @boolean? x caller) (type-cast @boolean? y caller))]
                        [xs (apply op (for/list ([x xs]) (type-cast @boolean? x caller)))])]))
 
-(define boolean?*->boolean? (const @boolean?))
+; A generic typing procedure for a lifted operator that takes N >= 0 arguments of type T
+; and returns a @boolean?. See term.rkt.
+(define (T*->boolean? . xs) @boolean?)
 
 (define-syntax-rule (define-lifted-operator @op $op)
   (define-operator @op
     #:identifier '$op
-    #:range boolean?*->boolean?
+    #:range T*->boolean?
     #:unsafe $op
     #:safe (lift-op $op)))
+
+(define-syntax-rule (define-quantifier @op $op)
+  (define-operator @op
+    #:identifier '$op
+    #:range T*->boolean?
+    #:unsafe $op
+    #:safe
+    (lambda (@vars @body)
+      (match* (@vars (type-cast @boolean? @body '$op))
+        [((list (constant _ (? primitive-solvable?)) (... ...)) body)
+         ($op @vars body)]
+        [(_ _)
+         (@assert
+          #f
+          (thunk
+           (raise-argument-error
+            '$op
+            "expected a list of symbolic constants of primitive solvable types" @vars)))]))))
 
 ;; ----------------- Basic boolean operators ----------------- ;; 
 (define (! x)
@@ -91,6 +112,13 @@
          [_ (loop (cdr xs))]))]
     [_ #f]))
 
+(define exists (quantifier @exists))
+(define forall (quantifier @forall))
+(define-quantifier @exists exists)
+(define-quantifier @forall forall)
+
+
+       
 ;; ----------------- Additional operators ----------------- ;; 
 (define-syntax and-&&
   (syntax-rules ()
@@ -114,6 +142,16 @@
                  (or (and t (subtype? t symbolic-type)) 
                      (and (union? v) (apply || (for/list ([g (in-union-guards v symbolic-type)]) g))))]
                 [_ #f]))
+
+
+;; ----------------- Partial evaluation rules for ∀ and ∃ ----------------- ;;
+
+(define-syntax-rule (quantifier @op)
+  (lambda (vars body)
+    (match* (vars body)
+      [((list) _) body]
+      [(_ (? boolean?)) body]
+      [(_ _) (expression @op vars body)])))
 
 ;; ----------------- Partial evaluation rules for && and || ----------------- ;; 
 (define-syntax-rule (logical-connective op co iden !iden)

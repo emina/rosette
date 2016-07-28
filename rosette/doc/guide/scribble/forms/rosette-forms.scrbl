@@ -163,8 +163,9 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   @racket[assume-expr].}] 
   If no such binding exists, the result is an unsatisfiable @racket[solution?].  The assertions encountered while 
   evaluating @racket[assume-expr] and @racket[guarantee-expr] are removed from the global @tech["assertion store"] once 
-  @racket[synthesize] returns.  The solver's ability to find solutions depends on the current @tech["reasoning precision"],
-  as determined by the @racket[current-bitwidth] parameter.
+  @racket[synthesize] returns.  These assertions @bold{may not include} @tech[#:key "quantified formula"]{quantified formulas}.
+  The solver's ability to find solutions depends on the current @tech["reasoning precision"],
+  as determined by the @racket[current-bitwidth] parameter. 
   @examples[#:eval rosette-eval
   (define-symbolic x c integer?)
   (assert (even? x))
@@ -284,15 +285,21 @@ the @racket[debug] form.}
   so most applications will perform better when @racket[current-bitwidth] is
   set to a positive integer.
 
+  The @racket[current-bitwidth] parameter must be set to @racket[#f] when
+  executing queries over assertions that contain @tech[#:key "quantified formula"]{quantified formulas}.
+  Otherwise, such a query will throw an exception.
+
   @examples[
  #:eval rosette-eval
- (define-symbolic x real?)
+ (define-symbolic x y real?)
  (current-bitwidth 5)  
  (code:line (solve (assert (= x 3.5))) (code:comment "there is no solution under"))
- (code:line (solve (assert (= x 64)))  (code:comment "5-bit signed integer semantics")) 
+ (code:line (solve (assert (= x 64)))  (code:comment "5-bit signed integer semantics"))
+ (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers are not supported"))
  (current-bitwidth #f)
  (code:line (solve (assert (= x 3.5))) (code:comment "but there is a solution under"))
- (code:line (solve (assert (= x 64)))  (code:comment "infinite-precision semantics"))]
+ (code:line (solve (assert (= x 64)))  (code:comment "infinite-precision semantics"))
+ (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers work"))]
 }
 
  
