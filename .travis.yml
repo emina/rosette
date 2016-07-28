@@ -4,8 +4,7 @@ sudo: false
 env:
   global:
     - RACKET_DIR=~/racket
-    - RACKET_URL="https://www.cs.utah.edu/plt/installers/6.4/racket-6.4-x86_64-linux-ubuntu-precise.sh"
-    - Z3_URL="https://github.com/emina/rosette/releases/download/v2.0/z3-d89c39cb-x64-ubuntu-12.04.zip"
+    - RACKET_URL="https://mirror.racket-lang.org/installers/6.6/racket-6.6-x86_64-linux.sh"
 
 before_install:
   - if [[ ! -e "$RACKET_DIR/bin/racket" ]]; then
@@ -14,10 +13,6 @@ before_install:
       sh ./racket.sh --in-place --dest $RACKET_DIR;
     else echo "using racket from cache"; fi
   - export PATH="${RACKET_DIR}/bin:${PATH}"
-  - wget $Z3_URL -O z3.zip
-  - unzip z3.zip
-  - mkdir $TRAVIS_BUILD_DIR/bin && mv z3 $TRAVIS_BUILD_DIR/bin/
-  - rm z3.zip
 
 install: 
   - raco pkg install
