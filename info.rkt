@@ -11,4 +11,4 @@
                     "racket-doc"))
 
 (define pkg-desc "Rosette solver-aided host language")
-(define version "2")
+(define version "2.2")
