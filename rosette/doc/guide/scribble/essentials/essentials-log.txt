@@ -135,7 +135,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define core (debug (integer?) (same poly factored 12)))
+((define ucore (debug (integer?) (same poly factored 12)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")

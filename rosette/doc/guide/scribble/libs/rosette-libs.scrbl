@@ -113,7 +113,8 @@ Sketch completions can only be generated for programs that have been saved to di
 
 @defproc[(print-forms [solution solution?]) void?]{
   Pretty-prints the result of applying @racket[generate-forms] to the given  
-  @racket[solution].     
+  @racket[solution]. Sketch completions can only be generated and printed
+ for programs that have been saved to disk. 
 }
 
 @section{Angelic Execution Library}
