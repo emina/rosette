@@ -1,6 +1,7 @@
 #lang racket
 
-(require (for-syntax racket/dict syntax/parse syntax/id-table (only-in racket pretty-print) 
+(require (for-syntax racket/dict syntax/parse syntax/id-table syntax/transformer
+                     (only-in racket pretty-print)
                      (only-in "../core/lift.rkt" drop@))
          racket/require racket/undefined
          (filtered-in drop@ "../adt/box.rkt")
@@ -140,10 +141,9 @@
                  (quasisyntax/loc stx 
                    (splicing-let ([loc (box #,e)])
                      (define-syntax var
-                       (syntax-id-rules (set!)
-                         [(set! var val) (set-box! loc val)]
-                         [(var . arg) ((unbox loc) . arg)]
-                         [var (unbox loc)])))))]
+                       (make-variable-like-transformer
+                        #'(unbox loc)
+                        #'(λ (val) (set-box! loc val)))))))]
               [(eq? e #'expr) stx]
               [else (quasisyntax/loc stx (define-values (var) #,e))]))]
      [(define-values (var ...) expr)
@@ -158,10 +158,9 @@
                      #,@(for/list ([v vs][loc locs])
                           (if (mutated? v)
                               #`(define-syntax #,v
-                                  (syntax-id-rules (set!)
-                                    [(set! #,v val) (set-box! #,loc val)]
-                                    [(#,v . arg) ((unbox #,loc) . arg)]
-                                    [#,v (unbox #,loc)]))
+                                  (make-variable-like-transformer
+                                   #'(unbox #,loc)
+                                   #'(λ (val) (set-box! #,loc val))))
                               #`(define-values (#,v) #,loc))))))]
               [(eq? e #'expr) stx]
               [else (quasisyntax/loc stx (define-values (var ...) #,e))]))]

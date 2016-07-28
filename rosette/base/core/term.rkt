@@ -1,6 +1,7 @@
 #lang racket
 
-(require racket/syntax (for-syntax racket racket/syntax) racket/generic "type.rkt")
+(require racket/syntax racket/generic "type.rkt"
+         (for-syntax racket/base racket/syntax syntax/transformer))
 
 (provide
  term-cache clear-terms!
@@ -93,17 +94,13 @@
   (lambda (stx)
     (syntax-case stx ()
       [(_ id-pat type-pat) #'(constant id-pat type-pat _)]))
-  (syntax-id-rules ()
-    [(_ id type) (make-const id type)]
-    [_ make-const]))
+  (make-variable-like-transformer #'make-const))
 
 (define-match-expander an-expression
   (lambda (stx)
     (syntax-case stx ()
       [(_ op-pat elts-pat ...) #'(expression (list op-pat elts-pat ...) _ _)]))
-  (syntax-id-rules ()
-    [(_ op elts ...) (make-expr op elts ...)]
-    [_ make-expr]))
+  (make-variable-like-transformer #'make-expr))
 
 (define-match-expander a-term
   (syntax-rules ()

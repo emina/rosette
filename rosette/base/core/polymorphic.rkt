@@ -1,6 +1,7 @@
 #lang racket
 
-(require "term.rkt" "union.rkt" "bool.rkt")
+(require "term.rkt" "union.rkt" "bool.rkt"
+         (for-syntax syntax/transformer))
 
 (provide 
  ite ite* ⊢ guarded guarded-test guarded-value =?    
@@ -67,9 +68,7 @@
   (lambda (stx)
     (syntax-case stx ()
       [(_ g-pat v-pat) #'(expression (== ⊢) g-pat v-pat)]))
-  (syntax-id-rules ()
-    [(_ g v) (make-guarded g v)]
-    [_ make-guarded]))
+  (make-variable-like-transformer #'make-guarded))
 
 (define (guarded-test gv) 
   (match gv [(expression (== ⊢) g _) g]))

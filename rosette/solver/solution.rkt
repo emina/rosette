@@ -1,6 +1,7 @@
 #lang racket
 
-(require "../base/core/term.rkt")
+(require "../base/core/term.rkt"
+         (for-syntax syntax/transformer))
 
 (provide solution? sat? unsat? unknown?
          (rename-out [make-sat sat] [make-unsat unsat] [make-unknown unknown])
@@ -57,17 +58,13 @@
   (syntax-rules ()
     [(model) (sat (app dict-count 0))]
     [(model pat) (sat pat)])
-  (syntax-id-rules (set!)
-    [(model s) (sat-model s)]
-    [model sat-model]))
+  (make-variable-like-transformer #'sat-model))
 
 (define-match-expander core
   (syntax-rules ()
     [(core) (unsat #f)]
     [(core pat) (unsat pat)])
-  (syntax-id-rules (set!)
-    [(core s) (unsat-core s)]
-    [core unsat-core]))
+  (make-variable-like-transformer #'unsat-core))
 
 (define sat0 (sat (hash)))
 (define unsat0 (unsat #f))

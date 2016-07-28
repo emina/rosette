@@ -1,6 +1,7 @@
 #lang racket
 
-(require "term.rkt")
+(require "term.rkt"
+         (for-syntax syntax/transformer))
 
 (provide union? (rename-out [a-union union])
          union-contents union-type union-guards union-values union-filter
@@ -108,6 +109,4 @@
      (union (list-no-order (cons guard-pat val-pat) ...) _)]
     [(_ : (guard-pat val-pat) ...+ lvp ...) 
      (union (list-no-order (cons guard-pat val-pat) ...+ lvp ...) _)])
-  (syntax-id-rules (set!)
-    [(a-union v ...) (make-union v ...)]
-    [a-union make-union]))
+  (make-variable-like-transformer #'make-union))
