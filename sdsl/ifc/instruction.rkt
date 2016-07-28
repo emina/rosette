@@ -1,6 +1,7 @@
 #lang rosette
 
-(require rosette/lib/match rosette/lib/angelic "value.rkt")
+(require rosette/lib/match rosette/lib/angelic "value.rkt"
+         (for-syntax syntax/transformer))
 
 (provide program instruction
          (rename-out [inst? instruction?]
@@ -49,9 +50,7 @@
 (define-match-expander instruction
   (syntax-rules () 
     [(_ proc args) (inst proc args)])
-  (syntax-id-rules ()
-    [(instruction proc arg ...) (make-inst proc arg ...)]
-    [instruction                make-inst]))
+  (make-variable-like-transformer #'make-inst))
 
 ; Returns thunk that prodcues a list of fresh symbolic instructions. If given a list of k 
 ; procedures, the thunk's output list contains k instructions such that the ith 

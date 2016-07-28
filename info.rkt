@@ -5,11 +5,11 @@
 (define deps '("r6rs-lib"
                "rackunit-lib"
                "slideshow-lib"
-               "base"))
+               ["base" #:version "6.3"]))
 
 (define build-deps '("pict-doc"
                      "scribble-lib"
-                    "racket-doc"))
+                     "racket-doc"))
 
 (define test-omit-paths (if (getenv "PLT_PKG_BUILD_SERVICE") 'all '()))
 

@@ -74,7 +74,8 @@
 ; the number of return values.
 (define-match-expander R
   (syntax-rules () [(_ pc-pat n-pat) (return pc-pat n-pat)])
-  (syntax-id-rules ()
-    [(R pc)   (return pc 0@⊥)]
-    [(R pc n) (return pc n)]
-    [R        return]))
+  (lambda (stx)
+    (syntax-case stx ()
+      [(R pc)   #'(return pc 0@⊥)]
+      [(R pc n) #'(return pc n)]
+      [R (identifier? #'R) #'return])))

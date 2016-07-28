@@ -25,11 +25,10 @@
     [(_ id vals) 
      #`(splicing-let ([array (array-procedure vals)])
          (define-syntax id
-           (syntax-id-rules (set!)
-             [(set! id e) 
-              (error 'set! "cannot modify an immutable reference: ~s" (syntax->datum #'id))]
-             [(id idx (... ...)) (array idx (... ...))]
-             [id (array)])))]))
+           (lambda (stx)
+             (syntax-case stx ()
+               [(id idx (... ...)) #'(array idx (... ...))]
+               [the-id (identifier? #'the-id) #'(array)]))))]))
 
 ; This macro expands to a procedure wrapper that allows
 ; the elements in the given nested list representation of 

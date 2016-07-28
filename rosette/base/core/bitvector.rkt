@@ -1,6 +1,7 @@
 #lang racket
 
-(require (for-syntax racket/syntax) racket/stxparam racket/stxparam-exptime)
+(require racket/stxparam racket/stxparam-exptime
+         (for-syntax racket/syntax syntax/transformer))
 (require "term.rkt" "union.rkt" "bool.rkt" "polymorphic.rkt" 
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 (require (only-in "real.rkt" @>= @> @= @integer? T*->integer?))
@@ -70,9 +71,7 @@
 (define-match-expander @bitvector
   (syntax-rules ()
     [(_ sz) (bitvector sz)])
-  (syntax-id-rules (set!)
-    [(@bitvector sz) (bitvector-type sz)]
-    [@bitvector bitvector-type]))
+  (make-variable-like-transformer #'bitvector-type))
 
 (define (bvsmin t) (- (expt 2 (- (bitvector-size t) 1))))
 (define (bvsmin? b) (and (bv? b) (= (bv-value b) (bvsmin (bv-type b)))))
@@ -127,9 +126,7 @@
 (define-match-expander @bv
   (syntax-rules ()
     [(_ val-pat type-pat) (bv val-pat type-pat)])
-  (syntax-id-rules (set!)
-    [(@bv v t) (make-bv v t)]
-    [@bv make-bv]))
+  (make-variable-like-transformer #'make-bv))
 
 (define (@bv? v)
   (match v
