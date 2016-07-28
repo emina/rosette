@@ -1,5 +1,5 @@
-5315
-((3) 0 () 22 ((q lib "rosette/base/base.rkt") (q lib "rosette/solver/solution.rkt") (q 1752 . 28) (q 3250 . 16) (q lib "rosette/base/core/term.rkt") (q 2529 . 7) (q lib "rosette/base/core/bool.rkt") (q lib "rosette/solver/solver.rkt") (q lib "rosette/base/core/function.rkt") (q 3054 . 7) (q lib "rosette/lib/synthax/core.rkt") (q 4034 . 5) (q lib "rosette/query/form.rkt") (q lib "rosette/base/core/type.rkt") (q 2724 . 10) (q 3864 . 7) (q 4862 . 7) (q lib "rosette/query/debug.rkt") (q lib "rosette/lib/synthax/form.rkt") (q lib "rosette/base/form/define.rkt") (q lib "rosette/base/core/union.rkt") (q lib "rosette/base/core/forall.rkt")) () (h ! (equal) ((c def c (c (? . 0) q bvlshr)) c (? . 14)) ((c form c (c (? . 4) q constant)) q (6991 . 2)) ((c def c (c (? . 1) q sat?)) q (5411 . 3)) ((c def c (c (? . 0) q bvsle)) c (? . 2)) ((c def c (c (? . 0) q bvsrem)) c (? . 3)) ((c def c (c (? . 0) q bitvector->integer)) c (? . 11)) ((c def c (c (? . 1) q model)) q (5778 . 3)) ((q def ((lib "rosette/query/eval.rkt") evaluate)) q (6024 . 4)) ((q def ((lib "rosette/query/core.rkt") current-solver)) q (4494 . 4)) ((c def c (c (? . 0) q bvslt)) c (? . 2)) ((c def c (c (? . 0) q bvsdiv)) c (? . 3)) ((q def ((lib "rosette/lib/render.rkt") render)) q (6647 . 4)) ((c form c (c (? . 6) q with-asserts)) q (7664 . 2)) ((c def c (c (? . 8) q function?)) q (4390 . 3)) ((q form ((lib "rosette/base/core/safe.rkt") assert)) q (167 . 7)) ((c def c (c (? . 1) q sat)) q (5549 . 4)) ((c def c (c (? . 20) q union-contents)) q (7233 . 4)) ((c def c (c (? . 7) q solver-debug)) q (5179 . 3)) ((c def c (c (? . 4) q clear-terms!)) q (7769 . 3)) ((q def ((lib "rosette/query/finitize.rkt") current-bitwidth)) q (1160 . 5)) ((c def c (c (? . 1) q unsat?)) q (5479 . 3)) ((c def c (c (? . 0) q bvor)) c (? . 5)) ((c def c (c (? . 0) q bvneg)) q (2988 . 3)) ((c def c (c (? . 0) q bvand)) c (? . 5)) ((c def c (c (? . 6) q clear-asserts!)) q (7626 . 2)) ((c def c (c (? . 4) q term-cache)) q (7692 . 4)) ((c def c (c (? . 13) q type?)) q (7075 . 3)) ((c def c (c (? . 0) q bitvector)) q (1304 . 3)) ((c def c (c (? . 6) q asserts)) q (7582 . 2)) ((c def c (c (? . 1) q core)) q (5897 . 3)) ((c def c (c (? . 0) q bvsge)) c (? . 2)) ((c def c (c (? . 0) q bvxor)) c (? . 5)) ((c form c (c (? . 4) q expression)) q (6954 . 2)) ((c def c (c (? . 0) q bvsub)) c (? . 9)) ((c def c (c (? . 7) q solver-check)) q (5108 . 3)) ((c def c (c (? . 7) q solver-shutdown)) q (5250 . 3)) ((c form c (c (? . 4) q term)) q (6925 . 2)) ((c def c (c (? . 1) q solution?)) q (5348 . 3)) ((c def c (c (? . 4) q expression?)) q (6813 . 3)) ((c form c (c (? . 12) q verify)) q (315 . 3)) ((c def c (c (? . 4) q term?)) q (6762 . 3)) ((c def c (c (? . 0) q bvnot)) q (2463 . 3)) ((c def c (c (? . 8) q fv?)) q (4445 . 3)) ((c def c (c (? . 0) q bvadd)) c (? . 9)) ((c def c (c (? . 0) q bvurem)) c (? . 3)) ((c def c (c (? . 7) q solver-maximize)) c (? . 16)) ((c def c (c (? . 0) q bv?)) q (1703 . 3)) ((c form c (c (? . 21) q for*/all)) q (7389 . 2)) ((c def c (c (? . 10) q generate-forms)) q (6432 . 3)) ((c def c (c (? . 0) q integer->bitvector)) q (4148 . 4)) ((c def c (c (? . 0) q bvudiv)) c (? . 3)) ((c def c (c (? . 4) q constant?)) q (6870 . 3)) ((c def c (c (? . 10) q print-forms)) q (6519 . 3)) ((c def c (c (? . 0) q bvsgt)) c (? . 2)) ((q form ((lib "rosette/lib/lift.rkt") define-lift)) q (7437 . 3)) ((c def c (c (? . 0) q bv)) q (1479 . 5)) ((c form c (c (? . 19) q define-symbolic*)) q (83 . 4)) ((c def c (c (? . 0) q bitvector?)) q (1423 . 3)) ((c def c (c (? . 0) q bvmul)) c (? . 9)) ((c def c (c (? . 0) q bitvector->natural)) c (? . 11)) ((c def c (c (? . 7) q solver-clear)) q (4795 . 3)) ((c def c (c (? . 0) q bveq)) c (? . 2)) ((q def ((lib "rosette/lib/angelic.rkt") choose*)) q (6591 . 3)) ((c def c (c (? . 0) q bvule)) c (? . 2)) ((c def c (c (? . 7) q solver?)) q (4622 . 3)) ((c form c (c (? . 17) q debug)) q (1063 . 4)) ((c form c (c (? . 10) q define-synthax)) q (6291 . 6)) ((c form c (c (? . 12) q optimize)) q (611 . 14)) ((c def c (c (? . 7) q solver-assert)) q (4675 . 4)) ((c def c (c (? . 8) q ~>)) q (4250 . 4)) ((c form c (c (? . 12) q synthesize)) q (408 . 10)) ((c def c (c (? . 13) q type-of)) q (7019 . 3)) ((c form c (c (? . 18) q choose)) q (6263 . 2)) ((c def c (c (? . 0) q bvsmod)) c (? . 3)) ((c def c (c (? . 0) q bvashr)) c (? . 14)) ((c def c (c (? . 0) q sign-extend)) c (? . 15)) ((c def c (c (? . 0) q zero-extend)) c (? . 15)) ((c def c (c (? . 0) q concat)) q (3685 . 3)) ((c def c (c (? . 6) q pc)) q (7553 . 2)) ((c def c (c (? . 7) q gen:solver)) q (4593 . 2)) ((c def c (c (? . 7) q solver-minimize)) c (? . 16)) ((c form c (c (? . 17) q define/debug)) q (989 . 5)) ((q def ((lib "rosette/solver/smt/z3.rkt") z3)) q (5320 . 2)) ((c def c (c (? . 0) q bvult)) c (? . 2)) ((c def c (c (? . 0) q bvuge)) c (? . 2)) ((c form c (c (? . 18) q ??)) q (6127 . 7)) ((c def c (c (? . 0) q bvugt)) c (? . 2)) ((c form c (c (? . 19) q define-symbolic)) q (0 . 4)) ((c form c (c (? . 12) q solve)) q (294 . 2)) ((c def c (c (? . 20) q union?)) q (7181 . 3)) ((c def c (c (? . 1) q unsat)) q (5670 . 4)) ((c form c (c (? . 21) q for/all)) q (7348 . 2)) ((c def c (c (? . 0) q bvshl)) c (? . 14)) ((c def c (c (? . 13) q solvable?)) q (7126 . 3)) ((c def c (c (? . 0) q extract)) q (3736 . 5))))
+5789
+((3) 0 () 25 ((q lib "rosette/base/base.rkt") (q lib "rosette/base/core/term.rkt") (q lib "rosette/base/core/bool.rkt") (q lib "rosette/solver/solution.rkt") (q lib "rosette/solver/solver.rkt") (q 1414 . 5) (q 3781 . 16) (q 3585 . 7) (q 2283 . 28) (q lib "rosette/base/core/type.rkt") (q 5393 . 7) (q lib "rosette/query/form.rkt") (q 1653 . 7) (q 3255 . 10) (q lib "rosette/base/core/function.rkt") (q 1516 . 7) (q lib "rosette/base/form/define.rkt") (q lib "rosette/lib/synthax/core.rkt") (q lib "rosette/base/core/union.rkt") (q lib "rosette/base/core/forall.rkt") (q 3060 . 7) (q 4395 . 7) (q lib "rosette/lib/synthax/form.rkt") (q lib "rosette/query/debug.rkt") (q 4565 . 5)) () (h ! (equal) ((c def c (c (? . 0) q bvlshr)) c (? . 13)) ((c def c (c (? . 0) q bvsub)) c (? . 7)) ((c form c (c (? . 16) q define-symbolic*)) q (83 . 4)) ((c def c (c (? . 0) q bitvector?)) q (1954 . 3)) ((c def c (c (? . 0) q bv?)) q (2234 . 3)) ((c def c (c (? . 1) q clear-terms!)) q (8300 . 3)) ((c def c (c (? . 9) q solvable?)) q (7657 . 3)) ((c def c (c (? . 0) q bvsgt)) c (? . 8)) ((c form c (c (? . 1) q expression)) q (7485 . 2)) ((c form c (c (? . 2) q with-asserts)) q (8195 . 2)) ((c form c (c (? . 19) q for*/all)) q (7920 . 2)) ((c def c (c (? . 2) q clear-asserts!)) q (8157 . 2)) ((c def c (c (? . 0) q ||)) c (? . 5)) ((c def c (c (? . 3) q solution?)) q (5879 . 3)) ((c def c (c (? . 4) q solver-shutdown)) q (5781 . 3)) ((c def c (c (? . 3) q unknown)) q (6335 . 2)) ((q def ((lib "rosette/lib/angelic.rkt") choose*)) q (7122 . 3)) ((c def c (c (? . 4) q solver-maximize)) c (? . 10)) ((c def c (c (? . 3) q unsat)) q (6233 . 4)) ((c def c (c (? . 0) q bvurem)) c (? . 6)) ((c def c (c (? . 0) q extract)) q (4267 . 5)) ((c def c (c (? . 0) q &&)) c (? . 5)) ((c def c (c (? . 3) q model)) q (6369 . 3)) ((c def c (c (? . 0) q bvsrem)) c (? . 6)) ((c def c (c (? . 0) q bvadd)) c (? . 7)) ((c def c (c (? . 0) q bvudiv)) c (? . 6)) ((c def c (c (? . 0) q bveq)) c (? . 8)) ((c def c (c (? . 0) q bvule)) c (? . 8)) ((c def c (c (? . 4) q solver?)) q (5153 . 3)) ((c form c (c (? . 11) q verify)) q (315 . 3)) ((c def c (c (? . 0) q bvugt)) c (? . 8)) ((c form c (c (? . 22) q ??)) q (6658 . 7)) ((c def c (c (? . 9) q type?)) q (7606 . 3)) ((c def c (c (? . 14) q fv?)) q (4976 . 3)) ((c def c (c (? . 0) q concat)) q (4216 . 3)) ((c def c (c (? . 0) q forall)) c (? . 12)) ((c def c (c (? . 1) q term?)) q (7293 . 3)) ((c def c (c (? . 4) q solver-check)) q (5639 . 3)) ((c def c (c (? . 4) q solver-assert)) q (5206 . 4)) ((c def c (c (? . 3) q unsat?)) q (6000 . 3)) ((c form c (c (? . 17) q define-synthax)) q (6822 . 6)) ((c def c (c (? . 0) q bv)) q (2010 . 5)) ((c def c (c (? . 4) q solver-minimize)) c (? . 10)) ((c def c (c (? . 0) q sign-extend)) c (? . 21)) ((q def ((lib "rosette/solver/smt/z3.rkt") z3)) q (5851 . 2)) ((c form c (c (? . 1) q constant)) q (7522 . 2)) ((c form c (c (? . 11) q solve)) q (294 . 2)) ((q def ((lib "rosette/query/finitize.rkt") current-bitwidth)) q (1160 . 5)) ((c def c (c (? . 3) q unknown?)) q (6060 . 3)) ((c def c (c (? . 1) q expression?)) q (7344 . 3)) ((c def c (c (? . 0) q bvsmod)) c (? . 6)) ((c def c (c (? . 0) q distinct?)) q (1304 . 3)) ((c def c (c (? . 0) q bvsge)) c (? . 8)) ((c def c (c (? . 0) q bvxor)) c (? . 20)) ((c def c (c (? . 0) q bvslt)) c (? . 8)) ((c def c (c (? . 1) q constant?)) q (7401 . 3)) ((c def c (c (? . 0) q <=>)) c (? . 15)) ((c def c (c (? . 4) q solver-debug)) q (5710 . 3)) ((c def c (c (? . 0) q exists)) c (? . 12)) ((c def c (c (? . 18) q union-contents)) q (7764 . 4)) ((q form ((lib "rosette/lib/lift.rkt") define-lift)) q (7968 . 3)) ((c def c (c (? . 0) q bvashr)) c (? . 13)) ((c def c (c (? . 14) q ~>)) q (4781 . 4)) ((c def c (c (? . 0) q bvneg)) q (3519 . 3)) ((c def c (c (? . 0) q bvmul)) c (? . 7)) ((c def c (c (? . 2) q pc)) q (8084 . 2)) ((c def c (c (? . 4) q gen:solver)) q (5124 . 2)) ((c def c (c (? . 0) q =>)) c (? . 15)) ((c form c (c (? . 16) q define-symbolic)) q (0 . 4)) ((c def c (c (? . 0) q bvsdiv)) c (? . 6)) ((c def c (c (? . 17) q generate-forms)) q (6963 . 3)) ((c def c (c (? . 0) q bvnot)) q (2994 . 3)) ((c def c (c (? . 3) q sat)) q (6122 . 4)) ((c form c (c (? . 23) q debug)) q (1063 . 4)) ((c def c (c (? . 18) q union?)) q (7712 . 3)) ((c form c (c (? . 19) q for/all)) q (7879 . 2)) ((c def c (c (? . 3) q core)) q (6468 . 3)) ((c def c (c (? . 1) q term-cache)) q (8223 . 4)) ((c def c (c (? . 0) q bvand)) c (? . 20)) ((c def c (c (? . 4) q solver-clear)) q (5326 . 3)) ((c form c (c (? . 11) q synthesize)) q (408 . 10)) ((c form c (c (? . 1) q term)) q (7456 . 2)) ((q form ((lib "rosette/base/core/safe.rkt") assert)) q (167 . 7)) ((c def c (c (? . 0) q !)) q (1364 . 3)) ((c def c (c (? . 0) q bvor)) c (? . 20)) ((c def c (c (? . 9) q type-of)) q (7550 . 3)) ((c def c (c (? . 0) q bitvector)) q (1835 . 3)) ((c def c (c (? . 0) q bvsle)) c (? . 8)) ((c def c (c (? . 0) q bvuge)) c (? . 8)) ((c def c (c (? . 2) q asserts)) q (8113 . 2)) ((c def c (c (? . 17) q print-forms)) q (7050 . 3)) ((q def ((lib "rosette/query/core.rkt") current-solver)) q (5025 . 4)) ((c def c (c (? . 0) q bvshl)) c (? . 13)) ((c def c (c (? . 0) q bitvector->natural)) c (? . 24)) ((q def ((lib "rosette/query/eval.rkt") evaluate)) q (6575 . 4)) ((c def c (c (? . 3) q sat?)) q (5942 . 3)) ((c form c (c (? . 11) q optimize)) q (611 . 14)) ((q def ((lib "rosette/lib/render.rkt") render)) q (7178 . 4)) ((c def c (c (? . 0) q zero-extend)) c (? . 21)) ((c form c (c (? . 22) q choose)) q (6794 . 2)) ((c def c (c (? . 0) q integer->bitvector)) q (4679 . 4)) ((c def c (c (? . 0) q bvult)) c (? . 8)) ((c def c (c (? . 14) q function?)) q (4921 . 3)) ((c form c (c (? . 23) q define/debug)) q (989 . 5)) ((c def c (c (? . 0) q bitvector->integer)) c (? . 24))))
 syntax
 (define-symbolic id ...+ type)
  
@@ -58,6 +58,31 @@ parameter
 (current-bitwidth k) -> void?
   k : (or/c #f positive-integer?)
  = 5
+procedure
+(distinct? v ...) -> boolean?
+  v : any/c
+procedure
+(! v) -> boolean?
+  v : boolean?
+procedure
+(&& v ...) -> boolean?
+  v : boolean?
+(|| v ...) -> boolean?
+  v : boolean?
+procedure
+(=> x y) -> boolean?
+  x : boolean?
+  y : boolean?
+(<=> x y) -> boolean?
+  x : boolean?
+  y : boolean?
+procedure
+(forall vs body) -> boolean?
+  vs : (listof constant?)
+  body : boolean?
+(exists vs body) -> boolean?
+  vs : (listof constant?)
+  body : boolean?
 procedure
 (bitvector size) -> bitvector?
   size : (and/c integer? positive? (not/c term?) (not/c union?))
@@ -218,29 +243,34 @@ procedure
 (solution? value) -> boolean?
   value : any/c
 procedure
-(sat? solution) -> boolean?
-  solution : solution?
+(sat? value) -> boolean?
+  value : any/c
 procedure
-(unsat? solution) -> boolean?
-  solution : solution?
+(unsat? value) -> boolean?
+  value : any/c
 procedure
-(sat) -> solution?
-(sat binding) -> solution?
+(unknown? value) -> boolean?
+  value : any/c
+procedure
+(sat) -> sat?
+(sat binding) -> sat?
   binding : (hash/c constant? any/c #:immutable #t)
 procedure
-(unsat) -> solution?
-(unsat constraints) -> solution?
+(unsat) -> unsat?
+(unsat constraints) -> unsat?
   constraints : (listof boolean?)
 procedure
+(unknown) -> unknown?
+procedure
 (model solution) -> (hash/c constant? any/c #:immutable #t)
-  solution : (and/c sat? solution?)
+  solution : sat?
 procedure
 (core solution) -> (or/c (listof (and/c constant? boolean?)) #f)
-  solution : (and/c unsat? solution?)
+  solution : unsat?
 procedure
 (evaluate v solution) -> any/c
   v : any/c
-  solution : (and/c solution? sat?)
+  solution : sat?
 syntax
 (?? maybe-type)
  
