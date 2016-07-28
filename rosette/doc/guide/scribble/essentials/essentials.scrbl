@@ -5,7 +5,7 @@
            rosette/base/form/define (only-in rosette/base/core/safe assert)
            rosette/query/query (only-in rosette asserts clear-asserts!)
            (only-in rosette/base/base bv?)
-           (except-in rosette/query/debug false true assert) rosette/query/eval
+           (except-in rosette/query/debug assert) rosette/query/eval
            (only-in rosette/lib/synthax ?? print-forms) rosette/lib/render))
 
 @(require racket/sandbox  racket/runtime-path  scribble/core

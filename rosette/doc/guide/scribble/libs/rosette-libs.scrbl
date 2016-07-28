@@ -3,7 +3,7 @@
 @(require (for-label 
            rosette/base/form/define rosette/solver/solution rosette/query/query rosette/query/eval 
            rosette/base/core/term rosette/lib/angelic
-           (except-in rosette/query/debug assert false true)
+           (except-in rosette/query/debug assert )
            (only-in rosette/lib/synthax ?? choose define-synthax generate-forms print-forms)
            (only-in rosette/base/core/safe assert)
            (only-in rosette/base/base function? bitvector bvshl bvashr bvlshr bvadd bvsub bvmul)
