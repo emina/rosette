@@ -7,7 +7,7 @@
          "../base/core/bool.rkt"  "../base/form/state.rkt" 
          "../base/core/equality.rkt" "../base/core/term.rkt")
 
-(provide relax? relate debug-origin debug define/debug protect assert true false)
+(provide relax? relate debug-origin debug define/debug protect assert)
 
 (define-syntax debug
   (syntax-rules ()
@@ -40,16 +40,6 @@
 (define-syntax-rule (protect expr)
   (syntax-parameterize ([app (syntax-rules () [(_ proc arg (... ...)) (#%app proc arg (... ...))])])
                        expr))
-
-(define-syntax true
-  (syntax-id-rules (set!)
-    [(set! true e) (error 'set! "cannot reassign the constant true")]
-    [true (relax #t true)]))
-
-(define-syntax false
-  (syntax-id-rules (set!)
-    [(set! false e) (error 'set! "cannot reassign the constant false")]
-    [false (relax #f false)]))
 
 (define relax?
   (make-parameter none/c
