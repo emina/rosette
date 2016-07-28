@@ -5,7 +5,7 @@
 (define-symbolic a b c boolean?)
 (define-symbolic xi yi zi integer?)
 (define-symbolic xr yr zr real?)
-(define-symbolic n1 n2 n3 (bitvector 4))
+(define-symbolic xb yb zb (bitvector 4))
   
 (define (all-different . xs)
   (match xs
@@ -36,6 +36,7 @@
   (check-unsat (verify (assert (equal? (distinct? xr yr zr) (all-different xr yr zr)))))
   (check-unsat (verify (assert (equal? (distinct? xr 4 yr 5 zr) (all-different 4 xr yr zr 5.0)))))
   (check-unsat (verify (assert (equal? (distinct? xi 4.4 yr 5 zi) (all-different 4.4 xi yr zi 5)))))
+  (check-equal? (distinct? (+ xi 4.4 yr) 5 zi (+ 4.4 yr xi )) #f)
   )
  
 
@@ -69,6 +70,39 @@
    (check-real)
    ))
 
+(define tests:bitvector
+  (test-suite+
+   "Tests for distinct? bitvectors."
+   (current-bitwidth #f)
+   (check-equal? (distinct? (bv 1 1)) #t)
+   (check-equal? (distinct? (bv 5 5)) #t)
+   (check-equal? (distinct? (bv 5 5) (bv 1 5)) #t)
+   (check-equal? (distinct? (bv 3 1) (bv 1 1)) #f)
+   (check-equal? (distinct? xb yb) (not (equal? xb yb)))
+   (check-equal? (distinct? xb yb xb zb) #f)
+   (check-equal? (distinct? (bv 3 4) xb (bv 1 4) yb (bv 1 4) zb) #f)
+   (check-unsat (verify (assert (equal? (distinct? xb yb zb) (all-different xb yb zb)))))
+   (check-unsat (verify (assert (equal? (distinct? xb (bv 4 4) yb (bv 5 4) zb)
+                                        (all-different  xb (bv 4 4) yb (bv 5 4) zb)))))
+   (check-equal? (distinct? (bvadd xb (bv 4 4) yb) (bv 5 4) zb (bvadd xb (bv 4 4) yb)) #f)))
+
+(define tests:mixed
+  (test-suite+
+   "Tests for distinct? non-primitives and mixed values."
+    (current-bitwidth #f)
+    (define-symbolic f g (~> integer? real?))
+    (check-equal? (distinct? (list)) #t)
+    (check-equal? (distinct? (list 1)) #t)
+    (check-equal? (distinct? (list 1) (list 3 4)) #t)
+    (check-equal? (distinct? (list 1) (list 1)) #f)
+    (check-equal? (distinct? (list a b xi yr) (list #t #f 1 2))
+                  (not (equal? (list a b xi yr) (list #t #f 1 2))))
+    (check-unsat (verify (assert (equal? (distinct? f g zb) (all-different zb g f)))))
+    (check-unsat (verify (assert (equal? (distinct? xr 1 f g zb yi) (all-different xr 1 zb g f yi)))))
+    ))
+
 (time (run-tests tests:bool))
 (time (run-tests tests:real))
 (time (run-tests tests:real-finitized))
+(time (run-tests tests:bitvector))
+(time (run-tests tests:mixed))
