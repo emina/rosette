@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/generic
+         (for-syntax syntax/transformer)
          "term.rkt" "bool.rkt" "safe.rkt" "union.rkt"  "equality.rkt"  "merge.rkt"
          (only-in "procedure.rkt" @procedure?))
 
@@ -105,9 +106,7 @@
   (lambda (stx)
     (syntax-case stx ()
       [(_ pat ...) #'(fv pat ... _)]))
-  (syntax-id-rules ()
-    [(_ ios o type) (make-fv ios o type)]
-    [_ make-fv])) 
+  (make-variable-like-transformer #'make-fv))
 
 (define (@fv? v)
   (match v
