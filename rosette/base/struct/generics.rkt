@@ -141,7 +141,7 @@
 (define (@make-struct-type-property name [guard #f] [supers null] [can-impersonate? #f])
   (define-values (prop:p p? p-ref) 
     (make-struct-type-property name guard supers can-impersonate?))
-  (values prop:p (lift 'p? p? self) (lift 'p-ref p-ref self)))
+  (values prop:p (lift p? self) (lift p-ref self)))
 
 (define-syntax-rule (lift proc receiver)
   (let ([proc proc])
