@@ -14,7 +14,9 @@
 
 (begin-for-syntax
 
-  ;; parse is copied without modifications from racket/generic
+  ;; parse is copied from racket/generic
+  ;; One modification (marked below): If the #:defined-predicate option
+  ;; is not present, it returns #f instead of (generate-temporary)
   (define (parse stx [options (hasheq)])
     (syntax-case stx ()
       [(#:defined-predicate name . args)
@@ -104,7 +106,9 @@
        (wrong-syntax #'other
                      "expected a method identifier with formal arguments")]
       [() (values (hash-ref options 'methods '())
-                  (hash-ref options 'support generate-temporary)
+                  ;; MODIFICATION: Third argument to hash-ref changed
+                  ;; from generate-temporary to #f
+                  (hash-ref options 'support #f)
                   (hash-ref options 'table #f)
                   (hash-ref options 'fast-defaults '())
                   (hash-ref options 'defaults '())
@@ -134,14 +138,23 @@
          (syntax/loc stx 
            (begin
              (define-generics id . rest)
-             (set! id? (lift id? receiver))
-             (set! support-name (lift support-name receiver))
-             (set! method-name (lift method-name receiver)) ...))))]))
+             (lift-if-exists id? receiver)
+             (lift-if-exists support-name receiver)
+             (lift-if-exists method-name receiver) ...))))]))
     
 (define (@make-struct-type-property name [guard #f] [supers null] [can-impersonate? #f])
   (define-values (prop:p p? p-ref) 
     (make-struct-type-property name guard supers can-impersonate?))
   (values prop:p (lift p? self) (lift p-ref self)))
+
+(define-syntax (lift-if-exists stx)
+  (syntax-case stx ()
+    [(_ proc receiver)
+     (if (syntax->datum #'proc)
+         (syntax/loc stx
+           (set! proc (lift proc receiver)))
+         (syntax/loc stx
+           (void)))]))
 
 (define-syntax-rule (lift proc receiver)
   (let ([proc proc])

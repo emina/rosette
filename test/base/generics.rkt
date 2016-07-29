@@ -2,6 +2,13 @@
 
 (require rackunit rackunit/text-ui rosette/lib/roseunit)
 
+(define-generics simple
+  (answer simple x))
+
+(struct life ()
+  #:methods gen:simple
+  [(define (answer self x) 42)])
+
 (define-generics evaluator
   (evaluat evaluator [env])
   (f evaluator . args)
@@ -56,6 +63,7 @@
    "Concrete tests for define-generics"
 
    ;; Generic function evaluation
+   (check-equal? (answer (life) 3) 42)
    (check-equal? (evaluat (Adder (Multiplier 'x 3) (list + 2 3))
                            #hash((x . 2)))
                  11)
