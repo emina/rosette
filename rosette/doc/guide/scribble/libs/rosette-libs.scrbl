@@ -88,7 +88,7 @@ The hole @racket[(id e ... k)] must specify the inlining bound
 (eval:no-prompt
  (code:comment "The body of nnf=> is a hole to be filled with an")
  (code:comment "expression of depth (up to) 1 from the NNF grammar.")
- (define (nnf=> a b)
+ (define (nnf=> x y)
    (nnf x y 1)))
 (define-symbolic a b boolean?)
 (eval:alts
@@ -96,7 +96,7 @@ The hole @racket[(id e ... k)] must specify the inlining bound
   (synthesize
    #:forall (list a b)
    #:guarantee (assert (equal? (=> a b) (nnf=> a b)))))
- `(define (nnf=> x y) (,|| (! a) b)))
+ `(define (nnf=> x y) (|| (! x) y)))
 ]
 
 Since @racket[define-synthax] uses macros to implement recursive grammars, 
