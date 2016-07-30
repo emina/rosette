@@ -17,7 +17,7 @@
           ((choose && ||) (nnf x y (- depth 1))
                           (nnf x y (- depth 1)))))
 
-(define (nnf=> x y) (nnf a b 1))
+(define (nnf=> x y) (nnf x y 1))
 
 (define-symbolic a b boolean?)
 
