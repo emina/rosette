@@ -96,7 +96,7 @@ The hole @racket[(id e ... k)] must specify the inlining bound
   (synthesize
    #:forall (list a b)
    #:guarantee (assert (equal? (=> a b) (nnf=> a b)))))
- `(define (nnf=> x y) (|| (! x) y)))
+ `(define (nnf=> x y) (,|| (! x) y)))
 ]
 
 Since @racket[define-synthax] uses macros to implement recursive grammars, 
