@@ -101,8 +101,21 @@
     (check-unsat (verify (assert (equal? (distinct? xr 1 f g zb yi) (all-different xr 1 zb g f yi)))))
     ))
 
+(define tests:regression
+  (test-suite+
+   "Regression tests for distinct?"
+   (define (test n)
+     (current-bitwidth #f)
+     (define-symbolic f (~> integer? integer?))
+     (let ([xs (build-list n identity)])
+       (solve (assert (apply distinct? (map f xs))))))
+   (check-sat (test 1))
+   (check-sat (test 32))
+   (check-sat (test 33))))
+
 (time (run-tests tests:bool))
 (time (run-tests tests:real))
 (time (run-tests tests:real-finitized))
 (time (run-tests tests:bitvector))
 (time (run-tests tests:mixed))
+(time (run-tests tests:regression))

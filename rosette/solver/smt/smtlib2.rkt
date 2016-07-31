@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/syntax (only-in racket [< racket/<] [- racket/-]))
+(require racket/syntax (only-in racket [< racket/<] [- racket/-] [and racket/and]))
 
 (provide (except-out (all-defined-out) quantified define-ops printf-smt))
 
@@ -22,7 +22,7 @@
        (match (read port)
          [(list (== 'objectives) _ ...) (loop)]
          [(list (== 'model) def ...)
-          (for/hash ([d def])
+          (for/hash ([d def] #:when (racket/and (pair? d) (equal? (car d) 'define-fun)))
             (match d
               [(list (== 'define-fun) c '() _ v) (values c v)]
               [(list (== 'define-fun) c _ ...) (values c d)]))]
