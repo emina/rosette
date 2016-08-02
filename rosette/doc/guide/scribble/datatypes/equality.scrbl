@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label rosette/base/form/define racket)
-          (for-label (only-in rosette/base/base function? distinct?))
+          (for-label (only-in rosette/base/base function? distinct? ~> bv))
           scribble/core scribble/html-properties scribble/eval racket/sandbox
           "../util/lifted.rkt")
 
