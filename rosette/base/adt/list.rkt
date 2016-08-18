@@ -168,7 +168,9 @@
               (iterator-next l1 (f (car l1) (car l2)) (loop (cdr l1) (cdr l2)))))]
        [(f l . args) 
         (assert-arity-includes f (add1 (length args)) (quote id))
-        (assert (andmap (curry = (length l)) args) (apply bad-lengths-error (quote id) l args))
+        (let ([len (length l)])
+          (assert (for/and ([arg args]) (= len (length arg)))
+                  (apply bad-lengths-error (quote id) l args)))
         (if (null? l)
             (iterator-next)
             (let loop ([l l] [args args])
