@@ -52,6 +52,7 @@
    ord)                ; integer?  
   #:methods gen:typed 
   [(define (get-type v) (term-type v))]
+  #:property prop:custom-print-quotable 'never
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (fprintf port "~a" (term->string self)))])
