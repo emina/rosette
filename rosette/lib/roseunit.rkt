@@ -73,9 +73,9 @@
 (define-syntax-rule (check-unsat test) (check-sol unsat? test))
 
 (define-syntax-rule (test-sat name expr)
-  (test-case name (check-sat expr "Not a satisfiable solution.")))
+  (test-case name (check-sat expr)))
 
 (define-syntax-rule (test-unsat name expr)
-  (test-case name (check-unsat expr "Not an unsatisfiable solution.")))
+  (test-case name (check-unsat expr)))
 
 
