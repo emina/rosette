@@ -66,9 +66,9 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 
 @defform[(assert expr maybe-message)
          #:grammar
-         [(maybe-message (code:line) expr)]
+         [(maybe-message (code:line) msg)]
          #:contracts
-         [(expr (or/c string? procedure?))]]{
+         [(msg (or/c string? procedure?))]]{
   Provides a mechanism for communicating desired
   program properties to the underlying solver.  Rosette keeps track of all
   assertions evaluated during an execution in an @tech{assertion store}. 
