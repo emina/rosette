@@ -35,7 +35,7 @@
     [(_ proc arg ...) 
      (quasisyntax/loc stx
        (call-with-values (thunk (#%app proc arg ...))
-                         (relax-values (syntax/source #,stx))))]))
+                         (relax-values (syntax/source proc))))]))
 
 (define-syntax-rule (protect expr)
   (syntax-parameterize ([app (syntax-rules () [(_ proc arg (... ...)) (#%app proc arg (... ...))])])
