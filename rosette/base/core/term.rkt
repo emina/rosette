@@ -124,6 +124,8 @@
 (struct operator (identifier range safe unsafe)
   #:property prop:procedure 
   (struct-field-index safe)
+  #:property prop:object-name
+  (struct-field-index identifier)
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (fprintf port "~a" (id->string (operator-identifier self))))])
