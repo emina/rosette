@@ -1,6 +1,6 @@
 #lang racket
 
-(require (for-syntax racket/syntax) racket/stxparam 
+(require (for-syntax racket/syntax) racket/stxparam syntax/quote
          (only-in "core.rkt" current-solver ∃-debug eval/asserts)
          "../lib/util/syntax-properties.rkt"
          (only-in "../base/form/app.rkt" app)
@@ -35,7 +35,7 @@
     [(_ proc arg ...) 
      (quasisyntax/loc stx
        (call-with-values (thunk (#%app proc arg ...))
-                         (relax-values (syntax/source #,stx))))]))
+                         (relax-values (quote-syntax/keep-srcloc proc))))]))
 
 (define-syntax-rule (protect expr)
   (syntax-parameterize ([app (syntax-rules () [(_ proc arg (... ...)) (#%app proc arg (... ...))])])
