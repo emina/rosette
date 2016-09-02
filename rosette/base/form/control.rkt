@@ -82,7 +82,7 @@
     [(_ expr ...) (syntax/loc stx (@not (@and expr ...)))]))
 
 (define (@xor a b)
-  (merge a (merge b #f a) b))
+  (@if a (@if b #f a) b))
 
 (define-syntax (@unless stx)
   (syntax-case stx ()
