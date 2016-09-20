@@ -27,10 +27,12 @@
                   [#t (eval-rec t sol cache)]
                   [#f (eval-rec f sol cache)]
                   [g (ite g (eval-rec t sol cache) (eval-rec f sol cache))])]
-               [(or (expression (== ite*) gvs ...) (union gvs))
-                (if (union? expr)
-                    (eval-guarded gvs sol cache car cdr)
-                    (eval-guarded gvs sol cache guarded-test guarded-value))]
+               [(union gvs)
+                (eval-guarded gvs sol cache car cdr)]
+               [(expression (== ite*) gvs ...) 
+                (match (eval-guarded gvs sol cache guarded-test guarded-value)
+                  [(union (? null?)) (solvable-default (get-type expr))]
+                  [other other])]
                [(expression (and op (or (== @forall) (== @exists))) vars body)
                 ((operator-unsafe op)
                  vars
@@ -59,11 +61,12 @@
 
 (define (eval-guarded gvs sol cache test value)
   (let loop ([vs gvs] [out '()])
-    (if (null? vs) 
+    (if (null? vs)
         (apply merge* out)
         (let ([gv (car vs)])
           (match (eval-rec (test gv) sol cache)
             [#t (eval-rec (value gv) sol cache)]
             [#f (loop (cdr vs) out)]
             [g  (loop (cdr vs) (cons (cons g (eval-rec (value gv) sol cache)) out))])))))
+
   
