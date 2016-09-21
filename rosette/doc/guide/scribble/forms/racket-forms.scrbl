@@ -31,7 +31,7 @@
 @(define sequencing (select '(begin begin0 begin-for-syntax)))
 @(define guarded-eval (select '(when unless)))
 @(define assignment (select '(set! set!-values)))
-@(define quasiquoting (select '(quasiquote unquote unquote-splicing)))
+@(define quasiquoting (select '(quasiquote unquote))); unquote-splicing)))
 @(define syntax-quoting (select '(quote-syntax)))
 
 @(define rosette-eval (rosette-evaluator))
