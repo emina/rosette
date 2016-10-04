@@ -22,7 +22,7 @@ The name "Rosette" refers both to the language and the whole system.
 
 To install Rosette, you will need to
 
-@itemlist[@item{Download and install @hyperlink["http://racket-lang.org"]{Racket} (version 6.4).}
+@itemlist[@item{Download and install @hyperlink["http://racket-lang.org"]{Racket} (version 6.6).}
            @item{Use Racket's @tt{raco} tool to install Rosette:
                  @nested{
                          @verbatim|{> raco pkg install rosette}|}}]
