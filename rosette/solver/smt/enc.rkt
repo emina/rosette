@@ -32,7 +32,7 @@
    (match v
      [(? expression?) (enc-expr v env quantified)]
      [(? constant?)   (enc-const v env quantified)]
-     [_               (enc-lit v env quantified)])
+     [_               (enc-lit v)])
    quantified))
 
 (define (enc-expr v env quantified)  
@@ -67,7 +67,9 @@
         (list (ref! env v) (smt-type (get-type v))))
       (enc body env (remove-duplicates (append vars quantified))))]
     [(expression (== @distinct?) (? real? rs) ..1 (? term? es) ...)
-     (apply $distinct (append (if (equal? @real? (get-type (car es))) (map exact->inexact rs) rs)
+     (apply $distinct (append (if (equal? @real? (get-type (car es)))
+                                  (for/list ([r rs]) (enc-real r))
+                                  rs)
                               (for/list ([e es]) (enc e env quantified))))]
     [(expression (app rosette->smt (? procedure? $op)) es ...) 
      (apply $op (for/list ([e es]) (enc e env quantified)))]
@@ -75,14 +77,17 @@
 
 (define (enc-const v env quantified) (ref! env v))
 
-(define (enc-lit v env quantified)
+(define (enc-lit v)
   (match v 
     [#t $true]
     [#f $false]
     [(? integer?) (inexact->exact v)]
-    [(? real?) (if (exact? v) ($/ (numerator v) (denominator v)) v)]
+    [(? real?) (enc-real v)]
     [(bv lit t) ($bv lit (bitvector-size t))]
     [_ (error 'enc "expected a boolean?, integer?, real?, or bitvector?, given ~a" v)]))
+
+(define-syntax-rule (enc-real v)
+  (if (exact? v) ($/ (numerator v) (denominator v)) (string->symbol (~r v))))
 
 (define-syntax define-encoder
   (syntax-rules ()
