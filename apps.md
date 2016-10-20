@@ -12,6 +12,7 @@ first-time users of Rosette in just a few days or weeks.
 
 | [Bagpipe][Bagpipe] | A language for specifying [BGP][BGP] policies and verifying that an Internet Service Provider’s router configurations implement these policies. |
 | [Chlorophyll][Chlorophyll] |  A synthesis-aided programming model and compiler for [GreenArrays GA144][GA144], a minimalist low-power spatial architecture. |
+| [Cosette][Cosette] |  A framework for reasoning about SQL equivalences. |
 | [Ferrite][Ferrite] | A framework for specifying and checking file system crash-consistency models. |
 | [Greenthumb][Greenthumb] | A framework for constructing superoptimizers. |
 | [Neutrons][Neutrons] |  A verifier for a subset of [EPICS][EPICS].  Currently in use at the University of Washington [Clinical Neutron Therapy System][CNTS]. |
@@ -24,6 +25,7 @@ first-time users of Rosette in just a few days or weeks.
 [BGP]: https://en.wikipedia.org/wiki/Border_Gateway_Protocol
 [Chlorophyll]: http://pl.eecs.berkeley.edu/projects/chlorophyll/
 [GA144]: http://www.greenarraychips.com/
+[Cosette]: http://cosette.cs.washington.edu/
 [Ferrite]: http://sandcat.cs.washington.edu/ferrite/
 [Greenthumb]: http://pl.eecs.berkeley.edu/projects/greenthumb/
 [Neutrons]: http://neutrons.uwplse.org
