@@ -34,4 +34,4 @@ defaults:
     values:
       layout: "default"
 
-doc_dir: ./doc/rosette-guide
+doc_dir: ./rosette-guide
