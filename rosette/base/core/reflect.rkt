@@ -20,25 +20,28 @@
     [(list (? constant?) ...) vs]
     [_ (let ([cache (make-hash)])
          (let loop ([vs vs])
-           (hash-ref! 
-            cache
-            vs
-            (lambda ()
-              (remove-duplicates 
-               (match vs
-                 [(union (list (cons guard value) ...))   
-                  (append (append-map loop guard) (append-map loop value))]
-                 [(expression _ x ...) (append-map loop x)]
-                 [(? constant? v) (list v)]
-                 [(box v) (loop v)]
-                 [(? list?) (append-map loop vs)]
-                 [(cons x y) (append (loop x) (loop y))]
-                 [(vector v ...) (append-map loop v)]
-                 [(and (? typed?) (app get-type t)) 
-                    (match (type-deconstruct t vs)
-                      [(list (== vs)) '()]
-                      [components (append-map loop components)])]
-                 [_ '()]))))))]))
+           (if (hash-has-key? cache vs)
+               (hash-ref cache vs)
+               (begin
+                (hash-set! cache vs '())
+                (let ([result
+                       (remove-duplicates 
+                        (match vs
+                          [(union (list (cons guard value) ...))   
+                           (append (append-map loop guard) (append-map loop value))]
+                          [(expression _ x ...) (append-map loop x)]
+                          [(? constant? v) (list v)]
+                          [(box v) (loop v)]
+                          [(? list?) (append-map loop vs)]
+                          [(cons x y) (append (loop x) (loop y))]
+                          [(vector v ...) (append-map loop v)]
+                          [(and (? typed?) (app get-type t)) 
+                           (match (type-deconstruct t vs)
+                             [(list (== vs)) '()]
+                             [components (append-map loop components)])]
+                          [_ '()]))])
+                  (hash-set! cache vs result)
+                  result)))))]))
 
 (define (term->datum val)
   (let convert ([val val] [cache (make-hash)])
