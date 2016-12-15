@@ -10,12 +10,14 @@
          rosette/base/adt/list
          rosette/base/adt/vector
          (only-in rosette/base/struct/struct struct)
+         (only-in rosette/base/form/control @if)
+         (only-in rosette/query/form solve)
          rosette/base/core/merge
          (only-in rosette/base/form/define define-symbolic))
 
 (define-symbolic x y z @integer?)
 
-(define-symbolic a b c @boolean?)
+(define-symbolic a b c d @boolean?)
 
 ; transparent immutable structs 
 (struct i0 (x) #:transparent)
@@ -161,6 +163,96 @@
 (define (struct-hash-tests)
   (check-equal? (equal-hash-code (h0 1)) (equal-hash-code (h0 1))))
 
+(define (cyclic0)
+  (clear-asserts!)
+  (define x0 (box 1))
+  (define x1 (@if a x0 (box 3)))
+  (@set-box! x1 x0)
+  (define y0 (box 1))
+  (define y1 (@if b y0 (box 3)))
+  (@set-box! y1 y0)
+  (check-sat (solve (@assert (&& a b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& (! a) b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& a (! b) (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
+
+(define (cyclic1)
+  (clear-asserts!)
+  (define x0 (box 1))
+  (define x1 (@if a x0 (box 3)))
+  (@set-box! x1 x0)
+  (define y0 (box 1))
+  (define y1 (@if b y0 3))
+  (@set-box! y1 y0)
+  (check-sat (solve (@assert (&& a b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& (! a) b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& a (! b) (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
+
+(define (cyclic2)
+  (clear-asserts!)
+  (define x0 (box 1))
+  (define v0 (box 2))
+  (define x1 (@if a x0 v0))
+  (@set-box! x1 (@if c x0 v0))
+  (define y0 (box 1))
+  (define w0 (box 2))
+  (define y1 (@if b y0 w0))
+  (@set-box! y1 (@if d y0 w0))
+  (check-sat (solve (@assert (&& a b (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& (! a) b (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& a (! b) (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
+
+(define (cyclic3)
+  (clear-asserts!)
+  (define x0 (m0 1))
+  (define x1 (@if a x0 (m0 3)))
+  (set-m0-m! x1 x0)
+  (define y0 (m0 1))
+  (define y1 (@if b y0 (m0 3)))
+  (set-m0-m! y1 y0)
+  (check-sat (solve (@assert (&& a b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& (! a) b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& a (! b) (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
+
+(define (cyclic4)
+  (clear-asserts!)
+  (define x0 (m0 1))
+  (define x1 (@if a x0 (m0 3)))
+  (set-m0-m! x1 x0)
+  (define y0 (m0 1))
+  (define y1 (@if b y0 3))
+  (set-m0-m! y1 y0)
+  (check-sat (solve (@assert (&& a b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& (! a) b (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& a (! b) (@equal? x1 y1)))))
+  (check-unsat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
+
+(define (cyclic5)
+  (clear-asserts!)
+  (define x0 (m0 1))
+  (define v0 (m0 2))
+  (define x1 (@if a x0 v0))
+  (set-m0-m! x1 (@if c x0 v0))
+  (define y0 (m0 1))
+  (define w0 (m0 2))
+  (define y1 (@if b y0 w0))
+  (set-m0-m! y1 (@if d y0 w0))
+  (check-sat (solve (@assert (&& a b (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& (! a) b (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& a (! b) (@equal? x1 y1)))))
+  (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
+
+(define (cyclic-tests)
+  (cyclic0)
+  (cyclic1)
+  (cyclic2)
+  (cyclic3)
+  (cyclic4)
+  (cyclic5))
+
 (define equality-tests
   (test-suite+ 
    "Tests for rosette/base/equality.rkt"
@@ -195,6 +287,9 @@
    ; struct tests
    (struct-equal?-tests)
    (struct-eq?-tests)
-   (struct-hash-tests)))
+   (struct-hash-tests)
+   ; cyclic tests
+   (cyclic-tests)
+   ))
 
 (time (run-tests equality-tests))
