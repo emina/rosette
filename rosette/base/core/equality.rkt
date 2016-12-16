@@ -6,25 +6,33 @@
          @equal?) ; (-> any/c any/c @boolean?)
 
 
-(define ustack (make-parameter '()))
-
-(define-syntax-rule (define-equality-predicate @=? =? type=?)
+(define-syntax-rule (define-equality-predicate @=? =? type=? @cache)
   (define (@=? x y)
-    (if (=? x y)
-        #t
-        (let ([args (cons x y)])
-          (if (member args (ustack))
-              #t
-              (parameterize ([ustack (cons args (ustack))])
-                (cond 
-                  [(union? x) (if (union? y) 
-                                  (union=union? x y @=?) 
-                                  (union=value? x y @=?))]
-                  [(union? y) (union=value? y x @=?)]
-                  [else (type=? (type-of x y) x y)])))))))
+    (let* ([cache (@cache)]
+           [toplevel? (hash-empty? cache)]
+           [key (cons x y)])
+      (if (hash-has-key? cache key)
+          (hash-ref cache key)
+          (begin
+            (hash-set! cache key #t)
+            (let ([result
+                   (cond [(=? x y) #t]
+                         [(union? x) (if (union? y) 
+                                         (union=union? x y @=?) 
+                                         (union=value? x y @=?))]
+                         [(union? y) (union=value? y x @=?)]
+                         [else (type=? (type-of x y) x y)])])
+              (if toplevel?
+                  (@cache (make-hash))
+                  (hash-set! cache key result))
+              result))))))
+                   
+                
 
-(define-equality-predicate @equal? equal? type-equal?)
-(define-equality-predicate @eq? eq? type-eq?)
+(define equal-cache (make-parameter (make-hash)))
+(define eq-cache (make-parameter (make-hash)))
+(define-equality-predicate @equal? equal? type-equal? equal-cache)
+(define-equality-predicate @eq? eq? type-eq? eq-cache)
 
 ; (-> union? union? (-> any/c any/c @boolean?) @boolean?)
 (define (union=union? x y =?)
