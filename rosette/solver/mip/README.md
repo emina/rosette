@@ -1,0 +1,3 @@
+- Download and install [CPLEX](https://www.ibm.com/developerworks/community/blogs/jfp/entry/CPLEX_Is_Free_For_Students?lang=en)
+- Locate cplex interactive executable, which is likely to be at IBM/ILOG/CPLEX_Studio*/cplex/bin/x86-64*/cplex
+- Copy cplex executable to rosette/bin
