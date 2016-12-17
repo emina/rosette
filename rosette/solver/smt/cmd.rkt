@@ -9,7 +9,8 @@
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
-         "../solution.rkt")
+         "../solution.rkt"
+         "ilp.rkt")
 
 (provide encode encode-for-proof decode)
 
@@ -22,6 +23,19 @@
 ; be augmented, if needed, with additional declarations and 
 ; definitions.  This procedure will not emit any other commands.
 (define (encode env asserts mins maxs)
+  ;; print ILP constraints
+  (define ilp #t)
+  (when ilp
+    (ilp-reset)
+    (unless (empty? mins)
+      (ilp-minimize (car mins) env))
+    (unless (empty? maxs)
+      (ilp-maximize (car maxs) env))
+    (ilp-assert-init)
+    (for ([a asserts])
+      (ilp-enc a env))
+    (ilp-done))
+  
   (for ([a asserts])
     (assert (enc a env)))
   (for ([m mins])
