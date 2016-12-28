@@ -103,7 +103,7 @@
 
 (define (reset-default-options)
   (reset)
-  (set-logic "QF_LIA")
+  ;;(set-logic "QF_LIA")
   (set-option ':produce-unsat-cores 'false)
   (set-option ':auto-config 'true)
   (set-option ':smt.relevancy 2)

@@ -22,7 +22,7 @@
 
 (struct equation (op signs terms lit))
 
-(define path "/Users/mangpo/work/scheduler/tests/out.mip")
+(define path "/Users/mangpo/work/out.mip")
 (define vars (set))
 (define out-port #f)
 
@@ -40,8 +40,13 @@
   ;; TODO: set bounds
   (define integer-vars (filter (lambda (x) (eq? (type-of x) @integer?)) (set->list vars)))
   (unless (set-empty? integer-vars)
+    (define count 0)
     (ilp-printf "generals\n")
     (for ([v integer-vars])
+      (set! count (add1 count))
+      (when (= count 200)
+        (ilp-printf "\n")
+        (set! count 0))
       (ilp-printf "~a " (get-name v)))
     (ilp-printf "\n")
     )
@@ -51,10 +56,10 @@
   (close-output-port out-port))
 
 (define (ilp-minimize x env)
-  (ilp-printf "minimize ~a\n" x))
+  (ilp-printf "minimize ~a\n" (get-name x)))
 
 (define (ilp-maximize x env)
-  (ilp-printf "maximize ~a\n" x))
+  (ilp-printf "maximize ~a\n" (get-name x)))
 
 (define (ilp-assert-init)
   (ilp-printf "subject to\n"))
@@ -85,14 +90,14 @@
     [(? constant?)
      (ilp-printf "~a " (get-name v)) (set! vars (set-add vars v))]
     [(? number?)    (ilp-printf "~a " v) ]
-    [_              (raise (format "cannot encode term ~a" v))]))
+    [_              (raise (exn:fail? (format "cannot encode term ~a" v) (current-continuation-marks)))]))
 
 (define-syntax define-encoder
   (syntax-rules ()
     [(_ id [rosette-op smt-op] ...)
      (define (id op) 
        (cond [(eq? op rosette-op) smt-op] ... 
-             [else (raise (format "unknown op ~a" op))]))]))
+             [else (raise (exn:fail? (format "unknown op ~a" op) (current-continuation-marks)))]))]))
 
 (define-encoder op->string
   [@= '=] [@<= '<=] [@+ '+] [@* '||] [@- '-])
@@ -105,7 +110,8 @@
      ]
     [(expression op e1 e2)
      (unless (member op (list @= @<=))
-       (raise (format "cannot encode inequality operation ~a to ILP" op)))
+       (raise (exn:fail? (format "Cannot encode inequality operation ~a to ILP in ~a" op v)
+                         (current-continuation-marks))))
      
      (define-values (e1-signs e1-terms e1-lits) (flatten-expr e1 env))
      (define-values (e2-signs e2-terms e2-lits) (flatten-expr e2 env))
@@ -116,7 +122,8 @@
      (define lits (append (map - e1-lits) e2-lits))
      (print-equation (equation op signs terms (apply + lits)))
      ]
-    [_ (raise (format "cannot encode ~a to ILP" v))]))
+    [_ (raise (exn:fail? (format "Cannot encode ~a to ILP" v)
+                         (current-continuation-marks)))]))
 
 (define (flatten-expr v env)
   (define signs (list))
@@ -134,6 +141,8 @@
        ]
       [(expression (== @+) es ...)
        (for ([e es]) (f e sign))]
+      [(expression (== @-) e)
+       (f e (- sign))]
       [(expression (== @-) es ...)
        (f (car es) sign)
        (for ([e (cdr es)]) (f e (- sign)))]
@@ -141,7 +150,8 @@
       [(expression (== @real->integer) e1)  (f e1 sign)]
       [(? constant?)   (set! signs (cons sign signs)) (set! terms (cons v terms))]
       [(? number?)     (set! lits (cons (* sign v) lits))]
-      [_               (raise (format "cannot encode ~a to ILP" v))]
+      [_               (raise (exn:fail? (format "cannot encode ~a to ILP" v)
+                                         (current-continuation-marks)))]
     ))
   (f v 1)
   (values signs terms lits))
@@ -151,7 +161,7 @@
     (match e2
       [(expression op2 es2 ...)
        (unless (member op2 (list @+ @-))
-         (raise (format "cannot encode ~a to ILP" v)))
+         (raise (exn:fail? (format "cannot encode ~a to ILP" v)) (current-continuation-marks)))
        (apply expression op2
               (for/list ([e es2])
                 (expression @* e1 e)))]))
@@ -164,6 +174,7 @@
        [(and (number? e2) (constant? e1)) (expression @* e2 e1)]
        [(number? e1) (f e1 e2)]
        [(number? e2) (f e2 e1)]
-       [else (raise (format "distribute: cannot encode ~a to ILP" v))])]))
+       [else (raise (exn:fail? (format "distribute: cannot encode ~a to ILP" v)
+                               (current-continuation-marks)))])]))
         
         
