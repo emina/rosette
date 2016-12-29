@@ -18,7 +18,8 @@
 
 (provide ilp-reset ilp-done
          ilp-minimize ilp-maximize
-         ilp-assert-init ilp-enc)
+         ilp-assert-init ilp-enc
+         rosette->ilp)
 
 (struct equation (op signs terms lit))
 
@@ -104,6 +105,7 @@
 
 ; Convert rosette constraint v to an ILP equation
 (define (rosette->ilp v env)
+  ;(fprintf (current-error-port) "~a\n" v)
   (match v
     [(expression (== @&&) es ...)
      (for ([e es]) (rosette->ilp e env))
@@ -122,8 +124,9 @@
      (define lits (append (map - e1-lits) e2-lits))
      (print-equation (equation op signs terms (apply + lits)))
      ]
-    [_ (raise (exn:fail? (format "Cannot encode ~a to ILP" v)
-                         (current-continuation-marks)))]))
+    [_
+     (raise (exn:fail? (format "Cannot encode ~a to ILP" v)
+                       (current-continuation-marks)))]))
 
 (define (flatten-expr v env)
   (define signs (list))
@@ -157,14 +160,22 @@
   (values signs terms lits))
 
 (define (distribute v)
-  (define (f e1 e2)
+  (define (f e1 e2) ;; e1 is number
     (match e2
+      [(expression (== @*) es2 ...)
+       (define num (findf number? es2))
+       (unless num (exn:fail? (format "cannot encode ~a to ILP" v)) (current-continuation-marks))
+       (distribute (apply expression @* (* num e1) (remove num es2)))
+       ]
+
       [(expression op2 es2 ...)
        (unless (member op2 (list @+ @-))
          (raise (exn:fail? (format "cannot encode ~a to ILP" v)) (current-continuation-marks)))
        (apply expression op2
               (for/list ([e es2])
-                (expression @* e1 e)))]))
+                (if (number? e)
+                    (* e1 e)
+                    (distribute (expression @* e1 e)))))]))
               
   (match v
     [(expression op e1 e2)
