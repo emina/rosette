@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in rosette sat unsat))
+(require (only-in rosette sat unsat evaluate))
 (require "ilp.rkt" "common.rkt" "mip-converter.rkt")
 (provide encode decode)
 
@@ -21,7 +21,7 @@
   (for ([sym (hash-values name2sym)])
     (hash-set! mip-sol-hash sym 0))
 
-  (read-line) ; Variable Name           Solution Value
+  (read-line) ; Variable Name Solution Value
   (define (loop)
     (define line (read-line))
     (unless (or (regexp-match #rx"All other variables" line)
@@ -55,28 +55,16 @@
       (hash-set! smt-sol-hash org-sym org-val)
       ))
 
-  ;; TODO: check that old and new objs are equal
+  (define smt-sol (sat (make-immutable-hash (hash->list smt-sol-hash))))
 
-  (sat (make-immutable-hash (hash->list smt-sol-hash)))
+  (for ([mip-pair (converter-objs convert)]
+        [smt-pair (converter-org-objs convert)])
+    (let ([mip-o (objective-expr mip-pair)]
+          [smt-o (objective-expr smt-pair)])
+      (unless (= (evaluate mip-o mip-sol) (evaluate smt-o smt-sol))
+        (raise (exn:fail (format "MIP objective is not equal to SMT objective.\nSMT: ~a = ~a\nMIP: ~a = ~a\n"
+                                 (evaluate smt-o smt-sol) smt-o
+                                 (evaluate mip-o mip-sol) mip-o))))))
+
+  smt-sol
   )
-
-
-
-
-#|
-CPLEX> Incumbent solution
-Variable Name           Solution Value
-m28                           2.000000
-m30                           1.000000
-m29                           1.000000
-m26                           1.000000
-m25                           1.000000
-m20                           1.000000
-m19                           1.000000
-m14                           1.000000
-m10                           1.000000
-m4                            1.000000
-m0                            1.000000
-All other variables in the range 1-32 are 0.
-CPLEX>
-|#

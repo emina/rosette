@@ -4,7 +4,7 @@
          "server.rkt" "cmd.rkt"
          "common.rkt" "smt-simplify.rkt" "mip-converter.rkt"
          "../solver.rkt" "../solution.rkt"
-         (only-in rosette symbolics)
+         (only-in rosette symbolics evaluate [= sym/=])
          (only-in racket [remove-duplicates unique])
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
@@ -69,14 +69,24 @@
      
    (define (solver-check self)
      (match-define (cplex server (app unique asserts) (app unique objs) env _) self)
+     
+     (define (multi-objective asserts objs convert)
+       (define sol
+         (server-run server
+                     (encode env asserts (car objs))
+                     (decode env convert)))
+       (cond
+         [(empty? (cdr objs)) sol]
+         [else
+          (define obj (objective-expr (car objs)))
+          (fprintf (current-error-port) (format "\nAdd constraint ~a\n" (sym/= (evaluate obj sol) obj)))
+          (multi-objective (cons (sym/= (evaluate obj sol) obj) asserts)
+                           (cdr objs) convert)]))
+     
      (cond [(ormap false? asserts) (unsat)]
            [else
             (when (= (length objs) 0)
               (raise (exn:fail "MIP solver requires at least one objective." (current-continuation-marks))))
-            
-            ;; TODO: muli objective
-            (when (> (length objs) 1)
-              (raise (exn:fail "MIP solver currently does not support multi objectives." (current-continuation-marks))))
             
             ;; step 1: simply equation (flatten)
             (define sim-asserts (simplify asserts))
@@ -92,18 +102,16 @@
             (fprintf (current-error-port) (format "SMT: asserts=~a vars=~a\n" (length sim-asserts) (length (symbolics sim-asserts))))
             (fprintf (current-error-port) (format "MIP: asserts=~a vars=~a\n" (length mip-asserts) (length (symbolics mip-asserts))))
 
-            (define sol
-              (server-run server
-                          (encode env mip-asserts (car mip-objs))
-                          (decode env convert)
-                          ;(decode convert)
-                          ))
+            ;; step 3: solve
+            (define sol (multi-objective mip-asserts mip-objs convert))
             (solver-clear-stacks! self)
             sol
             ]))
    
    (define (solver-debug self)
      (raise (exn:fail "cplex: solver-debug: unimplemented" (current-continuation-marks))))
+
+   
    ])
 
 (define (numeric-terms ts caller)
