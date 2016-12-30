@@ -3,7 +3,8 @@
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt"
          "common.rkt" "smt-simplify.rkt" "mip-converter.rkt"
-         "../solver.rkt" "../solution.rkt" 
+         "../solver.rkt" "../solution.rkt"
+         (only-in rosette symbolics)
          (only-in racket [remove-duplicates unique])
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
@@ -71,11 +72,11 @@
      (cond [(ormap false? asserts) (unsat)]
            [else
             (when (= (length objs) 0)
-              (raise (exn:fail "MIP solver requires at least one objective.")))
+              (raise (exn:fail "MIP solver requires at least one objective." (current-continuation-marks))))
             
             ;; TODO: muli objective
             (when (> (length objs) 1)
-              (raise (exn:fail "MIP solver currently do not support multi objectives.")))
+              (raise (exn:fail "MIP solver currently does not support multi objectives." (current-continuation-marks))))
             
             ;; step 1: simply equation (flatten)
             (define sim-asserts (simplify asserts))
@@ -86,6 +87,9 @@
             ;; step 2: convert SMT to MIP
             (define-values (mip-asserts mip-objs)
               (smt->mip sim-asserts sim-objs))
+
+            (fprintf (current-error-port) (format "SMT: asserts=~a vars=~a\n" (length sim-asserts) (length (symbolics sim-asserts))))
+            (fprintf (current-error-port) (format "MIP: asserts=~a vars=~a\n" (length mip-asserts) (length (symbolics mip-asserts))))
             
             (server-run server
                         (begin 
@@ -96,7 +100,7 @@
             ]))
    
    (define (solver-debug self)
-     (raise (exn:fail "cplex: solver-debug: unimplemented")))
+     (raise (exn:fail "cplex: solver-debug: unimplemented" (current-continuation-marks))))
    ])
 
 (define (numeric-terms ts caller)

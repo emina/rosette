@@ -266,6 +266,7 @@
   )
 
 (define (legal-conversion all-asserts syms-need-ub syms-have-ub syms-have-lb syms-exact)
+  ;;(fprintf (current-error-port) (format "New vars: ~a ~a ~a ~a\n" syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
   (define-syntax-rule (set-add! x a)
     (set! x (set-add x a)))
@@ -294,7 +295,7 @@
             (if pos (set-add! have-ub-neg v) (set-add! have-ub-pos v))]
 
            [(set-member? syms-exact v) (void)]
-           [else (raise (format "Illegal old variable ~a in new assertion." v))]
+           ;[else (raise (format "Illegal old variable ~a in new assertion." v))]
 
            )]
         [_ (void)]))
