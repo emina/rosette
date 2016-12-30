@@ -68,9 +68,6 @@
   ;(fprintf (current-error-port) "enc ~a\n" v)
   (rosette->ilp v env))
 
-(define (get-name v)
-  (define name (format "~a" v))
-  (string-replace name "$" ""))
 
 (define (print-equation v)
   (match v

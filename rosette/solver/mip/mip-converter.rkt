@@ -17,7 +17,9 @@
          "common.rkt"
          )
 
-(provide smt->mip)
+(provide smt->mip (struct-out converter))
+
+(struct converter (mapping-info name2sym asserts objs org-objs))
 
 (define (smt->mip asserts objs)
   ;(pretty-display `(asserts ,asserts))
@@ -79,7 +81,8 @@
 
     (range lb (add1 ub))
     )
-  
+
+  (define mapping-sym-info (make-hash))
   (define (init-mapping-sym s)
     (if (hash-has-key? legal-vals s)
         (hash-ref legal-vals s)
@@ -87,7 +90,12 @@
           (hash-set! legal-vals s vals)
           (let ([l (for/list ([val vals]) (get-mapping-sym-conc-no-init s val))])
             ;; sum_n(Mvn) = 1
-            (set! assert-placement (cons (sym/= (apply sym/+ l) 1) assert-placement)))
+            (set! assert-placement (cons (sym/= (apply sym/+ l) 1) assert-placement))
+            ;; store mapping info to decode Mvn back to original variable
+            (hash-set! mapping-sym-info
+                       s
+                       (for/list ([new-sym l] [val vals]) (cons new-sym val)))
+            )
           vals)))
 
   (define (has-mapping? s)
@@ -259,15 +267,18 @@
     (append assert-bounds assert-placement assert-comm-at assert-comm new-asserts assert-obj))
 
   ;; Check legality
-  (legal-conversion (append new-asserts assert-obj)
-                    syms-need-ub syms-have-ub syms-have-lb syms-exact)
+  (define name2sym
+    (legal-conversion (append new-asserts assert-obj)
+                      syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
-  (values all-asserts new-objs)
+  (converter mapping-sym-info name2sym all-asserts new-objs objs)
   )
 
 (define (legal-conversion all-asserts syms-need-ub syms-have-ub syms-have-lb syms-exact)
   ;;(fprintf (current-error-port) (format "New vars: ~a ~a ~a ~a\n" syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
+  (define name2sym (make-hash))
+  
   (define-syntax-rule (set-add! x a)
     (set! x (set-add x a)))
 
@@ -278,12 +289,13 @@
     (define have-ub-neg (set))
     (define (f v pos)
       (match v
-        [(expression (== @+) es ...)
+        [(expression (or (== @+) (== @*)) es ...)
          (for ([e es]) (f e pos))]
         [(expression (== @-) es ...)
          (f (car es) pos)
          (for ([e (cdr es)]) (f e (not pos)))]
         [(? constant?)
+         (hash-set! name2sym (get-name v) v)
          (cond
            [(set-member? syms-need-ub v)
             (if pos (set-add! need-ub-pos v) (set-add! need-ub-neg v))]
@@ -360,4 +372,5 @@
       [_ (raise (format "Illegal assertion (2) ~a" v))]))
 
   (map check-top all-asserts)
+  name2sym
   )

@@ -85,18 +85,21 @@
                 (objective (objective-type o) (simplify-expression (objective-expr o)))))
 
             ;; step 2: convert SMT to MIP
-            (define-values (mip-asserts mip-objs)
-              (smt->mip sim-asserts sim-objs))
+            (define convert (smt->mip sim-asserts sim-objs))
+            (define mip-asserts (converter-asserts convert))
+            (define mip-objs (converter-objs convert))
 
             (fprintf (current-error-port) (format "SMT: asserts=~a vars=~a\n" (length sim-asserts) (length (symbolics sim-asserts))))
             (fprintf (current-error-port) (format "MIP: asserts=~a vars=~a\n" (length mip-asserts) (length (symbolics mip-asserts))))
-            
-            (server-run server
-                        (begin 
+
+            (define sol
+              (server-run server
                           (encode env mip-asserts (car mip-objs))
+                          (decode env convert)
+                          ;(decode convert)
                           ))
             (solver-clear-stacks! self)
-            ;(server-read server (decode env))
+            sol
             ]))
    
    (define (solver-debug self)
