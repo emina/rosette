@@ -21,13 +21,19 @@
 
 (struct converter (mapping-info name2sym asserts objs org-objs))
 
+; Given a list of assertions and a list of objectives,
+; return MIP constraints as a converter object.
 (define (smt->mip asserts objs)
   ;(pretty-display `(asserts ,asserts))
+  (define t1 (current-seconds))
+
+  ;; Storage for extra assertions.
   (define assert-bounds (list))
   (define assert-placement (list))
   (define assert-comm-at (list))
   (define assert-comm (list))
 
+  ;; Storage for different kinds of variables which are used to check legality of the conversion.
   (define syms-need-ub (set))
   (define syms-have-ub (set))
   (define syms-have-lb (set))
@@ -37,6 +43,7 @@
     (define-symbolic* m sym/integer?)
     (associate-type m type)
     m)
+  
   (define (associate-type m type)
     (cond
       [(equal? type 'exact) (set! syms-exact (set-add syms-exact m))]
@@ -56,7 +63,10 @@
           (hash-set! h key val)
           val)))
 
+  ;; Mapping of an old symbolic variable to its valid range
   (define legal-vals (make-hash))
+
+  ;; Given an old symbolic variable, returns its vailde range (infered from the assertions).
   (define (get-legal-vals s)
     (define lb #f)
     (define ub #f)
@@ -82,7 +92,12 @@
     (range lb (add1 ub))
     )
 
+  ;; Mapping of Mv to a list of (Mvn n)
   (define mapping-sym-info (make-hash))
+
+  ;; Given an old symbolic variable Mv that can map to a range of values,
+  ;; create a set of new MIP symbolic variables Mvn such that Mvn = 0 or 1,
+  ;; and Mvn = 1 iff Mv = n.
   (define (init-mapping-sym s)
     (if (hash-has-key? legal-vals s)
         (hash-ref legal-vals s)
@@ -91,7 +106,7 @@
           (let ([l (for/list ([val vals]) (get-mapping-sym-conc-no-init s val))])
             ;; sum_n(Mvn) = 1
             (set! assert-placement (cons (sym/= (apply sym/+ l) 1) assert-placement))
-            ;; store mapping info to decode Mvn back to original variable
+            ;; store mapping info to decode Mvn back to original variable Mv
             (hash-set! mapping-sym-info
                        s
                        (for/list ([new-sym l] [val vals]) (cons new-sym val)))
@@ -100,14 +115,16 @@
 
   (define (has-mapping? s)
     (hash-has-key? legal-vals s))
-    
+
+  ;; Given Mv (s) and n, return Mvn
   (define (get-mapping-sym-conc-no-init s n)
     (hash-ref-sym mapping-matrix-hash (set s n)
                               (lambda (a) (sym/and (sym/<= 0 a)
                                                    (sym/<= a 1)))
                               #:type 'exact)
     )
-  
+
+  ;; Given Mv (s) and n, return Mvn and create all Mvn's
   (define (get-mapping-sym-conc s n)
     (init-mapping-sym s)
     (hash-ref-sym mapping-matrix-hash (set s n)
@@ -116,46 +133,66 @@
                               #:type 'exact)
     )
 
+  ;; Return a communication indicator Cuvn
+  ;; Cuvn = 1 if Mv (s1) != Mu (s2) and (Mv == n) or (Mu == n)
   (define (get-comm-at-conc s1 s2 n)
     (define mapping-s1 (get-mapping-sym-conc s1 n))
     (define mapping-s2 (get-mapping-sym-conc s2 n))
+    ;; 0 <= Cuvn <= 1
     (define comm (hash-ref-sym mapping-matrix-hash (set s1 s2 n)
                                (lambda (a) (sym/and (sym/<= 0 a)
                                                     (sym/<= a 1)))
                                #:type 'need-ub)) ;; tag with 'need-ub to check legality later
+    ;; Cuvn >= Mv - Mu
     (set! assert-comm-at
           (cons (sym/<= (sym/- mapping-s1 mapping-s2) comm) assert-comm-at))
+    ;; Cuvn >= Mu - Mv
     (set! assert-comm-at
           (cons (sym/<= (sym/- mapping-s2 mapping-s1) comm) assert-comm-at))
     comm
     )
 
+  ;; Return a communication indicator Cuv
+  ;; Cuv = 1 if Mv (s1) != Mu (s2)
   (define (get-comm s1 s2)
     (define range1 (init-mapping-sym s1))
     (define range2 (init-mapping-sym s2))
     (unless (equal? range1 range2)
       (raise "Not supporting for creating comm var when u and v can map to different sets"))
 
+    ;; 0 <= Cuv <= 1
     (define comm (hash-ref-sym mapping-matrix-hash (set s1 s2)
                                (lambda (a) (sym/and (sym/<= 0 a)
                                                     (sym/<= a 1)))
                                #:type 'need-ub)) ;; tag with 'need-ub to check legality later
-    
+
+    ;; for all n, Cuv >= Cuvn
     (for ([n range1])
       (let ([comm-at-n (get-comm-at-conc s1 s2 n)])
         (set! assert-comm (cons (sym/<= comm-at-n comm) assert-comm))))
     comm
     )
 
-  (define (not-eq s1 s2)
-    (if (and (has-mapping? s1) (has-mapping? s2))
-        (raise "MIP converter: unimplemented")
-        #f))
+  (define used-old-syms (set))
+  ;; Given constraint s1 != s2
+  (define (not-eq-constraint s1 s2)
+    (cond
+      [(and (has-mapping? s1) (has-mapping? s2))
+       ;; if s1 (Mv) and s2 (Mu) have new corresponding MIP variable Mvn's
+       ;; for all n, assert Mvn + Mun <= 1
+       (raise "MIP converter: unimplemented")]
+      
+      [(and (or (has-mapping? s1) (set-member? used-old-syms s1))
+            (or (has-mapping? s2) (set-member? used-old-syms s2)))
+       (raise (format "MIP converter: cannot convert (! (= ~a ~a))" s1 s2))]
+
+      [else #f]))
 
   (define mapping-matrix-hash (make-hash))
   (define (mapping-matrix v)
     ;(pretty-display `(mapping ,v))
     (match v
+      ;; if Mv != Mu and (Mv == n) or (Mu == n), + x
       [(expression
         (== @+)
         (expression (== ite)
@@ -180,7 +217,8 @@
              )
            v)
        ]
-      
+
+      ;; if Mv == n, + x
       [(expression (== ite)
                    (expression (== @=) (? integer? n) (? constant? mv))
                    (? number? n1) (? number? n2))
@@ -190,6 +228,7 @@
        ;; This transformation doesn't require upperbound.
        ]
       
+      ;; if Mv == Mu, + x
       [(expression (== ite)
                    (expression (== @=) (? constant? mu) (? constant? mv))
                    (? number? n1) (? number? n2))
@@ -197,18 +236,24 @@
        (define comm (get-comm mu mv))
        (sym/+ (sym/* n1 (sym/- 1 comm)) (sym/* n2 comm))
        ]
-      
-      [(expression (== @!) (expression (== @=) (? constant? v1) (? constant? v2)))
-       (not-eq v1 v2)]
-      
-      [(expression op es ...)
-       (cond
-        [(member op (list @+ @- @* @= @< @<=))
-         ;(pretty-display `(MATCH-3 ,op))
-         (apply expression op (for/list ([e es]) (mapping-matrix e)))]
 
-        [else v]);end cond
-       ]
+      ;; Mv != Mu
+      [(expression (== @!) (expression (== @=) (? constant? v1) (? constant? v2)))
+       (not-eq-constraint v1 v2)]
+
+      ;; simple bounds
+      [(expression (or (== @<) (== @<=)) (? constant?) (? number?)) v]
+      [(expression (or (== @<) (== @<=)) (? number?) (? constant?)) v]
+      
+      ;; others
+      [(expression op es ...)
+       (apply expression op (for/list ([e es]) (mapping-matrix e)))]
+
+      [(? constant?)
+       (when (set-member? old-syms v) (raise (format "A removed old variable ~a is used." v)))
+       (set! used-old-syms (set-add used-old-syms v))
+       v]
+      
       [_ v])
     )
 
@@ -217,12 +262,15 @@
     (if (expression? v)
         (let ([obj (get-sym type)]
               [new-v (mapping-matrix v)])
+          ;; If an objective v is an expression, introduce a new variable,
+          ;; and assert it equal to the expression. This is requied for CPLEX.
           (set! assert-obj (cons (expression @= new-v obj) assert-obj))
           obj)
         (begin
           (associate-type v type)
           v)))
 
+  ;; Remove assertions on bounds of old symbolic variables.
   (define (remove-old-syms v)
     (match v
       [(expression op (? constant? a) (? number? b))
@@ -233,11 +281,15 @@
 
       [_ #t]))
 
+  ;; Test if v is of form (= term1 term2)
   (define (not-eq? v)
     (match v
       [(expression (== @!) (expression (== @=) (? constant? v1) (? constant? v2))) #t]
       [_ #f]))
 
+  ;; Separate (= term1 term2) constraints to the second group
+  ;; because we need information from other assertions (used and removed variables)
+  ;; before converting them.
   (define first-group (filter (lambda (x) (not (not-eq? x))) asserts))
   (define second-group (filter (lambda (x) (not-eq? x)) asserts))
   
@@ -271,6 +323,8 @@
     (legal-conversion (append new-asserts assert-obj)
                       syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
+  (define t2 (current-seconds))
+  (fprintf (current-error-port) (format "Converting time: ~a\n" (- t2 t1)))
   (converter mapping-sym-info name2sym all-asserts new-objs objs)
   )
 

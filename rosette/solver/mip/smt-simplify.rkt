@@ -12,8 +12,7 @@
                   @abs @integer->real @real->integer @int?)
          )
 
-(provide simplify simplify-expression disect
-         remove-redundant-check sum-of-ite traverse)
+(provide simplify simplify-expression)
 
 (define (simplify asserts)
   ;; Remove redundant assertions,
@@ -22,7 +21,7 @@
   (define temp (remove-redundant-or asserts))
   ;; Remove redundant checks
   (define t2 (current-seconds))
-  (set! temp (map remove-redundant-check temp)) ;; this step is very slow.
+  ;(set! temp (map remove-redundant-check temp)) ;; this step is very slow.
   ;; Convert to form of sum of ite
   (define t3 (current-seconds))
   (set! temp (map sum-of-ite temp))
@@ -62,7 +61,7 @@
       [(expression (== @||) es ...)
        (define found (for*/or ([e es] [a asserts]) (equal? e a)))
        (cond
-         [found (set! change #t) #f]
+         [found (set! change #t) #f] ;; Remove this assertion if e is already asserted.
          [else
           (match v
             [(expression (== @||)
@@ -121,15 +120,11 @@
              (if pos b a)
              v))]
     [_ v]))
-  ;(pretty-display `(ret ,rm ,pre-v ,ret))
   (recurse ret))
 
 
 ;; Remove ite* condition checking when possible.
-;(define count 0)
 (define (remove-redundant-check v)
-  ;(set! count (add1 count))
-  ;(when (= 0 (modulo count 100000)) (pretty-display `(count ,count)))
 
   (define (recurse pre-v)
     (match pre-v
@@ -141,22 +136,15 @@
   (define ret
   (match v
     [(expression (== ite) c a b)
-     (define ret
-     (expression ite c (remove-check c a #t) b)) ;; (remove-check c b #f)
-     ;(pretty-display `(before ,pre-v))
-     ;(pretty-display `(after ,ret))
-     ret
+     (expression ite c (remove-check c a #t) b) ;; (remove-check c b #f)
      ]
+    
     [(expression (== ite*)
                  (expression (== ⊢) cs bs) ...)
      (define l
        (for/list ([c cs] [b bs])
          (expression ⊢ c (remove-check c b))))
-     (define ret
-     (apply expression ite* l))
-     ;(pretty-display `(before ,pre-v))
-     ;(pretty-display `(after ,ret))
-     ret
+     (apply expression ite* l)
      ]
     [_ v]))
   (recurse ret))
@@ -167,21 +155,22 @@
   (define ret
   (match v
 
-    ;; (+ x (ite c a 0))
+    ;; (ite c (+ a x) x) => (+ x (ite c a 0))
     [(expression (== ite) c (expression (== @+) a x) x) 
      (expression @+ (sum-of-ite x) (expression ite c a 0))]
     
     [(expression (== ite) c (expression (== @+) x a) x)
      (expression @+ (sum-of-ite x) (expression ite c a 0))]
     
-    ;; (+ x (ite c 0 a))
+    ;; (ite c x (+ a x)) => (+ x (ite c 0 a))
     [(expression (== ite) c x (expression (== @+) a x))
      (expression @+ (sum-of-ite x) (expression ite c 0 a))]
     
     [(expression (== ite) c x (expression (== @+) x a))
      (expression @+ (sum-of-ite x) (expression ite c 0 a))]
 
-    ;; (+ x (ite c a 0)) when x2 has been simplified.
+    ;; (ite c (+ a x) x2) => (+ x (ite c a 0))
+    ;; when x2 is a simplified x because of c.
     [(expression (== ite) c
                  (expression (== @+) a (expression (== ite) c x1 x2)) x2)
      (define x (expression ite c x1 x2))
@@ -192,7 +181,8 @@
      (define x (expression ite c x1 x2))
      (expression @+ (sum-of-ite x) (expression ite c a 0))]
     
-    ;; (+ x (ite c 0 a)) when x1 has been simplified.
+    ;; (ite c x1 (+ a x)) => (+ x (ite c 0 a))
+    ;; when x1 is a simplified x because of c.
     [(expression (== ite) c x1 (expression (== @+) a (expression (== ite) c x1 x2)))
      (define x (expression ite c x1 x2))
      (expression @+ (sum-of-ite x) (expression ite c 0 a))]
@@ -230,14 +220,14 @@
                     (expression (== @=) (== n) (? constant? m2))
                     (expression (== @+) (== a) (== x))
                     (== x))
-        ;(pretty-display `(MATCH-Y))
-        #;(pretty-display `(m1-m2 ,m1 ,m2
-                                ,(or (and (equal? m1 mu) (equal? m2 mv))
-                                     (and (equal? m2 mu) (equal? m1 mv)))))
-        ;;(pretty-display `(t1 ,t1))
-        ;;(pretty-display `(t2 ,t2))
-        ;;(pretty-display `(check ,(equal? x t1) ,(equal? x t2) ,(equal? t1 t2)))
-        ;;(compare t1 t2)
+;        (pretty-display `(MATCH-Y))
+;        (pretty-display `(m1-m2 ,m1 ,m2
+;                                ,(or (and (equal? m1 mu) (equal? m2 mv))
+;                                     (and (equal? m2 mu) (equal? m1 mv)))))
+;        (pretty-display `(t1 ,t1))
+;        (pretty-display `(t2 ,t2))
+;        (pretty-display `(check ,(equal? x t1) ,(equal? x t2) ,(equal? t1 t2)))
+;        (compare t1 t2)
         (compact-comm-constraint v mu mv m1 m2 x a n)
         ]
 
@@ -284,7 +274,7 @@
         (pretty-display `(t1 ,t1))
         (pretty-display `(t2 ,t2))
         (pretty-display `(check ,(equal? x t1) ,(equal? x t2) ,(equal? t1 t2)))
-        (compare t1 t2)
+        ;;(compare t1 t2)
         ;;(compact-comm-constraint v mu mv m1 m2 x a n)
         (raise (format "Cannot simplify nested ite (2.3) ~a" v))
         ]
@@ -325,45 +315,7 @@
                                a 0)))
       (raise (format "Cannot simplify nested ite (compact) ~a" v))))
 
-;; Handy functions for debugging
-(define (disect v)
-  (newline)
-  (pretty-display `(disect ,v))
-  (match v
-    [(expression (== ite) c (expression (== @+) a x) x) ;; (+ x (ite c a 0))
-     (pretty-display `(MATCH-1 ,(expression @+ x (expression ite c a 0))))
-     ]
-    [(expression (== ite) c (expression (== @+) x a) x)
-     (pretty-display `(MATCH-2 ,(expression @+ x (expression ite c a 0))))
-     ]
-    [(expression (== ite) c
-                 (expression (== @+) a
-                             (expression ite* es ...))
-                 x)
-     (define true-body
-       (for/or ([e es])
-         (pretty-display `(e ,e))
-         (match e
-           [(expression (== ⊢) c body)
-            body]
-           [_ #f])))
-     (if (equal? true-body x)
-         (pretty-display `(MATCH-3 ,(expression @+ x (expression ite c a 0))))
-         (pretty-display "NO MATCH"))
-     ]
-    [_ (pretty-display "NO MATCH (default)")]))
-
-(define (traverse v)
-  (define count 0)
-  (define (f v)
-    (set! count (add1 count))
-    (match v
-      [(expression op es ...)
-       (for ([e es]) (f e))]
-      [_ (void)]))
-  (f v)
-  count)
-
+;;;;;;;;;;;;;;;;;;;;;;;;; Handy functions for debugging ;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (compare x y)
   (match x
     [(expression op1 es1 ...)

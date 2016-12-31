@@ -27,10 +27,10 @@
             (printf "warning: could not find z3 executable in '~a'"
                     (path->string (simplify-path (path->directory-path cplex-path))))
             cplex-path)))
-  (cplex (server real-cplex-path cplex-opts) '() '() (env) '()))
+  (cplex (server real-cplex-path cplex-opts) '() '()))
 
   
-(struct cplex (server asserts objs env level)
+(struct cplex (server asserts objs)
   #:mutable
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cplex>"))]
@@ -55,8 +55,7 @@
                                      (objective 'max o)))))
    
    (define (solver-clear self) 
-     (solver-clear-stacks! self)
-     (solver-clear-env! self))
+     (solver-clear-stacks! self))
    
    (define (solver-shutdown self)
      (solver-clear self))
@@ -68,16 +67,22 @@
      (raise (exn:fail "cplex: solver-pop: unimplemented")))
      
    (define (solver-check self)
-     (match-define (cplex server (app unique asserts) (app unique objs) env _) self)
-     
+     (define t0 (current-seconds))
+     (match-define (cplex server (app unique asserts) (app unique objs)) self)
+
+     ;; Break multi-objective query into multiple single-objective queries
+     ;; because CPLEX doesn't support multi-objective.
      (define (multi-objective asserts objs convert)
+       ;; Optimize for the first objective on the list.
        (define sol
          (server-run server
-                     (encode env asserts (car objs))
-                     (decode env convert)))
+                     (encode asserts (car objs))
+                     (decode convert)))
        (cond
          [(empty? (cdr objs)) sol]
          [else
+          ;; Assert that the current objective must be equal to the found optimal value.
+          ;; And exclude the current objective from the objective list.
           (define obj (objective-expr (car objs)))
           (fprintf (current-error-port) (format "\nAdd constraint ~a\n" (sym/= (evaluate obj sol) obj)))
           (multi-objective (cons (sym/= (evaluate obj sol) obj) asserts)
@@ -89,22 +94,30 @@
               (raise (exn:fail "MIP solver requires at least one objective." (current-continuation-marks))))
             
             ;; step 1: simply equation (flatten)
+            (define t1 (current-seconds))
             (define sim-asserts (simplify asserts))
             (define sim-objs
               (for/list ([o objs])
                 (objective (objective-type o) (simplify-expression (objective-expr o)))))
 
             ;; step 2: convert SMT to MIP
+            (define t2 (current-seconds))
             (define convert (smt->mip sim-asserts sim-objs))
             (define mip-asserts (converter-asserts convert))
             (define mip-objs (converter-objs convert))
 
-            (fprintf (current-error-port) (format "SMT: asserts=~a vars=~a\n" (length sim-asserts) (length (symbolics sim-asserts))))
-            (fprintf (current-error-port) (format "MIP: asserts=~a vars=~a\n" (length mip-asserts) (length (symbolics mip-asserts))))
+            ; Take time to print this information.
+            ;(fprintf (current-error-port) (format "SMT: asserts=~a vars=~a\n" (length sim-asserts) (length (symbolics sim-asserts))))
+            ;(fprintf (current-error-port) (format "MIP: asserts=~a vars=~a\n" (length mip-asserts) (length (symbolics mip-asserts))))
 
             ;; step 3: solve
+            (define t3 (current-seconds))
             (define sol (multi-objective mip-asserts mip-objs convert))
             (solver-clear-stacks! self)
+            (define t4 (current-seconds))
+
+            (fprintf (current-error-port) (format "overhead: ~a, simplify ~a, convert: ~a, encode-solve-decode: ~a\n"
+                                                  (- t1 t0) (- t2 t1) (- t3 t2) (- t4 t3)))
             sol
             ]))
    
@@ -124,7 +137,4 @@
   (set-cplex-asserts! self '())
   (set-cplex-objs! self '()))
 
-(define (solver-clear-env! self)
-  (set-cplex-env! self (env))
-  (set-cplex-level! self '()))
   

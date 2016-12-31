@@ -1,27 +1,38 @@
 #lang racket
 
 (require (only-in rosette sat unsat evaluate))
-(require "ilp.rkt" "common.rkt" "mip-converter.rkt")
+(require "enc.rkt" "common.rkt" "mip-converter.rkt")
 (provide encode decode)
 
-(define (encode env asserts obj)
-  (ilp-start)
+; Given a list of asserts and a list of objectives,
+; the encode procedure prints an MIP encoding of the given assertions
+; to current-output-port. 
+(define (encode asserts obj)
+  (mip-start)
   (if (equal? 'min (objective-type obj))
-      (ilp-minimize (objective-expr obj) env)
-      (ilp-maximize (objective-expr obj) env))
+      (mip-minimize (objective-expr obj))
+      (mip-maximize (objective-expr obj)))
   
-  (ilp-assert-init)
-  (for ([a asserts]) (ilp-enc a env))
-  (ilp-done))
+  (mip-assert-init)
+  (for ([a asserts]) (mip-enc a))
+  (mip-done))
 
-(define (decode env convert)
+; Given a SMT->MIP conversion information 'convert',
+; the decode procedure reads the solution from current-input-port
+; and converts it into a Rosette solution object.  
+(define (decode convert)
   (define name2sym (converter-name2sym convert))
   (define mapping-info (converter-mapping-info convert))
   (define mip-sol-hash (make-hash))
+
+  ;; Set all variables to 0.
   (for ([sym (hash-values name2sym)])
     (hash-set! mip-sol-hash sym 0))
 
-  (read-line) ; Variable Name Solution Value
+  ;; Ignore headline line: Variable Name   Solution Value
+  (read-line)
+
+  ;; Loop to read all variables.
   (define (loop)
     (define line (read-line))
     (unless (or (regexp-match #rx"All other variables" line)
@@ -32,11 +43,12 @@
       (when (integer? val) (set! val (inexact->exact val)))
       (hash-set! mip-sol-hash sym val)
       (loop)))
-
   (loop)
+  
   (define mip-sol (sat (make-immutable-hash (hash->list mip-sol-hash))))
   (define smt-sol-hash (make-hash (hash->list mip-sol-hash)))
 
+  ;; Convert MIP solution to SMT solution.
   (for ([pair (hash->list mapping-info)])
     (let ([org-sym (car pair)]
           [mip-syms-vals (cdr pair)]
@@ -57,6 +69,8 @@
 
   (define smt-sol (sat (make-immutable-hash (hash->list smt-sol-hash))))
 
+  ;; Verify that the MIP and SMT solutions are the same with respect to
+  ;; a soft correctness condition: their objectives evaluate to the same values.
   (for ([mip-pair (converter-objs convert)]
         [smt-pair (converter-org-objs convert)])
     (let ([mip-o (objective-expr mip-pair)]
