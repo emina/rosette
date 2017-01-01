@@ -18,8 +18,9 @@
                   @integer->bitvector @bitvector->integer @bitvector->natural))
 
 (provide mip-start mip-done
+         mip-bounds-start mip-bound
          mip-minimize mip-maximize
-         mip-assert-init mip-enc)
+         mip-assert-start mip-enc)
 
 (define vars (set))
 
@@ -33,6 +34,25 @@
 (define (mip-start)
   (mip-printf "enter example\n")
   (set! vars (set)))
+
+(define (mip-bounds-start)
+  (mip-printf "bounds\n"))
+
+(define (mip-bound b)
+  (define v (get-name (bound-var b)))
+  (define lb (bound-lb b))
+  (define ub (bound-ub b))
+  (cond
+    [(and lb ub) (mip-printf "~a <= ~a <= ~a\n" lb v ub)]
+    [lb (mip-printf "~a <= ~a\n" lb v)]
+    [ub (mip-printf "~a <= ~a\n" v ub)]))
+
+(define (print-assert-bound b)
+  (define v (get-name (bound-var b)))
+  (define lb (bound-lb b))
+  (define ub (bound-ub b))
+  (when lb (mip-printf "~a >= ~a\n" v lb))
+  (when ub (mip-printf "~a <= ~a\n" v ub)))
 
 ; After entering constaints
 ;  - declare integer variables.
@@ -67,13 +87,15 @@
   (mip-printf "maximize ~a\n" (get-name x)))
 
 ; Print an indicator for the beginning of hard constraints.
-(define (mip-assert-init)
+(define (mip-assert-start)
   (mip-printf "subject to\n"))
 
 ; Print a constraint.
 (define (mip-enc v)
   ;(fprintf (current-error-port) "enc ~a\n" v)
-  (rosette->mip v))
+  (if (bound? v)
+      (print-assert-bound v)
+      (rosette->mip v)))
 
 (struct equation (op signs terms lit))
 
@@ -95,7 +117,7 @@
     [(? constant?)
      (mip-printf "~a " (get-name v)) (set! vars (set-add vars v))]
     [(? number?)    (mip-printf "~a " v) ]
-    [_              (raise (exn:fail (format "cannot encode term ~a" v) (current-continuation-marks)))]))
+    [_              (raise (exn:fail (format "Cannot encode term ~a" v) (current-continuation-marks)))]))
 
 (define-syntax define-encoder
   (syntax-rules ()
@@ -139,7 +161,7 @@
         (print-equation (equation op signs terms lit))])
      ]
     [_
-     (raise (exn:fail (format "Cannot encode ~a to mip" v)
+     (raise (exn:fail (format "Cannot encode ~a to mip (1)" v)
                        (current-continuation-marks)))]))
 
 ; Given a list of (* c term) and a corresponding list of sign (1 or -1).
@@ -226,7 +248,7 @@
                        (unless (eq? (type-of v) @integer?) (set! all-int #f))]
       [(? integer?)    (set! lits (cons (* sign v) lits))]
       [(? real?)       (set! lits (cons (* sign v) lits)) (set! all-int #f)]
-      [_               (raise (exn:fail (format "cannot encode ~a to MIP" v)
+      [_               (raise (exn:fail (format "Cannot encode ~a to MIP (2)" v)
                                          (current-continuation-marks)))]
     ))
   (f v 1)
@@ -239,13 +261,13 @@
     (match e2
       [(expression (== @*) es2 ...)
        (define num (findf number? es2))
-       (unless num (exn:fail (format "cannot encode ~a to MIP" v)) (current-continuation-marks))
+       (unless num (exn:fail (format "Cannot encode ~a to MIP (3)" v)) (current-continuation-marks))
        (distribute (apply expression @* (* num e1) (remove num es2)))
        ]
 
       [(expression op2 es2 ...)
        (unless (member op2 (list @+ @-))
-         (raise (exn:fail (format "cannot encode ~a to MIP" v)) (current-continuation-marks)))
+         (raise (exn:fail (format "Cannot encode ~a to MIP (4)" v)) (current-continuation-marks)))
        (apply expression op2
               (for/list ([e es2])
                 (if (number? e)

@@ -7,14 +7,16 @@
 ; Given a list of asserts and a list of objectives,
 ; the encode procedure prints an MIP encoding of the given assertions
 ; to current-output-port. 
-(define (encode asserts obj)
+(define (encode asserts bounds obj)
   (mip-start)
   (if (equal? 'min (objective-type obj))
       (mip-minimize (objective-expr obj))
       (mip-maximize (objective-expr obj)))
   
-  (mip-assert-init)
+  (mip-assert-start)
   (for ([a asserts]) (mip-enc a))
+  (mip-bounds-start)
+  (for ([a bounds]) (mip-bound a))
   (mip-done))
 
 ; Given a SMT->MIP conversion information 'convert',

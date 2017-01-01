@@ -19,7 +19,7 @@
 
 (provide smt->mip (struct-out converter))
 
-(struct converter (mapping-info name2sym asserts objs org-objs))
+(struct converter (mapping-info name2sym asserts bounds objs org-objs))
 
 ; Given a list of assertions and a list of objectives,
 ; return MIP constraints as a converter object.
@@ -52,45 +52,58 @@
       [(equal? type 'have-lb) (set! syms-have-lb (set-add syms-have-lb m))]))
   
   (define old-syms (set))
-  (define (hash-ref-sym h key [assert #f] #:type [type #f])
+  (define (hash-ref-sym h key #:lb [lb #f] #:ub [ub #f] #:type [type #f])
     (if (hash-has-key? h key)
         (hash-ref h key)
         (let ([val (get-sym type)])
           ;(pretty-display `(create ,key ,val))
           (for ([v key])
             (when (term? v) (set! old-syms (set-add old-syms v))))
-          (when assert (set! assert-bounds (cons (assert val) assert-bounds)))
+          (when (or lb ub) (set! assert-bounds (cons (bound val lb ub) assert-bounds)))
           (hash-set! h key val)
           val)))
+
+  (define upperbound (make-hash))
+  (define (set-upperbound s n)
+    (if (hash-has-key? upperbound s)
+        (hash-set! upperbound s (min n (hash-ref upperbound s)))
+        (hash-set! upperbound s n)))
+  
+  (define lowerbound (make-hash))
+  (define (set-lowerbound s n)
+    (if (hash-has-key? lowerbound s)
+        (hash-set! lowerbound s (max n (hash-ref lowerbound s)))
+        (hash-set! lowerbound s n)))
+
+  ;; Collect bound
+  ;; Return #f if it is a bound assertion.
+  ;; Return #t otherwise.
+  (define (collect-bound v)
+    (match v
+      [(expression (== @<=) (? integer? n) (? constant? s))
+       (set-lowerbound s n) #f]
+      
+      [(expression (== @<) (? integer? n) (? constant? s))
+       (set-lowerbound s (add1 n)) #f]
+      
+      [(expression (== @<=) (? constant? s) (? integer? n))
+       (set-upperbound s n) #f]
+      
+      [(expression (== @<) (? constant? s) (? integer? n))
+       (set-upperbound s (sub1 n)) #f]
+
+      [(expression (== @&&) a b)
+       (or (collect-bound a) (collect-bound b))]
+
+      [_ #t]
+      ))
 
   ;; Mapping of an old symbolic variable to its valid range
   (define legal-vals (make-hash))
 
   ;; Given an old symbolic variable, returns its vailde range (infered from the assertions).
-  (define (get-legal-vals s)
-    (define lb #f)
-    (define ub #f)
-    (define exclude (list)) ;; TODO
-
-    (for ([a asserts])
-      (match a
-        [(expression (== @<=) (? integer? n) (== s))
-         (when (or (equal? lb #f) (< lb n)) (set! lb n))]
-        
-        [(expression (== @<) (? number? n) (== s))
-         (when (or (equal? lb #f) (<= lb n)) (set! lb (add1 n)))]
-        
-        [(expression (== @<=) (== s) (? number? n))
-         (when (or (equal? ub #f) (< n ub)) (set! ub n))]
-        
-        [(expression (== @<) (== s) (? number? n))
-         (when (or (equal? ub #f) (<= n ub)) (set! ub (sub1 n)))]
-
-        [_ (void)]
-        ))
-
-    (range lb (add1 ub))
-    )
+  (define-syntax-rule (get-legal-vals s)
+    (range (hash-ref lowerbound s) (hash-ref upperbound s)))
 
   ;; Mapping of Mv to a list of (Mvn n)
   (define mapping-sym-info (make-hash))
@@ -118,19 +131,13 @@
 
   ;; Given Mv (s) and n, return Mvn
   (define (get-mapping-sym-conc-no-init s n)
-    (hash-ref-sym mapping-matrix-hash (set s n)
-                              (lambda (a) (sym/and (sym/<= 0 a)
-                                                   (sym/<= a 1)))
-                              #:type 'exact)
+    (hash-ref-sym mapping-matrix-hash (set s n) #:lb 0 #:ub 1 #:type 'exact)
     )
 
   ;; Given Mv (s) and n, return Mvn and create all Mvn's
   (define (get-mapping-sym-conc s n)
     (init-mapping-sym s)
-    (hash-ref-sym mapping-matrix-hash (set s n)
-                              (lambda (a) (sym/and (sym/<= 0 a)
-                                                   (sym/<= a 1)))
-                              #:type 'exact)
+    (hash-ref-sym mapping-matrix-hash (set s n) #:lb 0 #:ub 1 #:type 'exact)
     )
 
   ;; Return a communication indicator Cuvn
@@ -139,9 +146,7 @@
     (define mapping-s1 (get-mapping-sym-conc s1 n))
     (define mapping-s2 (get-mapping-sym-conc s2 n))
     ;; 0 <= Cuvn <= 1
-    (define comm (hash-ref-sym mapping-matrix-hash (set s1 s2 n)
-                               (lambda (a) (sym/and (sym/<= 0 a)
-                                                    (sym/<= a 1)))
+    (define comm (hash-ref-sym mapping-matrix-hash (set s1 s2 n) #:lb 0 #:ub 1
                                #:type 'need-ub)) ;; tag with 'need-ub to check legality later
     ;; Cuvn >= Mv - Mu
     (set! assert-comm-at
@@ -161,9 +166,7 @@
       (raise "Not supporting for creating comm var when u and v can map to different sets"))
 
     ;; 0 <= Cuv <= 1
-    (define comm (hash-ref-sym mapping-matrix-hash (set s1 s2)
-                               (lambda (a) (sym/and (sym/<= 0 a)
-                                                    (sym/<= a 1)))
+    (define comm (hash-ref-sym mapping-matrix-hash (set s1 s2) #:lb 0 #:ub 1
                                #:type 'need-ub)) ;; tag with 'need-ub to check legality later
 
     ;; for all n, Cuv >= Cuvn
@@ -174,6 +177,20 @@
     )
 
   (define used-old-syms (set))
+  (define (add-old-sym v)
+    (unless (set-member? used-old-syms v)
+      (set! used-old-syms (set-add used-old-syms v))
+      (define lb
+        (if (hash-has-key? lowerbound v)
+            (hash-ref lowerbound v)
+            (begin
+              (fprintf (current-error-port)
+                       (format "Warning: no lowerbound for ~a is specified. MIP implicitly assumes that ~a >= 0.\n"
+                               v v))
+              #f)))
+      (define ub (and (hash-has-key? upperbound v) (hash-ref upperbound v)))
+      (when (or lb ub) (set! assert-bounds (cons (bound v lb ub) assert-bounds)))))
+  
   ;; Given constraint s1 != s2
   (define (not-eq-constraint s1 s2)
     (cond
@@ -242,8 +259,8 @@
        (not-eq-constraint v1 v2)]
 
       ;; simple bounds
-      [(expression (or (== @<) (== @<=)) (? constant?) (? number?)) v]
-      [(expression (or (== @<) (== @<=)) (? number?) (? constant?)) v]
+      ;[(expression (or (== @<) (== @<=)) (? constant?) (? number?)) v]
+      ;[(expression (or (== @<) (== @<=)) (? number?) (? constant?)) v]
       
       ;; others
       [(expression op es ...)
@@ -251,7 +268,7 @@
 
       [(? constant?)
        (when (set-member? old-syms v) (raise (format "A removed old variable ~a is used." v)))
-       (set! used-old-syms (set-add used-old-syms v))
+       (add-old-sym v)
        v]
       
       [_ v])
@@ -287,6 +304,15 @@
       [(expression (== @!) (expression (== @=) (? constant? v1) (? constant? v2))) #t]
       [_ #f]))
 
+  (define (bound-as-bound b)
+    (let ([lb (bound-lb b)])
+      (and lb (< lb 0))))
+
+  (define (bound-as-assert b) (not (bound-as-bound b)))
+
+  ;; Collect bounds and remove those assertions
+  (set! asserts (filter collect-bound asserts))
+
   ;; Separate (= term1 term2) constraints to the second group
   ;; because we need information from other assertions (used and removed variables)
   ;; before converting them.
@@ -301,7 +327,7 @@
              [tag (if (equal? 'min type) 'have-ub 'have-lb)])
         (objective type (convert-objective (objective-expr o) tag)))))
   
-  (set! new-asserts (filter remove-old-syms new-asserts))
+  ;(set! new-asserts (filter remove-old-syms new-asserts))
 
   #|
   (pretty-display `(bounds ,assert-bounds))
@@ -315,17 +341,21 @@
   (pretty-display `(maximize ,maximize))
 |#
 
-  (define all-asserts
-    (append assert-bounds assert-placement assert-comm-at assert-comm new-asserts assert-obj))
 
   ;; Check legality
   (define name2sym
     (legal-conversion (append new-asserts assert-obj)
                       syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
+  (define all-asserts
+    (append (filter bound-as-assert assert-bounds)
+            assert-placement assert-comm-at assert-comm
+            new-asserts assert-obj
+            ))
+  
   (define t2 (current-seconds))
   (fprintf (current-error-port) (format "Converting time: ~a\n" (- t2 t1)))
-  (converter mapping-sym-info name2sym all-asserts new-objs objs)
+  (converter mapping-sym-info name2sym all-asserts (filter bound-as-bound assert-bounds) new-objs objs)
   )
 
 (define (legal-conversion all-asserts syms-need-ub syms-have-ub syms-have-lb syms-exact)
