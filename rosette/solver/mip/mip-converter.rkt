@@ -103,7 +103,7 @@
 
   ;; Given an old symbolic variable, returns its vailde range (infered from the assertions).
   (define-syntax-rule (get-legal-vals s)
-    (range (hash-ref lowerbound s) (hash-ref upperbound s)))
+    (range (hash-ref lowerbound s) (add1 (hash-ref upperbound s))))
 
   ;; Mapping of Mv to a list of (Mvn n)
   (define mapping-sym-info (make-hash))
