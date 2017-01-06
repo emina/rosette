@@ -19,7 +19,7 @@
     (close-output-port out-port)
     
     (define t2 (current-seconds))
-    (fprintf (current-error-port) (format "Encoding time: ~a\n" (- t2 t1)))
+    ;(fprintf (current-error-port) (format "Encoding time: ~a\n" (- t2 t1)))
 
     ;; Run CPLEX solver.
     (fprintf (current-error-port) (format "Run ~a ~a\n" (server-path s) (append (server-opts s) (list temp))))
@@ -29,10 +29,10 @@
     ;; Print progress and decode the solution.
     (define sol (print-and-decode out decode))
     (define t3 (current-seconds))
-    (fprintf (current-error-port) (format "Running & decoding time: ~a\n" (- t3 t2)))
+    ;(fprintf (current-error-port) (format "Running & decoding time: ~a\n" (- t3 t2)))
     
-    ;(fprintf (current-error-port) (format "Remove ~a\n" temp))
-    ;(system (format "rm ~a" temp))
+    (fprintf (current-error-port) (format "Remove ~a\n" temp))
+    (system (format "rm ~a" temp))
     sol
   ))
 
@@ -44,7 +44,7 @@
              (parameterize ([current-input-port out])
                decode)]
             [t2 (current-seconds)])
-        (fprintf (current-error-port) (format "Decoding time: ~a\n" (- t2 t1)))
+        ;(fprintf (current-error-port) (format "Decoding time: ~a\n" (- t2 t1)))
         sol)
       (unsat)
       ))

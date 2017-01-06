@@ -18,7 +18,7 @@
 
 (define (env) (make-hash))
 
-(define (make-cplex)
+(define (make-cplex #:simplify [sim #t])
   (define real-cplex-path
     ;; Check for 'cplex', else print a warning
     (if (file-exists? cplex-path)
@@ -27,10 +27,10 @@
             (printf "warning: could not find z3 executable in '~a'"
                     (path->string (simplify-path (path->directory-path cplex-path))))
             cplex-path)))
-  (cplex (server real-cplex-path cplex-opts) '() '()))
+  (cplex (server real-cplex-path cplex-opts) '() '() sim))
 
   
-(struct cplex (server asserts objs)
+(struct cplex (server asserts objs sim)
   #:mutable
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cplex>"))]
@@ -68,7 +68,7 @@
      
    (define (solver-check self)
      (define t0 (current-seconds))
-     (match-define (cplex server (app unique asserts) (app unique objs)) self)
+     (match-define (cplex server (app unique asserts) (app unique objs) sim) self)
 
      ;; Break multi-objective query into multiple single-objective queries
      ;; because CPLEX doesn't support multi-objective.
@@ -95,10 +95,12 @@
             
             ;; step 1: simply equation (flatten)
             (define t1 (current-seconds))
-            (define sim-asserts (simplify asserts))
+            (define sim-asserts (if sim (simplify asserts) asserts))
             (define sim-objs
-              (for/list ([o objs])
-                (objective (objective-type o) (simplify-expression (objective-expr o)))))
+              (if sim
+                  (for/list ([o objs])
+                    (objective (objective-type o) (simplify-expression (objective-expr o))))
+                  objs))
 
             ;; step 2: convert SMT to MIP
             (define t2 (current-seconds))

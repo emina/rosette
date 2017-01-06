@@ -40,6 +40,7 @@
 
 (define (mip-bound b)
   (define v (get-name (bound-var b)))
+  (set! vars (set-add vars (bound-var b)))
   (define lb (bound-lb b))
   (define ub (bound-ub b))
   (cond
@@ -49,6 +50,7 @@
 
 (define (print-assert-bound b)
   (define v (get-name (bound-var b)))
+  (set! vars (set-add vars (bound-var b)))
   (define lb (bound-lb b))
   (define ub (bound-ub b))
   (when lb (mip-printf "~a >= ~a\n" v lb))

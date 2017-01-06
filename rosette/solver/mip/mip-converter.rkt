@@ -54,14 +54,14 @@
       [(equal? type 'have-ub) (set! syms-have-ub (set-add syms-have-ub m))]
       [(equal? type 'have-lb) (set! syms-have-lb (set-add syms-have-lb m))]))
   
-  (define old-syms (set))
+  (define rm-old-syms (set))
   (define (hash-ref-sym h key #:lb [lb #f] #:ub [ub #f] #:type [type #f])
     (if (hash-has-key? h key)
         (hash-ref h key)
         (let ([val (get-sym type)])
           ;(pretty-display `(create ,key ,val))
           (for ([v key])
-            (when (term? v) (set! old-syms (set-add old-syms v))))
+            (when (term? v) (set! rm-old-syms (set-add rm-old-syms v))))
           
           (cond
             [with-bound
@@ -275,9 +275,9 @@
       ;; others
       [(expression op es ...)
        (apply expression op (for/list ([e es]) (mapping-matrix e)))]
-
+ 
       [(? constant?)
-       (when (set-member? old-syms v) (raise (format "A removed old variable ~a is used." v)))
+       (when (set-member? rm-old-syms v) (raise (format "A removed old variable ~a is used." v)))
        (add-old-sym v)
        v]
       
@@ -294,19 +294,9 @@
           (set! assert-obj (cons (expression @= new-v obj) assert-obj))
           obj)
         (begin
+          (add-old-sym v)
           (associate-type v type)
           v)))
-
-  ;; Remove assertions on bounds of old symbolic variables.
-  (define (remove-old-syms v)
-    (match v
-      [(expression op (? constant? a) (? number? b))
-       (not (and (member op (list @< @<=)) (set-member? old-syms a)))]
-      
-      [(expression op (? number? b) (? constant? a))
-       (not (and (member op (list @< @<=)) (set-member? old-syms a)))]
-
-      [_ #t]))
 
   ;; Test if v is of form (= term1 term2)
   (define (not-eq? v)
@@ -338,8 +328,6 @@
              [tag (if (equal? 'min type) 'have-ub 'have-lb)])
         (objective type (convert-objective (objective-expr o) tag)))))
   
-  ;(set! new-asserts (filter remove-old-syms new-asserts))
-
   #|
   (pretty-display `(bounds ,assert-bounds))
   (pretty-display `(placement ,assert-placement))
@@ -358,6 +346,10 @@
     (legal-conversion (append new-asserts assert-obj)
                       syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
+  (collect-name2sym name2sym (append assert-bounds new-objs))
+  ;(pretty-display `(new-objs ,new-objs))
+  ;(pretty-display `(name2sym ,name2sym))
+
   (define all-asserts
     (append (filter bound-as-assert assert-bounds)
             assert-placement assert-comm-at assert-comm
@@ -365,7 +357,7 @@
             ))
   
   (define t2 (current-seconds))
-  (fprintf (current-error-port) (format "Converting time: ~a\n" (- t2 t1)))
+  ;(fprintf (current-error-port) (format "Converting time: ~a\n" (- t2 t1)))
   (converter mapping-sym-info name2sym all-asserts (filter bound-as-bound assert-bounds) new-objs objs)
   )
 
@@ -470,3 +462,13 @@
   (map check-top all-asserts)
   name2sym
   )
+
+(define (collect-name2sym name2sym asserts)
+  (define (collect v)
+    (match v
+      [(? constant?) (hash-set! name2sym (get-name v) v)]
+      [(bound var lb ub) (collect var)]
+      [(expression op es ...) (for ([e es]) (collect e))]
+      [(objective t e) (collect e)]
+      [_ (void)]))
+  (for ([a asserts]) (collect a)))
