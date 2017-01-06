@@ -23,7 +23,10 @@
 
 ; Given a list of assertions and a list of objectives,
 ; return MIP constraints as a converter object.
-(define (smt->mip asserts objs)
+; If with-bound = #t, a bound assertion will be in the form of struct,
+; and the function will put bound with lowerbound < 0 in the bounds field of converter.
+; If with-bound = #f, a bound assertion is treated as a normal assertion.
+(define (smt->mip asserts objs #:with-bound [with-bound #t])
   ;(pretty-display `(asserts ,asserts))
   (define t1 (current-seconds))
 
@@ -59,7 +62,14 @@
           ;(pretty-display `(create ,key ,val))
           (for ([v key])
             (when (term? v) (set! old-syms (set-add old-syms v))))
-          (when (or lb ub) (set! assert-bounds (cons (bound val lb ub) assert-bounds)))
+          
+          (cond
+            [with-bound
+             (when (or lb ub) (set! assert-bounds (cons (bound val lb ub) assert-bounds)))]
+            [else
+             (when lb (set! assert-bounds (cons (expression @<= lb val) assert-bounds)))
+             (when ub (set! assert-bounds (cons (expression @<= val ub) assert-bounds)))])
+          
           (hash-set! h key val)
           val)))
 
@@ -251,7 +261,7 @@
                    (? number? n1) (? number? n2))
        ;(pretty-display `(MATCH-3))
        (define comm (get-comm mu mv))
-       (sym/+ (sym/* n1 (sym/- 1 comm)) (sym/* n2 comm))
+       (sym/+ (sym/* n1 (sym/- 1 comm)) (sym/* n2 comm)) ;; TODO: incorrect
        ]
 
       ;; Mv != Mu
@@ -305,8 +315,9 @@
       [_ #f]))
 
   (define (bound-as-bound b)
-    (let ([lb (bound-lb b)])
-      (and lb (< lb 0))))
+    (and (bound? b)
+         (let ([lb (bound-lb b)])
+           (and lb (< lb 0)))))
 
   (define (bound-as-assert b) (not (bound-as-bound b)))
 
@@ -358,6 +369,7 @@
   (converter mapping-sym-info name2sym all-asserts (filter bound-as-bound assert-bounds) new-objs objs)
   )
 
+;; TODO: This is not actually correct. What really matters is minimize/maximize not upperbound/lowerbound.
 (define (legal-conversion all-asserts syms-need-ub syms-have-ub syms-have-lb syms-exact)
   ;;(fprintf (current-error-port) (format "New vars: ~a ~a ~a ~a\n" syms-need-ub syms-have-ub syms-have-lb syms-exact))
 
