@@ -700,9 +700,9 @@
       [(v (union ts))
        (merge+ (for/list ([gt ts] #:when (bitvector? (cdr gt)))
                  (cons (car gt) (integer->bitvector v (cdr gt))))
-               #:unless (length ts) #:error (arguments-error "expected a bitvector type t" "t" @t))]
+               #:unless (length ts) #:error (arguments-error 'integer->bitvector "expected a bitvector type t" "t" @t))]
       [(v (? bitvector? t)) (integer->bitvector v t)]
-      [(_ _) (assert #f (arguments-error "expected a bitvector type t" "t" @t))])))
+      [(_ _) (assert #f (arguments-error 'integer->bitvector "expected a bitvector type t" "t" @t))])))
 
 (define-operator @bitvector->integer
   #:identifier 'bitvector->integer
