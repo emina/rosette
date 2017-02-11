@@ -138,25 +138,25 @@
          (syntax/loc stx 
            (begin
              (define-generics id . rest)
-             (lift-if-exists id? receiver)
-             (lift-if-exists support-name receiver)
-             (lift-if-exists method-name receiver) ...))))]))
+             (lift-if-exists id?)
+             (lift-if-exists support-name)
+             (lift-if-exists method-name) ...))))]))
     
 (define (@make-struct-type-property name [guard #f] [supers null] [can-impersonate? #f])
   (define-values (prop:p p? p-ref) 
     (make-struct-type-property name guard supers can-impersonate?))
-  (values prop:p (lift p? self) (lift p-ref self)))
+  (values prop:p (lift p?) (lift p-ref)))
 
 (define-syntax (lift-if-exists stx)
   (syntax-case stx ()
-    [(_ proc receiver)
+    [(_ proc)
      (if (syntax->datum #'proc)
          (syntax/loc stx
-           (set! proc (lift proc receiver)))
+           (set! proc (lift proc)))
          (syntax/loc stx
            (void)))]))
 
-(define-syntax-rule (lift proc receiver)
+(define-syntax-rule (lift proc)
   (let ([proc proc])
     (procedure-rename
      (lambda (receiver . args)
