@@ -15,9 +15,11 @@
   (define-values (head tail) (split-at bools (sub1 (length bools))))
   ; Check that all solutions prior to last are sat.
   (for ([h head])
-    (check-sat (gen (list h))))
+    (check-sat (gen h)))
   ; Check that the last solution is unsat
-  (check-unsat (gen tail))
+  (check-unsat (gen (car tail)))
+  (check-equal? (generator-state gen) 'suspended)
+  (gen 'shutdown)
   (check-equal? (generator-state gen) 'done)
   ; Check that term cache is not polluted with finitizaton values
   (check subset? (apply set (symbolics (hash-values (term-cache)))) consts))
