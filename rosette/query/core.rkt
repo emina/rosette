@@ -85,10 +85,15 @@
     (solver-clear solver)))
 
 ; Returns a generator that uses the solver of the given type, with the given 
-; bitwidth setting, to incrementally solve a series of constraints.  The generator 
-; consumes lists of constraints (i.e., boolean values and terms), and produces a 
-; sequence of solutions.  Specifically, the ith returned solution is a solution for 
-; all constraints added to the generator in the preceding i-1 calls.
+; bitwidth setting, to incrementally solve a sequence of constraints.  The generator 
+; consumes a constraint (i.e., a boolean value or term), a positive integer, or
+; the symbol 'shutdown.
+; If the argument is a constraint, it is pushed onto the current assertion stack and
+; a solution for all constraints on the stack is returned.
+; If it the argument is a positive integer k, then the top k constraints are popped
+; from the stack and the result is the solution to the remaining constraints.
+; If the argument is 'shutdown, all resources used by this generator are released, and the
+; generator transitions to the 'done state.
 (define (∃-solve+ #:solver [solver-type z3] #:bitwidth [bw (current-bitwidth)])
   (define cust (make-custodian))
   (define solver (parameterize ([current-custodian cust]
@@ -96,34 +101,54 @@
                    (solver-type)))
   (define handler (lambda (e) (solver-shutdown solver) (custodian-shutdown-all cust) (raise e)))
   (if bw
-      (generator (ψs)
+      (generator (ψ)
        (let ([fmap (make-hash)]
-             [φs '()])
-         (let outer ([δs ψs])
+             [φs '()]
+             [sols (list (sat))])
+         (let outer ([δ ψ])
            (with-handlers ([exn? handler])
-             (finitize δs bw fmap)
-             (solver-assert solver (for/list ([δ δs]) (hash-ref fmap δ)))
-             (set! φs (append δs φs)) 
-             (let inner ()
-               (define fsol (complete (solver-check solver) fmap))
-               (define sol (unfinitize fsol fmap))
-               (cond [(unsat? sol)
-                      (solver-shutdown solver) 
-                      (custodian-shutdown-all cust) 
-                      (clear-terms! ; Purge finitization terms from the cache
-                       (for/list ([(t ft) fmap] #:when (and (term? ft) (not (eq? t ft)))) ft))
-                      sol]
-                     [(all-true? φs sol) (outer (yield sol))]
-                     [else  
-                      (solver-assert solver (list (¬solution fsol)))
-                      (inner)]))))))                      
-      (generator (φs)
-       (let loop ([φs φs])
-         (with-handlers ([exn? handler])
-           (solver-assert solver φs)
-           (define sol (solver-check solver))
-           (cond [(unsat? sol) (solver-shutdown solver) (custodian-shutdown-all cust) sol]
-                 [else (loop (yield sol))]))))))
+             (cond [(or (boolean? δ) (term? δ))
+                    (finitize (list δ) bw fmap)
+                    (solver-push solver)
+                    (solver-assert solver (list (hash-ref fmap δ)))
+                    (set! φs (cons δ φs)) 
+                    (let inner ()
+                      (define fsol (complete (solver-check solver) fmap))
+                      (define sol (unfinitize fsol fmap))
+                      (cond [(or (unsat? sol) (all-true? φs sol))
+                             (set! sols (cons sol sols))
+                             (outer (yield sol))]
+                            [else  
+                             (solver-assert solver (list (¬solution fsol)))
+                             (inner)]))]
+                   [(equal? δ 'shutdown)
+                    (solver-shutdown solver) 
+                    (custodian-shutdown-all cust) 
+                    (clear-terms! ; Purge finitization terms from the cache
+                     (for/list ([(t ft) fmap] #:when (and (term? ft) (not (eq? t ft)))) ft))]
+                   [else
+                    (solver-pop solver δ)
+                    (set! φs (drop φs δ))
+                    (set! sols (drop sols δ))
+                    (outer (yield (car sols)))]))))) 
+      (generator (δ)
+       (let ([sols (list (sat))])
+         (let loop ([δ δ])
+           (with-handlers ([exn? handler])
+             (cond [(or (boolean? δ) (term? δ))
+                    (solver-push solver)
+                    (solver-assert solver (list δ))
+                    (define sol (solver-check solver))
+                    (set! sols (cons sol sols))
+                    (loop (yield sol))]
+                   [(equal? δ 'shutdown)
+                    (solver-shutdown solver)
+                    (custodian-shutdown-all cust)]
+                   [else
+                    (solver-pop solver δ)
+                    (set! sols (drop sols δ))
+                    (loop (yield (car sols)))])))))))
+                  
 
   
 ; Extracts an unsatisfiable core for the conjunction 
