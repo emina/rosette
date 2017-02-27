@@ -16,8 +16,10 @@
   (filtered-out drop@ 
     (combine-out   
      ; core/bool.rkt
-     pc with-asserts with-asserts-only asserts clear-asserts!
-     @assert @boolean? @false? @! @&& @=> @<=> @forall @exists
+     pc 
+     @assert with-asserts with-asserts-only asserts clear-asserts!
+     @assume assumes clear-assumes!
+     @boolean? @false? @! @&& @=> @<=> @forall @exists
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs

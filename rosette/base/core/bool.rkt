@@ -5,8 +5,9 @@
 (provide @boolean? @false? 
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
-         @assert pc with-asserts with-asserts-only 
-         (rename-out [export-asserts asserts]) clear-asserts!
+         pc @assert @assume with-asserts with-asserts-only 
+         (rename-out [export-asserts asserts] [export-assumes assumes])
+         clear-asserts! clear-assumes!
          T*->boolean?)
 
 ;; ----------------- Boolean type ----------------- ;; 
@@ -262,17 +263,7 @@
     [(_ _) #f]))
 
   
-;; ----------------- Assertions and path condition ----------------- ;; 
-(define (export-asserts) (remove-duplicates (asserts)))
-
-(define (clear-asserts!)  (asserts '()))
-    
-(define asserts 
-  (make-parameter 
-   '()
-   (match-lambda [(? list? xs) xs]
-                 [x (if (eq? x #t) (asserts) (cons x (asserts)))])))
-
+;; ----------------- Path condition ----------------- ;; 
 (define pc 
   (make-parameter 
    #t
@@ -283,6 +274,18 @@
      (or (&& (pc) new-pc)
          (error 'pc "infeasible path condition")))))
 
+;; ----------------- Assertions ----------------- ;; 
+    
+(define asserts 
+  (make-parameter 
+   '()
+   (match-lambda [(? list? xs) xs]
+                 [x (if (eq? x #t) (asserts) (cons x (asserts)))])))
+
+(define (export-asserts) (remove-duplicates (asserts)))
+
+(define (clear-asserts!)  (asserts '()))
+
 (define-syntax (@assert stx)
   (syntax-case stx ()
     [(_ val) (syntax/loc stx (@assert val #f))]
@@ -291,15 +294,15 @@
        (let ([guard (not-false? val)])
          (asserts (=> (pc) guard)) 
          (when (false? guard)
-           (raise-assertion-error msg))))]))
+           (raise-assert/assume-error 'assert msg))))]))
 
 (define (not-false? v)
   (or (eq? v #t) (! (@false? v))))
 
-(define (raise-assertion-error msg)
+(define (raise-assert/assume-error kind msg)
   (if (procedure? msg)
       (msg)
-      (error 'assert (if msg (format "~a" msg) "failed"))))
+      (error kind (if msg (format "~a" msg) "failed"))))
                      
 (define-syntax (with-asserts stx)
   (syntax-case stx (begin)
@@ -312,3 +315,24 @@
 (define-syntax-rule (with-asserts-only form)
   (let-values ([(out asserts) (with-asserts form)])
     asserts))
+
+;; ----------------- Assumptions ----------------- ;; 
+(define assumes 
+  (make-parameter 
+   '()
+   (match-lambda [(? list? xs) xs]
+                 [x (if (eq? x #t) (assumes) (cons x (assumes)))])))
+
+(define (export-assumes) (remove-duplicates (assumes)))
+
+(define (clear-assumes!)  (assumes '()))
+
+(define-syntax (@assume stx)
+  (syntax-case stx ()
+    [(_ val) (syntax/loc stx (@assume val #f))]
+    [(_ val msg) 
+     (syntax/loc stx 
+       (let ([guard (not-false? val)])
+         (assumes (=> (pc) guard)) 
+         (when (false? guard)
+           (raise-assert/assume-error 'assume msg))))]))
