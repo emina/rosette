@@ -4,10 +4,10 @@
          rosette/base/core/term rosette/base/core/bool)
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
-  (let-values ([(e ignore) (with-asserts expected-value)]
-               [(v a) (with-asserts actual)])
+  (let-values ([(e ignore-assumes ignore-asserts) (vcgen-eval expected-value)]
+               [(v actual-assumes actual-asserts) (vcgen-eval actual)])
     (check-equal? v e)
-    (check-equal? (apply set a) (apply set expected-asserts))))
+    (check-equal? (apply set actual-asserts) (apply set expected-asserts))))
 
 (define (check-pe op)
   (define-symbolic a boolean?)

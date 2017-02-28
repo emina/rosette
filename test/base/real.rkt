@@ -43,9 +43,9 @@
 
 (define-syntax-rule (check-cast (type val) (accepted? result))
   (with-handlers ([exn:fail? (lambda (e) (check-equal? accepted? #f))])  
-    (let-values ([(actual-result asserts) (with-asserts (type-cast type val))])
+    (let-values ([(actual-result actual-assumes actual-asserts) (vcgen-eval (type-cast type val))])
       (check-equal? actual-result result)
-      (match asserts
+      (match actual-asserts
         [(list)   (check-equal? accepted? #t)]
         [(list v) (check-equal? accepted? v)]
         [_ (fail "found more than 1 assertion")]))))
@@ -83,14 +83,14 @@
 (define-syntax check-num-exn
   (syntax-rules ()
     [(_ expr)
-     (check-exn exn:fail? (thunk (with-asserts-only expr)))]
+     (check-exn exn:fail? (thunk (vcgen expr)))]
     [(_ pred expr)
-     (check-exn pred (thunk (with-asserts-only expr)))]))
+     (check-exn pred (thunk (vcgen expr)))]))
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
-  (let-values ([(v a) (with-asserts actual)])
+  (let-values ([(v actual-assumes actual-asserts) (vcgen-eval actual)])
     (check-equal? v expected-value)
-    (check-equal? (apply set a) (apply set expected-asserts))))
+    (check-equal? (apply set actual-asserts) (apply set expected-asserts))))
 
 (define (check-real?)
   (check-equal? (@real? 1) #t)

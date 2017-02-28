@@ -34,13 +34,12 @@
                                 (finitized-solution v))))))
 
 (define-syntax-rule (finitize/solve bw constraint ...)
-  (let* ([terms (with-asserts-only 
-                 (begin (@assert constraint) ...))]
-         [fmap (finitize terms bw)]
-         [fsol (apply solve (map (curry hash-ref fmap) terms))])
+  (let*-values ([(assumptions assertions) (vcgen (begin (@assert constraint) ...))]
+                [(fmap) (finitize assertions bw)]
+                [(fsol) (apply solve (map (curry hash-ref fmap) assertions))])
     (lift-solution fsol fmap)))
 
-(define (terms t) ; produces a hashmap from each typed? subterm in t to itself
+(define (assertions t) ; produces a hashmap from each typed? subterm in t to itself
   (define env (make-hash))
   (define (rec v)
     (when (typed? v)
@@ -53,7 +52,7 @@
   (for/hash ([(k v) env]) (values k v)))
 
 (define (check-pure-bitvector-term t)
-  (define expected (terms t))
+  (define expected (assertions t))
   (define actual (for/hash ([(k v) (finitize (list t) bw)] #:when (typed? k))
                    (values k v)))
   ;(printf "expected: ~a\nactual: ~a\n" expected actual)

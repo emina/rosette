@@ -63,6 +63,11 @@
 
 
 (define (procedure-merge-tests)
+
+  (define-syntax-rule (count-asserts expr)
+    (let-values ([(assumptions assertions) (vcgen expr)])
+      (length assertions)))
+  
   (check-equal? (merge a identity identity) identity)
   (check-equal? (@procedure? (merge a identity 2)) a)
   
@@ -80,18 +85,18 @@
   (define s* (merge a s *))
   (check-equal? (s*) 1)
   (check-true (null? (asserts)))
-  (check-equal? (length (with-asserts-only (check-equal? (s* 3 2) 6))) 1)
+  (check-equal? (count-asserts (check-equal? (s* 3 2) 6)) 1)
   
   (define (kw #:kw y) (- y))
   (define f (merge b + 'f))
   (define g (merge c s* f))
   (check-equal? 
-   (length (with-asserts-only (check-equal? (g) (ite* (cons (&& b (! c)) 0) (cons (|| (&& c (! a)) (&& a c)) 1)))))
+   (count-asserts (check-equal? (g) (ite* (cons (&& b (! c)) 0) (cons (|| (&& c (! a)) (&& a c)) 1))))
    1)
   
   (define h (merge c kw f))
   (check-equal?
-   (length (with-asserts-only (check-equal? (h #:kw 3) -3)))
+   (count-asserts (check-equal? (h #:kw 3) -3))
    2)
   
   )
