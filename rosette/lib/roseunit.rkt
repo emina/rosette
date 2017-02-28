@@ -4,7 +4,7 @@
 (require rackunit)
 (require (only-in rosette 
                   clear-state!
-                  current-bitwidth term-cache current-oracle oracle with-asserts-only
+                  current-bitwidth term-cache current-oracle oracle vcgen
                   solution? sat? unsat?))
 
 (provide run-all-tests test-groups test-suite+ test-sat test-unsat check-sol check-sat check-unsat)    
@@ -52,11 +52,14 @@
       name
       #:before (thunk (printf "~a\n" name) (before)) 
       #:after after
-      (with-asserts-only
-       (parameterize ([current-bitwidth (current-bitwidth)]
-                      [term-cache (hash-copy (term-cache))]
-                      [current-oracle (oracle (current-oracle))])
-         test ...)))]
+      (call-with-values
+       (thunk 
+        (vcgen
+            (parameterize ([current-bitwidth (current-bitwidth)]
+                           [term-cache (hash-copy (term-cache))]
+                           [current-oracle (oracle (current-oracle))])
+              test ...)))
+       void))]
     [(_ name #:before before test ...)
      (test-suite+ name #:before before #:after void test ...)]
     [(_ name #:after after test ...)
