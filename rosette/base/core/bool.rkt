@@ -6,7 +6,7 @@
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
          pc @assert @assume with-asserts with-asserts-only 
-         (rename-out [export-asserts asserts] [export-assumes assumes])
+         (rename-out [get-asserts asserts] [get-assumes assumes])
          clear-asserts! clear-assumes!
          T*->boolean?)
 
@@ -274,36 +274,42 @@
      (or (&& (pc) new-pc)
          (error 'pc "infeasible path condition")))))
 
-;; ----------------- Assertions ----------------- ;; 
+;; ----------------- Assertions and assumptions ----------------- ;;
+
+(define-syntax-rule (define-vcg-form id @id ids get-id clear-id!)
+  (begin
+
+    (define ids 
+      (make-parameter 
+       '()
+       (match-lambda [(? list? xs) xs]
+                     [x (if (eq? x #t) (ids) (cons x (ids)))])))
     
-(define asserts 
-  (make-parameter 
-   '()
-   (match-lambda [(? list? xs) xs]
-                 [x (if (eq? x #t) (asserts) (cons x (asserts)))])))
+    (define (get-id) (remove-duplicates (ids)))
 
-(define (export-asserts) (remove-duplicates (asserts)))
+    (define (clear-id!) (ids '()))
 
-(define (clear-asserts!)  (asserts '()))
-
-(define-syntax (@assert stx)
-  (syntax-case stx ()
-    [(_ val) (syntax/loc stx (@assert val #f))]
-    [(_ val msg) 
-     (syntax/loc stx 
-       (let ([guard (not-false? val)])
-         (asserts (=> (pc) guard)) 
-         (when (false? guard)
-           (raise-assert/assume-error 'assert msg))))]))
+    (define-syntax (@id stx)
+      (syntax-case stx ()
+        [(_ val) (syntax/loc stx (@id val #f))]
+        [(_ val msg) 
+         (syntax/loc stx 
+           (let ([guard (not-false? val)])
+             (ids (=> (pc) guard)) 
+             (when (false? guard)
+               (raise-vcg-form-error 'id msg))))]))))
 
 (define (not-false? v)
   (or (eq? v #t) (! (@false? v))))
 
-(define (raise-assert/assume-error kind msg)
+(define (raise-vcg-form-error kind msg)
   (if (procedure? msg)
       (msg)
       (error kind (if msg (format "~a" msg) "failed"))))
-                     
+    
+(define-vcg-form assert @assert asserts get-asserts clear-asserts!)
+(define-vcg-form assume @assume assumes get-assumes clear-assumes!)
+
 (define-syntax (with-asserts stx)
   (syntax-case stx (begin)
     [(_ (begin form ...)) #'(with-asserts (let () form ...))]
@@ -316,23 +322,5 @@
   (let-values ([(out asserts) (with-asserts form)])
     asserts))
 
-;; ----------------- Assumptions ----------------- ;; 
-(define assumes 
-  (make-parameter 
-   '()
-   (match-lambda [(? list? xs) xs]
-                 [x (if (eq? x #t) (assumes) (cons x (assumes)))])))
 
-(define (export-assumes) (remove-duplicates (assumes)))
 
-(define (clear-assumes!)  (assumes '()))
-
-(define-syntax (@assume stx)
-  (syntax-case stx ()
-    [(_ val) (syntax/loc stx (@assume val #f))]
-    [(_ val msg) 
-     (syntax/loc stx 
-       (let ([guard (not-false? val)])
-         (assumes (=> (pc) guard)) 
-         (when (false? guard)
-           (raise-assert/assume-error 'assume msg))))]))
