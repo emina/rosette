@@ -5,7 +5,8 @@
 (provide @boolean? @false? 
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
-         pc @assert @assume with-asserts with-asserts-only 
+         pc @assert @assume vcgen vcgen-eval
+         with-asserts with-asserts-only 
          (rename-out [get-asserts asserts] [get-assumes assumes])
          clear-asserts! clear-assumes!
          T*->boolean?)
@@ -309,6 +310,19 @@
     
 (define-vcg-form assert @assert asserts get-asserts clear-asserts!)
 (define-vcg-form assume @assume assumes get-assumes clear-assumes!)
+
+;; ----------------- VC generation ----------------- ;;
+
+(define-syntax (vcgen-eval stx)
+  (syntax-case stx (begin)
+    [(_ (begin form ...)) #'(vcgen-eval (let () form ...))]
+    [(_ form) #`(parameterize ([asserts (asserts)]
+                               [assumes (assumes)])
+                  (values form (get-assumes) (get-asserts)))]))
+
+(define-syntax-rule (vcgen form)
+  (let-values ([(out assumes asserts) (vcgen-eval form)])
+    (values assumes asserts)))
 
 (define-syntax (with-asserts stx)
   (syntax-case stx (begin)

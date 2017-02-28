@@ -19,6 +19,7 @@
      pc 
      @assert with-asserts with-asserts-only asserts clear-asserts!
      @assume assumes clear-assumes!
+     vcgen vcgen-eval
      @boolean? @false? @! @&& @=> @<=> @forall @exists
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
