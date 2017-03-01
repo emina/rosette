@@ -7,6 +7,8 @@
 (provide solve verify synthesize optimize
          current-solver (rename-out [∃-solve+ solve+]))
 
+
+
 ; The solve query evaluates the given forms, gathers all 
 ; assertions generated during the evaluation, 
 ; and searches for a model (a binding from symbolic 
@@ -15,7 +17,8 @@
 ; this means that there is no solution under the k-bit semantics that 
 ; corresponds to a solution under the infinite precision semantics.  
 (define-syntax-rule (solve form forms ...)
-  (∃-solve (eval/asserts (thunk form forms ...))))
+  (let-values ([(assumes asserts) (vcs (thunk form forms ...))])
+    (∃-solve (append assumes asserts))))
 
 ; The verify query evaluates the given forms, gathers all 
 ; assumptions and assertions generated during the evaluation, 
@@ -58,9 +61,11 @@
 (define-syntax optimize
   (syntax-rules ()
     [(_ kw opt #:guarantee form)
-     (let ([obj opt]) ; evaluate objective first to push its assertions onto the stack
-       (∃-solve (eval/asserts (thunk form)) kw obj))]
+     (let*-values ([(obj) opt] ; evaluate objective first to push its assertions onto the stack
+                   [(assumes asserts) (vcs (thunk form))])
+       (∃-solve (append assumes asserts) kw obj))]
     [(_ kw1 opt1 kw2 opt2 #:guarantee form)
-     (let ([obj1 opt1]
-           [obj2 opt2]) ; evaluate objectives first to push their assertions onto the stack
-       (∃-solve (eval/asserts (thunk form)) kw1 obj1 kw2 obj2))]))
+     (let*-values ([(obj1) opt1]
+                   [(obj2) opt2] ; evaluate objectives first to push their assertions onto the stack
+                   [(assumes asserts) (vcs (thunk form))])
+       (∃-solve (append assumes asserts) kw1 obj1 kw2 obj2))]))

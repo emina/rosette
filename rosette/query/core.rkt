@@ -4,7 +4,7 @@
   "eval.rkt" "finitize.rkt"
   (only-in "../base/core/term.rkt" constant? term-type get-type term? term-cache clear-terms! term<? solvable-default)
   (only-in "../base/core/equality.rkt" @equal?)
-  (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
+  (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean? vcgen-eval)
   (only-in "../base/core/function.rkt" fv)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
@@ -12,7 +12,7 @@
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
   (only-in "../solver/smt/z3.rkt" z3))
 
-(provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug eval/asserts 
+(provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug eval/asserts vcs
          all-true? some-false? unfinitize)
 
 ; Current solver instance that is used for queries and kept alive for performance.
@@ -43,6 +43,16 @@
   (with-handlers ([exn:fail? return-#f])
     (with-asserts-only (closure))))
 
+(define failed (gensym))
+(define return-failed (lambda (e) failed))
+
+(define (vcs closure)
+  (let-values ([(out assumes asserts)
+                (vcgen-eval (with-handlers ([exn:fail? return-failed])
+                              (closure)))])
+    (if (eq? out failed)
+        (values assumes (cons #f asserts))
+        (values assumes asserts))))
 
   
 
