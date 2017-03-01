@@ -1,6 +1,6 @@
 #lang rosette
 
-(require rackunit rackunit/text-ui racket/generator
+(require rackunit rackunit/text-ui  
          rosette/lib/roseunit)
 
 (define-symbolic a b c boolean?)
@@ -18,9 +18,13 @@
     (check-sat (gen h)))
   ; Check that the last solution is unsat
   (check-unsat (gen (car tail)))
-  (check-equal? (generator-state gen) 'suspended)
+  ; Check that next-to-last solution is still sat
+  (check-sat (gen 1))
+  ; Check that nothing can be called after shutdown
   (gen 'shutdown)
-  (check-equal? (generator-state gen) 'done)
+  (check-exn exn:fail? (thunk (gen #t)))
+  (check-exn exn:fail? (thunk (gen 1)))
+  (check-exn exn:fail? (thunk (gen 'shutdown)))
   ; Check that term cache is not polluted with finitizaton values
   (check subset? (apply set (symbolics (hash-values (term-cache)))) consts))
 
