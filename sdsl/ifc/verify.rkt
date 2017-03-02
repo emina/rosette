@@ -56,17 +56,17 @@
     (define m1 (start (map instruction (map procedure p)))) ; Use a fresh program (same procedures, fresh args).
     
     (define cex
-      (let ([m0 m0]
-            [m1 m1])
-        (verify 
-         #:assume  (begin 
-                     (assert (≈ m0 m1))     
-                     (set! m0 (step m0 k))  
-                     (set! m1 (step m1 k)) 
-                     (assert (end m0))
-                     (assert (end m1)))
-         #:guarantee (assert (≈ m0 m1)))))
-    
+      (verify 
+       (let ([m0 m0]
+             [m1 m1])
+         (requires
+          (assert (≈ m0 m1))     
+          (set! m0 (step m0 k))  
+          (set! m1 (step m1 k)) 
+          (assert (end m0))
+          (assert (end m1)))
+         (assert (≈ m0 m1)))))
+
     (if (sat? cex) (EENI-witness (evaluate m0 cex) (evaluate m1 cex) k ≈) #t)))
 
 (struct EENI-witness (m0 m1 k ≈)

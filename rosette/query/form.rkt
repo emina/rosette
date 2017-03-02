@@ -2,12 +2,30 @@
 
 (require "core.rkt" 
          (only-in "../base/core/reflect.rkt" symbolics)
-         (only-in "../base/core/bool.rkt" ! ||))
+         (only-in "../base/core/bool.rkt" ! || vcgen-eval @assume @assert))
 
-(provide solve verify synthesize optimize
-         current-solver (rename-out [∃-solve+ solve+]))
+(provide solve verify synthesize optimize current-solver (rename-out [∃-solve+ solve+])
+         requires ensures)
 
+; Evaluates the given forms and returns the result.
+; All assumptions and assertions generated during the
+; evaluation of these forms are treated as assumptions.
+; In particular, they are all added to the current assumption stack.
+(define-syntax-rule (requires form ...)
+  (let-values ([(result assumes asserts) (vcgen-eval (begin form ...))])
+    (for ([vc (in-sequences (reverse assumes) (reverse asserts))])
+      (@assume vc))
+    result))
 
+; Evaluates the given forms and returns the result.
+; All assumptions and assertions generated during the
+; evaluation of these forms are treated as assertions.
+; In particular, they are all added to the current assertion stack.
+(define-syntax-rule (ensures form ...)
+  (let-values ([(result assumes asserts) (vcgen-eval (begin form ...))])
+    (for ([vc (in-sequences (reverse assumes) (reverse asserts))])
+      (@assert vc))
+    result))
 
 ; The solve query evaluates the given forms, gathers all 
 ; assertions generated during the evaluation, 
@@ -30,11 +48,10 @@
 ; corresponds to a solution under the infinite precision semantics.  
 (define-syntax verify
   (syntax-rules ()
-    [(_ #:assume pre #:guarantee post)
-     (∃-solve `(,@(eval/asserts (thunk pre)) 
-                ,(apply || (map ! (eval/asserts (thunk post))))))]
-    [(_ #:guarantee post) (verify #:assume #t #:guarantee post)]
-    [(_ post) (verify #:assume #t #:guarantee post)]))
+    [(_ form)
+     (let-values ([(assumes asserts) (vcs (thunk form))])
+       (∃-solve `(,@assumes ,(apply || (map ! asserts)))))]))
+
 
 ; The synthesize query evaluates the given forms, gathers all 
 ; assumptions and assertions generated during the evaluation, 
