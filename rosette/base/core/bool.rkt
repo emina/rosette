@@ -313,6 +313,12 @@
 
 ;; ----------------- VC generation ----------------- ;;
 
+; Evaluates the given expression and returns 3 values:
+; * the result of the evaluation,
+; * the assumptions generated during evaluation, and
+; * the assertions generated during evaluation.
+; The global assumptions and assertions stack has the
+; same state before and after the evaluation of a vcgen-eval form.
 (define-syntax (vcgen-eval stx)
   (syntax-case stx (begin)
     [(_ (begin form ...)) #'(vcgen-eval (let () form ...))]
@@ -320,6 +326,11 @@
                                [assumes (assumes)])
                   (values form (get-assumes) (get-asserts)))]))
 
+; Evaluates the given expression and returns 2 values:
+; * the assumptions generated during evaluation, and
+; * the assertions generated during evaluation.
+; The global assumptions and assertions stack has the
+; same state before and after the evaluation of a vcgen-eval form.
 (define-syntax-rule (vcgen form)
   (let-values ([(out assumes asserts) (vcgen-eval form)])
     (values assumes asserts)))
