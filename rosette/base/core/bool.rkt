@@ -322,8 +322,8 @@
 (define-syntax (vcgen-eval stx)
   (syntax-case stx (begin)
     [(_ (begin form ...)) #'(vcgen-eval (let () form ...))]
-    [(_ form) #`(parameterize ([asserts (asserts)]
-                               [assumes (assumes)])
+    [(_ form) #`(parameterize ([asserts '()]
+                               [assumes '()])
                   (values form (get-assumes) (get-asserts)))]))
 
 ; Evaluates the given expression and returns 2 values:

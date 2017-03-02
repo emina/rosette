@@ -46,26 +46,19 @@
 ; If current-bitwidth is a positive integer k, and the verify form returns unsat, 
 ; this means that there is no solution under the k-bit semantics that 
 ; corresponds to a solution under the infinite precision semantics.  
-(define-syntax verify
-  (syntax-rules ()
-    [(_ form)
-     (let-values ([(assumes asserts) (vcs (thunk form))])
-       (∃-solve `(,@assumes ,(apply || (map ! asserts)))))]))
+(define-syntax-rule (verify form)
+  (let-values ([(assumes asserts) (vcs (thunk form))])
+    (∃-solve `(,@assumes ,(apply || (map ! asserts))))))
 
 
 ; The synthesize query evaluates the given forms, gathers all 
 ; assumptions and assertions generated during the evaluation, 
 ; and searches for a model (a binding from symbolic 
 ; constants to values) of the formula ∃H.∀I. pre => post, 
-; where I are the given input constants and H are all other symoblic constants. 
-(define-syntax synthesize 
-  (syntax-rules (synthesize)
-    [(_ #:forall inputs #:assume pre #:guarantee post)
-     (∃∀-solve (symbolics inputs) 
-               (eval/asserts (thunk pre)) 
-               (eval/asserts (thunk post)))]    
-    [(_ #:forall inputs #:guarantee post)
-     (synthesize #:forall inputs #:assume #t #:guarantee post)]))
+; where I are the given input constants and H are all other symbolic constants. 
+(define-syntax-rule (synthesize #:forall inputs #:guarantee form)
+  (let-values ([(assumes asserts) (vcs (thunk form))])
+     (∃∀-solve (symbolics inputs) assumes asserts)))  
 
 ; The optimize query evaluates the given form, gathers all 
 ; assertions generated during the evaluation, 
