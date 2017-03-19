@@ -5,13 +5,14 @@
 
 (struct server (path opts))
 
-(define-syntax-rule (server-run s encode decode)
+(define-syntax-rule (server-run s timeout encode decode)
   (let* ([temp (format "temp-~a.mip" (current-seconds))]
          [out-port (open-output-file temp #:exists 'truncate)])
     ;; Encode and print to file.
     (fprintf (current-error-port) (format "Generate ILP program at ~a\n" temp))
     (define t1 (current-seconds))
     (parameterize ([current-output-port out-port])
+      (pretty-display (format "set dettimelimit ~a" timeout))
       (begin0 
         encode
         (flush-output (current-output-port)))

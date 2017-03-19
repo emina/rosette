@@ -18,7 +18,7 @@
 
 (define (env) (make-hash))
 
-(define (make-cplex #:simplify [sim #t])
+(define (make-cplex #:simplify [sim #t] #:timeout [timeout #f])
   (define real-cplex-path
     ;; Check for 'cplex', else print a warning
     (if (file-exists? cplex-path)
@@ -27,10 +27,10 @@
             (printf "warning: could not find z3 executable in '~a'"
                     (path->string (simplify-path (path->directory-path cplex-path))))
             cplex-path)))
-  (cplex (server real-cplex-path cplex-opts) '() '() sim))
+  (cplex (server real-cplex-path cplex-opts) '() '() sim timeout))
 
   
-(struct cplex (server asserts objs sim)
+(struct cplex (server asserts objs sim timeout)
   #:mutable
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cplex>"))]
@@ -68,14 +68,14 @@
      
    (define (solver-check self)
      (define t0 (current-seconds))
-     (match-define (cplex server (app unique asserts) (app unique objs) sim) self)
+     (match-define (cplex server (app unique asserts) (app unique objs) sim timeout) self)
 
      ;; Break multi-objective query into multiple single-objective queries
      ;; because CPLEX doesn't support multi-objective.
      (define (multi-objective asserts bounds objs convert)
        ;; Optimize for the first objective on the list.
        (define sol
-         (server-run server
+         (server-run server timeout
                      (encode asserts bounds (car objs))
                      (decode convert)))
        (cond
