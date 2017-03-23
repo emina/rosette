@@ -76,9 +76,10 @@
                      (assert (= (⊕ 2 (+ x 2)) 6))))
   (test-equivalent (sol ⊕) '(((1 1) . 2) ((2 1) . 3) ((2 3) . 6))))
 
-(define (check-int-real-no-finite-solution)
+(define (check-finitization-disallowed)
+  (current-bitwidth 5)
   (define-symbolic f (~> boolean? real?))
-  (check-pred unsat? (solve (assert (= (f #f) .5)))))
+  (check-exn #px"finitize.*" (thunk (solve (assert (= (f #f) .5))))))
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
   (let-values ([(e ignore) (with-asserts expected-value)]
@@ -126,11 +127,7 @@
 (define tests:finitized
   (test-suite+
    "UF tests with finitization"
-   (current-bitwidth 5)
-   (check-boolean?)
-   (check-bitvector?)
-   (check-int-real)
-   (check-int-real-no-finite-solution)
+   (check-finitization-disallowed)
    ))
 
 (define tests:lifted

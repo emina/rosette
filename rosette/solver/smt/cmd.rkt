@@ -3,7 +3,7 @@
 (require (only-in "smtlib2.rkt" assert minimize maximize
                   check-sat get-model get-unsat-core
                   read-solution true false)
-         "env.rkt" "enc.rkt"
+         "env.rkt" "enc.rkt" "dec.rkt"
          (only-in "../../base/core/term.rkt" constant? term-type solvable-default)
          (only-in "../../base/core/function.rkt" fv function? function-domain function-range)
          (only-in "../../base/core/bool.rkt" @boolean?)
@@ -60,76 +60,11 @@
 (define (decode env)
   (match (read-solution)
     [(? hash? sol) 
-     (sat (for/hash ([(decl id) (in-dict env)]
-                     #:when (and (constant? decl) (hash-has-key? sol id)))
-            (let ([t (term-type decl)])
-              (values decl
-                      (if (function? t)
-                          (decode-function t (hash-ref sol id))
-                          (decode-value t (hash-ref sol id)))))))]
+     (sat (decode-model env sol))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-dict env)] #:when (set-member? core id)) 
                  (if (constant? bool) bool (car bool)))))]
     [#f (unsat)]
     ['unknown (unknown)]))
-
-(define (to-exact-int a) (if (integer? a) (inexact->exact a) a))
-
-(define (decode-value type val)
-  (match type
-    [(== @boolean?)
-     (match val
-       [(== true) #t]
-       [(== false) #f])]
-    [(== @integer?) 
-     (match val
-       [(? integer?) val]
-       [(list '- v) (- v)])]
-    [(== @real?) 
-     (match val 
-       [(? real?) val]
-       [(list '- (list '/ a b)) (- (/ (to-exact-int a) (to-exact-int b)))]
-       [(list '- v) (- v)]
-       [(list '/ a b) (/ (to-exact-int a) (to-exact-int b))]
-       [(list '/ (list '- a) b) (/ (- (to-exact-int a)) (to-exact-int b))])]
-    [(? bitvector? t)
-     (match val
-       [(? number?) (bv val t)]
-       [(list _ (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) _)
-        (bv n t)])]
-    [other other]))
-
-(define (decode-function type val)
-  (define default+tbl
-    (reverse
-     (match val
-      [(list (== 'define-fun) _ params _ body)
-       (decode-body (map car params) (function-domain type) (function-range type) body)])))
-  (fv (reverse (cdr default+tbl)) (car default+tbl) type))
-  
-(define (decode-body params dom ran body)
-  (match body
-    [(list (== 'ite) args v0 (and rest (list (== 'ite) _ ...)))
-     (cons (cons (decode-args params dom args) (decode-value ran v0))
-           (decode-body params dom ran rest))]
-    [(list (== 'ite) args v0 v1)
-     (list (cons (decode-args params dom args) (decode-value ran v0))
-           (decode-value ran v1))]))
-
-(define (decode-args params types args)
-  (for/list ([p params][t types])
-    (decode-value
-     t 
-     (match args
-       [(list (== 'and) _ ... (list (== '=) (== p) y) _ ...) y]
-       [(list (== 'and) _ ... (list (== '=) x (== p)) _ ...) x]
-       [(list (== '=) x y)
-        (or (and (equal? p x) y)
-            (and (equal? p y) x))]))))
-  
-
-
-  
-
 

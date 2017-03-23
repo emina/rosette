@@ -5,7 +5,7 @@
          "term.rkt" "bool.rkt" "safe.rkt" "union.rkt"  "equality.rkt"  "merge.rkt"
          (only-in "procedure.rkt" @procedure?))
 
-(provide (rename-out [fv-stx fv]) @fv? fv? fv-cond fv-else fv-type
+(provide (rename-out [fv-stx fv]) @fv? fv? fv-type
          ~> function function? function-domain function-range)
 
 #|-----------------------------------------------------------------------------------|#
@@ -14,10 +14,8 @@
 ; is a non-empty list of primitive-solvable? types, and its range is a primitive-solvable?
 ; type.
 ;
-; The only values that have function types are instances of the fv struct.  This struct
-; represents functions that are essentially lookup tables.  Each fv has a set of 'cond'
-; cases, which map specific inputs to outputs.  All unmapped inputs are mapped to the
-; 'else' value.  An fv value is a procedure and can be directly applied to values
+; The only values that have function types are instances of the fv struct.
+; An fv value is a procedure and can be directly applied to values
 ; (symbolic, concrete, or a mix of the two).
 #|-----------------------------------------------------------------------------------|#
 
@@ -82,24 +80,22 @@
     [(d0 d1 . rest) (function `(,d0 ,d1 ,@(drop-right rest 1)) (last rest))]))
 
 ; Represents a function value.
-(struct fv (cond else type λ)
+(struct fv (type λ)
   #:property prop:procedure
   [struct-field-index λ]
   #:methods gen:typed
   [(define (get-type self) (fv-type self))]
   #:methods gen:custom-write
   [(define (write-proc self port m)
-     (fprintf port "(fv ~a ~a ~a)" (fv-cond self) (fv-else self) (fv-type self)))])
+     (fprintf port "(fv ~a)" (fv-type self)))])
 
-(define (make-fv ios o type)
-  (fv ios o type
+(define (make-fv type proc)
+  (fv type 
       (procedure-reduce-arity
        (lambda args
-         (let* ([args  (for/list ([a args] [t (function-domain type)])
-                         (type-cast t a))]
-                [parts (for/list ([io ios])
-                         (cons (@equal? (car io) args) (cdr io)))])
-           (apply merge* (cons (! (apply || (map car parts))) o) parts)))
+         (apply proc
+                (for/list ([a args] [t (function-domain type)])
+                  (type-cast t a))))
        (length (function-domain type)))))
 
 (define-match-expander fv-stx

@@ -286,20 +286,24 @@ the @racket[debug] form.}
   set to a positive integer.
 
   The @racket[current-bitwidth] parameter must be set to @racket[#f] when
-  executing queries over assertions that contain @tech[#:key "quantified formula"]{quantified formulas}.
+  executing queries over assertions that contain @tech[#:key "quantified formula"]{quantified formulas}
+  or @seclink["sec:UF"]{uninterpreted functions}.
   Otherwise, such a query will throw an exception.
 
   @examples[
  #:eval rosette-eval
  (define-symbolic x y real?)
+ (define-symbolic f (~> real? real?))
  (current-bitwidth 5)  
  (code:line (solve (assert (= x 3.5))) (code:comment "there is no solution under"))
  (code:line (solve (assert (= x 64)))  (code:comment "5-bit signed integer semantics"))
  (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers are not supported"))
+ (code:line (solve (assert (= x (f x))))  (code:comment "same for uninterpreted functions"))
  (current-bitwidth #f)
  (code:line (solve (assert (= x 3.5))) (code:comment "but there is a solution under"))
  (code:line (solve (assert (= x 64)))  (code:comment "infinite-precision semantics"))
- (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers work"))]
+ (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers work"))
+ (code:line (solve (assert (= x (f x)))) (code:comment "so do uninterpreted functions"))]
 }
 
  

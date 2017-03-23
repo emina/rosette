@@ -15,9 +15,11 @@
 @(define-runtime-path root ".")
 @(define rosette-eval (rosette-log-evaluator (logfile root "uninterpreted-log")))
 
-@title{Uninterpreted Functions}
+@title[#:tag "sec:UF"]{Uninterpreted Functions}
 
-@declare-exporting[rosette/base/base #:use-sources (rosette/base/core/function)]
+@declare-exporting[rosette/base/base #:use-sources (rosette/base/core/function
+                                                    rosette/query/finitize
+                                                    rosette/base/core/safe)]
 
 In Rosette, functions are special kinds of @seclink["sec:proc"]{procedures} that are pure
 (have no side effects) and total (defined on every input value).
@@ -32,6 +34,7 @@ no fixed meaning.  Their meaning (or interpretation) is determined by the underl
 as the result of a @seclink["sec:queries"]{solver-aided query}.
 
 @examples[#:eval rosette-eval
+(current-bitwidth #f)
 (code:comment "an uninterpreted function from integers to booleans:")
 (define-symbolic f (~> integer? boolean?))
 (code:line (f 1)     (code:comment "no built-in interpretation for 1"))

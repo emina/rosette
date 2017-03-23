@@ -1,4 +1,5 @@
 ;; This file was created by make-log-based-eval
+((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic f (~> integer? boolean?))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -54,13 +55,13 @@
   0
   ()
   ()
-  (c values c (0 (u . "(fv (((1) . #f) ((0) . #t)) #f integer?~>boolean?)"))))
+  (c values c (0 (u . "(fv integer?~>boolean?)"))))
  #""
  #"")
 ((evaluate x sol) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((fv? f) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((fv? g) ((3) 0 () 0 () () (q values #t)) #"" #"")
-((g 2) ((3) 0 () 0 () () (q values #f)) #"" #"")
+((g 2) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((g x)
  ((3)
   1
@@ -70,7 +71,13 @@
   0
   ()
   ()
-  (c values c (0 (u . "(= 0 (real->integer x))"))))
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(ite (= 1 (real->integer x)) #t (ite (= 0 (real->integer x)) #f #t))"))))
  #""
  #"")
 ((define t (~> integer? real? boolean? (bitvector 4)))
@@ -86,7 +93,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "integer?~>real?~>boolean?~>(bitvector? 4)"))))
+  (c values c (0 (u . "integer?~>real?~>boolean?~>(bitvector 4)"))))
  #""
  #"")
 ((~> t integer?)
@@ -98,7 +105,7 @@
   ()
   (q
    exn
-   "function: expected a list of primitive solvable types\n  domain: '(integer?~>real?~>boolean?~>(bitvector? 4))"))
+   "function: expected a list of primitive solvable types\n  domain: '(integer?~>real?~>boolean?~>(bitvector 4))"))
  #""
  #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -174,10 +181,7 @@
   0
   ()
   ()
-  (c
-   values
-   c
-   (0 (u . "(fv (((#f) . #t) ((#t) . #f)) #t boolean?~>boolean?)"))))
+  (c values c (0 (u . "(fv boolean?~>boolean?)"))))
  #""
  #"")
 ((fv? g) ((3) 0 () 0 () () (q values #t)) #"" #"")

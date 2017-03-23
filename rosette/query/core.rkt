@@ -5,7 +5,6 @@
   (only-in "../base/core/term.rkt" constant? term-type get-type term? term-cache clear-terms! term<? solvable-default)
   (only-in "../base/core/equality.rkt" @equal?)
   (only-in "../base/core/bool.rkt" ! || && => with-asserts-only @boolean?)
-  (only-in "../base/core/function.rkt" fv)
   (only-in "../base/core/real.rkt" @integer? @real?)
   (only-in "../base/core/bitvector.rkt" bv bitvector?)
   "../solver/solver.rkt"
@@ -42,9 +41,6 @@
 (define (eval/asserts closure)
   (with-handlers ([exn:fail? return-#f])
     (with-asserts-only (closure))))
-
-
-  
 
 ; Searches for a model, if any, for the conjunction 
 ; of the given formulas, using the provided solver and 
@@ -270,13 +266,7 @@
                   (loop (guess cex))]))])))
 
 (define (¬solution sol)
-  (apply ||
-         (for/list ([(c v) (model sol)])
-           (match v
-             [(fv ios o type)
-              ; TODO:  introduce skolems to negate the else case
-              (apply || (for/list ([io ios]) (! (@equal? (apply c (car io)) (cdr io)))))]
-             [_ (! (@equal? c v))]))))
+  (apply || (for/list ([(c v) (model sol)]) (! (@equal? c v)))))
 
              
         
