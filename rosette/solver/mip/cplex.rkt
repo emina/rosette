@@ -24,7 +24,7 @@
     (if (file-exists? cplex-path)
       cplex-path
       (begin
-            (printf "warning: could not find z3 executable in '~a'"
+            (printf "warning: could not find CPLEX executable in '~a'"
                     (path->string (simplify-path (path->directory-path cplex-path))))
             cplex-path)))
   (cplex (server real-cplex-path cplex-opts) '() '() sim timeout))
@@ -115,6 +115,8 @@
 
             ;; step 3: solve
             (define t3 (current-seconds))
+            (fprintf (current-error-port) (format "overhead: ~a, simplify ~a, convert: ~a\n"
+                                                  (- t1 t0) (- t2 t1) (- t3 t2)))
             (define sol (multi-objective mip-asserts mip-bounds mip-objs convert))
             (solver-clear-stacks! self)
             (define t4 (current-seconds))

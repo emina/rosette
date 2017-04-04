@@ -12,7 +12,7 @@
     (fprintf (current-error-port) (format "Generate ILP program at ~a\n" temp))
     (define t1 (current-seconds))
     (parameterize ([current-output-port out-port])
-      (pretty-display (format "set dettimelimit ~a" timeout))
+      (when timeout (pretty-display (format "set dettimelimit ~a" timeout)))
       (begin0 
         encode
         (flush-output (current-output-port)))
@@ -20,7 +20,7 @@
     (close-output-port out-port)
     
     (define t2 (current-seconds))
-    ;(fprintf (current-error-port) (format "Encoding time: ~a\n" (- t2 t1)))
+    (fprintf (current-error-port) (format "Encoding time: ~a\n" (- t2 t1)))
 
     ;; Run CPLEX solver.
     (fprintf (current-error-port) (format "Run ~a ~a\n" (server-path s) (append (server-opts s) (list temp))))
@@ -30,10 +30,10 @@
     ;; Print progress and decode the solution.
     (define sol (print-and-decode out decode))
     (define t3 (current-seconds))
-    ;(fprintf (current-error-port) (format "Running & decoding time: ~a\n" (- t3 t2)))
+    (fprintf (current-error-port) (format "Running & decoding time: ~a\n" (- t3 t2)))
     
     (fprintf (current-error-port) (format "Remove ~a\n" temp))
-    (system (format "rm ~a" temp))
+    ;;(system (format "rm ~a" temp))
     sol
   ))
 
