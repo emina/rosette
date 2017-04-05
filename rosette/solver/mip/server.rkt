@@ -5,7 +5,7 @@
 
 (struct server (path opts))
 
-(define-syntax-rule (server-run s timeout encode decode)
+(define-syntax-rule (server-run s timeout encode decode mst-read mst-write)
   (let* ([id (current-seconds)]
          [temp (format "temp-~a.mip" id)]
          [out-port (open-output-file temp #:exists 'truncate)])
@@ -17,7 +17,10 @@
       (begin0 
         encode
         (flush-output (current-output-port)))
-      (pretty-display (format "write temp-sol-~a.mst all" id))
+      (when mst-read (pretty-display (format "read ~a" mst-read)))
+      (pretty-display "optimize")
+      (pretty-display "display solution variables -")
+      (pretty-display (format "write ~a all" mst-write))
       )
     (close-output-port out-port)
     

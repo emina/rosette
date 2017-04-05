@@ -76,8 +76,6 @@
     (mip-printf "\n")
     )
   (mip-printf "end\n")
-  (mip-printf "optimize\n")
-  (mip-printf "display solution variables -\n")
   )
 
 ; Print a minization objective.

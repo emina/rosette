@@ -72,12 +72,15 @@
 
      ;; Break multi-objective query into multiple single-objective queries
      ;; because CPLEX doesn't support multi-objective.
-     (define (multi-objective asserts bounds objs convert)
+     (define (multi-objective asserts bounds objs convert temp-sol n)
        ;; Optimize for the first objective on the list.
        (define sol
          (server-run server timeout
                      (encode asserts bounds (car objs))
-                     (decode convert)))
+                     (decode convert)
+                     (and (> n 0) (format "~a~a.mst" temp-sol (sub1 n)))
+                     (format "~a~a.mst" temp-sol n)
+                     ))
        (cond
          [(empty? (cdr objs)) sol]
          [else
@@ -86,7 +89,7 @@
           (define obj (objective-expr (car objs)))
           (fprintf (current-error-port) (format "\nAdd constraint ~a\n" (sym/= (evaluate obj sol) obj)))
           (multi-objective (cons (sym/= (evaluate obj sol) obj) asserts)
-                           bounds (cdr objs) convert)]))
+                           bounds (cdr objs) convert temp-sol (add1 n))]))
      
      (cond [(ormap false? asserts) (unsat)]
            [else
@@ -117,7 +120,8 @@
             (define t3 (current-seconds))
             (fprintf (current-error-port) (format "overhead: ~a, simplify ~a, convert: ~a\n"
                                                   (- t1 t0) (- t2 t1) (- t3 t2)))
-            (define sol (multi-objective mip-asserts mip-bounds mip-objs convert))
+            (define temp (format "temp-sol-t~a-o" (current-seconds)))
+            (define sol (multi-objective mip-asserts mip-bounds mip-objs convert temp 0))
             (solver-clear-stacks! self)
             (define t4 (current-seconds))
 
