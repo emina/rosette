@@ -6,7 +6,8 @@
 (struct server (path opts))
 
 (define-syntax-rule (server-run s timeout encode decode)
-  (let* ([temp (format "temp-~a.mip" (current-seconds))]
+  (let* ([id (current-seconds)]
+         [temp (format "temp-~a.mip" id)]
          [out-port (open-output-file temp #:exists 'truncate)])
     ;; Encode and print to file.
     (fprintf (current-error-port) (format "Generate ILP program at ~a\n" temp))
@@ -16,6 +17,7 @@
       (begin0 
         encode
         (flush-output (current-output-port)))
+      (pretty-display (format "write temp-sol-~a.mst all" id))
       )
     (close-output-port out-port)
     
