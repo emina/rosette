@@ -8,6 +8,7 @@
 (define-syntax-rule (server-run s timeout encode decode mst-read mst-write)
   (let* ([id (current-seconds)]
          [temp (format "temp-~a.mip" id)]
+         [temp-log (format "temp-~a.out" id)]
          [out-port (open-output-file temp #:exists 'truncate)])
     ;; Encode and print to file.
     (fprintf (current-error-port) (format "Generate ILP program at ~a\n" temp))
@@ -33,7 +34,9 @@
       (apply subprocess #f #f #f (server-path s) (append (server-opts s) (list temp))))
 
     ;; Print progress and decode the solution.
-    (define sol (print-and-decode out decode))
+    (define log-port (open-output-file temp-log #:exists 'truncate))
+    (define sol (print-and-decode out decode log-port))
+    (close-output-port log-port)
     (define t3 (current-seconds))
     (fprintf (current-error-port) (format "Running & decoding time: ~a\n" (- t3 t2)))
     
@@ -43,8 +46,8 @@
   ))
 
 ;; Relay output from CPLEX to stdout and decode the solution.
-(define-syntax-rule (print-and-decode out decode)
-  (if (print-until-solution out)
+(define-syntax-rule (print-and-decode out decode log-port)
+  (if (print-until-solution out log-port)
       (let ([t1 (current-seconds)]
             [sol
              (parameterize ([current-input-port out])
@@ -53,17 +56,21 @@
         ;(fprintf (current-error-port) (format "Decoding time: ~a\n" (- t2 t1)))
         sol)
       (unsat)
-      ))
+      )
+  )
+  
 
 ;; Relay output from CPLEX at 'out' port to stdout until eof or a solution is found.
 ;; Return #t if a solution is found, otherwise return #f.
-(define (print-until-solution out)
+(define (print-until-solution out log-port)
   (define line (read-line out))
   (pretty-display line)
+  (pretty-display line log-port)
+  (flush-output log-port)
 
   (if (eof-object? line)
       #f
       (if (regexp-match #rx"CPLEX> Incumbent solution" line)
           #t
-          (print-until-solution out))))
+          (print-until-solution out log-port))))
     
