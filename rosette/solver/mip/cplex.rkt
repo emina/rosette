@@ -1,5 +1,6 @@
 #lang racket
 
+(require racket/generic)
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt"
          "common.rkt" "smt-simplify.rkt" "mip-converter.rkt"
@@ -11,7 +12,7 @@
          (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
          (only-in "../../base/core/real.rkt" @integer? @real?))
 
-(provide (rename-out [make-cplex cplex]) cplex?)
+(provide (rename-out [make-cplex cplex]) cplex? solver-check-with-init)
 
 (define-runtime-path cplex-path (build-path ".." ".." ".." "bin" "cplex"))
 (define cplex-opts '("-f"))
@@ -29,44 +30,16 @@
             cplex-path)))
   (cplex (server real-cplex-path cplex-opts) '() '() sim timeout))
 
+(define-generics mip-solver
+  [solver-check-with-init mip-solver #:mip-start [mip-start] #:mip-sol [mip-sol]])
   
 (struct cplex (server asserts objs sim timeout)
   #:mutable
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cplex>"))]
-  #:methods gen:solver
+  #:methods gen:mip-solver
   [
-   (define (solver-assert self bools)
-     (set-cplex-asserts! self 
-      (append (cplex-asserts self)
-              (for/list ([b bools] #:unless (equal? b #t))
-                (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
-                  (error 'assert "expected a boolean value, given ~s" b))
-                b))))
-
-   (define (solver-minimize self nums)
-     (set-cplex-objs! self (append (cplex-objs self)
-                                   (for/list ([o (numeric-terms nums 'solver-minimize)])
-                                     (objective 'min o)))))
-   
-   (define (solver-maximize self nums)
-     (set-cplex-objs! self (append (cplex-objs self)
-                                   (for/list ([o (numeric-terms nums 'solver-maximize)])
-                                     (objective 'max o)))))
-   
-   (define (solver-clear self) 
-     (solver-clear-stacks! self))
-   
-   (define (solver-shutdown self)
-     (solver-clear self))
-
-   (define (solver-push self)
-     (raise (exn:fail "cplex: solver-push: unimplemented")))
-   
-   (define (solver-pop self [k 1])
-     (raise (exn:fail "cplex: solver-pop: unimplemented")))
-     
-   (define (solver-check self)
+   (define (solver-check-with-init self #:mip-start [mip-start #f] #:mip-sol [mip-sol #f])
      (define t0 (current-seconds))
      (match-define (cplex server (app unique asserts) (app unique objs) sim timeout) self)
 
@@ -78,8 +51,12 @@
          (server-run server timeout
                      (encode asserts bounds (car objs))
                      (decode convert)
-                     (and (> n 0) (format "~a~a.mst" temp-sol (sub1 n)))
-                     (format "~a~a.mst" temp-sol n)
+                     (if (> n 0)
+                         (format "~a~a.mst" temp-sol (sub1 n))
+                         mip-start)
+                     (if (and (= (length objs) 1) mip-sol)
+                         mip-sol
+                         (format "~a~a.mst" temp-sol n))
                      ))
        (cond
          [(empty? (cdr objs)) sol]
@@ -130,10 +107,42 @@
             sol
             ]))
    
-   (define (solver-debug self)
-     (raise (exn:fail "cplex: solver-debug: unimplemented" (current-continuation-marks))))
+   ]
+  #:methods gen:solver
+  [
+   (define (solver-assert self bools)
+     (set-cplex-asserts! self 
+      (append (cplex-asserts self)
+              (for/list ([b bools] #:unless (equal? b #t))
+                (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
+                  (error 'assert "expected a boolean value, given ~s" b))
+                b))))
 
+   (define (solver-minimize self nums)
+     (set-cplex-objs! self (append (cplex-objs self)
+                                   (for/list ([o (numeric-terms nums 'solver-minimize)])
+                                     (objective 'min o)))))
    
+   (define (solver-maximize self nums)
+     (set-cplex-objs! self (append (cplex-objs self)
+                                   (for/list ([o (numeric-terms nums 'solver-maximize)])
+                                     (objective 'max o)))))
+   
+   (define (solver-clear self) 
+     (solver-clear-stacks! self))
+   
+   (define (solver-shutdown self)
+     (solver-clear self))
+
+   (define (solver-push self)
+     (raise (exn:fail "cplex: solver-push: unimplemented")))
+   
+   (define (solver-pop self [k 1])
+     (raise (exn:fail "cplex: solver-pop: unimplemented")))
+     
+   (define (solver-check self)
+     (solver-check-with-init self)
+     )
    ])
 
 (define (numeric-terms ts caller)
