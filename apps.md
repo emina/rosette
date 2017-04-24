@@ -15,8 +15,10 @@ first-time users of Rosette in just a few days or weeks.
 | [Cosette][Cosette] |  A framework for reasoning about SQL equivalences. |
 | [Ferrite][Ferrite] | A framework for specifying and checking file system crash-consistency models. |
 | [Greenthumb][Greenthumb] | A framework for constructing superoptimizers. |
+| [MemSynth][MemSynth] | A language and tool for verifying, synthesizing, and disambiguating memory consistency models. |
 | [Neutrons][Neutrons] |  A verifier for a subset of [EPICS][EPICS].  Currently in use at the University of Washington [Clinical Neutron Therapy System][CNTS]. |
 | [Synapse][Synapse] |  A framework for specifying and solving optimal synthesis problems. |
+| [Ocelot][Ocelot] | An engine for solving, verifying, and synthesizing specifications in bounded relational logic. |
 | [Wallingford][Wallingford] | An experimental constraint reactive programming language. | 
 | [More][More] |  Demo languages and tools for [secure stack machines][SSM], data-parallel programing, and web-scraping.  | 
 
@@ -28,7 +30,9 @@ first-time users of Rosette in just a few days or weeks.
 [Cosette]: http://cosette.cs.washington.edu/
 [Ferrite]: http://sandcat.cs.washington.edu/ferrite/
 [Greenthumb]: http://pl.eecs.berkeley.edu/projects/greenthumb/
+[MemSynth]: http://memsynth.uwplse.org
 [Neutrons]: http://neutrons.uwplse.org
+[Ocelot]: https://jamesbornholt.github.io/ocelot/
 [EPICS]: http://www.aps.anl.gov/epics/
 [CNTS]: https://staff.washington.edu/jon/cnts/
 [Synapse]: http://synapse.uwplse.org
