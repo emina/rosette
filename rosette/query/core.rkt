@@ -11,7 +11,7 @@
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
   (only-in "../solver/smt/z3.rkt" z3))
 
-(provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug eval/asserts 
+(provide current-solver ∃-solve ∃-solve+ ∃∀-solve ∃-debug ∃!-solve+ eval/asserts 
          all-true? some-false? unfinitize)
 
 ; Current solver instance that is used for queries and kept alive for performance.
@@ -268,5 +268,27 @@
 (define (¬solution sol)
   (apply || (for/list ([(c v) (model sol)]) (! (@equal? c v)))))
 
-             
+
+; Given a list of assumptions and assertions, uses incremental solving
+; to solve the formula (&& (apply && assumes) (apply || (map ! asserts)).
+(define (∃!-solve+ assumes asserts)
+  (match asserts
+    [(list) (unsat)]
+    [(list a) (∃-solve `(,@assumes ,(! a)))]
+    [_ 
+     (define solver (∃-solve+))
+     (begin0
+       (match (solver (apply && assumes))
+         [(? unsat? sol) sol]
+         [_
+          (let loop ([asserts asserts])
+            (match asserts
+              [(list) (unsat)]
+              [(list a as ...)
+               (match (solver (! a))
+                 [(? unsat?)
+                  (solver 1)
+                  (loop as)]
+                 [sol sol])]))])
+       (solver 'shutdown))]))
         
