@@ -64,7 +64,9 @@
   #:methods gen:solvable
   [(define/generic generic-solvable-default solvable-default)
    (define (solvable-default self)
-     (fv null (generic-solvable-default (function-range self)) self))
+     (fv self (procedure-reduce-arity
+               (lambda args (generic-solvable-default (function-range self)))
+               (length (function-domain self)))))
    (define (solvable-domain self) (function-domain self))
    (define (solvable-range self) (function-range self))]
   #:methods gen:custom-write
