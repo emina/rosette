@@ -9,30 +9,32 @@
 ; The solution consist of 'sat or 'unsat, followed by  
 ; followed by a suitably formatted s-expression.  The 
 ; output of this procedure is a hashtable from constant 
-; identifiers to their values (if the solution is 'sat);
+; identifiers to their SMTLib values (if the solution is 'sat);
 ; a non-empty list of assertion identifiers that form an
 ; unsatisfiable core (if the solution is 'unsat and a 
 ; core was extracted); #f (if the solution is 
 ; 'unsat and no core was extracted); or 'unknown otherwise.
 (define (read-solution)
   (define port (current-input-port))
-  (match (read port)
-    [(== 'sat)
-     (let loop ()
-       (match (read port)
-         [(list (== 'objectives) _ ...) (loop)]
-         [(list (== 'model) def ...)
-          (for/hash ([d def] #:when (racket/and (pair? d) (equal? (car d) 'define-fun)))
-            (match d
-              [(list (== 'define-fun) c '() _ v) (values c v)]
-              [(list (== 'define-fun) c _ ...) (values c d)]))]
-         [other (error 'solution "expected model, given ~a" other)]))]
-    [(== 'unsat) 
-     (match (read port) 
-       [(list (? symbol? name) ...) name]
-       [_ #f])]
-    [(== 'unknown) 'unknown]
-    [other (error 'solution "unrecognized solver output: ~a" other)]))
+  (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
+    (match (read port)
+      [(== 'sat)
+       (let loop ()
+         (match (read port)
+           [(list (== 'objectives) _ ...) (loop)]
+           [(list (== 'model) def ...)
+            (for/hash ([d def] #:when (racket/and (pair? d) (equal? (car d) 'define-fun)))
+              (values (cadr d) d))]
+              ;(match d
+              ;  [(list (== 'define-fun) c '() _ v) (values c v)]
+              ;  [(list (== 'define-fun) c _ ...) (values c d)]))]
+           [other (error 'solution "expected model, given ~a" other)]))]
+      [(== 'unsat) 
+       (match (read port) 
+         [(list (? symbol? name) ...) name]
+         [_ #f])]
+      [(== 'unknown) 'unknown]
+      [other (error 'solution "unrecognized solver output: ~a" other)])))
 
 ; Prints all smt commands to current-output-port.
 (define-syntax-rule (printf-smt arg ...)

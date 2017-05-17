@@ -9,8 +9,11 @@
 (define-syntax-rule (define-equality-predicate @=? =? type=? @cache)
   (define (@=? x y)
     (let* ([cache (@cache)]
-           [toplevel? (hash-empty? cache)]
+           [toplevel? (false? cache)]
            [key (cons x y)])
+      (when toplevel?
+        (set! cache (make-hash))
+        (@cache cache))
       (if (hash-has-key? cache key)
           (hash-ref cache key)
           (begin
@@ -23,14 +26,14 @@
                          [(union? y) (union=value? y x @=?)]
                          [else (type=? (type-of x y) x y)])])
               (if toplevel?
-                  (@cache (make-hash))
+                  (@cache #f)
                   (hash-set! cache key result))
               result))))))
                    
                 
 
-(define equal-cache (make-parameter (make-hash)))
-(define eq-cache (make-parameter (make-hash)))
+(define equal-cache (make-parameter #f))
+(define eq-cache (make-parameter #f))
 (define-equality-predicate @equal? equal? type-equal? equal-cache)
 (define-equality-predicate @eq? eq? type-eq? eq-cache)
 

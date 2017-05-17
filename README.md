@@ -73,7 +73,7 @@ Alternatively, you can install Rosette from source:
 
 * For more on using Rosette, see [_The Rosette Guide_][1].  Rosette's internals are described in [this PLDI'14 paper][2].
   
-[1]: http://emina.github.io/rosette/doc/rosette-guide/index.html
+[1]: http://emina.github.io/rosette/rosette-guide/index.html
 [2]: http://dl.acm.org/citation.cfm?id=2594340
 
 

@@ -1,15 +1,18 @@
 #lang racket
 
-(require racket/draw)
+(require racket/draw (only-in mrlib/graph find-dot))
 
 (provide automaton->bitmap automaton->dot)
 
 (define (automaton->bitmap a)
-  (define-values (p p-out p-in p-err)
-    (subprocess #f #f #f (find-executable-path "dot") "-Tjpeg"))
-  (automaton->dot a p-in)
-  (close-output-port p-in)
-  (read-bitmap p-out 'jpeg))
+  (match (find-dot)
+    [#f a]
+    [dot 
+     (define-values (p p-out p-in p-err)
+       (subprocess #f #f #f dot "-Tjpeg"))
+     (automaton->dot a p-in)
+     (close-output-port p-in)
+     (read-bitmap p-out 'jpeg)]))
   
 (define (automaton->dot a [port (current-output-port)])
   (fprintf port "digraph fsm {\n")

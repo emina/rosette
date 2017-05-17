@@ -38,6 +38,15 @@ if they refer to the same object.
 
 @section{The Solver Interface}
 
+A solver contains a stack of assertions (boolean terms) to satisfy and a set of objectives (numeric terms) to optimize. 
+The assertion stack is partitioned into levels, with each level containing
+a set of assertions. The bottom (0) assertion level cannot be removed, but more levels
+can be created and removed using the @racket[solver-push] and @racket[solver-pop] procedures.
+The @racket[solver-assert] procedure adds assertions to the top level of the assertion stack, while 
+the @racket[solver-minimize] and @racket[solver-maximize] procedures add new terms to the current set of optimization objectives.
+The @racket[solver-check] procedure checks the satisfiability of all assertions in the assertion stack,
+optimizing the resulting solution (if any) with respect to the provided objectives. 
+
 @defparam[current-solver solver solver?]{
   The @racket[current-solver] parameter holds the solver object used for 
   answering solver-aided queries.  Rosette's default solver is @racket[z3], although
@@ -51,26 +60,39 @@ if they refer to the same object.
   A @hyperlink["https://docs.racket-lang.org/reference/struct-generics.html"]{generic interface}
   that specifies the procedures provided by a solver.  These include
   @racket[solver-assert],
+  @racket[solver-push],
+  @racket[solver-pop],
   @racket[solver-clear],
   @racket[solver-minimize],
   @racket[solver-maximize],
   @racket[solver-check],
   @racket[solver-debug], and
   @racket[solver-shutdown].
-  Solvers are stateful.  Each solver contains the constraints that have been added to it
-  via @racket[solver-assert], and the numeric objective terms that have been added to it
-  via @racket[solver-minimize] and @racket[solver-maximize]. 
+  A solver may support a subset of this interface, which loosely follows
+  the @hyperlink["http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.5-r2015-06-28.pdf"]{SMTLib solver interface}.
+
+ 
 }
 
 @defproc[(solver? [v any/c]) boolean?]{
 Returns true if @racket[v] is a concrete value that implements the @racket[gen:solver] interface.}
 
 @defproc[(solver-assert [solver solver?] [constraints (listof boolean?)]) void?]{
-Adds the given constraints to the given solver. These constraints take the form of boolean terms
-to be satisfied by subsequent calls to @racket[solver-check].}                                                                                   
+Takes as input a list of boolean terms or values and
+adds them to the current (top) level in the assertion stack.}                                                                                   
+@defproc[(solver-push [solver solver?]) void?]{
+Pushes a new level onto the solver's assertion stack.  Subsequent calls to
+@racket[solver-assert] will add assertions to this level.}
+
+@defproc[(solver-pop [solver solver?] [levels integer?]) void?]{
+Pops the given number of levels off the solver's assertion stack,
+removing all the assertions at the popped levels. The number of @racket[levels] to
+pop must be a positive integer that is no greater than the number of preceding
+calls to @racket[solver-push].}
 
 @defproc[(solver-clear [solver solver?]) void?]{
-Clears all constraints from the given solver.}
+Clears the assertion stack of all levels and all assertions,
+and removes all objectives from the current set of objectives to optimize.}
 
 @defproc*[([(solver-minimize [solver solver?] [objs (listof (or/c integer? real? bv?))]) void?]
            [(solver-maximize [solver solver?] [objs (listof (or/c integer? real? bv?))]) void?])]{
@@ -79,7 +101,7 @@ numeric terms whose value is to be minimized or maximized by subsequent calls to
 while satisfying all the boolean terms asserted via @racket[solver-assert].}  
 
 @defproc[(solver-check [solver solver?]) solution?]{
-Searches for a binding from symbolic constants to concrete values that satisfies the 
+Searches for a binding from symbolic constants to concrete values that satisfies all  
 constraints (boolean terms) added to the solver via @racket[solver-assert].
 If such a binding---or, a @racket[model]---exists, 
 it is returned in the form of a satisfiable (@racket[sat?]) solution, which optimizes
@@ -90,7 +112,7 @@ resulting solution produces @racket[#f]).
 }
 
 @defproc[(solver-debug [solver solver?]) solution?]{
-Searches for an unsatisfiable core of the constraints (boolean terms)
+Searches for an unsatisfiable core of all constraints (boolean terms)
 added to the solver via @racket[solver-assert] @emph{after} the most recent call to 
 @racket[clear] or @racket[solver-check] (if any).
 If the constraints are satisfiable, or the given solver does 

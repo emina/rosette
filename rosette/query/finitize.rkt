@@ -47,23 +47,12 @@
      (sat (for/hash ([(k fk) fmap] #:when (dict-has-key? m fk))
             (let ([t (term-type k)])
               (values k (cond [(equal? k fk) (dict-ref m fk)]
-                              [(function? t) (unfinitize-fun t (dict-ref m fk))]
                               [else (bv-value (dict-ref m fk))])))))]
     [(core #f) sol] ; no core extracted
     [(core φs) (unsat (for/list ([(k v) fmap] #:when (member v φs)) k))]))
 
 (define (unfinitize-value t v)
   (if (infinite? t) (bv-value v) v))
-
-(define (unfinitize-fun t fval)
-  (match-define (fv ios o type) fval)
-  (match-define (function dom ran) t)
-  (fv (for/list ([io ios])
-        (cons (for/list ([i (car io)][d dom])
-                (unfinitize-value d i))
-              (unfinitize-value ran (cdr io))))
-      (unfinitize-value ran o)
-      t))
        
                        
 ; Takes as input a solution and a finitization map 
@@ -135,8 +124,7 @@
          [(union) (error 'finitize "all finitizations infeasible: ~a" v)]
          [_ e])))
     [(expression (or (== @forall) (== @exists)) _ _)
-     (error 'finitize "cannot use (current-bitwidth ~a) with a quantified formula ~a; use (current-bitwidth #f) instead"
-            (current-bitwidth) v)]
+     (finitization-error "a quantified formula" v)]
     [(expression op x)     
      ((unsafe op) (finitize-any x env))]
     [(expression op x y)   
@@ -149,9 +137,7 @@
     [(constant id (? infinite?))
      (constant (finitize-identifier id) (bitvector (current-bitwidth)))]
     [(constant id (function dom ran))
-     (if (or (infinite? ran) (ormap infinite? dom))
-         (constant (finitize-identifier id) (function (map finitize-type dom) (finitize-type ran)))
-         v)]
+     (finitization-error "an uninterpreted function" v)]
     [_ v]))
                               
 (define (finitize-lit v env)
@@ -170,7 +156,9 @@
 (define (finitize-identifier id)
   ((if (list? id) cons list) (gensym 'bv) id))
 
-(define (finitize-type t)
-  (if (infinite? t)
-      (bitvector (current-bitwidth))
-      t))
+(define (finitization-error msg v)
+  (error
+   'finitize
+   "cannot use (current-bitwidth ~a) with ~a ~a; use (current-bitwidth #f) instead"
+   (current-bitwidth) msg v))
+
