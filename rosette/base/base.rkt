@@ -87,7 +87,7 @@
      ; form/state.rkt
      current-oracle oracle oracle? 
      ; form/define.rkt
-     define-symbolic define-symbolic*
+     define-symbolic define-symbolic* generate-symbolic
      ; form/control.rkt
      @if @and @or @not @nand @nor @xor @implies
      @unless @when @cond @case else

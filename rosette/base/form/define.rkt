@@ -3,7 +3,7 @@
 (require (for-syntax racket)
          "../util/array.rkt" "../core/term.rkt" "state.rkt")
 
-(provide define-symbolic define-symbolic*)
+(provide define-symbolic define-symbolic* generate-symbolic)
 
 #|--------------define forms--------------|#
 
@@ -36,6 +36,18 @@
      (and (identifier? #'v0) (andmap identifier? (syntax->list #'(v ...))))
      (syntax/loc stx (begin (define-symbolic* v0 type) (define-symbolic* v type) ...))]
     ))
+
+(define-syntax (generate-symbolic stx)
+  (syntax-case stx ()
+    [(_ type)
+     (syntax/loc stx
+       (with-syntax ([(var) (generate-temporaries #'(gen))])
+         (constant (list #'var ((current-oracle) #'var)) type)))]
+    [(_ type [ k ... ])
+     (syntax/loc stx
+       (with-syntax ([(var) (generate-temporaries #'(gen))])
+         (reshape (list k ...) (for/list ([i (in-range (* k ...))])
+                                 (generate-symbolic type)))))]))
 
 #|--------------helper functions--------------|#
 
