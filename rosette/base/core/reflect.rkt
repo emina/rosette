@@ -18,30 +18,26 @@
 (define (symbolics vs)
   (match vs
     [(list (? constant?) ...) vs]
-    [_ (let ([cache (make-hash)])
+    [_ (let ([cache (mutable-set)]
+             [result '()])
          (let loop ([vs vs])
-           (if (hash-has-key? cache vs)
-               (hash-ref cache vs)
-               (begin
-                (hash-set! cache vs '())
-                (let ([result
-                       (remove-duplicates 
-                        (match vs
-                          [(union (list (cons guard value) ...))   
-                           (append (append-map loop guard) (append-map loop value))]
-                          [(expression _ x ...) (append-map loop x)]
-                          [(? constant? v) (list v)]
-                          [(box v) (loop v)]
-                          [(? list?) (append-map loop vs)]
-                          [(cons x y) (append (loop x) (loop y))]
-                          [(vector v ...) (append-map loop v)]
-                          [(and (? typed?) (app get-type t)) 
-                           (match (type-deconstruct t vs)
-                             [(list (== vs)) '()]
-                             [components (append-map loop components)])]
-                          [_ '()]))])
-                  (hash-set! cache vs result)
-                  result)))))]))
+           (unless (set-member? cache vs)
+             (set-add! cache vs)
+             (match vs
+               [(union (list (cons guard value) ...))
+                (for-each loop guard) (for-each loop value)]
+               [(expression _ x ...) (for-each loop x)]
+               [(? constant? v) (set! result (cons v result))]
+               [(box v) (loop v)]
+               [(? list?) (for-each loop vs)]
+               [(cons x y) (loop x) (loop y)]
+               [(vector v ...) (for-each loop v)]
+               [(and (? typed?) (app get-type t))
+                (match (type-deconstruct t vs)
+                  [(list (== vs)) (void)]
+                  [components (for-each loop components)])]
+               [_ (void)])))
+         (reverse result))]))
 
 (define (term->datum val)
   (let convert ([val val] [cache (make-hash)])
