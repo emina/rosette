@@ -116,7 +116,17 @@
                   (hash-ref options 'derived '()))]
       [other
        (wrong-syntax #'other
-                     "expected a list of arguments with no dotted tail")])))
+                     "expected a list of arguments with no dotted tail")]))
+
+  (define (index-of name-stx formals-stx)
+    (let* ([name (syntax->datum name-stx)]
+           [formals (syntax->datum formals-stx)])
+      (let loop ([i 0] [formals formals])
+        (cond [(not (pair? formals))
+               (wrong-syntax #'other "cannot tell where the generic type is")]
+              [(eq? name (car formals))
+               (datum->syntax name-stx i)]
+              [else (loop (+ i 1) (cdr formals))])))))
 
 (define-syntax (@define-generics stx)
   (syntax-case stx ()
@@ -133,36 +143,40 @@
                        "#:defined-table option is not supported in Rosette"))
 
        (with-syntax ([id? (format-id #'id "~a?" #'id #:source #'id)]
-                     [((method-name . dummy) ...) methods]
+                     [((method-name . method-args) ...) methods]
                      [support-name support])
-         (syntax/loc stx 
-           (begin
-             (define-generics id . rest)
-             (lift-if-exists id? receiver)
-             (lift-if-exists support-name receiver)
-             (lift-if-exists method-name receiver) ...))))]))
+         (with-syntax ([(method-index ...)
+                        (map (lambda (args) (index-of #'id args))
+                             (syntax-e #'(method-args ...)))])
+           (syntax/loc stx 
+             (begin
+               (define-generics id . rest)
+               (lift-if-exists id? 0)
+               (lift-if-exists support-name 0)
+               (lift-if-exists method-name method-index) ...)))))]))
     
 (define (@make-struct-type-property name [guard #f] [supers null] [can-impersonate? #f])
   (define-values (prop:p p? p-ref) 
     (make-struct-type-property name guard supers can-impersonate?))
-  (values prop:p (lift p? self) (lift p-ref self)))
+  (values prop:p (lift p? 0) (lift p-ref 0)))
 
 (define-syntax (lift-if-exists stx)
   (syntax-case stx ()
-    [(_ proc receiver)
+    [(_ proc receiver-index)
      (if (syntax->datum #'proc)
          (syntax/loc stx
-           (set! proc (lift proc receiver)))
+           (set! proc (lift proc receiver-index)))
          (syntax/loc stx
            (void)))]))
 
-(define-syntax-rule (lift proc receiver)
+(define-syntax-rule (lift proc receiver-index)
   (let ([proc proc])
     (procedure-rename
-     (lambda (receiver . args)
-      (if (union? receiver)
-          (for/all ([r receiver]) (apply proc r args))
-          (apply proc receiver args)))
+     (lambda args
+       (define receiver (list-ref args receiver-index))
+       (if (union? receiver)
+           (for/all ([r receiver]) (apply proc (list-set args receiver-index r)))
+           (apply proc args)))
      (or (object-name proc) 'proc))))
 
 #|
