@@ -32,7 +32,7 @@ Rosette, and you get the tools for free!
 ```
 
 To learn more, take a look at [The Rosette Guide]({{site.doc_dir}}/index.html),
-[this talk](https://www.youtube.com/watch?v=KpDyuMIb_E0&feature=youtu.be),
+[this talk](https://www.youtube.com/watch?v=KpDyuMIb_E0&index=25&list=PLZdCLR02grLp4W4ySd1sHPOsK83gvqBQp),
 [applications](apps.html), or publications:  
 
 * [1] Emina Torlak and Rastislav Bodik. A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages. PLDI 2014.
