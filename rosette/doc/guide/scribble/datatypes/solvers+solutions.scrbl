@@ -129,6 +129,8 @@ if needed.  That is, the solver should behave as though its state was merely cle
 (via @racket[solver-clear]) after a shutdown call.  
 }
 
+@defmodule[rosette/solver/smt/z3 #:no-declare]
+
 @defproc[(z3) solver?]{
 Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.}
 
