@@ -4,7 +4,7 @@ sudo: false
 env:
   global:
     - RACKET_DIR=~/racket
-    - RACKET_URL="https://mirror.racket-lang.org/installers/6.6/racket-6.6-x86_64-linux.sh"
+    - RACKET_URL="https://mirror.racket-lang.org/installers/6.9/racket-6.9-x86_64-linux.sh"
 
 before_install:
   - if [[ ! -e "$RACKET_DIR/bin/racket" ]]; then
@@ -14,11 +14,11 @@ before_install:
     else echo "using racket from cache"; fi
   - export PATH="${RACKET_DIR}/bin:${PATH}"
 
-install: 
+install:
   - raco pkg install
 
 script:
-  - raco test 
+  - raco test
   - time raco make test/all-rosette-tests.rkt
   - raco test test/all-rosette-tests.rkt
   - time raco make test/all-sdsl-tests.rkt
