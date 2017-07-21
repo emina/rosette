@@ -1,78 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-  <!-- Basic Page Needs
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- Basic Page Needs -->
   <meta charset="utf-8">
-  <title>{{ page.title }}</title>
+  <title>Rosette: {{ page.title }}</title>
 
   <meta name="description" content="The Rosette Language">
   <meta name="author" content="Emina Torlak">
 
-  <!-- Mobile Specific Metas
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- Mobile Specific Metas -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- FONT
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-  <!-- CSS
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ site.baseurl }}/css/normalize.css">
-  <link rel="stylesheet" href="{{ site.baseurl }}/css/skeleton.css">
   <link rel="stylesheet" href="{{ site.baseurl }}/css/tango.css">
-  <link rel="stylesheet" href="{{ site.baseurl }}/css/custom.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/default.css">
 
-  <!-- Scripts
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- Scripts -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
   <link rel="stylesheet" href="{{ site.baseurl }}/css/github-prettify-theme.css">
   <script src="{{ site.baseurl }}/js/site.js"></script>
 
-  <!-- Favicon
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ site.baseurl }}/images/rosette-black.png">
-
 </head>
-<body class="{{ page.path | replace:'.md','' | replace:'/','-' }}">
 
-  <!-- Primary Page Layout
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-  <div class="container">
+<body>
 
-    <div class="navbar-spacer"></div>
-     <div class="header">
-      <h1 class="title">The Rosette Language</h1>
-     </div>
-    <nav class="navbar">
-      <div class="container">
-        <ul class="navbar-list">
-          <li class="navbar-item"><a class="navbar-link" href="index.html">About</a></li>
-          <li class="navbar-item"><a class="navbar-link" href="https://github.com/emina/rosette">Download</a></li>
-	  <li class="navbar-item"><a class="navbar-link" href="{{site.doc_dir}}/index.html">Docs</a></li>
-          <li class="navbar-item"><a class="navbar-link" href="apps.html">Applications</a></li>       
-          <li class="navbar-item"><a class="navbar-link" href="acks.html">Thanks</a></li> 
-        </ul>
-      </div>
+  <header>
+    <h1><img src="{{ site.baseurl }}/images/rosette-gray.png" alt="Rosette"> The Rosette Language</h1>
+
+    <nav>
+      <ul>
+        <li><a class="{% if page.url == '/' %}active{% endif %}" href="{{ site.baseurl }}/index.html">About</a></li>
+        <li><a href="https://github.com/emina/rosette">Download</a></li>
+        <li><a href="{{ site.doc_dir }}/" target="_blank">Docs</a></li>
+        <li><a class="{% if page.url == '/apps.html' %}active{% endif %}" href="{{ site.baseurl }}/apps.html">Applications</a></li>
+        <li><a class="{% if page.url == '/acks.html' %}active{% endif %}" href="{{ site.baseurl }}/acks.html">Thanks</a></li>
+      </ul>
     </nav>
-    <div class="row">
-      <div class="twelve columns" style="margin-top: 4rem;">
-        {{ content }}
-      </div>
-    </div>
-    <div class="row">
-      <div class="twelve columns footer">
-	&copy; <a href="http://homes.cs.washington.edu/~emina/">Emina Torlak</a>.
-	Built with <a href="http://getskeleton.com/">Skeleton</a> and 
-                   <a href="http://jekyllrb.com/">Jekyll</a>.
-      </div>
-    </div>  
-  </div>
+  </header>
 
-<!-- End Document
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <main>
+    {{ content }}
+  </main>
+
+  <footer>
+    <p>
+       &copy; <a href="http://homes.cs.washington.edu/~emina/">Emina Torlak</a>.
+       Built with <a href="http://jekyllrb.com/">Jekyll</a>.
+       Last updated {{ site.time | date_to_string }}.
+    </p>
+  </footer>
+
 </body>
+
 </html>

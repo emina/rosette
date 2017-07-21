@@ -1,5 +1,5 @@
 ---
-title: Rosette Applications
+title: Applications
 ---
 
 ## Applications  
@@ -19,8 +19,8 @@ first-time users of Rosette in just a few days or weeks.
 | [Neutrons][Neutrons] |  A verifier for a subset of [EPICS][EPICS].  Currently in use at the University of Washington [Clinical Neutron Therapy System][CNTS]. |
 | [Synapse][Synapse] |  A framework for specifying and solving optimal synthesis problems. |
 | [Ocelot][Ocelot] | An engine for solving, verifying, and synthesizing specifications in bounded relational logic. |
-| [Wallingford][Wallingford] | An experimental constraint reactive programming language. | 
-| [More][More] |  Demo languages and tools for [secure stack machines][SSM], data-parallel programing, and web-scraping.  | 
+| [Wallingford][Wallingford] | An experimental constraint reactive programming language. |
+| [More][More] |  Demo languages and tools for [secure stack machines][SSM], data-parallel programing, and web-scraping.  |
 
 
 [Bagpipe]: http://www.konne.me/bagpipe/

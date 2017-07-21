@@ -1,8 +1,8 @@
 ---
-title: The Rosette Language
+title: About
 ---
 
-## About <img src="images/rosette-gray.png" alt="Rosette" class="logo">
+## About Rosette
 
 Rosette is a solver-aided programming language that extends
 [Racket](http://racket-lang.org/) with language constructs for program
@@ -35,6 +35,7 @@ To learn more, take a look at [The Rosette Guide]({{site.doc_dir}}/index.html),
 [this talk](https://www.youtube.com/watch?v=KpDyuMIb_E0&index=25&list=PLZdCLR02grLp4W4ySd1sHPOsK83gvqBQp),
 [applications](apps.html), or publications:  
 
+{: .bibliography}
 * [1] Emina Torlak and Rastislav Bodik. A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages. PLDI 2014.
 ([ACM](http://dl.acm.org/citation.cfm?id=2594340), [PDF](http://homes.cs.washington.edu/~emina/pubs/rosette.pldi14.pdf))
 * [2] Emina Torlak and Rastislav Bodik. Growing Solver-Aided Languages with Rosette. Onward! 2013. ([ACM](http://dl.acm.org/citation.cfm?id=2509586), [PDF](http://homes.cs.washington.edu/~emina/pubs/rosette.onward13.pdf))

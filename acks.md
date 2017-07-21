@@ -1,5 +1,5 @@
 ---
-title: Rosette Acknowledgments
+title: Acknowledgments
 ---
 
 ## Acknowledgments  
