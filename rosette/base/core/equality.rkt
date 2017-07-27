@@ -6,13 +6,13 @@
          @equal?) ; (-> any/c any/c @boolean?)
 
 
-(define-syntax-rule (define-equality-predicate @=? =? type=? @cache)
+(define-syntax-rule (define-equality-predicate @=? =? type=? @cache @make-hash)
   (define (@=? x y)
     (let* ([cache (@cache)]
            [toplevel? (false? cache)]
            [key (cons x y)])
       (when toplevel?
-        (set! cache (make-hash))
+        (set! cache (@make-hash))
         (@cache cache))
       (if (hash-has-key? cache key)
           (hash-ref cache key)
@@ -34,8 +34,8 @@
 
 (define equal-cache (make-parameter #f))
 (define eq-cache (make-parameter #f))
-(define-equality-predicate @equal? equal? type-equal? equal-cache)
-(define-equality-predicate @eq? eq? type-eq? eq-cache)
+(define-equality-predicate @equal? equal? type-equal? equal-cache make-hash)
+(define-equality-predicate @eq? eq? type-eq? eq-cache make-hasheq)
 
 ; (-> union? union? (-> any/c any/c @boolean?) @boolean?)
 (define (union=union? x y =?)

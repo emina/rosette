@@ -158,7 +158,13 @@
   (check-equal? (@equal? (merge a b (@list x)) (merge a b (@list x))) #t)
   (check-equal? (@eq? (merge a b x) (merge c y a))
                 (|| (&& a (! c) (@equal? b a)) 
-                    (&& (! a) c (@equal? x y)))))
+                    (&& (! a) c (@equal? x y))))
+  (define v0 (vector 1))
+  (define v1 (vector 1))
+  (define v2 (merge a v0 v1))
+  (check-equal? (@eq? v0 v2) a)
+  (check-equal? (@eq? v1 v2) (! a)))
+  
 
 (define (struct-hash-tests)
   (check-equal? (equal-hash-code (h0 1)) (equal-hash-code (h0 1))))
