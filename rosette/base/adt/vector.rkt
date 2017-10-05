@@ -83,8 +83,8 @@
                     (index-too-large-error 'vector-set! vec idx))]
         [((union vs) idx)
          (assert-bound [0 @<= idx @< (merge** vs vector-length)] 'vector-set!)
-         (for/list ([v vs])
-           (and (merge-set! (cdr v) idx val (car v)) (car v)))])))
+         (for ([v vs])
+           (merge-set! (cdr v) idx val (car v)))])))
 
 (define (@vector-fill! vec val)
   (match (type-cast @vector? vec 'vector-fill!)
