@@ -4,7 +4,7 @@
 
 (provide solution? sat? unsat? unknown?
          (rename-out [make-sat sat] [make-unsat unsat] [make-unknown unknown])
-         model core)
+         model core complete-solution)
 
 ; Represents the solution to a set of logical constraints.
 ; The contents of a solution depend on whether it is satisfiable,
@@ -92,4 +92,19 @@
 
 ; Returns an unknown solution.
 (define (make-unknown) unknown0)
-  
+
+
+; Takes as input a solution and a list of constants, 
+; and returns a solution that is complete with respect to the given list.  
+; That is, if the given solution is satisfiable but has no mapping for a
+; constant in consts, the returned solution has a default binding  
+; for that constant (and same bindings as sol for other constants).  If 
+; the given solution is unsat, it is simply returned.
+(define (complete-solution sol consts) 
+  (match sol
+    [(model m)
+     (sat (for/hash ([c (in-sequences consts (in-dict-keys m))])
+            (values c (if (dict-has-key? m c)
+                          (dict-ref m c)
+                          (solvable-default (term-type c))))))]
+    [_ sol]))
