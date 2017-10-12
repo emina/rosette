@@ -2,8 +2,8 @@
 
 (require racket/splicing (for-syntax racket/syntax) 
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
-         (only-in "merge.rkt" merge merge*)
-         (only-in "bool.rkt" ! || pc)
+         (only-in "merge.rkt" merge merge* merge-same)
+         (only-in "bool.rkt" ! || && pc)
          (only-in "union.rkt" union)
          (only-in "term.rkt" expression)
          (only-in "polymorphic.rkt" guarded-test guarded-value ite ite*)
@@ -47,8 +47,8 @@
        (let ([proc (lambda (v) expr)])
          (match val
            [(union gvs) (guard-apply proc gvs)]
-           [(expression (== ite) c t e) (guard-apply proc (list (cons c t) (cons (! c) e)))]
-           [(expression (== ite*) gvs (... ...)) (guard-apply proc gvs guarded-test guarded-value)]
+           [(expression (or (== ite) (== ite*)) _ (... ...))
+            (guard-apply proc (flatten-guarded val))]
            [v         (proc v)])))]
     [(_ ([v val concrete]) expr)
      (identifier? #'v)
@@ -60,6 +60,20 @@
          (guard-apply
           (lambda (v) expr)
           (for/list ([c concrete]) (cons (== sym c) c)))))]))
+
+(define (flatten-guarded v)
+  (merge-same 
+   (let loop ([guards '()][val v])
+     (match val
+       [(expression (== ite) c t e)
+        (append (loop (cons c guards) t)
+                (loop (cons (! c) guards) e))]
+       [(expression (== ite*) gvs ...)
+        (apply append
+               (for/list ([gv gvs])
+                 (loop (cons (guarded-test gv) guards)
+                       (guarded-value gv))))]
+       [_ (list (cons (apply && guards) val))]))))
 
 ; Applies the given procedure to each of the guarded values,
 ; given as guard/value structures.  The application of the procedure 
