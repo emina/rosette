@@ -50,7 +50,7 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 @defform[(define-symbolic* id ...+ type)
          #:contracts
          [(type (and/c solvable? type?))]]{
-  Creates a stream of distinct @tech["symbolic constant"] of the given 
+  Creates a stream of distinct @tech["symbolic constant"]s of the given 
   @tech["solvable type"] for each identifier, binding the identifier to the 
   next element from its stream every time the form is evaluated.  
   @examples[#:eval rosette-eval
