@@ -4,9 +4,9 @@
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          (only-in "merge.rkt" merge merge* merge-same)
          (only-in "bool.rkt" ! || && pc)
-         (only-in "union.rkt" union)
+         (only-in "union.rkt" union union?)
          (only-in "term.rkt" expression)
-         (only-in "polymorphic.rkt" guarded-test guarded-value ite ite*)
+         (only-in "polymorphic.rkt" guarded guarded-test guarded-value ite ite*)
          (only-in "equality.rkt" @equal?)
          (only-in "effects.rkt" speculate* location=? location-final-value)
          "safe.rkt")
@@ -47,9 +47,15 @@
        (let ([proc (lambda (v) expr)])
          (match val
            [(union gvs) (guard-apply proc gvs)]
-           [(expression (or (== ite) (== ite*)) _ (... ...))
-            (guard-apply proc (flatten-guarded val))]
-           [v         (proc v)])))]
+           [other       (proc other)])))]
+    [(_ ([v val #:exhaustive]) expr)
+     (identifier? #'v)
+     (syntax/loc stx
+       (let ([proc (lambda (v) expr)])
+         (match val
+           [(or (? union? sym) (and (expression (or (== ite) (== ite*)) _ (... ...)) sym)) 
+            (guard-apply proc (flatten-guarded sym))]
+           [other (proc other)])))]
     [(_ ([v val concrete]) expr)
      (identifier? #'v)
      (syntax/loc stx (for/all ([v val concrete @equal?]) expr))]
@@ -73,6 +79,11 @@
                (for/list ([gv gvs])
                  (loop (cons (guarded-test gv) guards)
                        (guarded-value gv))))]
+       [(union gvs)
+        (apply append
+               (for/list ([gv gvs])
+                 (loop (cons (car gv) guards)
+                       (cdr gv))))]
        [_ (list (cons (apply && guards) val))]))))
 
 ; Applies the given procedure to each of the guarded values,

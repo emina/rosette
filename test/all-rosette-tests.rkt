@@ -20,6 +20,7 @@
  "base/list.rkt"
  "base/vector.rkt"
  "base/generics.rkt"
+ "base/forall.rkt"
  "query/solve.rkt"
  "query/verify.rkt"
  "query/synthesize.rkt"
