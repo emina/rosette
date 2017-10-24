@@ -50,7 +50,7 @@ optimizing the resulting solution (if any) with respect to the provided objectiv
 @defparam[current-solver solver solver?]{
   The @racket[current-solver] parameter holds the solver object used for 
   answering solver-aided queries.  Rosette's default solver is @racket[z3], although
-  new (SMT) solvers can be added well.  Rosette will work with any solver that implements the
+  new (SMT) solvers can be added as well.  Rosette will work with any solver that implements the
   @racket[gen:solver] generic interface.
   @examples[#:eval rosette-eval
    (current-solver)]
