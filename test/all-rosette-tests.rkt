@@ -4,7 +4,7 @@
 
 (error-print-width 4)
 
-(run-all-tests 
+(run-all-tests            
  "base/effects.rkt" 
  "base/type.rkt" 
  "base/term.rkt"
@@ -21,6 +21,7 @@
  "base/vector.rkt"
  "base/generics.rkt"
  "base/forall.rkt"
+ "base/ord-dict.rkt"
  "query/solve.rkt"
  "query/verify.rkt"
  "query/synthesize.rkt"
@@ -28,8 +29,7 @@
  "query/solve+.rkt"
  "query/optimize.rkt"
  "query/synthax.rkt"
- "query/push-pop.rkt"
- )
+ "query/push-pop.rkt")
 
 #|
 (require rosette)

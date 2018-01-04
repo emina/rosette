@@ -46,7 +46,7 @@
    (first (filter element? (read-html-as-xml (get-pure-port (string->url ustr)))))))
 
 (define (tags dom)
-  (define seen (ord-dict))
+  (define seen (odict))
   (let loop ([dom dom])
     (when (DOMNode? dom)
       (dict-set! seen (DOMNode-tagname dom) #t)
