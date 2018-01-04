@@ -1,7 +1,7 @@
 #lang racket
 
 (require 
- (for-syntax racket))
+ (for-syntax racket) "../util/ord-dict.rkt")
 
 (provide speculate speculate* apply! location=? (rename-out [state-val location-final-value]))
 
@@ -24,7 +24,7 @@
   ; is critical for mutable objects whose hash code may change upon mutation.  note 
   ; that variables are keyed by the symbol representing their name, so eq? comparisons
   ; for them are equivalent to equal? comparisons.
-  (parameterize ([env (make-custom-hash eq? eq-hash-code)]) 
+  (parameterize ([env (odict null eq?)]) 
     ; roll-back state updates, encapsulate
     ; updates to set! variables as specified above, 
     ; and return the value of the body together with the 
@@ -53,7 +53,7 @@
   ; is critical for mutable objects whose hash code may change upon mutation.  note 
   ; that variables are keyed by the symbol representing their name, so eq? comparisons
   ; for them are equivalent to equal? comparisons.
-  (parameterize ([env (make-custom-hash eq? eq-hash-code)]) 
+  (parameterize ([env (odict null eq?)]) 
     ; roll-back state updates, encapsulate
     ; updates to set! variables as specified above, 
     ; and return the value of the body together with the 
