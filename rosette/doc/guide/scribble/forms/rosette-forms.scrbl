@@ -198,7 +198,7 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   to the cost terms provided in the @racket[minimize-expr] and @racket[maximize-expr] lists.  Specifically, these
   terms take on the minimum or maximum values when evaluated with respect to a satisfiable solution.  For more details on
   solving optimization problems, see the
-  @hyperlink["http://rise4fun.com/z3opt/tutorialcontent/guide"]{Z3 optimization tutorial}.
+  @hyperlink["https://rise4fun.com/Z3/tutorial/optimization"]{Z3 optimization tutorial}.
 
   As is the case for other solver-aided queries, the assertions encountered while 
   evaluating @racket[minimize-expr],
