@@ -26,7 +26,7 @@ controlling the performance of Rosette's symbolic evaluator.
 
 @section[#:tag "sec:symbolic-terms"]{Symbolic Terms}
 
-@declare-exporting[rosette/base/core/term #:use-sources (rosette/base/core/type rosette/base/core/term)]
+@declare-exporting[rosette/base/core/term rosette/base/core/reflect #:use-sources (rosette/base/core/type rosette/base/core/term rosette/base/core/reflect)]
 
 A @deftech{symbolic term} is either a symbolic constant, created via
 @seclink["sec:symbolic-constants"]{@code{define-symbolic[*]}}, 
@@ -66,13 +66,13 @@ Pattern matching forms for symbolic terms, expressions, and constants, respectiv
   [(term content type) (list content type)])]}
 
 @defproc[(symbolics [v any/c]) (listof constant?)]{
-Returns the list of all symbolic constants that are
+Returns all symbolic constants that are
 transitively contained in the given value.
 @examples[#:eval rosette-eval
 (define-symbolic x y z integer?) 
 (symbolics x)
-(symbolics (if (= x y) 2 3))
-(symbolics (list y z))
+(symbolics (if (= x y) 2 #f))
+(symbolics (list y z y))
 (struct cell (value) #:transparent)
 (symbolics (list 5 (cons (box y) z) (vector (cell x) z)))]
 }
