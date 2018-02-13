@@ -17,7 +17,7 @@
 
 (define (symbolics vs)
   (match vs
-    [(list (? constant?) ...) vs]
+    [(list (? constant?) ...) (remove-duplicates vs)]
     [_ (let ([cache (mutable-set)]
              [result '()])
          (let loop ([vs vs])

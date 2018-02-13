@@ -5,6 +5,7 @@
            rosette/base/form/define rosette/query/eval (only-in rosette/base/base bitvector ~>)
            rosette/base/core/term rosette/base/core/type rosette/base/core/union
            (only-in rosette/base/core/bool asserts)
+           (only-in rosette/base/core/reflect symbolics)
            rosette/base/core/forall rosette/lib/lift ;rosette/lib/match 
            (only-in rosette/base/core/safe assert) 
            racket)
@@ -63,6 +64,18 @@ Pattern matching forms for symbolic terms, expressions, and constants, respectiv
   [(expression op child ...) (cons op child)])
 (match e
   [(term content type) (list content type)])]}
+
+@defproc[(symbolics [v any/c]) (listof constant?)]{
+Returns the list of all symbolic constants that are
+transitively contained in the given value.
+@examples[#:eval rosette-eval
+(define-symbolic x y z integer?) 
+(symbolics x)
+(symbolics (if (= x y) 2 3))
+(symbolics (list y z))
+(struct cell (value) #:transparent)
+(symbolics (list 5 (cons (box y) z) (vector (cell x) z)))]
+}
 
 @defproc*[([(type-of [v any/c] ...+) type?])]{
 Returns the most specific @racket[type?] predicate that accepts all of the given values.
