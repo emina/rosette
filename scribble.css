@@ -194,6 +194,7 @@ table td {
   font-size: 85%;
   border: 0.5em solid #F5F5DC;
   margin: 0 0 0 0;
+  white-space: normal; /* in case margin note is inside code sample */
 }
 
 .refcontent {

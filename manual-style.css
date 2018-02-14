@@ -315,7 +315,7 @@ a:hover {
 
 
 /* slightly different handling for margin-note* on narrow screens */
-@media all and (max-width:1260px) {
+@media all and (max-width:1340px) {
      span.refcolumn {
          float: right;
          width: 50%;
@@ -352,13 +352,12 @@ a:hover {
 }
 
 
-@media all and (min-width:1260px) {
+@media all and (min-width:1340px) {
     .refcolumn {
-        position: absolute;
-        left: 66rem; right: 3em;
-        margin: 0;
+        margin: 0 -22.5rem 1rem 0;
         float: right;
-        max-width: 18rem;
+        clear: right;
+        width: 18rem;
     }
 }
 
