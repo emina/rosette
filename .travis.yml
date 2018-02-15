@@ -7,9 +7,9 @@ env:
   matrix:
     - RACKET_VERSION=6.6
     - RACKET_VERSION=6.9
-    - RACKET_VERSION=6.10
     - RACKET_VERSION=6.10.1
     - RACKET_VERSION=6.11
+    - RACKET_VERSION=6.12
     - RACKET_VERSION=HEAD
 
 matrix:
