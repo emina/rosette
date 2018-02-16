@@ -93,9 +93,15 @@
     [(_ test body ...) (syntax/loc stx (@if test (let () body ...) (void)))]))
 
 (define-syntax (@cond stx)
-  (syntax-case stx (else)
+  (syntax-case stx (=> else)
     [(_) (syntax/loc stx (void))]
     [(_ [else else-val ...]) (syntax/loc stx (let () else-val ...))]
+    [(_ [then0 => f0] [then then-val ...] ...)
+     (syntax/loc stx
+       (let ([v then0])
+         (if v
+             (f0 v)
+             (@cond [then then-val ...] ...))))]
     [(_ [then0 then0-val ...] [then then-val ...] ...) 
      (syntax/loc stx (@if then0 
                               (let () then0-val ...) 
