@@ -48,7 +48,7 @@ Rosette lifts the following @seclink["syntax" #:doc '(lib "scribblings/reference
       (list @elem{Procedure Expressions} @procs)
       (list @elem{Local Binding} @local-binding)
       (list @elem{Local Definitions} @local-defs)
-      (list @elem{Conditionals} (list @conditionals ", " @racket[cond] " with " @racket[[#, @var[test] #, @var[body] ...+]] " and " @racket[[else #, @var[body] ...+]] "clauses"))
+      (list @elem{Conditionals} (list @conditionals ", " @racket[cond] " with " @racket[[#, @var[test] #, @var[body] ...+]] " and " @racket[[else #, @var[body] ...+]] " clauses"))
       (list @elem{Dispatch} @dispatch)
       (list @elem{Definitions} @definitions)
       (list @elem{Sequencing} @sequencing)
