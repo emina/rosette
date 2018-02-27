@@ -88,9 +88,14 @@
   [(define (get-type self) (bv-type self))]
   #:methods gen:custom-write
   [(define (write-proc self port mode)
-     (fprintf port "(bv ~a ~a)" 
-              (bv-value self)
-              (bitvector-size (bv-type self))))])
+     (match self
+       [(bv v (bitvector bw))
+        (let*-values ([(q r) (quotient/remainder bw 4)]
+                      [(p b mw) (if (zero? r) (values "x" 16 q) (values "b" 2 bw))])
+            (fprintf port "(bv #~a~a ~a)"
+                     p
+                     (~r (ufinitize v bw) #:base b #:pad-string "0" #:min-width mw)
+                     bw))]))])
 
 ; Returns a signed representation of the given number, using the specified bitwidth.
 ; Assumes that val is a real, non-infinite, non-NaN number.
