@@ -175,6 +175,9 @@ In our example, evaluating @racket[i] with respect to @racket[cex] reveals that 
 Now that we have an input on which @racket[factored] differs from @racket[poly], the next step is to debug it, by figuring out which of its subexpressions are responsible for the fault.  Rosette provides a query for this as well.  To access it, we import the debugging facilities, mark @racket[factored] as a candidate for debugging, and issue a @racket[debug] query: 
 
 @racketblock[
+(code:comment "Save these definitions to a file:")
+#lang rosette
+
 (require rosette/query/debug rosette/lib/render)
  
 (define (poly x)
@@ -186,7 +189,7 @@ Now that we have an input on which @racket[factored] differs from @racket[poly],
 (define (same p f x)
   (assert (= (p x) (f x))))
 
-(code:comment "Call after saving the above definitions to a file:")
+(code:comment "Call after loading the above definitions:")
 #, @elem{>} (define ucore (debug [integer?] (same poly factored 12)))
 #, @elem{>} (render ucore) 
 #,(call-with-input-file (build-path root "pict.png") (lambda (in) (read-bitmap in 'png)))]
