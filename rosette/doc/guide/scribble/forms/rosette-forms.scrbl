@@ -2,6 +2,7 @@
 
 @(require (for-label  
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
+           (only-in rosette/solver/solver solver?)
            rosette/base/core/term (only-in rosette/query/debug define/debug debug)
            (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/safe assert) 
@@ -112,10 +113,38 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   (code:line (evaluate x sol) (code:comment "x must be true"))
   (code:line (evaluate y sol) (code:comment "y must be true"))
   (solve (assert (not x)))]
-  @;We refer to the  
-  @;@racket[solve] query as @deftech{angelic execution} because it causes the solver to behave as an
-  @;angelic oracle---it supplies "good" bindings for symbolic constants that cause the execution to terminate successfully.
 }
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc[(solve+) procedure?]{
+Returns a stateful procedure that uses a fresh @racket[solver?] instance
+to incrementally solve a sequence of constraints (with respect to @racket[current-bitwidth]).
+
+The returned procedure consumes a constraint (i.e., a boolean value or @tech["symbolic term"]),
+a positive integer, or the symbol @racket['shutdown].
+
+If the argument is a constraint, it is pushed onto the solver's constraint stack and
+a solution for all constraints on the stack is returned.
+
+If the argument is a positive integer @var[k], then the top @var[k] constraints are popped
+from the solver's constraint stack and the result is the solution to the remaining constraints.
+
+If the argument is @racket['shutdown], all resources used by the procedure are released, and any
+subsequent calls to the procedure throw an exception.
+ @examples[#:eval rosette-eval
+  (define-symbolic x y integer?)
+  (define inc (solve+))
+  (code:line (inc (< x y))   (code:comment "push (< x y) and solve"))
+  (code:line (inc (> x 5))   (code:comment "push (> x 5) and solve"))
+  (code:line (inc (< y 4))   (code:comment "push (< y 4) and solve"))
+  (code:line (inc 1)         (code:comment "pop  (< y 4) and solve"))
+  (code:line (inc (< y 9))   (code:comment "push (< y 9) and solve"))
+  (code:line (inc 'shutdown) (code:comment "release resources"))
+  (code:line (inc (> y 4))   (code:comment "unusable"))
+ ]
+}
+
 
 @(rosette-eval '(clear-asserts!))
 
