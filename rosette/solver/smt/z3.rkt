@@ -24,8 +24,8 @@
         (if (file-exists? z3.exe-path)
           z3.exe-path
           (unless (getenv "PLT_PKG_BUILD_SERVICE")
-            (printf "warning: could not find z3 executable in '~a'"
-                    (path->string (simplify-path (path->directory-path z3.exe-path))))
+            (printf "warning: could not find z3 executable at ~a\n"
+                    (path->string (simplify-path (path->directory-path z3-path))))
             z3-path)))))
   (z3 (server real-z3-path z3-opts) '() '() '() (env) '()))
   
