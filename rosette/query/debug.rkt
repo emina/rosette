@@ -4,7 +4,8 @@
          (only-in "core.rkt" current-solver ∃-debug eval/asserts)
          "../lib/util/syntax-properties.rkt"
          (only-in "../base/form/app.rkt" app)
-         "../base/core/bool.rkt"  "../base/form/state.rkt" 
+         "../base/core/bool.rkt"  "../base/form/state.rkt"
+         "../base/core/union.rkt"
          "../base/core/equality.rkt" "../base/core/term.rkt")
 
 (provide relax? relate debug-origin debug define/debug protect assert)
@@ -57,27 +58,43 @@
                       (error 'relate "expected a 2 argument procedure, given ~s" rel))
                     rel)))
 
+(define (relax-value r origin . suffix)
+  (cond
+    [(and (not (relaxer? r)) ((relax?) r))
+     (constant (list* relaxer origin suffix) (type-of r))]
+    [(and (list? r) (andmap (relax?) r))
+     (for/list ([(v i) (in-indexed r)])
+       (relax-value v origin i))]
+    [(union? r)
+     (apply union
+      (for/list ([(gv i) (in-indexed (union-contents r))])
+        (cons (car gv) (relax-value (cdr gv) origin i))))]
+    [else r]))
+    
 (define (relax-values origin)
   (lambda rs 
     (apply values 
            (map (lambda (r) 
-                  (if (and ((relax?) r) (not (relaxer? r)))
-                      (let ([tracked (constant (list relaxer origin) (type-of r))])
-                        (@assert ((relate) tracked r))
-                        tracked)
-                      r))
+                  (let ([tracked (relax-value r origin)])
+                    (cond [(equal? r tracked) r]
+                          [else 
+                           #;(printf "RELAXED: ~a, TRACKED: ~a, guards-match? ~a\n"
+                                   r tracked 
+                                   (if (union? r) (andmap equal? (union-guards r) (union-guards tracked)) #t))
+                           (@assert ((relate) tracked r))
+                           tracked])))
                 rs))))
 
 (define relaxer #'relaxer)
 
 (define (relaxer? val)
   (match val
-    [(constant (list (== relaxer) _) _) #t]
+    [(constant (list (== relaxer) _ ...) _) #t]
     [_ #f]))
 
 (define (debug-origin val)
   (match val
-    [(constant (list (== relaxer) origin) _) origin]
+    [(constant (list (== relaxer) origin _ ...) _) origin]
     [_ #f]))
 
 
