@@ -24,7 +24,7 @@
                 (module+ #,i
                   (run-all-tests
                    #,@(for/list ([m (syntax->list #'(mod ...))])
-                        (syntax-case m ()
+                        (syntax-case m (submod)
                           [(submod name) (quasisyntax/loc m (submod name #,i))]
                           [_ m]))))))))]))
 
