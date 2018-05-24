@@ -75,6 +75,6 @@
      
      )))
    
-
-(time (run-tests vector-copy!-errors))
-(time (run-tests vector-copy!-tests))
+(module+ test
+  (time (run-tests vector-copy!-errors))
+  (time (run-tests vector-copy!-tests)))

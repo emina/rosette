@@ -46,6 +46,6 @@
    (check-dict (odict null eq?) eq?
                (vector 0) (vector 0) (vector 0))))
        
-  
-(time (run-tests tests-dict-equal?))
-(time (run-tests tests-dict-eq?))
+(module+ test
+  (time (run-tests tests-dict-equal?))
+  (time (run-tests tests-dict-eq?)))

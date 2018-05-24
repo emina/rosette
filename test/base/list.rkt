@@ -102,7 +102,6 @@
 (define list-tests
   (test-suite+ 
    "Tests for rosette/base/list.rkt"
-   
    (check-null?)
    (check-cons)
    (check-car)
@@ -114,5 +113,5 @@
    (check-flatten)
    ))
 
-(time (run-tests list-tests))
-
+(module+ test
+  (time (run-tests list-tests)))

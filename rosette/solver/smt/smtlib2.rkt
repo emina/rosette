@@ -1,51 +1,19 @@
 #lang racket
 
-(require racket/syntax (only-in racket [< racket/<] [- racket/-] [and racket/and]))
+(require racket/syntax (only-in racket [< racket/<] [- racket/-] [and racket/and])
+         (only-in "server.rkt" printf/current-server))
 
 (provide (except-out (all-defined-out) quantified define-ops printf-smt))
 
-
-; Reads the SMT solution from current-input-port.
-; The solution consist of 'sat or 'unsat, followed by  
-; followed by a suitably formatted s-expression.  The 
-; output of this procedure is a hashtable from constant 
-; identifiers to their SMTLib values (if the solution is 'sat);
-; a non-empty list of assertion identifiers that form an
-; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); #f (if the solution is 
-; 'unsat and no core was extracted); or 'unknown otherwise.
-(define (read-solution)
-  (define port (current-input-port))
-  (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
-    (match (read port)
-      [(== 'sat)
-       (let loop ()
-         (match (read port)
-           [(list (== 'objectives) _ ...) (loop)]
-           [(list (== 'model) def ...)
-            (for/hash ([d def] #:when (racket/and (pair? d) (equal? (car d) 'define-fun)))
-              (values (cadr d) d))]
-              ;(match d
-              ;  [(list (== 'define-fun) c '() _ v) (values c v)]
-              ;  [(list (== 'define-fun) c _ ...) (values c d)]))]
-           [other (error 'solution "expected model, given ~a" other)]))]
-      [(== 'unsat) 
-       (match (read port) 
-         [(list (? symbol? name) ...) name]
-         [_ #f])]
-      [(== 'unknown) 'unknown]
-      [other (error 'solution "unrecognized solver output: ~a" other)])))
-
 ; Prints all smt commands to current-output-port.
+; To dump the printed SMT, use (output-smt #t).
 (define-syntax-rule (printf-smt arg ...)
-  (begin 
-    ;(fprintf (current-error-port) arg ...)(fprintf (current-error-port) "\n")
-    (printf arg ...)))
+  (printf/current-server arg ...))
 
 ; Commands
-(define (set-option opt val) (printf-smt "(set-option ~a ~a)" opt val))
+(define (set-option opt val) (printf-smt "(set-option ~a ~a)\n" opt val))
 
-(define (set-logic l)    (printf-smt "(set-logic ~a)" l))
+(define (set-logic l)    (printf-smt "(set-logic ~a)\n" l))
 (define (check-sat)      (printf-smt "(check-sat)\n"))
 (define (get-model)      (printf-smt "(get-model)\n"))
 (define (get-unsat-core) (printf-smt "(get-unsat-core)\n"))
@@ -56,24 +24,24 @@
 (define (pop [n 1])      (printf-smt "(pop ~a)\n" n))
 
 (define assert 
-  (case-lambda [(e)     (printf-smt "(assert ~a)" e)]
-               [(e id)  (printf-smt "(assert (! ~a :named ~a))" e id)]))
+  (case-lambda [(e)     (printf-smt "(assert ~a)\n" e)]
+               [(e id)  (printf-smt "(assert (! ~a :named ~a))\n" e id)]))
 
-(define (minimize t)    (printf-smt "(minimize ~a)" t))
-(define (maximize t)    (printf-smt "(maximize ~a)" t))
+(define (minimize t)    (printf-smt "(minimize ~a)\n" t))
+(define (maximize t)    (printf-smt "(maximize ~a)\n" t))
 
 ; Declarations and definitions
 (define (declare-const id type)
-  (printf-smt "(declare-const ~a ~a)" id type))
+  (printf-smt "(declare-const ~a ~a)\n" id type))
 
 (define (declare-fun id domain range)
-  (printf-smt "(declare-fun ~a ~a ~a)" id domain range))
+  (printf-smt "(declare-fun ~a ~a ~a)\n" id domain range))
                      
 (define (define-const id type body)
-  (printf-smt "(define-fun ~a () ~a ~a)" id type body))
+  (printf-smt "(define-fun ~a () ~a ~a)\n" id type body))
 
 (define (define-fun id args type body)
-  (printf-smt "(define-fun ~a ~a ~a ~a)" id args type body))
+  (printf-smt "(define-fun ~a ~a ~a ~a)\n" id args type body))
 
 ; Applications of uninterpreted functions.
 (define (app f . args)

@@ -169,6 +169,7 @@
    (check-equal? (tree-test 5 #:b b #:c 3 n 7 8 9) (list 'tree x 'a 5 'b b 'c 3 'd 7 'e '(8 9)))
    (check-equal? (tree-test 5 n #:b b #:c 3 7 8 9 10) (list 'tree x 'a 5 'b b 'c 3 'd 7 'e '(8 9 10)))))
 
-(time (run-tests gen-concrete-tests))
-(time (run-tests gen-symbolic-tests))
-(time (run-tests gen-sig-tests))
+(module+ test
+  (time (run-tests gen-concrete-tests))
+  (time (run-tests gen-symbolic-tests))
+  (time (run-tests gen-sig-tests)))

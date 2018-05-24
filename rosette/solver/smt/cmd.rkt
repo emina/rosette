@@ -2,7 +2,7 @@
 
 (require (only-in "smtlib2.rkt" assert minimize maximize
                   check-sat get-model get-unsat-core
-                  read-solution true false)
+                  true false)
          "env.rkt" "enc.rkt" "dec.rkt"
          (only-in "../../base/core/term.rkt" constant? term-type solvable-default)
          (only-in "../../base/core/function.rkt" fv function? function-domain function-range)
@@ -52,19 +52,20 @@
 (define (name->id name)
   (string->symbol (substring (symbol->string name) 1)))
 
-; Given an encoding enviornment, the decode procedure reads 
-; the solution from current-input-port and converts it into a 
-; Rosette solution object.  The port must be connected to a 
-; solver working on a problem P such that every identifier 
-; declared or defined in P is bound in env.
-(define (decode env)
-  (match (read-solution)
+; Given a solution and an encoding enviornment, the decode procedure
+; converts the solution into a Rosette solution object.
+; The solution is either a map from constant names to values
+; (corresponding to a satisfiable model), a list of constant names
+; (corresponding to an unsat core), or the symbols 'unsat or 'unknown.
+(define (decode soln env)
+  (match soln
     [(? hash? sol) 
      (sat (decode-model env sol))]
     [(? list? names)
      (unsat (let ([core (apply set (map name->id names))])
               (for/list ([(bool id) (in-dict env)] #:when (set-member? core id)) 
                  (if (constant? bool) bool (car bool)))))]
-    [#f (unsat)]
-    ['unknown (unknown)]))
+    ['unsat (unsat)]
+    ['unknown (unknown)]
+    [_ (error 'decode "expected solution, given ~a" soln)]))
 

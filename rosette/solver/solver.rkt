@@ -6,7 +6,7 @@
          solver-assert solver-push solver-pop solver-clear
          solver-minimize solver-maximize
          solver-check solver-debug 
-         solver-shutdown)
+         solver-shutdown solver-constructor solver-features)
 
 ; The generic solver interface specifies the set of procedures that 
 ; should be provided by a Rosette solver. These include 
@@ -37,7 +37,7 @@
 ; 
 ; The solver-debug procedure searches for an unsatisfiable core for the current 
 ; set of constraints.  It throws an error if these constraints are 
-; satisfiable.  The solver-dbug procedure will only core perform extraction on  
+; satisfiable.  The solver-debug procedure will only core perform extraction on  
 ; constraints that were added to the solver _after_ the most recent call to 
 ; solver-check (if any).  All constraints added prior to that call are ignored.
 ; 
@@ -45,6 +45,12 @@
 ; clears all added constraints, and releases all system resources associated 
 ; with this solver instance.  The solver must be able to reacquire these resources 
 ; if needed.  That is, the solver should behave as specified above after a shutdown call.
+;
+; The solver-constructor procedure returns the constructor procedure for a
+; solver instance, which can be used to create new solvers of the same type.
+;
+; The solver-theories procedure returns a list of symbol?s specifying the
+; SMT features (logics, optimization, etc) a solver supports.
 (define-generics solver
   [solver-assert solver bools]
   [solver-push solver]
@@ -54,4 +60,6 @@
   [solver-maximize solver nums]
   [solver-check solver]
   [solver-debug solver]
-  [solver-shutdown solver])
+  [solver-shutdown solver]
+  [solver-constructor solver]
+  [solver-features solver])

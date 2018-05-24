@@ -10,83 +10,85 @@
          (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
          (only-in "../../base/core/real.rkt" @integer? @real?))
 
-(provide (rename-out [make-z3 z3]) z3?)
+(provide (rename-out [make-cvc4 cvc4]) cvc4? cvc4-available?)
 
-(define-runtime-path z3-path (build-path ".." ".." ".." "bin" "z3"))
-(define z3-opts '("-smt2" "-in"))
+(define-runtime-path cvc4-path (build-path ".." ".." ".." "bin" "cvc4"))
+(define cvc4-opts '("-L" "smt2" "-q" "-m" "-i" "--continued-execution" "--bv-div-zero-const"))
 
-(define (find-z3 [path #f])
+(define (find-cvc4 [path #f])
   (cond
     [(and (path-string? path) (file-exists? path)) path]
-    [(file-exists? z3-path) z3-path]
-    [(file-exists? (path-replace-suffix z3-path ".exe")) (path-replace-suffix z3-path ".exe")]
-    [(find-executable-path "z3") => identity]
+    [(file-exists? cvc4-path) cvc4-path]
+    [(find-executable-path "cvc4") => identity]
     [else #f]))
 
-(define (make-z3 #:path [path #f])
-  (define real-z3-path (find-z3 path))
-  (when (and (false? real-z3-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-    (printf "warning: could not find z3 executable at ~a\n" (path->string (simplify-path z3-path))))
-  (z3 (server real-z3-path z3-opts set-default-options) '() '() '() (env) '()))
-  
-(struct z3 (server asserts mins maxs env level)
+(define (cvc4-available?)
+  (not (false? (find-cvc4 #f))))
+
+(define (make-cvc4 #:path [path #f])
+  (define real-cvc4-path (find-cvc4 path))
+  (if (and (false? real-cvc4-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+      (error 'cvc4 "cvc4 binary is not available (expected to be at ~a); try passing the #:path argument to (cvc4)" (path->string (simplify-path cvc4-path)))
+      (cvc4 (server real-cvc4-path cvc4-opts set-default-options) '() '() '() (env) '())))
+
+(struct cvc4 (server asserts mins maxs env level)
   #:mutable
   #:methods gen:custom-write
-  [(define (write-proc self port mode) (fprintf port "#<z3>"))]
+  [(define (write-proc self port mode) (fprintf port "#<cvc4>"))]
   #:methods gen:solver
   [
    (define (solver-constructor self)
-     make-z3)
+     make-cvc4)
    
    (define (solver-features self)
-     '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers optimize unsat-cores))
-   
+     '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers))
+
    (define (solver-assert self bools)
-     (set-z3-asserts! self 
-      (append (z3-asserts self)
+     (set-cvc4-asserts! self 
+      (append (cvc4-asserts self)
               (for/list ([b bools] #:unless (equal? b #t))
                 (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
                   (error 'assert "expected a boolean value, given ~s" b))
                 b))))
 
    (define (solver-minimize self nums)
-     (set-z3-mins! self (append (z3-mins self) (numeric-terms nums 'solver-minimize))))
+     (unless (null? nums)
+       (error 'solver-minimize "cvc4 optimization isn't supported")))
    
    (define (solver-maximize self nums)
-     (set-z3-maxs! self (append (z3-maxs self) (numeric-terms nums 'solver-maximize))))
+     (unless (null? nums)
+       (error 'solver-maximize "cvc4 optimization isn't supported")))
    
-   (define (solver-clear self) 
-     (solver-clear-stacks! self)
-     (solver-clear-env! self)
-     (server-write (z3-server self) (reset))
-     (set-default-options (z3-server self)))
+   (define (solver-clear self)
+     (solver-shutdown self))
    
    (define (solver-shutdown self)
-     (solver-clear self)
-     (server-shutdown (z3-server self)))
+     (solver-clear-stacks! self)
+     (solver-clear-env! self)
+     (server-shutdown (cvc4-server self)))
 
    (define (solver-push self)
-     (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env level) self)
+     (match-define (cvc4 server (app unique asserts) (app unique mins) (app unique maxs) env level) self)
      (server-write
       server
       (begin
         (encode env asserts mins maxs)
         (push)))
      (solver-clear-stacks! self)
-     (set-z3-level! self (cons (dict-count env) level)))
+     (set-cvc4-level! self (cons (dict-count env) level)))
    
    (define (solver-pop self [k 1])
-     (match-define (z3 server _ _ _ env level) self)
+     (match-define (cvc4 server _ _ _ env level) self)
      (when (or (<= k 0) (> k (length level)))
        (error 'solver-pop "expected 1 < k <= ~a, given ~a" (length level) k))
      (server-write server (pop k))
      (solver-clear-stacks! self)
      (for ([lvl level][i k])
        (clear! env lvl))
-     (set-z3-level! self (drop level k)))
+     (set-cvc4-level! self (drop level k)))
      
    (define (solver-check self)
-     (match-define (z3 server (app unique asserts) (app unique mins) (app unique maxs) env _) self)
+     (match-define (cvc4 server (app unique asserts) (app unique mins) (app unique maxs) env _) self)
      (cond [(ormap false? asserts) (unsat)]
            [else (server-write
                   server
@@ -96,29 +98,10 @@
                  (read-solution server env)]))
    
    (define (solver-debug self)
-     (match-define (z3 server (app unique asserts) _ _ _ _) self)
-     (cond [(ormap false? asserts) (unsat (list #f))]
-           [else (solver-clear-env! self)
-                 (server-write (z3-server self) (reset))
-                 (set-core-options (z3-server self))
-                 (server-write
-                  server
-                  (begin (encode-for-proof (z3-env self) asserts)
-                         (check-sat)))
-                 (read-solution server (z3-env self) #:unsat-core? #t)]))])
+     (error 'solver-debug "cvc4 debug not supported"))])
 
 (define (set-default-options server)
-  (server-write server
-    (set-option ':produce-unsat-cores 'false)
-    (set-option ':auto-config 'true)
-    (set-option ':smt.relevancy 2)
-    (set-option ':smt.mbqi.max_iterations 10000000)))
-
-(define (set-core-options server)
-  (server-write server
-    (set-option ':produce-unsat-cores 'true)
-    (set-option ':auto-config 'false)
-    (set-option ':smt.relevancy 0)))
+  void)
 
 (define (numeric-terms ts caller)
   (for/list ([t ts] #:unless (or (real? t) (bv? t)))
@@ -127,13 +110,13 @@
       [_ (error caller "expected a numeric term, given ~s" t)])))
 
 (define (solver-clear-stacks! self)
-  (set-z3-asserts! self '())
-  (set-z3-mins! self '())
-  (set-z3-maxs! self '()))
+  (set-cvc4-asserts! self '())
+  (set-cvc4-mins! self '())
+  (set-cvc4-maxs! self '()))
 
 (define (solver-clear-env! self)
-  (set-z3-env! self (env))
-  (set-z3-level! self '()))
+  (set-cvc4-env! self (env))
+  (set-cvc4-level! self '()))
 
 ; Reads the SMT solution from the server.
 ; The solution consists of 'sat or 'unsat, followed by  

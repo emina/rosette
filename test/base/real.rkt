@@ -19,14 +19,17 @@
 (define maxval 4)
 (define maxval+1 5)
 
-
-(define-syntax-rule (check-valid? (op e ...) expected)
-  (let ([actual (op e ...)])
-    (check-equal? actual expected) 
-    ;(printf "ASSERTS: ~a\n" (asserts))
-    (define preconditions (asserts))
-    (clear-asserts!)
-    (check-pred unsat? (apply solve (! (@equal? (expression op e ...) expected)) preconditions))))
+(define-syntax check-valid?
+  (syntax-rules ()
+    [(_ (op e ...) expected)
+     (check-valid? (op e ...) expected [unsat?])]
+    [(_ (op e ...) expected [pred? ...])
+     (let ([actual (op e ...)])
+      (check-equal? actual expected) 
+      (define preconditions (asserts))
+      (clear-asserts!)
+      (define pred (lambda (x) (or (pred? x) ...)))
+      (check-pred pred (apply solve (! (@equal? (expression op e ...) expected)) preconditions)))]))
 
 (define-syntax-rule (test-valid? ([var sym] ...) (op e ...) expected)
   (let ([actual (op e ...)])
@@ -287,8 +290,8 @@
   (check-valid? (op x 1.0) 0)
   (check-valid? (op x -1.0) 0)
   (check-valid? (op x x) 0)
-  (check-valid? (op x (@- x)) 0)
-  (check-valid? (op (@- x) x) 0)
+  (check-valid? (op x (@- x)) 0 [unsat? unknown?])
+  (check-valid? (op (@- x) x) 0 [unsat? unknown?])
   (check-valid? (op (ite a 4 6) 3) 
                 (ite a (op 4 3) (op 6 3)))
   (check-valid? (op 18 (ite a 4 6)) 
@@ -500,6 +503,7 @@
 (define tests:=
   (test-suite+
    "Tests for = in rosette/base/real.rkt"
+   #:features '(qf_lia qf_lra)
    (check-=-simplifications)
    (check-cmp-semantics @= xi yi)
    (check-cmp-semantics @= xr yr)))
@@ -507,6 +511,7 @@
 (define tests:<
   (test-suite+
    "Tests for < in rosette/base/real.rkt"
+   #:features '(qf_lia qf_lra)
    (check-cmp-simplifications @< @>)
    (check-cmp-semantics @< xi yi)
    (check-cmp-semantics @< xr yr)))
@@ -514,6 +519,7 @@
 (define tests:<=
   (test-suite+
    "Tests for <= in rosette/base/real.rkt"
+   #:features '(qf_lia qf_lra)
    (check-cmp-simplifications @<= @>=)
    (check-cmp-semantics @<= xi yi)
    (check-cmp-semantics @<= xr yr)))
@@ -521,6 +527,7 @@
 (define tests:+
   (test-suite+
    "Tests for + in rosette/base/real.rkt"
+   #:features '(qf_lia qf_lra)
    (check-+-simplifications xi yi zi)
    (check-+-simplifications xr yr zr)
    (check-semantics @+ xi yi zi)
@@ -529,6 +536,7 @@
 (define tests:-
   (test-suite+
    "Tests for - in rosette/base/real.rkt"
+   #:features '(qf_lia qf_lra)
    (check---simplifications xi yi zi)
    (check---simplifications xr yr zr)
    (check-semantics @- xi yi zi)
@@ -537,6 +545,7 @@
 (define tests:*
   (test-suite+
    "Tests for * in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-*-simplifications xi yi zi)
    (check-*-simplifications xr yr zr)
    (check-*-real-simplifications)
@@ -546,6 +555,7 @@
 (define tests:/
   (test-suite+
    "Tests for / in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-division-simplifications @/ xr yr zr (/ 2 10))
    (check-semantics @/ xr yr zr (lambda (x) (not (zero? x))))
    ))
@@ -553,24 +563,28 @@
 (define tests:quotient
   (test-suite+
    "Tests for quotient in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-quotient-simplifications)
    (check-semantics @quotient xi yi zi (lambda (x) (not (zero? x))))))
 
 (define tests:remainder
   (test-suite+
    "Tests for remainder in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-remainder-simplifications @remainder)
    (check-semantics @remainder xi yi zi (lambda (x) (not (zero? x))))))
 
 (define tests:modulo
   (test-suite+
    "Tests for modulo in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-remainder-simplifications @modulo)
    (check-semantics @modulo xi yi zi (lambda (x) (not (zero? x))))))
 
 (define tests:abs
   (test-suite+
    "Tests for abs in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-abs-simplifications xi)
    (check-abs-simplifications xr)
    (check-semantics @abs xi yi zi)
@@ -579,16 +593,19 @@
 (define tests:int?
   (test-suite+
    "Tests for int? in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-int?-semantics)))
 
 (define tests:integer->real
   (test-suite+
    "Tests for integer->real in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-integer->real-semantics)))
 
 (define tests:real->integer
   (test-suite+
    "Tests for real->integer in rosette/base/real.rkt"
+   #:features '(qf_nia qf_nra)
    (check-real->integer-semantics)))
 
 (define tests:lifted
@@ -599,22 +616,23 @@
    (check-lifted-nary)
    ))
 
-(time (run-tests tests:real?))
-(time (run-tests tests:integer?))
-(time (run-tests tests:=))
-(time (run-tests tests:<))
-(time (run-tests tests:<=))
-(time (run-tests tests:+))
-(time (run-tests tests:-))
-(time (run-tests tests:*))
-(time (run-tests tests:/))
-(time (run-tests tests:quotient))
-(time (run-tests tests:remainder))
-(time (run-tests tests:modulo))
-(time (run-tests tests:abs))
-(time (run-tests tests:int?))
-(time (run-tests tests:integer->real))
-(time (run-tests tests:real->integer))
-(time (run-tests tests:lifted))
-
-(solver-shutdown (solver))
+(module+ test
+  (time (run-tests tests:real?))
+  (time (run-tests tests:integer?))
+  (time (run-tests tests:=))
+  (time (run-tests tests:<))
+  (time (run-tests tests:<=))
+  (time (run-tests tests:+))
+  (time (run-tests tests:-))
+  (time (run-tests tests:*))
+  (time (run-tests tests:/))
+  (time (run-tests tests:quotient))
+  (time (run-tests tests:remainder))
+  (time (run-tests tests:modulo))
+  (time (run-tests tests:abs))
+  (time (run-tests tests:int?))
+  (time (run-tests tests:integer->real))
+  (time (run-tests tests:real->integer))
+  (time (run-tests tests:lifted))
+  
+  (solver-shutdown (solver)))
