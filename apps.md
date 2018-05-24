@@ -10,16 +10,18 @@ verification of radiotherapy software to synthesis of code for
 ultra-low power hardware. Several of these tools have been developed by
 first-time users of Rosette in just a few days or weeks.
 
-| [Bagpipe][] | A language for specifying [BGP][] policies and verifying that an Internet Service Provider’s router configurations implement these policies. |
-| [Chlorophyll][] |  A synthesis-aided programming model and compiler for [GreenArrays GA144][GA144], a minimalist low-power spatial architecture. |
-| [Cosette][] |  A framework for reasoning about SQL equivalences. |
-| [Ferrite][] | A framework for specifying and checking file system crash-consistency models. |
-| [Greenthumb][] | A framework for constructing superoptimizers. |
+
 | [MemSynth][] | A language and tool for verifying, synthesizing, and disambiguating memory consistency models. |
-| [Neutrons][] |  A verifier for a subset of [EPICS][EPICS].  Currently in use at the University of Washington [Clinical Neutron Therapy System][CNTS]. |
-| [Nonograms][] | A system for synthesizing problem-solving strategies for logic puzzles. | 
-| [Synapse][] |  A framework for specifying and solving optimal synthesis problems. |
 | [Ocelot][] | An engine for solving, verifying, and synthesizing specifications in bounded relational logic. |
+| [Cosette][] |  A framework for reasoning about SQL equivalences. |
+| [Bagpipe][] | A language for specifying [BGP][] policies and verifying that an Internet Service Provider’s router configurations implement these policies. |
+| [Neutrons][] |  A verifier for a subset of [EPICS][EPICS].  Currently in use at the University of Washington [Clinical Neutron Therapy System][CNTS]. |
+| [Greenthumb][] | A framework for constructing superoptimizers. |
+| [Chlorophyll][] |  A synthesis-aided programming model and compiler for [GreenArrays GA144][GA144], a minimalist low-power spatial architecture. |
+| [Nonograms][] | A system for synthesizing problem-solving strategies for logic puzzles. |
+| [Quivela][] | A tool for proving the security of cryptographic protocols. |
+| [Ferrite][] | A framework for specifying and checking file system crash-consistency models. |
+| [Synapse][] |  A framework for specifying and solving optimal synthesis problems. |
 | [Wallingford][] | An experimental constraint reactive programming language. |
 | [More][] |  Demo languages and tools for [secure stack machines][SSM], data-parallel programing, and web-scraping.  |
 
@@ -35,6 +37,7 @@ first-time users of Rosette in just a few days or weeks.
 [Neutrons]: http://neutrons.uwplse.org
 [Nonograms]: https://github.com/edbutler/nonograms-rule-synthesis
 [Ocelot]: https://jamesbornholt.github.io/ocelot/
+[Quivela]: https://github.com/awslabs/quivela
 [EPICS]: http://www.aps.anl.gov/epics/
 [CNTS]: https://staff.washington.edu/jon/cnts/
 [Synapse]: http://synapse.uwplse.org
