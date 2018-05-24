@@ -21,4 +21,3 @@ defaults:
     values:
       layout: "default"
 
-doc_dir: ./rosette-guide
