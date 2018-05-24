@@ -283,8 +283,7 @@
   (c values c (c (0 (u . "(= 0 (remainder x 2))")))))
  #""
  #"")
-((define sol
-   (synthesize #:forall (list x) #:guarantee (assert (odd? (+ x c)))))
+((define sol (synthesize #:forall x #:guarantee (assert (odd? (+ x c)))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")

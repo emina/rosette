@@ -8,7 +8,8 @@
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts clear-asserts!)
            (only-in rosette/base/base bv?)
-           (only-in rosette/base/core/function function?))
+           (only-in rosette/base/core/function function?)
+           (only-in rosette/base/core/reflect symbolics))
           (for-label racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox  racket/runtime-path 
           "../util/lifted.rkt")
@@ -176,16 +177,16 @@ subsequent calls to the procedure throw an exception.
 
 @section{Synthesis}
 
-@defform[(synthesize
-            #:forall input-expr
-            maybe-assume
-            #:guarantee guarantee-expr)
-          #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)])
-          #:contracts [(input-expr (listof constant?))]]{
+@defform*[((synthesize input-expr expr)
+          (synthesize
+           #:forall input-expr
+           maybe-assume
+           #:guarantee guarantee-expr)
+          #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)]))]{
   Searches for a binding of symbolic constants 
   to concrete values that has the following properties: 
   @itemlist[#:style 'ordered
-  @item{it does not map constants in the @racket[input-expr] list; and,} 
+  @item{it does not map the constants in @racket[(symbolics input-expr)]; and,} 
   @item{it satisfies all assertions encountered during the evaluation of 
   @racket[guarantee-expr], for every binding of @racket[input-expr] constants to values that satisfies 
   the assertions encountered before the invocation of @racket[synthesize] and during the evaluation of 
@@ -200,7 +201,7 @@ subsequent calls to the procedure throw an exception.
   (assert (even? x))
   (code:line (asserts)   (code:comment "assertion pushed on the store")) 
   (define sol 
-    (synthesize #:forall (list x) 
+    (synthesize #:forall x 
                 #:guarantee (assert (odd? (+ x c)))))
   (code:line (asserts)   (code:comment "assertion store same as before")) 
   (code:line (evaluate x sol) (code:comment "x is unbound")) 
