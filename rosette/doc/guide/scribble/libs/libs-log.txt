@@ -1,0 +1,312 @@
+;; This file was created by make-log-based-eval
+((require rosette/lib/synthax) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (div2 x)
+   ((choose bvshl bvashr bvlshr bvadd bvsub bvmul) x (?? (bitvector 8))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic i (bitvector 8))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+('(define (div2 x) (bvlshr x (bv 1 8)))
+ ((3) 0 () 0 () () (q values (define (div2 x) (bvlshr x (bv 1 8)))))
+ #""
+ #"")
+((code:comment "Defines a grammar for boolean expressions")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((code:comment "in negation normal form (NNF).")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((define-synthax
+  (nnf x y depth)
+  #:base
+  (choose x (! x) y (! y))
+  #:else
+  (choose
+   x
+   (! x)
+   y
+   (! y)
+   ((choose && ||) (nnf x y (- depth 1)) (nnf x y (- depth 1)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((code:comment "The body of nnf=> is a hole to be filled with an")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((code:comment "expression of depth (up to) 1 from the NNF grammar.")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((define (nnf=> x y) (nnf x y 1))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(`(define (nnf=> x y) (,|| (! x) y))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c define c (q nnf=> x y) c (c (0 (u . "||")) q (! x) y))))
+ #""
+ #"")
+((code:comment "A grammar for linear arithmetic.")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((define-synthax LA (((_ e ...) (+ (* e (??)) ...))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((code:comment "The following query has no solution because (??) in")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((code:comment "(LA e ...) generates a single integer hole that is")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((code:comment "shared by all e passed to LA, in this case x and y.")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((define-symbolic* x y integer?)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define sol
+   (synthesize
+    #:forall
+    (list x y)
+    #:guarantee
+    (assert (= (LA x y) (+ (* 2 x) y)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(sol
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((code:comment "The following query has a solution because the second")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((code:comment "clause of LA2 creates two independent (??) holes.")
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+ #""
+ #"")
+((define-synthax
+  LA2
+  (((_ e) (* e (??))) ((_ e1 e2) (+ (* e1 (??)) (* e2 (??))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define sol2
+   (synthesize
+    #:forall
+    (list x y)
+    #:guarantee
+    (assert (= (LA2 x y) (+ (* 2 x) y)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+('(define sol
+    (synthesize
+     #:forall
+     (list x y)
+     #:guarantee
+     (assert (= (+ (* x 2) (* y 1)) (+ (* 2 x) y)))))
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   values
+   (define sol
+     (synthesize
+      #:forall
+      (list x y)
+      #:guarantee
+      (assert (= (+ (* x 2) (* y 1)) (+ (* 2 x) y)))))))
+ #""
+ #"")
+((require rosette/lib/angelic) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (static) (choose 1 2 3))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (dynamic) (choose* 1 2 3))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((static)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0 (u . "(ite 0$choose:eval:27:0 1 (ite 1$choose:eval:27:0 2 3))"))))
+ #""
+ #"")
+((static)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0 (u . "(ite 0$choose:eval:27:0 1 (ite 1$choose:eval:27:0 2 3))"))))
+ #""
+ #"")
+((dynamic)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(ite xi?$0 1 (ite xi?$1 2 3))"))))
+ #""
+ #"")
+((dynamic)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(ite xi?$2 1 (ite xi?$3 2 3))"))))
+ #""
+ #"")
+((equal? (static) (static)) ((3) 0 () 0 () () (q values #t)) #"" #"")
+((equal? (dynamic) (dynamic))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u . "(= (ite xi?$4 1 (ite xi?$5 2 3)) (ite xi?$6 1 (ite xi?$7 2 3)))"))))
+ #""
+ #"")

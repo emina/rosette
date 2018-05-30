@@ -423,7 +423,8 @@
 (define @cons? @pair?)
 
 (define @flatten
-  (match-lambda [(union vs) (merge** vs flatten)]
+  (match-lambda [(union vs) (merge** vs @flatten)]
+                [(cons x y) (@append (@flatten x) (@flatten y))]
                 [other (flatten other)]))
 
 (define @append*

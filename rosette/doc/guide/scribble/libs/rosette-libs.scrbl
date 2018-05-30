@@ -9,11 +9,12 @@
            (only-in rosette/base/base function? bitvector bvshl bvashr bvlshr bvadd bvsub bvmul)
            rosette/lib/render
            racket (only-in pict pict?))
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/eval racket/sandbox  racket/runtime-path
           "../util/lifted.rkt")
 
 
-@(define rosette-eval (rosette-evaluator))
+@(define-runtime-path root ".")
+@(define rosette-eval (rosette-log-evaluator (logfile root "libs-log")))
 
 @title[#:tag "sec:rosette-libs"]{Solver-Aided Libraries}
 
@@ -35,7 +36,7 @@ The default type for holes, if one is not provided, is @racket[integer?].
 Chapter @seclink["sec:synthesize"]{2.3.3} shows an example of using integer holes to @tech{sketch}
 a factored polynomial function, which is then completed with the help of a @racket[synthesize]  query.  
 The @racket[(??)] construct @seclink["sec:symbolic-constants"]{creates} 
-and returns a fresh symbolic constant of type @racket[type-expr] (or @racket[integer?]).                
+and returns a fresh symbolic constant of type @racket[type-expr] (or @racket[integer?]).
 }
 
 @defform[(choose expr ...+)]{
@@ -103,6 +104,49 @@ Since @racket[define-synthax] uses macros to implement recursive grammars,
 instantiating a recursive grammar with a large limit (e.g., k > 3) can cause
 long compilation times, especially if @racket[else-expr] contains many
 recursive instantiations of the grammar.
+
+Note also that the  @racket[...] transformer cannot be used to create multiple  
+@racket[??] or @racket[choose] holes within a @racket[define-synthax] form.
+In particular, a given syntactic occurrence of @racket[??] or @racket[choose]
+always refers to the same hole, as shown below.
+
+@examples[#:eval rosette-eval
+(eval:no-prompt
+ (code:comment "A grammar for linear arithmetic.") 
+ (define-synthax LA
+  ([(_ e ...) (+ (* e (??)) ...)]))
+ 
+ (code:comment "The following query has no solution because (??) in")
+ (code:comment "(LA e ...) generates a single integer hole that is")
+ (code:comment "shared by all e passed to LA, in this case x and y.")
+ (define-symbolic* x y integer?)
+ (define sol
+   (synthesize
+    #:forall (list x y)
+    #:guarantee (assert (= (LA x y) (+ (* 2 x) y))))))
+
+ sol
+
+ (eval:no-prompt
+  (code:comment "The following query has a solution because the second")
+  (code:comment "clause of LA2 creates two independent (??) holes.")
+  (define-synthax LA2
+    ([(_ e) (* e (??))]
+     [(_ e1 e2) (+ (* e1 (??)) (* e2 (??)))]))
+
+  (define sol2
+    (synthesize
+     #:forall (list x y)
+     #:guarantee (assert (= (LA2 x y) (+ (* 2 x) y))))))
+     
+ (eval:alts
+  (print-forms sol2)
+  '(define sol
+     (synthesize
+      #:forall
+      (list x y)
+      #:guarantee
+      (assert (= (+ (* x 2) (* y 1)) (+ (* 2 x) y))))))]
 }
 
 @defproc[(generate-forms [solution solution?]) (listof syntax?)]{

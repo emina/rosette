@@ -148,6 +148,82 @@
  #""
  #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define inc (solve+)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((inc (< x y))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 0]\n [y 1])"))))
+ #""
+ #"")
+((inc (> x 5))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 6]\n [y 13])"))))
+ #""
+ #"")
+((inc (< y 4))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((inc 1)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 6]\n [y 13])"))))
+ #""
+ #"")
+((inc (< y 9))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 6]\n [y 7])"))))
+ #""
+ #"")
+((inc 'shutdown) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((inc (> y 4))
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q
+   exn
+   "solver-push: contract violation:\nexpected: solver?\ngiven: #f\nargument position: 1st"))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x y boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((assert x) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((asserts)
@@ -207,8 +283,7 @@
   (c values c (c (0 (u . "(= 0 (remainder x 2))")))))
  #""
  #"")
-((define sol
-   (synthesize #:forall (list x) #:guarantee (assert (odd? (+ x c)))))
+((define sol (synthesize #:forall x #:guarantee (assert (odd? (+ x c)))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")

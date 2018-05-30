@@ -83,6 +83,18 @@ assertions will not appear in the assertion store after
 ]
 }
 
+@defform[(with-asserts-only expr)]{
+Like @racket[with-asserts], but returns only the assertions generated
+during the evaluation of @racket[expr].
+@examples[#:eval rosette-eval
+(define-symbolic a b boolean?)  
+(with-asserts-only 
+   (begin (assert a) 
+          (assert b) 
+          4))
+]
+}
+
 @(rosette-eval '(clear-terms!))
 @defparam[term-cache h hash?]{
 A parameter that holds the cache of all @seclink["sec:symbolic-terms"]{symbolic terms}

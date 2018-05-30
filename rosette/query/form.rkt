@@ -45,7 +45,9 @@
                (eval/asserts (thunk pre)) 
                (eval/asserts (thunk post)))]    
     [(_ #:forall inputs #:guarantee post)
-     (synthesize #:forall inputs #:assume #t #:guarantee post)]))
+     (synthesize #:forall inputs #:assume #t #:guarantee post)]
+    [(_ inputs post)
+     (synthesize #:forall inputs #:guarantee post)]))
 
 ; The optimize query evaluates the given form, gathers all 
 ; assertions generated during the evaluation, 

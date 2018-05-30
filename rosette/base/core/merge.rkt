@@ -4,7 +4,7 @@
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          "term.rkt" "union.rkt" "bool.rkt")
 
-(provide merge merge* unsafe-merge*)
+(provide merge merge* unsafe-merge* merge-same)
 
 (define (merge b x y)
   (match* (b x y)

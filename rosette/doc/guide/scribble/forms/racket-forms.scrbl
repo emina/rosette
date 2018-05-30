@@ -23,7 +23,7 @@
    (select '(let let* letrec let-values let*-values letrec-values let-syntax 
               letrec-syntax let-syntaxes letrec-syntaxes letrec-syntaxes+values)))
 @(define local-defs (select '(local)))
-@(define conditionals (select '(if cond else and or)))
+@(define conditionals (select '(if and or)))
 @(define dispatch (select '(case)))
 @(define definitions 
    (select '(define define-values define-syntax define-syntaxes 
@@ -48,7 +48,7 @@ Rosette lifts the following @seclink["syntax" #:doc '(lib "scribblings/reference
       (list @elem{Procedure Expressions} @procs)
       (list @elem{Local Binding} @local-binding)
       (list @elem{Local Definitions} @local-defs)
-      (list @elem{Conditionals} @conditionals)
+      (list @elem{Conditionals} (list @conditionals ", " @racket[cond] " with " @racket[[#, @var[test] #, @var[body] ...+]] " and " @racket[[else #, @var[body] ...+]] " clauses"))
       (list @elem{Dispatch} @dispatch)
       (list @elem{Definitions} @definitions)
       (list @elem{Sequencing} @sequencing)

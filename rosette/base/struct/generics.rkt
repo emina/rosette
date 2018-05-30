@@ -3,7 +3,7 @@
 (require (for-syntax (only-in racket/syntax
                               format-id wrong-syntax generate-temporary
                               current-syntax-context)
-                     (only-in syntax/stx stx-car))
+                     (only-in syntax/stx stx-pair? stx-car stx-cdr))
          (only-in racket/generic define-generics)
          (only-in "../form/control.rkt" @if)
          (only-in "../core/bool.rkt" @assert)
@@ -116,7 +116,24 @@
                   (hash-ref options 'derived '()))]
       [other
        (wrong-syntax #'other
-                     "expected a list of arguments with no dotted tail")])))
+                     "expected a list of arguments with no dotted tail")]))
+
+  (define (index-of name-stx formals-stx)
+    (let loop ([i 0] [formals formals-stx])
+      (unless (stx-pair? formals)
+        (wrong-syntax
+         formals-stx
+         "did not find the generic name ~a among the required, by-position arguments"
+         (syntax->datum name-stx)))
+      (define c (stx-car formals))
+      (cond [(identifier? c)
+             (if (free-identifier=? name-stx (stx-car formals))
+                 (datum->syntax name-stx i)
+                 (loop (+ i 1) (stx-cdr formals)))]
+            [(keyword? (syntax->datum c)) ; count only by-position required arguments
+             (loop i (stx-cdr (stx-cdr formals)))]
+            [else
+             (wrong-syntax c "required arguments must precede optional arguments")]))))
 
 (define-syntax (@define-generics stx)
   (syntax-case stx ()
@@ -133,37 +150,57 @@
                        "#:defined-table option is not supported in Rosette"))
 
        (with-syntax ([id? (format-id #'id "~a?" #'id #:source #'id)]
-                     [((method-name . dummy) ...) methods]
+                     [((method-name . method-args) ...) methods]
                      [support-name support])
-         (syntax/loc stx 
-           (begin
-             (define-generics id . rest)
-             (lift-if-exists id? receiver)
-             (lift-if-exists support-name receiver)
-             (lift-if-exists method-name receiver) ...))))]))
+         (with-syntax ([(method-index ...)
+                        (map (lambda (args) (index-of #'id args))
+                             (syntax-e #'(method-args ...)))])
+           (syntax/loc stx 
+             (begin
+               (define-generics id . rest)
+               (lift-if-exists id? 0)
+               (lift-if-exists support-name 0)
+               (lift-if-exists method-name method-index) ...)))))]))
     
 (define (@make-struct-type-property name [guard #f] [supers null] [can-impersonate? #f])
   (define-values (prop:p p? p-ref) 
     (make-struct-type-property name guard supers can-impersonate?))
-  (values prop:p (lift p? self) (lift p-ref self)))
+  (values prop:p (lift p? 0) (lift p-ref 0)))
 
 (define-syntax (lift-if-exists stx)
   (syntax-case stx ()
-    [(_ proc receiver)
+    [(_ proc receiver-index)
      (if (syntax->datum #'proc)
          (syntax/loc stx
-           (set! proc (lift proc receiver)))
+           (set! proc (lift proc receiver-index)))
          (syntax/loc stx
            (void)))]))
 
-(define-syntax-rule (lift proc receiver)
-  (let ([proc proc])
-    (procedure-rename
-     (lambda (receiver . args)
-      (if (union? receiver)
-          (for/all ([r receiver]) (apply proc r args))
-          (apply proc receiver args)))
-     (or (object-name proc) 'proc))))
+(define (lift proc receiver-index)
+  (define-values (required-kws allowed-kws) (procedure-keywords proc))
+  (define arity (procedure-arity proc))
+  (procedure-rename
+   (if (null? allowed-kws)
+       (procedure-reduce-arity
+        (lambda args
+          (define receiver (list-ref args receiver-index))
+          (if (union? receiver)
+              (for/all ([r receiver])
+                (apply proc (list-set args receiver-index r)))
+              (apply proc args)))
+        arity)
+       (procedure-reduce-keyword-arity
+        (make-keyword-procedure
+         (lambda (kws kw-args . args)
+           (define receiver (list-ref args receiver-index))
+           (if (union? receiver)
+               (for/all ([r receiver])
+                 (keyword-apply proc kws kw-args (list-set args receiver-index r)))
+               (keyword-apply proc kws kw-args args))))
+        arity
+        required-kws
+        allowed-kws))
+   (or (object-name proc) 'lifted)))
 
 #|
 ; sanity check

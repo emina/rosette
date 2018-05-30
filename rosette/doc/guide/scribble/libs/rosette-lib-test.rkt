@@ -26,6 +26,35 @@
    #:forall (list a b)
    #:guarantee (assert (equal? (=> a b) (nnf=> a b)))))
 
+; A grammar for linear arithmetic.
+(define-synthax LA
+ ([(_ e ...) (+ (* e (??)) ...)]))
+ 
+; The following query has no solution because (??) in
+; (LA e ...) generates a single integer hole that is
+; shared by all e passed to LA, in this case x and y.
+(define-symbolic* x y integer?)
+
+(define sol
+  (synthesize
+   #:forall (list x y)
+   #:guarantee (assert (= (LA x y) (+ (* 2 x) y)))))
+
+sol
+
+; The following query has a solution because the second
+; clause of LA2 creates two independent (??) holes.
+(define-synthax LA2
+  ([(_ e) (* e (??))]
+   [(_ e1 e2) (+ (* e1 (??)) (* e2 (??)))]))
+ 
+(define sol2
+  (synthesize
+   #:forall (list x y)
+   #:guarantee (assert (= (LA2 x y) (+ (* 2 x) y)))))
+
+(print-forms sol2)
+
 #|
 (define-synthax [shift terminal ... k]
   #:assert (>= k 0)

@@ -2,12 +2,14 @@
 
 @(require (for-label  
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
+           (only-in rosette/solver/solver solver?)
            rosette/base/core/term (only-in rosette/query/debug define/debug debug)
            (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts clear-asserts!)
            (only-in rosette/base/base bv?)
-           (only-in rosette/base/core/function function?))
+           (only-in rosette/base/core/function function?)
+           (only-in rosette/base/core/reflect symbolics))
           (for-label racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox  racket/runtime-path 
           "../util/lifted.rkt")
@@ -50,7 +52,7 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 @defform[(define-symbolic* id ...+ type)
          #:contracts
          [(type (and/c solvable? type?))]]{
-  Creates a stream of distinct @tech["symbolic constant"] of the given 
+  Creates a stream of distinct @tech["symbolic constant"]s of the given 
   @tech["solvable type"] for each identifier, binding the identifier to the 
   next element from its stream every time the form is evaluated.  
   @examples[#:eval rosette-eval
@@ -112,10 +114,38 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   (code:line (evaluate x sol) (code:comment "x must be true"))
   (code:line (evaluate y sol) (code:comment "y must be true"))
   (solve (assert (not x)))]
-  @;We refer to the  
-  @;@racket[solve] query as @deftech{angelic execution} because it causes the solver to behave as an
-  @;angelic oracle---it supplies "good" bindings for symbolic constants that cause the execution to terminate successfully.
 }
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc[(solve+) procedure?]{
+Returns a stateful procedure that uses a fresh @racket[solver?] instance
+to incrementally solve a sequence of constraints (with respect to @racket[current-bitwidth]).
+
+The returned procedure consumes a constraint (i.e., a boolean value or @tech["symbolic term"]),
+a positive integer, or the symbol @racket['shutdown].
+
+If the argument is a constraint, it is pushed onto the solver's constraint stack and
+a solution for all constraints on the stack is returned.
+
+If the argument is a positive integer @var[k], then the top @var[k] constraints are popped
+from the solver's constraint stack and the result is the solution to the remaining constraints.
+
+If the argument is @racket['shutdown], all resources used by the procedure are released, and any
+subsequent calls to the procedure throw an exception.
+ @examples[#:eval rosette-eval
+  (define-symbolic x y integer?)
+  (define inc (solve+))
+  (code:line (inc (< x y))   (code:comment "push (< x y) and solve"))
+  (code:line (inc (> x 5))   (code:comment "push (> x 5) and solve"))
+  (code:line (inc (< y 4))   (code:comment "push (< y 4) and solve"))
+  (code:line (inc 1)         (code:comment "pop  (< y 4) and solve"))
+  (code:line (inc (< y 9))   (code:comment "push (< y 9) and solve"))
+  (code:line (inc 'shutdown) (code:comment "release resources"))
+  (code:line (inc (> y 4))   (code:comment "unusable"))
+ ]
+}
+
 
 @(rosette-eval '(clear-asserts!))
 
@@ -147,16 +177,16 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
 
 @section{Synthesis}
 
-@defform[(synthesize
-            #:forall input-expr
-            maybe-assume
-            #:guarantee guarantee-expr)
-          #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)])
-          #:contracts [(input-expr (listof constant?))]]{
+@defform*[((synthesize input-expr expr)
+          (synthesize
+           #:forall input-expr
+           maybe-assume
+           #:guarantee guarantee-expr)
+          #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)]))]{
   Searches for a binding of symbolic constants 
   to concrete values that has the following properties: 
   @itemlist[#:style 'ordered
-  @item{it does not map constants in the @racket[input-expr] list; and,} 
+  @item{it does not map the constants in @racket[(symbolics input-expr)]; and,} 
   @item{it satisfies all assertions encountered during the evaluation of 
   @racket[guarantee-expr], for every binding of @racket[input-expr] constants to values that satisfies 
   the assertions encountered before the invocation of @racket[synthesize] and during the evaluation of 
@@ -171,7 +201,7 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   (assert (even? x))
   (code:line (asserts)   (code:comment "assertion pushed on the store")) 
   (define sol 
-    (synthesize #:forall (list x) 
+    (synthesize #:forall x 
                 #:guarantee (assert (odd? (+ x c)))))
   (code:line (asserts)   (code:comment "assertion store same as before")) 
   (code:line (evaluate x sol) (code:comment "x is unbound")) 
@@ -198,7 +228,7 @@ The @seclink["ch:essentials"]{Essentials} chapter introduced the key concepts of
   to the cost terms provided in the @racket[minimize-expr] and @racket[maximize-expr] lists.  Specifically, these
   terms take on the minimum or maximum values when evaluated with respect to a satisfiable solution.  For more details on
   solving optimization problems, see the
-  @hyperlink["http://rise4fun.com/z3opt/tutorialcontent/guide"]{Z3 optimization tutorial}.
+  @hyperlink["https://rise4fun.com/Z3/tutorial/optimization"]{Z3 optimization tutorial}.
 
   As is the case for other solver-aided queries, the assertions encountered while 
   evaluating @racket[minimize-expr],

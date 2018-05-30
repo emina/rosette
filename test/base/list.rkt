@@ -91,6 +91,11 @@
   (check-equal? (@flatten (list 1 (list 2) 3)) (flatten '(1 (2) 3)))
   (check-equal? (@flatten 'a) (flatten 'a))
   (check-equal? (@flatten l0) l0)
+  (check-equal? (@flatten (merge a '(1) '((((#f)))))) `(,(merge a 1 #f)))
+  (check-equal? (@flatten (merge a '(1 2 (3 4)) '(1 2 (#f 4)))) `(1 2 ,(merge a 3 #f) 4))
+  (check-equal? (@flatten (merge a '(1 2 (3 4)) '(1 2 ((#f) 4)))) `(1 2 ,(merge a 3 #f) 4))
+  (check-union? (@flatten (merge a '(1 2 (3 4)) '(1 2 ((3 3) 4)))) {[a '(1 2 3 4)] [(! a) '(1 2 3 3 4)]})
+  (check-equal? (@flatten (merge a '((1 . 2) (((3) 4))) '(((1) 2 #f) . 4))) `(1 2 ,(merge a 3 #f) 4))
   (check-union? (@flatten (merge a '(1 (2) 3) '(4 . 5))) {[a '(1 2 3)] [(! a) '(4 5)]}))
  
 

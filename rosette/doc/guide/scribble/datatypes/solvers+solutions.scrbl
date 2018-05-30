@@ -50,7 +50,7 @@ optimizing the resulting solution (if any) with respect to the provided objectiv
 @defparam[current-solver solver solver?]{
   The @racket[current-solver] parameter holds the solver object used for 
   answering solver-aided queries.  Rosette's default solver is @racket[z3], although
-  new (SMT) solvers can be added well.  Rosette will work with any solver that implements the
+  new (SMT) solvers can be added as well.  Rosette will work with any solver that implements the
   @racket[gen:solver] generic interface.
   @examples[#:eval rosette-eval
    (current-solver)]
@@ -128,6 +128,8 @@ with the given solver instance.  The solver must be able to reacquire these reso
 if needed.  That is, the solver should behave as though its state was merely cleared
 (via @racket[solver-clear]) after a shutdown call.  
 }
+
+@defmodule[rosette/solver/smt/z3 #:no-declare]
 
 @defproc[(z3) solver?]{
 Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.}

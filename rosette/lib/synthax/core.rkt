@@ -90,7 +90,7 @@
                 (let ([ctx (cons (identifier->tag (syntax/source call)) (static-context))])
                   (syntax-parameterize ([static-context (syntax-id-rules () [_ ctx])])
                                        (in-context ctx
-                                                   (thunk #,(if (<= (eval #'k) 0) 
+                                                   (thunk #,(if (<= (eval #'k (make-base-namespace)) 0)
                                                                 (syntax/source e0) 
                                                                 (syntax/source ek)))))))]))                    
          (free-id-table-set! codegen #'id (cons #'id id-gen))))]

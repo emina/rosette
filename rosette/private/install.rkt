@@ -12,11 +12,17 @@
          net/url
          file/unzip)
 
+(define (print-failure path msg)
+  (printf "\n\n********** Failed to install Z3 **********\n\n")
+  (printf "You'll need to manually install a Z3 binary\n")
+  (printf "to this location: ~a\n\n" path)
+  (printf "The problem was:\n~a\n\n" msg)
+  (printf "*********\n\n\n"))
 
 (define (pre-installer collections-top-path racl-path)
-  (with-handlers ([exn:fail? (lambda (e) (printf "Could not install z3.\n~a" e))])
-    (define bin-path (build-path racl-path ".." "bin"))
-    (define z3-path (build-path bin-path "z3"))
+  (define bin-path (simplify-path (build-path racl-path ".." "bin")))
+  (define z3-path (build-path bin-path "z3"))
+  (with-handlers ([exn:fail? (lambda (e) (print-failure z3-path (exn-message e)))])
     (unless (file-exists? z3-path)
       (define-values (z3-url z3-extracted-subdir) (get-z3-url))
       (define z3-port (get-pure-port (string->url z3-url) #:redirections 10))  
