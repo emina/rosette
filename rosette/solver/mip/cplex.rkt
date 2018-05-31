@@ -50,11 +50,11 @@
                      (encode asserts (car objs))
                      (decode name2sym)
                      (if (> n 0)
-                         (format "~a~a.mst" temp-sol (sub1 n))
+                         (build-path temp-sol (format "~a.mst" (sub1 n)))
                          mip-start)
                      (if (and (= (length objs) 1) mip-sol)
                          mip-sol
-                         (format "~a~a.mst" temp-sol n))
+                         (build-path temp-sol (format "~a.mst" n)))
                      verbose
                      ))
        (cond
@@ -75,7 +75,7 @@
               (raise (exn:fail "MIP solver requires at least one objective." (current-continuation-marks))))
             
             (define name2sym (collect-name2sym (append asserts objs)))
-            (define temp (format "_temp-sol-t~a-o" (current-seconds)))
+            (define temp (make-temporary-file "cplexsol~a" 'directory))
             (define sol (multi-objective asserts objs name2sym temp 0))
             (solver-clear-stacks! self)
 

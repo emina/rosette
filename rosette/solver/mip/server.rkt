@@ -6,9 +6,8 @@
 (struct server (path opts))
 
 (define-syntax-rule (server-run s timeout encode decode mst-read mst-write verbose)
-  (let* ([id (current-seconds)]
-         [temp (format "_temp-~a.mip" id)]
-         [temp-log (format "_temp-~a.out" id)]
+  (let* ([temp (make-temporary-file "cplex~a.mip")]
+         [temp-log (make-temporary-file "cplex~a.out")]
          [out-port (open-output-file temp #:exists 'truncate)])
     ;; Encode and print to file.
     (when verbose
@@ -37,7 +36,10 @@
     (define sol (print-and-decode out decode log-port verbose))
     (close-output-port log-port)
     
-    (system (format "rm _temp-*"))
+    (unless verbose
+      (delete-file temp)
+      (delete-file temp-log))
+    
     sol
   ))
 
