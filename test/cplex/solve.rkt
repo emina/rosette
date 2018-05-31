@@ -83,6 +83,19 @@
     (check-equal? (evaluate zi sol) 0)))
 
 
+(define multi-objectives-unsat-tests
+  (test-suite+ "Solve MIP unsat multi objectives."
+    (clear-asserts!)
+    (define obj (+ (* 2 xi) (* 2 yi) (* 2 zi)))
+    (assert (<= (+ xi yi zi) 1))
+    (assert (>= xi 1))
+    (assert (>= yi 1))
+    (assert (>= zi 1))
+    (solver-maximize solver (list obj xi))
+    (solver-assert solver (asserts))
+    (check-unsat (solver-check solver))))
+
+
 (define distribution-tests
   (test-suite+ "Solve formula that requires the distribution rule."
     (clear-asserts!)
@@ -116,5 +129,6 @@
 (time (run-tests basic-tests))
 (time (run-tests mip-tests))
 (time (run-tests multi-objectives-tests))
+(time (run-tests multi-objectives-unsat-tests))
 (time (run-tests distribution-tests))
 (time (run-tests mip-sol-start-tests))

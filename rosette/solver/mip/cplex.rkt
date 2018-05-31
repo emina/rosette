@@ -59,6 +59,7 @@
                      ))
        (cond
          [(empty? (cdr objs)) sol]
+         [(unsat? sol) sol]
          [else
           ;; Assert that the current objective must be equal to the found optimal value.
           ;; And exclude the current objective from the objective list.
