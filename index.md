@@ -26,14 +26,14 @@ Rosette, and you get the tools for free!
 
 ; This implements a SAT solver.
 (define (SAT formula)
-  (solve (assert (interpret formula))))  
+  (solve (assert (interpret formula))))
 
 (SAT `(∧ r o (∨ s e (¬ t)) t (¬ e)))
 ```
 
-To learn more, take a look at [The Rosette Guide]({{site.doc_dir}}/index.html),
+To learn more, take a look at [The Rosette Guide](https://docs.racket-lang.org/rosette-guide/index.html),
 [this talk](https://www.youtube.com/watch?v=KpDyuMIb_E0&index=25&list=PLZdCLR02grLp4W4ySd1sHPOsK83gvqBQp),
-[applications](apps.html), or publications:  
+[applications](apps.html), or publications:
 
 {: .bibliography}
 * [1] Emina Torlak and Rastislav Bodik. A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages. PLDI 2014.
