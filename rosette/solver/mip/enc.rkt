@@ -2,66 +2,31 @@
 
 (require "common.rkt"
          (only-in "../../base/core/term.rkt" expression expression? constant? term? get-type @app type-of)
-         (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
-         (only-in "../../base/core/distinct.rkt" @distinct?)
          (only-in "../../base/core/bool.rkt" @! @&& @|| @=> @<=> @forall @exists)
          (only-in "../../base/core/real.rkt" 
                   @integer? @real? @= @< @<= @>= @> 
                   @+ @* @- @/ @quotient @remainder @modulo 
-                  @abs @integer->real @real->integer @int?)
-         (only-in "../../base/core/bitvector.rkt" 
-                  bitvector? bv bitvector-size 
-                  @bveq @bvslt @bvsle @bvult @bvule   
-                  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
-                  @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
-                  @concat @extract @zero-extend @sign-extend 
-                  @integer->bitvector @bitvector->integer @bitvector->natural))
+                  @abs @integer->real @real->integer @int?))
 
 (provide mip-start mip-done
-         mip-bounds-start mip-bound
          mip-minimize mip-maximize
          mip-assert-start mip-enc)
 
 (define vars (set))
 
 (define-syntax-rule (mip-printf arg ...)
-  ;(fprintf (current-error-port) arg ...)
-  ;(fprintf out-port arg ...)
-  (fprintf (current-output-port) arg ...)
-  )
+  (fprintf (current-output-port) arg ...))
 
 ; Print CPLEX command to enter MIP constraints.
 (define (mip-start)
   (mip-printf "enter example\n")
   (set! vars (set)))
 
-(define (mip-bounds-start)
-  (mip-printf "bounds\n"))
-
-(define (mip-bound b)
-  (define v (get-name (bound-var b)))
-  (set! vars (set-add vars (bound-var b)))
-  (define lb (bound-lb b))
-  (define ub (bound-ub b))
-  (cond
-    [(and lb ub) (mip-printf "~a <= ~a <= ~a\n" lb v ub)]
-    [lb (mip-printf "~a <= ~a\n" lb v)]
-    [ub (mip-printf "~a <= ~a\n" v ub)]))
-
-(define (print-assert-bound b)
-  (define v (get-name (bound-var b)))
-  (set! vars (set-add vars (bound-var b)))
-  (define lb (bound-lb b))
-  (define ub (bound-ub b))
-  (when lb (mip-printf "~a >= ~a\n" v lb))
-  (when ub (mip-printf "~a <= ~a\n" v ub)))
-
 ; After entering constaints
 ;  - declare integer variables.
 ;  - print comment to solve the query.
 ;  - print solution.
 (define (mip-done)
-  ;; TODO: set bounds
   (define integer-vars (filter (lambda (x) (eq? (type-of x) @integer?)) (set->list vars)))
   (unless (set-empty? integer-vars)
     (define count 0)
@@ -80,11 +45,15 @@
 
 ; Print a minization objective.
 (define (mip-minimize x)
-  (mip-printf "minimize ~a\n" (get-name x)))
+  (mip-printf "minimize ")
+  (flatten-and-print-expr x)
+  (mip-printf "\n"))
 
 ; Print a maximization objective.
 (define (mip-maximize x)
-  (mip-printf "maximize ~a\n" (get-name x)))
+  (mip-printf "maximize ")
+  (flatten-and-print-expr x)
+  (mip-printf "\n"))
 
 ; Print an indicator for the beginning of hard constraints.
 (define (mip-assert-start)
@@ -92,12 +61,20 @@
 
 ; Print a constraint.
 (define (mip-enc v)
-  ;(fprintf (current-error-port) "enc ~a\n" v)
-  (if (bound? v)
-      (print-assert-bound v)
-      (rosette->mip v)))
+  (rosette->mip v))
 
 (struct equation (op signs terms lit))
+
+; Flatten an expression v and print it out in CPLEX format.
+(define (flatten-and-print-expr v)
+  (define-values (signs terms lits all-int) (flatten-expr v))
+  (for ([sign signs]
+        [term terms])
+    (mip-printf "~a " (if (> sign 0) '+ '-))
+    (print-term term))
+  (for ([lit lits])
+    (mip-printf "~a " (if (>= lit 0) '+ '-))
+    (print-term lit)))
 
 ; Given a equation object, print it out in CPLEX format.
 (define (print-equation v)
@@ -106,17 +83,21 @@
      (for ([sign signs]
            [term terms])
        (mip-printf "~a " (if (> sign 0) '+ '-))
-       (print-expr term))
+       (print-term term))
      (mip-printf "~a ~a\n" (op->string op) lit)]))
 
-(define (print-expr v)
+; Given a term, print it out in CPLEX format.
+(define (print-term v)
   (match v
     [(expression (== @*) e1 e2)
-     (print-expr e1)
-     (print-expr e2)]
+     (print-term e1)
+     (print-term e2)]
     [(? constant?)
      (mip-printf "~a " (get-name v)) (set! vars (set-add vars v))]
-    [(? number?)    (mip-printf "~a " v) ]
+    [(? number?)
+     (if (integer? v)
+         (mip-printf "~a " v)
+         (mip-printf "~a " (exact->inexact v)))]
     [_              (raise (exn:fail (format "Cannot encode term ~a" v) (current-continuation-marks)))]))
 
 (define-syntax define-encoder
@@ -131,7 +112,6 @@
 
 ; Convert rosette constraint v to an equation object, and print it.
 (define (rosette->mip v)
-  ;(fprintf (current-error-port) "~a\n" v)
   (match v
     [(expression (== @&&) es ...)
      (for ([e es]) (rosette->mip e))
@@ -147,7 +127,7 @@
      (define terms (append e1-terms e2-terms))
      
      ;; Collapse terms that use the same variables.
-     ;; However, it doesn't make CPLX solve any faster.
+     ;; However, it doesn't make CPLEX solve any faster.
      ;; Sometimes it reduces time to print to file, but also increases overhead.
      ;(define-values (terms signs) (simplify-equation pre-terms pre-signs))
      
@@ -163,57 +143,6 @@
     [_
      (raise (exn:fail (format "Cannot encode ~a to mip (1)" v)
                        (current-continuation-marks)))]))
-
-; Given a list of (* c term) and a corresponding list of sign (1 or -1).
-; Collapse the lists so that a unique term appears once.
-(define (simplify-equation terms signs)
-  (define coeff (make-hash))
-  (define (add-coeff x c)
-    (if (hash-has-key? coeff x)
-        (hash-set! coeff x (+ (hash-ref coeff x) c))
-        (hash-set! coeff x c))
-    )
-
-  (define (f v sign)
-    (match v
-      [(? constant?) (add-coeff v sign)]
-      [(expression (== @*) (? number? c) (? constant? x))
-       (add-coeff x (* sign c))]
-      [(expression (== @*) (? constant? x) (? number? c))
-       (add-coeff x (* sign c))]
-      ))
-
-;  (fprintf (current-error-port) "old:\n")
-;  (for ([term terms] [sign signs])
-;    (fprintf (current-error-port) "~a ~a, " (if (= sign 1) "+" "-") term))
-;  (fprintf (current-error-port) "\n")
-
-  (for ([term terms] [sign signs])
-    (f term sign))
-  
-  (define pairs
-    (filter
-     identity
-     (for/list ([pair (hash->list coeff)])
-       (let ([term (car pair)]
-             [c (cdr pair)])
-         (cond
-           [(= c 0) #f]
-           [(or (= c 1) (= c -1))
-            (cons term c)]
-           [else
-            (cons (expression @* (abs c) term) (if (> c 0) 1 -1))])))))
-  
-  (define new-terms (map car pairs))
-  (define new-signs (map cdr pairs))
-  
-;  (fprintf (current-error-port) "new:\n")
-;  (for ([term new-terms] [sign new-signs])
-;    (fprintf (current-error-port) "~a ~a, " (if (= sign 1) "+" "-") term) )
-;  (fprintf (current-error-port) "\n")
-
-  (values new-terms new-signs)
-  )
 
 ; Flattern a Rosette expression v to
 ;  - terms:   a list of (* c term)
@@ -242,8 +171,8 @@
       [(expression (== @-) es ...)
        (f (car es) sign)
        (for ([e (cdr es)]) (f e (- sign)))]
-      ;[(expression (== @integer->real) e1)  (f e1 sign)]
-      ;[(expression (== @real->integer) e1)  (f e1 sign)]
+      [(expression (== @integer->real) e1)  (f e1 sign)]
+      [(expression (== @real->integer) e1)  (f e1 sign)]
       [(? constant?)   (set! signs (cons sign signs)) (set! terms (cons v terms))
                        (unless (eq? (type-of v) @integer?) (set! all-int #f))]
       [(? integer?)    (set! lits (cons (* sign v) lits))]
@@ -261,18 +190,24 @@
     (match e2
       [(expression (== @*) es2 ...)
        (define num (findf number? es2))
-       (unless num (exn:fail (format "Cannot encode ~a to MIP (3)" v)) (current-continuation-marks))
+       (unless num (exn:fail (format "Cannot encode ~a to MIP (3)" v) (current-continuation-marks)))
        (distribute (apply expression @* (* num e1) (remove num es2)))
        ]
 
+      [(expression (== @integer->real) e2-inner)
+       (distribute (expression @* e1 e2-inner))
+       ]
+      
       [(expression op2 es2 ...)
        (unless (member op2 (list @+ @-))
-         (raise (exn:fail (format "Cannot encode ~a to MIP (4)" v)) (current-continuation-marks)))
+         (raise (exn:fail (format "Cannot encode ~a to MIP (4)" v) (current-continuation-marks))))
        (apply expression op2
               (for/list ([e es2])
                 (if (number? e)
                     (* e1 e)
-                    (distribute (expression @* e1 e)))))]))
+                    (distribute (expression @* e1 e)))))]
+
+      ))
               
   (match v
     [(expression op e1 e2)

@@ -2,24 +2,22 @@
 
 (require racket/generic)
 (require racket/runtime-path 
-         "server.rkt" "cmd.rkt"
-         "common.rkt" "smt-simplify.rkt" "mip-converter.rkt"
+         "server.rkt" "cmd.rkt" "common.rkt"
          "../solver.rkt" "../solution.rkt"
          (only-in rosette symbolics evaluate [= sym/=])
          (only-in racket [remove-duplicates unique])
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
-         (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
-         (only-in "../../base/core/real.rkt" @integer? @real?))
+         (only-in "../../base/core/real.rkt" @integer? @real?)
+         (only-in rosette/base/core/term
+                  expression expression? constant? term? get-type @app type-of))
 
 (provide (rename-out [make-cplex cplex]) cplex? solver-check-with-init)
 
 (define-runtime-path cplex-path (build-path ".." ".." ".." "bin" "cplex"))
 (define cplex-opts '("-f"))
 
-(define (env) (make-hash))
-
-(define (make-cplex #:simplify [sim #t] #:timeout [timeout #f])
+(define (make-cplex #:timeout [timeout #f] #:verbose [verbose #f])
   (define real-cplex-path
     ;; Check for 'cplex', else print a warning
     (if (file-exists? cplex-path)
@@ -28,12 +26,12 @@
             (printf "warning: could not find CPLEX executable in '~a'"
                     (path->string (simplify-path (path->directory-path cplex-path))))
             cplex-path)))
-  (cplex (server real-cplex-path cplex-opts) '() '() sim timeout))
+  (cplex (server real-cplex-path cplex-opts) '() '() timeout verbose))
 
 (define-generics mip-solver
   [solver-check-with-init mip-solver #:mip-start [mip-start] #:mip-sol [mip-sol]])
   
-(struct cplex (server asserts objs sim timeout)
+(struct cplex (server asserts objs timeout verbose)
   #:mutable
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cplex>"))]
@@ -41,22 +39,23 @@
   [
    (define (solver-check-with-init self #:mip-start [mip-start #f] #:mip-sol [mip-sol #f])
      (define t0 (current-seconds))
-     (match-define (cplex server (app unique asserts) (app unique objs) sim timeout) self)
+     (match-define (cplex server (app unique asserts) (app unique objs) timeout verbose) self)
 
      ;; Break multi-objective query into multiple single-objective queries
      ;; because CPLEX doesn't support multi-objective.
-     (define (multi-objective asserts bounds objs convert temp-sol n)
+     (define (multi-objective asserts objs name2sym temp-sol n)
        ;; Optimize for the first objective on the list.
        (define sol
          (server-run server timeout
-                     (encode asserts bounds (car objs))
-                     (decode convert)
+                     (encode asserts (car objs))
+                     (decode name2sym)
                      (if (> n 0)
                          (format "~a~a.mst" temp-sol (sub1 n))
                          mip-start)
                      (if (and (= (length objs) 1) mip-sol)
                          mip-sol
                          (format "~a~a.mst" temp-sol n))
+                     verbose
                      ))
        (cond
          [(empty? (cdr objs)) sol]
@@ -64,46 +63,22 @@
           ;; Assert that the current objective must be equal to the found optimal value.
           ;; And exclude the current objective from the objective list.
           (define obj (objective-expr (car objs)))
-          (fprintf (current-error-port) (format "\nAdd constraint ~a\n" (sym/= (evaluate obj sol) obj)))
+          (when verbose
+            (fprintf (current-error-port)
+                     (format "\nAdd constraint ~a\n" (sym/= (evaluate obj sol) obj))))
           (multi-objective (cons (sym/= (evaluate obj sol) obj) asserts)
-                           bounds (cdr objs) convert temp-sol (add1 n))]))
+                           (cdr objs) name2sym temp-sol (add1 n))]))
      
      (cond [(ormap false? asserts) (unsat)]
            [else
             (when (= (length objs) 0)
               (raise (exn:fail "MIP solver requires at least one objective." (current-continuation-marks))))
             
-            ;; step 1: simply equation (flatten)
-            (define t1 (current-seconds))
-            (define sim-asserts (if sim (simplify asserts) asserts))
-            (define sim-objs
-              (if sim
-                  (for/list ([o objs])
-                    (objective (objective-type o) (simplify-expression (objective-expr o))))
-                  objs))
-
-            ;; step 2: convert SMT to MIP
-            (define t2 (current-seconds))
-            (define convert (smt->mip sim-asserts sim-objs))
-            (define mip-asserts (converter-asserts convert))
-            (define mip-bounds (converter-bounds convert))
-            (define mip-objs (converter-objs convert))
-
-            ; Take time to print this information.
-            ;(fprintf (current-error-port) (format "SMT: asserts=~a vars=~a\n" (length sim-asserts) (length (symbolics sim-asserts))))
-            ;(fprintf (current-error-port) (format "MIP: asserts=~a vars=~a\n" (length mip-asserts) (length (symbolics mip-asserts))))
-
-            ;; step 3: solve
-            (define t3 (current-seconds))
-            (fprintf (current-error-port) (format "overhead: ~a, simplify ~a, convert: ~a\n"
-                                                  (- t1 t0) (- t2 t1) (- t3 t2)))
-            (define temp (format "temp-sol-t~a-o" (current-seconds)))
-            (define sol (multi-objective mip-asserts mip-bounds mip-objs convert temp 0))
+            (define name2sym (collect-name2sym (append asserts objs)))
+            (define temp (format "_temp-sol-t~a-o" (current-seconds)))
+            (define sol (multi-objective asserts objs name2sym temp 0))
             (solver-clear-stacks! self)
-            (define t4 (current-seconds))
 
-            (fprintf (current-error-port) (format "overhead: ~a, simplify ~a, convert: ~a, encode-solve-decode: ~a\n"
-                                                  (- t1 t0) (- t2 t1) (- t3 t2) (- t4 t3)))
             sol
             ]))
    
@@ -133,12 +108,6 @@
    
    (define (solver-shutdown self)
      (solver-clear self))
-
-   (define (solver-push self)
-     (raise (exn:fail "cplex: solver-push: unimplemented")))
-   
-   (define (solver-pop self [k 1])
-     (raise (exn:fail "cplex: solver-pop: unimplemented")))
      
    (define (solver-check self)
      (solver-check-with-init self)
@@ -155,4 +124,13 @@
   (set-cplex-asserts! self '())
   (set-cplex-objs! self '()))
 
-  
+(define (collect-name2sym asserts)
+  (define name2sym (make-hash))
+  (define (collect v)
+    (match v
+      [(? constant?) (hash-set! name2sym (get-name v) v)]
+      [(expression op es ...) (for ([e es]) (collect e))]
+      [(objective t e) (collect e)]
+      [_ (void)]))
+  (for ([a asserts]) (collect a))
+  name2sym)
