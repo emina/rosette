@@ -6,8 +6,9 @@
 (struct server (path opts))
 
 (define-syntax-rule (server-run s timeout encode decode mst-read mst-write verbose)
-  (let* ([temp (make-temporary-file "cplex~a.mip")]
-         [temp-log (make-temporary-file "cplex~a.out")]
+  (let* ([tempdir (make-temporary-file "cplex~a" 'directory)]
+         [temp (build-path tempdir "cplex.mip")]
+         [temp-log (build-path tempdir "cplex.out")]
          [out-port (open-output-file temp #:exists 'truncate)])
     ;; Encode and print to file.
     (when verbose
@@ -28,8 +29,9 @@
     ;; Run CPLEX solver.
     (when verbose
       (fprintf (current-error-port) (format "Run ~a ~a\n" (server-path s) (append (server-opts s) (list temp)))))
-    (define-values (p out in err) 
-      (apply subprocess #f #f #f (server-path s) (append (server-opts s) (list temp))))
+    (define-values (p out in err)
+      (parameterize ([current-directory tempdir])
+        (apply subprocess #f #f #f (server-path s) (append (server-opts s) (list temp)))))
 
     ;; Print progress and decode the solution.
     (define log-port (open-output-file temp-log #:exists 'truncate))
@@ -37,9 +39,8 @@
     (close-output-port log-port)
     
     (unless verbose
-      (delete-file temp)
-      (delete-file temp-log))
-    
+      (delete-directory tempdir))
+
     sol
   ))
 

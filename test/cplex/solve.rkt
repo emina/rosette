@@ -117,14 +117,14 @@
     (assert (<= (+ xi yi zi) 1))
     (solver-maximize solver (list obj))
     (solver-assert solver (asserts))
-    (define mip-sol-file "cplex-test-sol.mst")
+    (define mip-sol-file (make-temporary-file "cplex-test-sol-~a.mst"))
     (solver-check-with-init solver #:mip-sol mip-sol-file)
 
     (solver-maximize solver (list obj xi))
     (solver-assert solver (asserts))
     (define sol (solver-check-with-init solver #:mip-start mip-sol-file))
     (check-equal? (evaluate xi sol) 1)
-    (check-true (system (format "rm ~a" mip-sol-file)))))
+    (check-not-exn (thunk (delete-file mip-sol-file)))))
 
 (time (run-tests basic-tests))
 (time (run-tests mip-tests))
