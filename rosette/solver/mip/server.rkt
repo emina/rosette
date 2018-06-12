@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in rosette sat unsat))
+(require (only-in rosette sat unsat) racket/file)
 (provide server server-run)
 
 (struct server (path opts))
@@ -39,7 +39,7 @@
     (close-output-port log-port)
     
     (unless verbose
-      (delete-directory tempdir))
+      (delete-directory/files tempdir))
 
     sol
   ))
