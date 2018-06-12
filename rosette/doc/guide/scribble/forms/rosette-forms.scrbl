@@ -178,11 +178,11 @@ subsequent calls to the procedure throw an exception.
 @section{Synthesis}
 
 @defform*[((synthesize input-expr expr)
-          (synthesize
-           #:forall input-expr
-           maybe-assume
-           #:guarantee guarantee-expr)
-          #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)]))]{
+           (synthesize
+            #:forall input-expr
+            maybe-assume
+            #:guarantee guarantee-expr))
+          #:grammar ([maybe-assume (code:line) (code:line #:assume assume-expr)])]{
   Searches for a binding of symbolic constants 
   to concrete values that has the following properties: 
   @itemlist[#:style 'ordered
