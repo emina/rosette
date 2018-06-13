@@ -13,17 +13,23 @@
     ;; Encode and print to file.
     (when verbose
       (fprintf (current-error-port) (format "Generate ILP program at ~a\n" temp)))
-    
-    (parameterize ([current-output-port out-port])
-      (when timeout (pretty-display (format "set dettimelimit ~a" timeout)))
-      (begin0 
-        encode
-        (flush-output (current-output-port)))
-      (when mst-read (pretty-display (format "read ~a" mst-read)))
-      (pretty-display "optimize")
-      (pretty-display "display solution variables -")
-      (pretty-display (format "write ~a all" mst-write))
-      )
+
+    (with-handlers ([exn:fail?
+                     (λ (e)
+                       (close-output-port out-port)
+                       (unless verbose
+                         (delete-directory/files tempdir))
+                       (raise e))])
+      (parameterize ([current-output-port out-port])
+        (when timeout (pretty-display (format "set dettimelimit ~a" timeout)))
+        (begin0 
+          encode
+          (flush-output (current-output-port)))
+        (when mst-read (pretty-display (format "read ~a" mst-read)))
+        (pretty-display "optimize")
+        (pretty-display "display solution variables -")
+        (pretty-display (format "write ~a all" mst-write))
+        ))
     (close-output-port out-port)
 
     ;; Run CPLEX solver.

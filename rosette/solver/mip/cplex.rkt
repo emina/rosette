@@ -70,15 +70,25 @@
           (multi-objective (cons (sym/= (evaluate obj sol) obj) asserts)
                            (cdr objs) name2sym temp-sol (add1 n))]))
      
-     (cond [(ormap false? asserts) (unsat)]
+     (cond [(ormap false? asserts)
+            (solver-clear-stacks! self)
+            (unsat)]
            [else
             (when (= (length objs) 0)
               (raise (exn:fail "MIP solver requires at least one objective." (current-continuation-marks))))
             
             (define name2sym (collect-name2sym (append asserts objs)))
             (define temp (make-temporary-file "cplexsol~a" 'directory))
-            (define sol (multi-objective asserts objs name2sym temp 0))
+            (define sol
+              (with-handlers ([exn:fail?
+                               (λ (e)
+                                 (solver-clear-stacks! self)
+                                 (delete-directory/files temp)
+                                 (raise e))])
+                (multi-objective asserts objs name2sym temp 0)))
+
             (solver-clear-stacks! self)
+            (delete-directory/files temp)
 
             sol
             ]))

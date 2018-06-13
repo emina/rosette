@@ -69,6 +69,20 @@
     (check-true (and (> (evaluate zr sol2) 1.4) (< (evaluate zr sol2) 1.5)))
     ))
 
+(define non-mip-tests
+  (test-suite+ "Solve MIP tests."
+    (clear-asserts!)
+    (define obj (+ (* 2 xi) (* 3 yi)))
+    (assert (<= (* (* xi (/ 2 9)) (* yi (/ 1 4))) 1))
+    (assert (<= (+ (* xi (/ 1 7)) (* yi (/ 1 3))) 1))
+    (solver-maximize solver (list obj))
+    (solver-assert solver (asserts))
+    (check-exn
+     exn:fail?
+     (lambda ()
+       (solver-check solver)))
+    ))
+
 
 (define multi-objectives-tests
   (test-suite+ "Solve MIP multi objectives."
@@ -128,6 +142,7 @@
 
 (time (run-tests basic-tests))
 (time (run-tests mip-tests))
+(time (run-tests non-mip-tests))
 (time (run-tests multi-objectives-tests))
 (time (run-tests multi-objectives-unsat-tests))
 (time (run-tests distribution-tests))
