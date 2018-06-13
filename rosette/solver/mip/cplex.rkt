@@ -19,8 +19,8 @@
 
 (define (find-cplex [path #f])
   (cond
-    [(file-exists? cplex-path) cplex-path]
     [(and (path-string? path) (file-exists? path)) path]
+    [(file-exists? cplex-path) cplex-path]
     [(find-executable-path "cplex") => identity]
     [else #f]))
 
