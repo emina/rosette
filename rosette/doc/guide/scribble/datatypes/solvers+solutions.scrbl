@@ -114,10 +114,20 @@ computing an unsatisfiable @racket[core] (i.e., calling @racket[core] on the
 resulting solution produces @racket[#f]).
 }
 
-@defproc[(solver-check-with-init [solver (cplex?)] #:mip-sol [final-solution-file (path-string?)] #:mip-start [initial-solution-file (path-string?)]) solution?]{
-Like @racket[solver-check] but accepts only CPLEX solver and takes optional arguments @racket[final-solution-file] and/or @racket[initial-solution-file]. When @racket[final-solution-file] is given, the solver will save the solution to the given file in an 
+@defproc[(solver-check-with-init 
+          [solver cplex?]
+          [#:mip-sol final-solution-file (or/c path-string? #f) #f]
+          [#:mip-start initial-solution-file (or/c path-string? #f) #f])
+         solution?]{
+Like @racket[solver-check], but accepts only a CPLEX solver,
+and takes optional arguments @racket[final-solution-file] and/or @racket[initial-solution-file].
+When @racket[final-solution-file] is a @racket[path-string?],
+the solver will save the solution to the given file in
 @hyperlink["https://www.ibm.com/support/knowledgecenter/bs/SSSA5P_12.6.2/ilog.odms.cplex.help/CPLEX/FileFormats/topics/MST.html"]{MST format}
-if a solution exists. This file can be used as @racket[initial-solution-file] in a later @racket[olver-check-with-init] to provide starting values for variables. Note that @racket[initial-solution-file] does not have to be a satisfiable solution, but it must be in an MST format.
+if a solution exists.
+This file can be used as the @racket[initial-solution-file] in a later call to @racket[solver-check-with-init]
+to provide starting values for variables.
+Note that @racket[initial-solution-file] does not have to be a satisfiable solution, but it must be in MST format.
 
 The @racket[constraints] given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
 }
@@ -142,13 +152,15 @@ if needed.  That is, the solver should behave as though its state was merely cle
 
 @defmodule[rosette/solver/smt/z3 #:no-declare]
 
-@defproc[(z3) solver?]{
+@defproc*[([(z3) solver?]
+           [(z3? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.}
 
 
-@defmodule[rosette/solver/smip/cplex #:no-declare]
+@defmodule[rosette/solver/mip/cplex #:no-declare]
 
-@defproc[(cplex #:timeout [timeout (integer?)] #:verbose [verbose (boolean?)]) solver?]{
+@defproc*[([(cplex [#:timeout timeout (or/c integer? #f) #f] [#:verbose verbose boolean? #f]) solver?]
+           [(cplex? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the
 @hyperlink["https://www.ibm.com/developerworks/community/blogs/jfp/entry/CPLEX_Is_Free_For_Students?lang=en"]{CPLEX} solver from IBM.
 To use this solver, users must 1) download and install CPLEX, 2) locate CPLEX interactive executable, which is likely to be at IBM/ILOG/CPLEX_Studio*/cplex/bin/x86-64*/cplex, and 3) copy cplex executable to rosette/bin.
