@@ -17,16 +17,19 @@
 (define-runtime-path cplex-path (build-path ".." ".." ".." "bin" "cplex"))
 (define cplex-opts '("-f"))
 
-(define (make-cplex #:timeout [timeout #f] #:verbose [verbose #f])
-  (define real-cplex-path
-    ;; Check for 'cplex', else print a warning
-    (if (file-exists? cplex-path)
-      cplex-path
-      (begin
-            (printf "warning: could not find CPLEX executable in '~a'"
-                    (path->string (simplify-path (path->directory-path cplex-path))))
-            cplex-path)))
-  (cplex (server real-cplex-path cplex-opts) '() '() timeout verbose))
+(define (find-cplex [path #f])
+  (cond
+    [(file-exists? cplex-path) cplex-path]
+    [(and (path-string? path) (file-exists? path)) path]
+    [(find-executable-path "cplex") => identity]
+    [else #f]))
+
+(define (make-cplex #:path [path #f] #:timeout [timeout #f] #:verbose [verbose #f])
+  (define real-cplex-path (find-cplex path))
+  (if (and (false? real-cplex-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+      (let ([p (path->string (simplify-path cplex-path))])
+        (error 'cplex "cplex binary is not available (expected to be at ~a, or try `(cplex \"path/to/cplex\")`)" p))
+      (cplex (server real-cplex-path cplex-opts) '() '() timeout verbose)))
 
 (define-generics mip-solver
   [solver-check-with-init mip-solver #:mip-start [mip-start] #:mip-sol [mip-sol]])

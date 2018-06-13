@@ -159,13 +159,19 @@ Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prov
 
 @defmodule[rosette/solver/mip/cplex #:no-declare]
 
-@defproc*[([(cplex [#:timeout timeout (or/c integer? #f) #f] [#:verbose verbose boolean? #f]) solver?]
+@defproc*[([(cplex [#:path path (or/c path-string? #f) #f] [#:timeout timeout (or/c integer? #f) #f] [#:verbose verbose boolean? #f]) solver?]
            [(cplex? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the
 @hyperlink["https://www.ibm.com/developerworks/community/blogs/jfp/entry/CPLEX_Is_Free_For_Students?lang=en"]{CPLEX} solver from IBM.
-To use this solver, users must 1) download and install CPLEX, 2) locate CPLEX interactive executable, which is likely to be at IBM/ILOG/CPLEX_Studio*/cplex/bin/x86-64*/cplex, and 3) copy cplex executable to rosette/bin.
 
-The @racket[timeout] is in seconds. When @racket[verbose] is @racket[#t], the detailed output from CPLEX solver will be displayed.
+To use this solver, download and install CPLEX,
+and locate the CPLEX interactive executable,
+which is likely to be at @tt{CPLEX_Studio*/cplex/bin/x86-64*/cplex}.
+Either add this directory to your @tt{PATH},
+or pass the path to the executable as the @racket[path] argument.
+
+The @racket[timeout] is in seconds.
+When @racket[verbose] is @racket[#t], the detailed output from CPLEX solver will be displayed.
 }
 
 @section{Solutions}
