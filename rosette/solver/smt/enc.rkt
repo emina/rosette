@@ -27,13 +27,10 @@
 ; The environment will be modified (if needed) to include an encoding for 
 ; the given value and all of its subexpressions (if any).
 (define (enc v env [quantified '()])
-  (ref!
-   env v
-   (match v
-     [(? expression?) (enc-expr v env quantified)]
-     [(? constant?)   (enc-const v env quantified)]
-     [_               (enc-lit v)])
-   quantified))
+  (match v
+    [(? expression?) (ref-expr! v env quantified enc-expr)]
+    [(? constant?)   (ref-const! v env quantified)]
+    [_               (ref-expr! v env quantified enc-lit)]))
 
 (define (enc-expr v env quantified)  
   (match v
@@ -62,10 +59,11 @@
     [(expression (== @bitvector->natural) v) 
      ($bv->nat (enc v env quantified) (bitvector-size (get-type v)))]
     [(expression (and (or (== @forall) (== @exists)) op) vars body)
-     ((if (equal? op @forall) $forall $exists)
-      (for/list ([v vars])
-        (list (ref! env v) (smt-type (get-type v))))
-      (enc body env (remove-duplicates (append vars quantified))))]
+     (let ([vars+quantified (remove-duplicates (append vars quantified))])
+       ((if (equal? op @forall) $forall $exists)
+        (for/list ([v vars])
+          (list (ref-const! v env vars+quantified) (smt-type (get-type v))))
+        (enc body env vars+quantified)))]
     [(expression (== @distinct?) (? real? rs) ..1 (? term? es) ...)
      (apply $distinct (append (if (equal? @real? (get-type (car es)))
                                   (for/list ([r rs]) (enc-real r))
@@ -75,9 +73,7 @@
      (apply $op (for/list ([e es]) (enc e env quantified)))]
     [_ (error 'enc "cannot encode ~a to SMT" v)]))
 
-(define (enc-const v env quantified) (ref! env v))
-
-(define (enc-lit v)
+(define (enc-lit v env quantified)
   (match v 
     [#t $true]
     [#f $false]
