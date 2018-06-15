@@ -44,6 +44,7 @@
     (check-verify sat? (verify #:assume (assert #t)
                                #:guarantee (assert (and (= (+ (* 2 n) 1) 0) (not (= n 0))))))
     ))
-    
-(time (run-tests verify-tests))
-(time (run-tests short-circuit-tests))
+
+(module+ test
+  (time (run-tests verify-tests))
+  (time (run-tests short-circuit-tests)))

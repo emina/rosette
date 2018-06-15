@@ -4,7 +4,7 @@
          rosette/lib/roseunit)
 
 (current-bitwidth #f)
-(define-symbolic x y z integer?)
+(define-symbolic x y z (bitvector 8))
 (define-symbolic a b c boolean?)
 
 (define (check-model sol m)
@@ -13,6 +13,7 @@
 
 (define push-pop-tests
   (test-suite+ "Tests for the push / pop interface."
+   #:features '(qf_bv)
          
   (define solver (current-solver))
   (check-exn exn:fail? (thunk (solver-pop solver)))
@@ -27,22 +28,22 @@
   (check-exn exn:fail? (thunk (solver-pop solver 3)))
   (solver-pop solver 2)
 
-  (solver-assert solver (list (= (+ x y) 10) (= (+ x (* 2 y)) 20)))
-  (check-model (solver-check solver) (hash x 0 y 10))
+  (solver-assert solver (list (equal? (bvadd x y) (bv 10 8)) (equal? (bvadd x (bvmul (bv 2 8) y)) (bv 20 8))))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8)))
   (solver-push solver)
-  (solver-assert solver (list (= (+ (* 3 x) y) 10) (= (+ (* 2 x) (* 2 y)) 21)))
+  (solver-assert solver (list (equal? (bvadd (bvmul (bv 3 8) x) y) (bv 10 8)) (equal? (bvadd (bvmul (bv 2 8) x) (bvmul (bv 2 8) y)) (bv 21 8))))
   (check-pred unsat? (solver-check solver))
 
   (solver-pop solver)
-  (check-model (solver-check solver) (hash x 0 y 10))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8)))
 
   (solver-push solver)
   (solver-assert solver (list a (! b) c))
-  (check-model (solver-check solver) (hash x 0 y 10 a #t b #f c #t))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8) a #t b #f c #t))
 
   (solver-pop solver)
   (check-pred sat? (solver-check solver))
-  (check-model (solver-check solver) (hash x 0 y 10))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8)))
 
   (solver-push solver)
   (solver-assert solver (list (! a)))
@@ -50,17 +51,18 @@
   (solver-assert solver (list b))
   (solver-push solver)
   (solver-assert solver (list (! c)))
-  (check-model (solver-check solver) (hash x 0 y 10 a #f b #t c #f))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8) a #f b #t c #f))
 
   (solver-pop solver)
-  (check-model (solver-check solver) (hash x 0 y 10 a #f b #t))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8) a #f b #t))
 
   (solver-pop solver)
-  (check-model (solver-check solver) (hash x 0 y 10 a #f))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8) a #f))
 
   (solver-pop solver)
-  (check-model (solver-check solver) (hash x 0 y 10))
+  (check-model (solver-check solver) (hash x (bv 0 8) y (bv 10 8)))
   
   ))
 
-(time (run-tests push-pop-tests))
+(module+ test
+  (time (run-tests push-pop-tests)))

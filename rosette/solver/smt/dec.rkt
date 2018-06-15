@@ -18,9 +18,9 @@
 
 (provide decode-model)
 
-; Decodes the sol hashmap, produced by read-solution in smtlib2,
-; into a map from constants declared in env to their values, as given by sol.
-; The env argument is assumed to be dictionary from constant? to symbol?.
+; Decodes a sol hashmap into a map from constants declared in env to
+; their values, as given by sol. The env argument is assumed to be a
+; dictionary from constant? to symbol?.
 (define (decode-model env sol)
   (let ([i-sol (inline (α-rename sol) env)])
     (for/hash ([(decl id) (in-dict env)]

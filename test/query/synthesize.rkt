@@ -37,5 +37,5 @@
     
     ))
 
-
-(time (run-tests basic-tests))
+(module+ test
+  (time (run-tests basic-tests)))

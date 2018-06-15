@@ -77,13 +77,16 @@
   (match v 
     [#t $true]
     [#f $false]
-    [(? integer?) (inexact->exact v)]
+    [(? integer?) (enc-integer v)]
     [(? real?) (enc-real v)]
     [(bv lit t) ($bv lit (bitvector-size t))]
     [_ (error 'enc "expected a boolean?, integer?, real?, or bitvector?, given ~a" v)]))
 
 (define-syntax-rule (enc-real v)
   (if (exact? v) ($/ (numerator v) (denominator v)) (string->symbol (~r v))))
+(define-syntax-rule (enc-integer v)
+  (let ([v* (inexact->exact v)])
+    (if (< v* 0) ($- (abs v*)) v*)))
 
 (define-syntax define-encoder
   (syntax-rules ()

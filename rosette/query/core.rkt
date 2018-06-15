@@ -93,12 +93,12 @@
 ; from the stack and the result is the solution to the remaining constraints.
 ; If the argument is 'shutdown, all resources used by the procedure are released, and any
 ; subsequent calls to the procedure throw an exception. 
-(define (∃-solve+ #:solver [solver-type z3] #:bitwidth [bw (current-bitwidth)])
+(define (∃-solve+ #:solver [solver-type #f] #:bitwidth [bw (current-bitwidth)])
   (define cust (make-custodian))
   (define solver
     (parameterize ([current-custodian cust]
                    [current-subprocess-custodian-mode 'kill])
-      (solver-type)))
+      (if (false? solver-type) ((solver-constructor (current-solver))) (solver-type))))
   (define handler
     (lambda (e)
       (when (and solver cust)
@@ -206,7 +206,8 @@
 ; ∃H . ∀I . assumes => asserts.
 ; Note, however, that the procedure will *not* produce models that satisfy the above 
 ; formula by making assumes evaluate to false.
-(define (∃∀-solve inputs assumes asserts #:solver [solver z3] #:bitwidth [bw (current-bitwidth)])
+(define (∃∀-solve inputs assumes asserts #:solver [solver #f] #:bitwidth [bw (current-bitwidth)])
+  (define solver-type (if (false? solver) (solver-constructor (current-solver)) solver))
   (parameterize ([current-custodian (make-custodian)]
                  [current-subprocess-custodian-mode 'kill]
                  [term-cache (hash-copy (term-cache))])
@@ -218,10 +219,10 @@
            (define fsol (cegis (for/list ([i inputs])  (hash-ref fmap i))
                                (for/list ([φ assumes]) (hash-ref fmap φ))
                                (for/list ([φ asserts]) (hash-ref fmap φ))
-                               (solver) (solver)))
+                               (solver-type) (solver-type)))
            (unfinitize fsol fmap)]
           [else 
-           (cegis inputs assumes asserts (solver) (solver))])
+           (cegis inputs assumes asserts (solver-type) (solver-type))])
         (custodian-shutdown-all (current-custodian))))))
          
 

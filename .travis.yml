@@ -4,13 +4,14 @@ sudo: false
 env:
   global:
     - RACKET_DIR=~/racket
+    - CVC4_URL="http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.5-x86_64-linux-opt"
+    - BOOLECTOR_URL="http://fmv.jku.at/boolector/boolector-2.4.1-with-lingeling-bbc.tar.bz2"
   matrix:
     - RACKET_VERSION=6.6
     - RACKET_VERSION=6.9
-    - RACKET_VERSION=6.10.1
-    - RACKET_VERSION=6.11
     - RACKET_VERSION=6.12
     - RACKET_VERSION=HEAD
+    - RACKET_VERSION=6.12 ALL_SOLVERS=1
 
 matrix:
   allow_failures:
@@ -21,12 +22,22 @@ before_install:
   - git clone https://github.com/greghendershott/travis-racket.git
   - cat travis-racket/install-racket.sh | bash # pipe to bash not sh!
   - export PATH="${RACKET_DIR}/bin:${PATH}"
+  - if [ "$ALL_SOLVERS" == "1" ]; then
+      mkdir bin;
+      wget $CVC4_URL -q -O bin/cvc4;
+      chmod +x bin/cvc4;
+      wget $BOOLECTOR_URL -q -O boolector.tar.bz2;
+      tar xjf boolector.tar.bz2;
+      make -C boolector-*;
+      cp boolector-*/boolector/bin/boolector bin/;
+      rm -rf boolector*;
+    fi
+
 
 install:
   - raco pkg install
 
 script:
-  - raco test
   - time raco make test/all-rosette-tests.rkt
   - raco test test/all-rosette-tests.rkt
   - time raco make test/all-sdsl-tests.rkt

@@ -51,4 +51,5 @@
    (check-cached @= x y)
    (check-cached @< x y)))
 
-(time (run-tests value-tests))
+(module+ test
+  (time (run-tests value-tests)))

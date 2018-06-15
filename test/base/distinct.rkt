@@ -43,6 +43,7 @@
 (define tests:bool
   (test-suite+
    "Tests for distinct? over booleans."
+   #:features '()
    (check-equal? (distinct?) #t)
    (check-equal? (distinct? #t) #t)
    (check-equal? (distinct? #f) #t)
@@ -59,6 +60,7 @@
 (define tests:real
   (test-suite+
    "Tests for distinct? over infinite precision integers and reals."
+   #:features '(qf_nra)
    (current-bitwidth #f)
    (check-real)
    ))
@@ -66,6 +68,7 @@
 (define tests:real-finitized
   (test-suite+
    "Tests for distinct? over finite precision integers and reals."
+   #:features '(qf_bv)
    (current-bitwidth 5)
    (check-real)
    ))
@@ -73,6 +76,7 @@
 (define tests:bitvector
   (test-suite+
    "Tests for distinct? bitvectors."
+   #:features '(qf_bv)
    (current-bitwidth #f)
    (check-equal? (distinct? (bv 1 1)) #t)
    (check-equal? (distinct? (bv 5 5)) #t)
@@ -89,21 +93,23 @@
 (define tests:mixed
   (test-suite+
    "Tests for distinct? non-primitives and mixed values."
-    (current-bitwidth #f)
-    (define-symbolic f g (~> integer? real?))
-    (check-equal? (distinct? (list)) #t)
-    (check-equal? (distinct? (list 1)) #t)
-    (check-equal? (distinct? (list 1) (list 3 4)) #t)
-    (check-equal? (distinct? (list 1) (list 1)) #f)
-    (check-equal? (distinct? (list a b xi yr) (list #t #f 1 2))
-                  (not (equal? (list a b xi yr) (list #t #f 1 2))))
-    (check-unsat (verify (assert (equal? (distinct? f g zb) (all-different zb g f)))))
-    (check-unsat (verify (assert (equal? (distinct? xr 1 f g zb yi) (all-different xr 1 zb g f yi)))))
+   #:features '(qf_uf qf_lia qf_lra)
+   (current-bitwidth #f)
+   (define-symbolic f g (~> integer? real?))
+   (check-equal? (distinct? (list)) #t)
+   (check-equal? (distinct? (list 1)) #t)
+   (check-equal? (distinct? (list 1) (list 3 4)) #t)
+   (check-equal? (distinct? (list 1) (list 1)) #f)
+   (check-equal? (distinct? (list a b xi yr) (list #t #f 1 2))
+                 (not (equal? (list a b xi yr) (list #t #f 1 2))))
+   (check-unsat (verify (assert (equal? (distinct? f g zb) (all-different zb g f)))))
+   (check-unsat (verify (assert (equal? (distinct? xr 1 f g zb yi) (all-different xr 1 zb g f yi)))))
     ))
 
 (define tests:regression
   (test-suite+
    "Regression tests for distinct?"
+   #:features '(qf_uf qf_lra)
    (define (test n)
      (current-bitwidth #f)
      (define-symbolic f (~> integer? integer?))
@@ -113,9 +119,10 @@
    (check-sat (test 32))
    (check-sat (test 33))))
 
-(time (run-tests tests:bool))
-(time (run-tests tests:real))
-(time (run-tests tests:real-finitized))
-(time (run-tests tests:bitvector))
-(time (run-tests tests:mixed))
-(time (run-tests tests:regression))
+(module+ test
+  (time (run-tests tests:bool))
+  (time (run-tests tests:real))
+  (time (run-tests tests:real-finitized))
+  (time (run-tests tests:bitvector))
+  (time (run-tests tests:mixed))
+  (time (run-tests tests:regression)))

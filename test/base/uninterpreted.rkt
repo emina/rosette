@@ -81,6 +81,25 @@
   (define-symbolic f (~> boolean? real?))
   (check-exn #px"finitize.*" (thunk (solve (assert (= (f #f) .5))))))
 
+; Basic tests for booleans and 1-bit bitvectors (some solvers conflate them)
+(define (check-bitvector-booleans)
+  (define-symbolic even (~> (bitvector 2) boolean?))
+  (define sol
+    (solve (for ([i (in-range -2 2)])
+             (assert (equal? (even (bv i 2)) (even? i))))))
+  (check-sat sol)
+  (check-equal? (evaluate (even (bv -2 2)) sol) #t)
+  
+  (define-symbolic f (~> boolean? (bitvector 2)))
+  (define solf
+    (solve (assert (and (equal? (f #t) (bv 0 2))
+                        (equal? (f #f) (bv -2 2))))))
+  (check-sat solf)
+  (check-equal? (evaluate (f #t) solf) (bv 0 2))
+  (check-equal? (evaluate (f #f) solf) (bv -2 2))
+  (check-exn #px"boolean\\?" (thunk ((evaluate f solf) (bv 0 1)))))
+    
+
 (define-syntax-rule (check-state actual expected-value expected-asserts)
   (let-values ([(e ignore) (with-asserts expected-value)]
                [(v a) (with-asserts actual)])
@@ -116,13 +135,19 @@
 
 (define tests:basic
   (test-suite+
-   "UF tests with no finitization"
+   "UF basic tests"
+   #:features '(qf_uf qf_bv)
    (current-bitwidth #f)
    (check-boolean?)
    (check-bitvector?)
-   (check-int-real)
-   ))
+   (check-bitvector-booleans)))
 
+(define tests:unfinitized
+  (test-suite+
+   "UF tests without finitization"
+   #:features '(qf_uf qf_lia qf_lra)
+   (current-bitwidth #f)
+   (check-int-real)))
 
 (define tests:finitized
   (test-suite+
@@ -135,6 +160,8 @@
    "UF tests for lifted applications"
    (check-types)))
 
-(time (run-tests tests:basic))
-(time (run-tests tests:finitized))
-(time (run-tests tests:lifted))
+(module+ test
+  (time (run-tests tests:basic))
+  (time (run-tests tests:unfinitized))
+  (time (run-tests tests:finitized))
+  (time (run-tests tests:lifted)))

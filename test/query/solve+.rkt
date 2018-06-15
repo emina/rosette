@@ -25,7 +25,8 @@
   (check-exn exn:fail? (thunk (gen #t)))
   (check-exn exn:fail? (thunk (gen 1)))
   (check-exn exn:fail? (thunk (gen 'shutdown)))
-  ; Check that term cache is not polluted with finitizaton values
+  ; Check that term cache is not polluted with finitizaton values -- no
+  ; fresh constants should be left in the term cache
   (check subset? (apply set (symbolics (hash-values (term-cache)))) consts))
 
 (define basic-tests
@@ -63,6 +64,7 @@
     (current-bitwidth 3)
     (check-solve+ (= xr (bitvector->integer yb)) (bveq yb (bv -8 4)))
  )) 
-                     
-(time (run-tests basic-tests))
-(time (run-tests finitized-tests))
+
+(module+ test             
+  (time (run-tests basic-tests))
+  (time (run-tests finitized-tests)))
