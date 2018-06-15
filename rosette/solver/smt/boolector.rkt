@@ -2,13 +2,12 @@
 
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt" "env.rkt" 
-         "../solver.rkt" "../solution.rkt" 
-         (only-in racket [remove-duplicates unique])
-         (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core push pop)
+         "../solver.rkt" "../solution.rkt"
+         (prefix-in super/ "solver.rkt")
+         (only-in "smtlib2.rkt" get-model)
          (only-in "../../base/core/term.rkt" term term? term-type constant? expression constant term-cache)
          (only-in "../../base/core/bool.rkt" @boolean? @forall @exists)
          (only-in "../../base/core/bitvector.rkt" bitvector bitvector? bv? bv bv-value @extract @sign-extend @zero-extend @bveq)
-         (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/core/function.rkt" function-domain function-range function? function fv)
          (only-in "../../base/core/type.rkt" type-of)
          (only-in "../../base/form/control.rkt" @if))
@@ -18,108 +17,54 @@
 (define-runtime-path boolector-path (build-path ".." ".." ".." "bin" "boolector"))
 (define boolector-opts '("-m" "--smt2-model" "-i"))
 
-(define (find-boolector [path #f])
-  (cond
-    [(and (path-string? path) (file-exists? path)) path]
-    [(file-exists? boolector-path) boolector-path]
-    [else (or (find-executable-path "boolector") #f)]))
-
 (define (boolector-available?)
-  (not (false? (find-boolector #f))))
+  (not (false? (super/find-solver "boolector" boolector-path #f))))
 
 (define (make-boolector #:path [path #f])
-  (define real-boolector-path (find-boolector path))
+  (define real-boolector-path (super/find-solver "boolector" boolector-path path))
   (if (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
       (error 'boolector "boolector binary is not available (expected to be at ~a); try passing the #:path argument to (boolector)" (path->string (simplify-path boolector-path)))
       (boolector (server real-boolector-path boolector-opts set-default-options) '() '() '() (env) '())))
-  
-(struct boolector (server asserts mins maxs env level)
-  #:mutable
+
+(struct boolector super/solver ()
+  #:property prop:solver-constructor make-boolector
   #:methods gen:custom-write
-  [(define (write-proc self port mode) (fprintf port "#<boolector>"))]
+  [(define (write-proc self port mode) (fprintf port "#<cvc4>"))]
   #:methods gen:solver
   [
-   (define (solver-constructor self)
-     make-boolector)
-   
    (define (solver-features self)
      '(qf_bv qf_uf))
-   
+
    (define (solver-assert self bools)
-     (set-boolector-asserts! self 
-      (append (boolector-asserts self)
-              (for/list ([b bools] #:unless (equal? b #t))
-                (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
-                  (error 'assert "expected a boolean value, given ~s" b))
-                (boolector-typecheck b)
-                b))))
+     (super/solver-assert self bools boolector-typecheck))
 
    (define (solver-minimize self nums)
-     (unless (null? nums)
-       (error 'solver-minimize "boolector does not support optimization")))
+     (super/solver-minimize self nums))
    
    (define (solver-maximize self nums)
-     (unless (null? nums)
-       (error 'solver-maximize "boolector does not support optimization")))
+     (super/solver-maximize self nums))
    
    (define (solver-clear self)
-     (solver-shutdown self))
+     (super/solver-clear self))
    
    (define (solver-shutdown self)
-     (solver-clear-stacks! self)
-     (solver-clear-env! self)
-     (server-shutdown (boolector-server self)))
+     (super/solver-shutdown self))
 
    (define (solver-push self)
-     (match-define (boolector server (app unique asserts) (app unique mins) (app unique maxs) env level) self)
-     (server-write
-      server
-      (begin
-        (encode env asserts mins maxs)
-        (push)))
-     (solver-clear-stacks! self)
-     (set-boolector-level! self (cons (dict-count env) level)))
+     (super/solver-push self))
    
    (define (solver-pop self [k 1])
-     (match-define (boolector server _ _ _ env level) self)
-     (when (or (<= k 0) (> k (length level)))
-       (error 'solver-pop "expected 1 < k <= ~a, given ~a" (length level) k))
-     (server-write server (pop k))
-     (solver-clear-stacks! self)
-     (for ([lvl level][i k])
-       (clear! env lvl))
-     (set-boolector-level! self (drop level k)))
-     
+     (super/solver-pop self k))
+   
    (define (solver-check self)
-     (match-define (boolector server (app unique asserts) (app unique mins) (app unique maxs) env _) self)
-     (cond [(ormap false? asserts) (unsat)]
-           [else (server-write
-                  server
-                  (begin (encode env asserts mins maxs)
-                         (check-sat)))
-                 (solver-clear-stacks! self)
-                 (read-solution server env)]))
+     (super/solver-check self boolector-read-solution))
    
    (define (solver-debug self)
-     (error 'solver-debug "boolector debug not supported"))])
+     (super/solver-debug self))])
 
 (define (set-default-options server)
   void)
 
-(define (numeric-terms ts caller)
-  (for/list ([t ts] #:unless (or (real? t) (bv? t)))
-    (match t
-      [(term _ (or (== @integer?) (== @real?) (? bitvector?))) t]
-      [_ (error caller "expected a numeric term, given ~s" t)])))
-
-(define (solver-clear-stacks! self)
-  (set-boolector-asserts! self '())
-  (set-boolector-mins! self '())
-  (set-boolector-maxs! self '()))
-
-(define (solver-clear-env! self)
-  (set-boolector-env! self (env))
-  (set-boolector-level! self '()))
 
 (define (boolector-typecheck v)
   (define (valid-type? t)
@@ -156,7 +101,7 @@
 ; unsatisfiable core (if the solution is 'unsat and a 
 ; core was extracted); #f (if the solution is 
 ; 'unsat and no core was extracted); or 'unknown otherwise.
-(define (read-solution server env #:unsat-core? [unsat-core? #f])
+(define (boolector-read-solution server env)
   (define m
     (decode
      (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
@@ -165,19 +110,11 @@
           (server-write server (get-model))
           (let loop ()
             (match (server-read server (read))
-              [(list (== 'objectives) _ ...) (loop)]
               [(list (== 'model) def ...)
                (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
                  (values (cadr d) d))]
               [other (error 'read-solution "expected model, given ~a" other)]))]
-         [(== 'unsat)
-          (if unsat-core?
-              (begin
-                (server-write server (get-unsat-core))
-                (match (server-read server (read))
-                  [(list (? symbol? name) ...) name]
-                  [other (error 'read-solution "expected unsat core, given ~a" other)]))
-              'unsat)]
+         [(== 'unsat) 'unsat]
          [(== 'unknown) 'unknown]
          [other (error 'read-solution "unrecognized solver output: ~a" other)]))
      (fake-env-types env)))

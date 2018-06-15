@@ -71,8 +71,7 @@ optimizing the resulting solution (if any) with respect to the provided objectiv
   @racket[solver-maximize],
   @racket[solver-check],
   @racket[solver-debug],
-  @racket[solver-shutdown],
-  @racket[solver-constructor], and
+  @racket[solver-shutdown], and
   @racket[solver-features].
   A solver may support a subset of this interface, which loosely follows
   the @hyperlink["http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.5-r2015-06-28.pdf"]{SMTLib solver interface}.
@@ -133,11 +132,6 @@ clears all added constraints, and releases all system resources associated
 with the given solver instance.  The solver must be able to reacquire these resources 
 if needed.  That is, the solver should behave as though its state was merely cleared
 (via @racket[solver-clear]) after a shutdown call.  
-}
-
-@defproc[(solver-constructor [solver solver?]) procedure?]{
-Returns a procedure that can be invoked to construct additional
-instances of the same solver type as @racket[solver].
 }
 
 @defproc[(solver-features [solver solver?]) (listof symbol?)]{
