@@ -48,16 +48,26 @@
       (run-solver-specific-tests (solver-features slvr)))))
 
 
-(printf "===== Running generic tests =====\n")
-(run-generic-tests)
+(define (fast-tests)
+  (printf "===== Running generic tests =====\n")
+  (run-generic-tests)
 
-(printf "===== Running Z3 tests =====\n")
-(run-tests-with-solver z3)
+  (printf "===== Running Z3 tests =====\n")
+  (run-tests-with-solver z3))
 
-(when (cvc4-available?)
-  (printf "===== Running CVC4 tests =====\n")
-  (run-tests-with-solver cvc4))
+(module+ fast
+  (fast-tests))
 
-(when (boolector-available?)
-  (printf "===== Running Boolector tests =====\n")
-  (run-tests-with-solver boolector))
+
+(define (slow-tests)
+  (when (cvc4-available?)
+    (printf "===== Running CVC4 tests =====\n")
+    (run-tests-with-solver cvc4))
+
+  (when (boolector-available?)
+    (printf "===== Running Boolector tests =====\n")
+    (run-tests-with-solver boolector)))
+
+(module+ test
+  (fast-tests)
+  (slow-tests))
