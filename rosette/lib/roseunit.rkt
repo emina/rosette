@@ -85,9 +85,9 @@
   (for ([rts (in-list (unbox discovered-tests))])
     (match-define (rosette-test-suite feats ts tc bw o) rts)
     (when (and (not (null? feats)) (for/and ([f feats]) (member f features)))
-      (parameterize ([term-cache tc]
+      (parameterize ([term-cache (hash-copy tc)]
                      [current-bitwidth bw]
-                     [current-oracle o])
+                     [current-oracle (oracle o)])
         (time (run-tests ts))))))
 
 ; The same as run-all-discovered-tests, but only for tests
@@ -96,9 +96,9 @@
   (for ([rts (in-list (unbox discovered-tests))])
     (match-define (rosette-test-suite feats ts tc bw o) rts)
     (when (null? feats)
-      (parameterize ([term-cache tc]
+      (parameterize ([term-cache (hash-copy tc)]
                      [current-bitwidth bw]
-                     [current-oracle o])
+                     [current-oracle (oracle o)])
         (time (run-tests ts))))))
 
     

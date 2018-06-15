@@ -103,7 +103,7 @@
 (define-match-expander fv-stx
   (lambda (stx)
     (syntax-case stx ()
-      [(_ pat ...) #'(fv pat ...)]))
+      [(_ pat ...) #'(fv pat ... _)]))
   (make-variable-like-transformer #'make-fv))
 
 (define (@fv? v)

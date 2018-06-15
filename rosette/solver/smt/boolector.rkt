@@ -22,8 +22,7 @@
   (cond
     [(and (path-string? path) (file-exists? path)) path]
     [(file-exists? boolector-path) boolector-path]
-    [(find-executable-path "boolector") => identity]
-    [else #f]))
+    [else (or (find-executable-path "boolector") #f)]))
 
 (define (boolector-available?)
   (not (false? (find-boolector #f))))
@@ -228,10 +227,10 @@
                [(fake-function _ _ original)
                 (match-define (function domain range) (type-of original))
                 (match val
-                  [(fv type proc)
+                  [(fv type)
                    (define inner
                      (lambda args
-                       (apply proc
+                       (apply val
                               (for/list ([a (in-list args)][t (in-list domain)])
                                 (if (eq? t @boolean?) (@if a (bv 1 1) (bv 0 1)) a)))))
                    (define outer

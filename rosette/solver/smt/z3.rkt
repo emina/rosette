@@ -20,8 +20,7 @@
     [(and (path-string? path) (file-exists? path)) path]
     [(file-exists? z3-path) z3-path]
     [(file-exists? (path-replace-suffix z3-path ".exe")) (path-replace-suffix z3-path ".exe")]
-    [(find-executable-path "z3") => identity]
-    [else #f]))
+    [else (or (find-executable-path "z3") #f)]))
 
 (define (make-z3 #:path [path #f])
   (define real-z3-path (find-z3 path))

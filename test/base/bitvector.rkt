@@ -871,10 +871,9 @@
 (define tests:extract
   (test-suite+
    "Tests for extract in rosette/base/bitvector.rkt"
-   #:features '(qf_bv)
+   #:features '(qf_bv qf_lia)
    (check-extract-simplifications)
-   (unless (boolector? (solver))
-     (check-extract-semantics))))
+   (check-extract-semantics)))
 
 (define tests:zero-extend
   (test-suite+

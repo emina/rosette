@@ -19,8 +19,7 @@
   (cond
     [(and (path-string? path) (file-exists? path)) path]
     [(file-exists? cvc4-path) cvc4-path]
-    [(find-executable-path "cvc4") => identity]
-    [else #f]))
+    [else (or (find-executable-path "cvc4") #f)]))
 
 (define (cvc4-available?)
   (not (false? (find-cvc4 #f))))
