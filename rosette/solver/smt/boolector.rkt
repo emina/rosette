@@ -3,7 +3,7 @@
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt"
-         (prefix-in super/ "solver.rkt")
+         (prefix-in base/ "base-solver.rkt")
          (only-in "smtlib2.rkt" get-model)
          (only-in "../../base/core/term.rkt" term term? term-type constant? expression constant term-cache)
          (only-in "../../base/core/bool.rkt" @boolean? @forall @exists)
@@ -18,15 +18,15 @@
 (define boolector-opts '("-m" "--smt2-model" "-i"))
 
 (define (boolector-available?)
-  (not (false? (super/find-solver "boolector" boolector-path #f))))
+  (not (false? (base/find-solver "boolector" boolector-path #f))))
 
 (define (make-boolector #:path [path #f])
-  (define real-boolector-path (super/find-solver "boolector" boolector-path path))
+  (define real-boolector-path (base/find-solver "boolector" boolector-path path))
   (if (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
       (error 'boolector "boolector binary is not available (expected to be at ~a); try passing the #:path argument to (boolector)" (path->string (simplify-path boolector-path)))
       (boolector (server real-boolector-path boolector-opts set-default-options) '() '() '() (env) '())))
 
-(struct boolector super/solver ()
+(struct boolector base/solver ()
   #:property prop:solver-constructor make-boolector
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cvc4>"))]
@@ -36,31 +36,31 @@
      '(qf_bv qf_uf))
 
    (define (solver-assert self bools)
-     (super/solver-assert self bools boolector-typecheck))
+     (base/solver-assert self bools boolector-typecheck))
 
    (define (solver-minimize self nums)
-     (super/solver-minimize self nums))
+     (base/solver-minimize self nums))
    
    (define (solver-maximize self nums)
-     (super/solver-maximize self nums))
+     (base/solver-maximize self nums))
    
    (define (solver-clear self)
-     (super/solver-clear self))
+     (base/solver-clear self))
    
    (define (solver-shutdown self)
-     (super/solver-shutdown self))
+     (base/solver-shutdown self))
 
    (define (solver-push self)
-     (super/solver-push self))
+     (base/solver-push self))
    
    (define (solver-pop self [k 1])
-     (super/solver-pop self k))
+     (base/solver-pop self k))
    
    (define (solver-check self)
-     (super/solver-check self boolector-read-solution))
+     (base/solver-check self boolector-read-solution))
    
    (define (solver-debug self)
-     (super/solver-debug self))])
+     (base/solver-debug self))])
 
 (define (set-default-options server)
   void)
