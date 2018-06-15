@@ -102,9 +102,8 @@
 ; core was extracted); #f (if the solution is 
 ; 'unsat and no core was extracted); or 'unknown otherwise.
 (define (boolector-read-solution server env)
-  (define m
-    (decode
-     (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
+  (define raw-model
+    (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
        (match (server-read server (read))
          [(== 'sat)
           (server-write server (get-model))
@@ -116,9 +115,48 @@
               [other (error 'read-solution "expected model, given ~a" other)]))]
          [(== 'unsat) 'unsat]
          [(== 'unknown) 'unknown]
-         [other (error 'read-solution "unrecognized solver output: ~a" other)]))
-     (fake-env-types env)))
+         [other (error 'read-solution "unrecognized solver output: ~a" other)])))
+  ; First, we need to fix up the model's shadowing of incremental variables
+  (define stripped-raw-model (if (hash? raw-model) (fixup-incremental-names raw-model) raw-model))
+  ; Now decode in an environment with fake types for UFs
+  (define m (decode stripped-raw-model (fake-env-types env)))
+  ; Finally, fix up the decoded model with the right types
   (fixup-model m))
+
+
+; Boolector adds a BTOR@level prefix to constant names in incremental mode,
+; and repeats bindings for the same constant at different levels.
+; For example:
+;   (model
+;     (define-fun BTOR@3c1 () (_ BitVec 8) #b00000000)
+;     (define-fun BTOR@3c2 () (_ BitVec 8) #b00001010)
+;     (define-fun BTOR@5c10 () (_ BitVec 1) #b1)
+;     (define-fun BTOR@5c11 () (_ BitVec 1) #b0)
+;     (define-fun BTOR@5c13 () (_ BitVec 1) #b1)
+;     (define-fun BTOR@6c10 () (_ BitVec 1) #b0)
+;     (define-fun BTOR@7c12 () (_ BitVec 1) #b1)
+;     (define-fun BTOR@8c13 () (_ BitVec 1) #b0))
+; For each constant, we need to choose the binding with the highest such level, and then
+; strip that the prefix so the names match their actual definitions.
+(define (strip-BTOR@-prefix-from-define-fun v)
+  (match v
+    [(list (== 'define-fun) id params ret body)
+     `(define-fun ,(regexp-replace #rx"^BTOR@[0-9]+c" (symbol->string id) "c") ,params ,ret ,body)]
+    [_ v]))
+(define (BTOR@-level k)
+  (let ([match (regexp-match #rx"^BTOR@([0-9]+)(c.*)$" (symbol->string k))])
+    (if match
+        (values (string->number (second match)) (string->symbol (third match)))
+        (values 0 k))))
+(define (fixup-incremental-names raw-model)
+  (define leveled
+    (for/fold ([ret (hash)]) ([(k v) raw-model])
+      (define-values (l id) (BTOR@-level k))
+      (if (> l (car (hash-ref ret id '(-1 -1))))
+          (hash-set ret id (cons l (strip-BTOR@-prefix-from-define-fun v)))
+          ret)))
+  (for/hash ([(k l/v) leveled])
+    (values k (cdr l/v))))
 
 
 ; Boolector interprets booleans as 1-bit bitvectors.

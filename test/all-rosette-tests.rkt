@@ -32,12 +32,12 @@
  "base/finitize.rkt"
  "base/distinct.rkt"
  "base/generics.rkt"
+ "base/push-pop.rkt"
  "query/solve.rkt"
  "query/verify.rkt"
  "query/synthesize.rkt"
  "query/solve+.rkt"
  "query/synthax.rkt"
- "query/push-pop.rkt"
  "query/debug.rkt"
  "query/optimize.rkt")
 

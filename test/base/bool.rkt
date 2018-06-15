@@ -29,7 +29,7 @@
 (define bool-tests
   (test-suite+ 
    "Tests for rosette/base/bool.rkt" 
-   #:features '()
+   #:features '(qf_uf)
    
    (check-equal? (! (! a)) a)
    (check-equal? (! #t) #f)
