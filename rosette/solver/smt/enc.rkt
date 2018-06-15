@@ -126,16 +126,7 @@
       ($ite ($< v 0) ($- v) v)))
 
 (define ($int->bv i n)
-  (define bv0 ($bv 0 n))
-  (apply 
-   $bvor 
-   (let loop ([b (- n 1)] [m ($mod i (expt 2 n))])
-     (if (< b 0)
-         (list)
-         (let* ([2^b (expt 2 b)]
-                [1? ($<= 2^b m)])          
-           (cons ($ite 1? ($bv 2^b n) bv0) 
-                 (loop (- b 1) ($- m ($ite 1? 2^b 0)))))))))
+  `((_ int2bv ,n) ,i))
 
 (define ($bv->nat v n) 
   (apply $+ (for/list ([i n]) ($bit v i n))))
