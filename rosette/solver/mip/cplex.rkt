@@ -12,7 +12,7 @@
          (only-in rosette/base/core/term
                   expression expression? constant? term? get-type @app type-of))
 
-(provide (rename-out [make-cplex cplex]) cplex? solver-check-with-init)
+(provide (rename-out [make-cplex cplex]) cplex? cplex-available? solver-check-with-init)
 
 (define-runtime-path cplex-path (build-path ".." ".." ".." "bin" "cplex"))
 (define cplex-opts '("-f"))
@@ -21,8 +21,10 @@
   (cond
     [(and (path-string? path) (file-exists? path)) path]
     [(file-exists? cplex-path) cplex-path]
-    [(find-executable-path "cplex") => identity]
-    [else #f]))
+    [else (or (find-executable-path "cplex") #f)]))
+
+(define (cplex-available?)
+  (not (false? (find-cplex #f))))
 
 (define (make-cplex #:path [path #f] #:timeout [timeout #f] #:verbose [verbose #f])
   (define real-cplex-path (find-cplex path))

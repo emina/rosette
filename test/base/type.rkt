@@ -75,4 +75,5 @@
    (least-common-supertype-tests)
    (subtype?-tests)))
 
-(time (run-tests type-tests))
+(module+ test
+  (time (run-tests type-tests)))

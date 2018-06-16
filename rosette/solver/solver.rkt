@@ -6,12 +6,14 @@
          solver-assert solver-push solver-pop solver-clear
          solver-minimize solver-maximize
          solver-check solver-debug 
-         solver-shutdown)
+         solver-shutdown solver-features
+         prop:solver-constructor solver-constructor? solver-constructor
+         )
 
 ; The generic solver interface specifies the set of procedures that 
 ; should be provided by a Rosette solver. These include 
 ; solver-assert, solver-clear, solver-minimize, solver-maximize,
-; solver-check, solver-debug, and solver-shutdown. A solver may support
+; solver-check, solver-debug, solver-shutdown, and solver-features. A solver may support
 ; a subset of this functionality.  This interface loosely follows
 ; the [SMTLib solver interface](http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.5-r2015-06-28.pdf).
 ;
@@ -37,7 +39,7 @@
 ; 
 ; The solver-debug procedure searches for an unsatisfiable core for the current 
 ; set of constraints.  It throws an error if these constraints are 
-; satisfiable.  The solver-dbug procedure will only core perform extraction on  
+; satisfiable.  The solver-debug procedure will only core perform extraction on  
 ; constraints that were added to the solver _after_ the most recent call to 
 ; solver-check (if any).  All constraints added prior to that call are ignored.
 ; 
@@ -45,6 +47,9 @@
 ; clears all added constraints, and releases all system resources associated 
 ; with this solver instance.  The solver must be able to reacquire these resources 
 ; if needed.  That is, the solver should behave as specified above after a shutdown call.
+;
+; The solver-features procedure returns a list of symbol?s specifying the
+; SMT features (logics, optimization, etc) a solver supports.
 (define-generics solver
   [solver-assert solver bools]
   [solver-push solver]
@@ -54,4 +59,13 @@
   [solver-maximize solver nums]
   [solver-check solver]
   [solver-debug solver]
-  [solver-shutdown solver])
+  [solver-shutdown solver]
+  [solver-features solver])
+
+; Solvers should implement the prop:solver-constructor type property
+; to provide the procedure used to construct new solvers of the same type.
+; Query forms will use this property to spawn new solvers when necessary
+; (e.g., synthesize needs two solvers).
+(define-values
+  (prop:solver-constructor solver-constructor? solver-constructor)
+  (make-struct-type-property 'solver-constructor))

@@ -115,23 +115,26 @@
     (define-symbolic x y boolean?)
     (define-symbolic f (~> boolean? boolean? boolean?))
     (define sol (solve (assert (forall (list x y) (equal? (f x y) (or x y))))))
-    (check-sat sol)
-    (check-unsat (verify (assert (equal? (evaluate (f x y) sol) (or x y))))))
+    (check-pred (disjoin sat? unknown?) sol)
+    (when (sat? sol)
+      (check-unsat (verify (assert (equal? (evaluate (f x y) sol) (or x y)))))))
 
   (let ()
     (define-symbolic x integer?)
     (define-symbolic f (~> integer? integer?))
     (define sol (solve (assert (forall (list x) (= x (f x))))))
-    (check-sat sol)
-    (check-unsat (verify (assert (equal? (evaluate (f x) sol) (identity x))))))
+    (check-pred (disjoin sat? unknown?) sol)
+    (when (sat? sol)
+      (check-unsat (verify (assert (equal? (evaluate (f x) sol) (identity x)))))))
 
   (let ()
     (define-symbolic offset integer?)
     (define-symbolic a (~> integer? integer?))
     (define-symbolic disk (~> integer? integer? integer?))
     (define sol (solve (assert (forall (list offset) (= (a offset) (disk 5 offset))))))
-    (check-sat sol)
-    (check-unsat (verify (assert (equal? (evaluate (a offset) sol) (evaluate (disk 5 offset) sol)))))
+    (check-pred (disjoin sat? unknown?) sol)
+    (when (sat? sol)
+      (check-unsat (verify (assert (equal? (evaluate (a offset) sol) (evaluate (disk 5 offset) sol))))))
     )
 
   (let ()
@@ -139,8 +142,9 @@
     (define-symbolic a (~> real? real?))
     (define-symbolic disk (~> real? real? real?))
     (define sol (solve (assert (forall (list offset) (= (a offset) (disk 5.35 offset))))))
-    (check-sat sol)
-    (check-unsat (verify (assert (equal? (evaluate (a offset) sol) (evaluate (disk 5.35 offset) sol)))))
+    (check-pred (disjoin sat? unknown?) sol)
+    (when (sat? sol)
+      (check-unsat (verify (assert (equal? (evaluate (a offset) sol) (evaluate (disk 5.35 offset) sol))))))
   )
   )
 
@@ -161,23 +165,27 @@
 (define tests:solving
   (test-suite+
    "Tests for solving quantified formulas"
+   #:features '(qf_lia quantifiers)
    (current-bitwidth #f)
    (check-solve)))
 
 (define tests:eval
   (test-suite+
    "Tests for evaluating quantified formulas"
+   #:features '(qf_bv qf_lia quantifiers)
    (current-bitwidth #f)
    (check-eval)))
 
 (define tests:uninterpreted
   (test-suite+
    "Tests for solving quantified formulas in the presence of uninterpreted functions"
+   #:features '(qf_uf qf_lia quantifiers)
    (current-bitwidth #f)
    (check-uninterpreted)))
 
-;(time (run-tests tests:basic))
-;(time (run-tests tests:finitized))
-;(time (run-tests tests:solving))
-;(time (run-tests tests:eval))
-(time (run-tests tests:uninterpreted))
+(module+ test
+  (time (run-tests tests:basic))
+  (time (run-tests tests:finitized))
+  (time (run-tests tests:solving))
+  (time (run-tests tests:eval))
+  (time (run-tests tests:uninterpreted)))

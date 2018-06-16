@@ -2,6 +2,7 @@
 
 (require "solver/solver.rkt" "solver/smt/z3.rkt"
          "solver/solution.rkt" 
+         (only-in "solver/smt/server.rkt" output-smt)
          "base/base.rkt"
          "query/query.rkt"
          (for-syntax racket)
@@ -26,11 +27,11 @@
   (clear-terms!)
   (current-solver (z3)))
 
-(provide 
+(provide
+ (except-out (all-from-out "solver/solver.rkt") prop:solver-constructor solver-constructor? solver-constructor)
  (all-from-out  
-  "solver/solver.rkt"
   "solver/solution.rkt" 
   "base/base.rkt"
-  "query/query.rkt") 
+  "query/query.rkt")
  (for-syntax (all-from-out racket))
- rosette clear-state!)
+ rosette clear-state! output-smt)

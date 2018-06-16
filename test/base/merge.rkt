@@ -106,5 +106,6 @@
    (list-merge-tests)
    (procedure-merge-tests)))
 
-(time (run-tests merge-tests))
+(module+ test
+  (time (run-tests merge-tests)))
 

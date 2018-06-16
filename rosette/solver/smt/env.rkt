@@ -9,7 +9,7 @@
          (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size)
          (only-in "../../base/core/real.rkt" @integer? @real?))
 
-(provide (rename-out [make-hash env]) ref! clear! smt-type)
+(provide (rename-out [make-hash env]) ref-const! ref-expr! clear! smt-type)
 
 (define (smt-id base n) (format-symbol "~a~a" base n))
 
@@ -34,60 +34,67 @@
   (for ([k to-evict])
     (hash-remove! env k)))
 
-; The ref! macro retrieves the SMT encoding for 
-; the given Rosette value from the given environment. 
-; If the environment does not have an encoding for 
-; the specified value, it is (optionally) modified to 
-; include an encoding for this value.  The macro takes  
-; two forms:
-; * (ref! env val) returns the identifier that is bound to 
-; the Rosette constant val in the environment env.  If no 
-; such identifier exists, the macro creates a fresh  
-; identifier id; binds val to id in env; declares the id using declare-const;
-; and returns id. The identifier takes the form (format-symbol "c~a" i), where 
-; i is the size of the env dictionary just before 
-; the macro is called.
-; * (ref! env val enc quantified) returns the SMT encoding that is
-; bound to the Rosette value val in the environment env.  
-; If env has no encoding for (cons val quantified), and the macro evaluates 
-; the provided encoding expression enc.  If the result of 
-; evaluating enc is not an s-expression (a pair), that result 
-; is returned. Otherwise, the macro uses define-const to 
-; introduce a new SMT definition using a fresh identifier id 
-; and enc as its body; binds val to id in env; and
-; returns id. The quantified variables are used as arguments for the definition.
-; The identifier takes the form 
-; (format-symbol "e~a" i), where i is the size of the 
-; env dictionary in just before the macro is called. 
-(define-syntax ref!
-  (syntax-rules ()
-    [(_ env val) 
-     (let ([defs env]
-           [v val])
-       (or (dict-ref defs v #f)         
-           (let ([id (smt-id 'c (dict-count defs))]
-                 [t (term-type v)])
-             (dict-set! defs v id)
-             (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
-             id)))]
-    [(_ env val enc quantified)
-     (let* ([defs env]
-            [v val]
-            [k (cons v quantified)])
-       (or (dict-ref defs k #f) 
-           (match enc 
-             [(? pair? e)
-              (let ([id (smt-id 'e (dict-count defs))])
-                (cond [(null? quantified)
-                       (dict-set! defs k id)
-                       (define-const id (smt-type (type-of v)) e)
-                       id]
-                      [else 
-                       (define-fun id (for/list ([q quantified]) (list (dict-ref defs q) (smt-type (type-of q))))
-                         (smt-type (type-of v))
-                         e)
-                       (define app-id (cons id (for/list ([q quantified]) (dict-ref defs q))))
-                       (dict-set! defs k app-id)
-                       app-id]))]
-             [e e])))]))
+; Retrieves the SMT identifier id for the Rosette constant v from the environment env.
+; 
+; If env[v] = id or env[v] = (variable id), then id is returned. Additionally, if 
+; env[v] = (variable id) and v is not quantified, then env is updated to bind v to id,
+; and id is declared in the SMT encoding using declare-fun.
+;
+; If env[v] is undefined, ref-const! creates the identifier id, which takes the 
+; form (format-symbol "c~a" i), where i is the size of env just before the call.
+; If v is not quantified, then v is bound to id in env, and d is declared in the SMT
+; encoding using declare-fun. Otherwise, v is bound to (variable id) in env.
+(define (ref-const! v env quantified)
+  (match (dict-ref env v #f)
+    [#f
+     (let ([id (smt-id 'c (dict-count env))])
+       (if (member v quantified)
+           (dict-set! env v (variable id))
+           (declare-fun! env v id))
+       id)]
+    [(? symbol? id) id]
+    [(variable id)
+     (unless (member v quantified)
+       (declare-fun! env v id))
+     id]))
 
+(struct variable (id) #:transparent)
+
+(define (declare-fun! defs v id)
+  (let ([t (term-type v)])
+    (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
+    (dict-set! defs v id)))
+
+; Retrieves the SMT encoding for the Rosette expression e in the environment env.
+; If env has a binding for (cons e quantified), that binding is returned. 
+; Otherwise, ref-expr! evaluates (encoder e env quantified) to obtain the encoding enc.
+; If enc is not an s-expression (a pair), it is returned. Otherwise, ref-expr! extends
+; the SMT encoding with (define-fun id ([arg-id type] ...) enc), where arg-id's are the
+; SMT identifiers for the values in the quantified list. The identifier id takes the form 
+; (format-symbol "e~a" i), where i is the size of the env dictionary just before the call.
+; If the quantified list is empty, env is extended with a binding from e to id, and id
+; is returned. Otherwise, env is extended with a binding from e to (e arg-id ...) and
+; (e arg-id ...) is returned.
+(define (ref-expr! e env quantified encoder)
+  (let ([k (cons e quantified)])
+    (or (dict-ref env k #f) 
+        (match (encoder e env quantified) 
+          [(? pair? enc)
+           (let ([id (smt-id 'e (dict-count env))])
+             (cond [(null? quantified)
+                    (dict-set! env k id)
+                    (define-const id (smt-type (type-of e)) enc)
+                    id]
+                   [else
+                    (define qids
+                      (for/list ([q quantified])
+                        (match (dict-ref env q)
+                          [(? symbol? qid) qid]
+                          [(variable qid) qid])))
+                    (define-fun id (for/list ([q quantified][qid qids]) (list qid (smt-type (type-of q))))
+                      (smt-type (type-of e))
+                      enc)
+                    (define app-id (cons id qids))
+                    (dict-set! env k app-id)
+                    app-id]))]
+          [enc enc]))))
