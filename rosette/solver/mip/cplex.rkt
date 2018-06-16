@@ -101,6 +101,9 @@
    ]
   #:methods gen:solver
   [
+   (define (solver-features self)
+     '(qf_lia qf_lra))
+   
    (define (solver-assert self bools)
      (set-cplex-asserts! self 
       (append (cplex-asserts self)

@@ -118,24 +118,6 @@ computing an unsatisfiable @racket[core] (i.e., calling @racket[core] on the
 resulting solution produces @racket[#f]).
 }
 
-@defproc[(solver-check-with-init 
-          [solver cplex?]
-          [#:mip-sol final-solution-file (or/c path-string? #f) #f]
-          [#:mip-start initial-solution-file (or/c path-string? #f) #f])
-         solution?]{
-Like @racket[solver-check], but accepts only a CPLEX solver,
-and takes optional arguments @racket[final-solution-file] and/or @racket[initial-solution-file].
-When @racket[final-solution-file] is a @racket[path-string?],
-the solver will save the solution to the given file in
-@hyperlink["https://www.ibm.com/support/knowledgecenter/bs/SSSA5P_12.6.2/ilog.odms.cplex.help/CPLEX/FileFormats/topics/MST.html"]{MST format}
-if a solution exists.
-This file can be used as the @racket[initial-solution-file] in a later call to @racket[solver-check-with-init]
-to provide starting values for variables.
-Note that @racket[initial-solution-file] does not have to be a satisfiable solution, but it must be in MST format.
-
-The @racket[constraints] given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
-}
-
 @defproc[(solver-debug [solver solver?]) solution?]{
 Searches for an unsatisfiable core of all constraints (boolean terms)
 added to the solver via @racket[solver-assert] @emph{after} the most recent call to 
@@ -243,12 +225,30 @@ or pass the path to the executable as the @racket[path] argument.
 
 The @racket[timeout] is in seconds.
 When @racket[verbose] is @racket[#t], the detailed output from CPLEX solver will be displayed.
+
+The @racket[constraints] given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
 }
 
 @defproc[(cplex-available?) boolean?]{
 Returns true if the CPLEX solver is available for use (i.e., Rosette can locate a @tt{cplex} binary).
 If this returns @racket[#f], @racket[(cplex)] will not succeed
 without its optional @racket[path] argument.}
+
+@defproc[(solver-check-with-init 
+          [solver cplex?]
+          [#:mip-sol final-solution-file (or/c path-string? #f) #f]
+          [#:mip-start initial-solution-file (or/c path-string? #f) #f])
+         solution?]{
+Like @racket[solver-check], but accepts only a CPLEX solver,
+and takes optional arguments @racket[final-solution-file] and/or @racket[initial-solution-file].
+When @racket[final-solution-file] is a @racket[path-string?],
+the solver will save the solution to the given file in
+@hyperlink["https://www.ibm.com/support/knowledgecenter/bs/SSSA5P_12.6.2/ilog.odms.cplex.help/CPLEX/FileFormats/topics/MST.html"]{MST format}
+if a solution exists.
+This file can be used as the @racket[initial-solution-file] in a later call to @racket[solver-check-with-init]
+to provide starting values for variables.
+Note that @racket[initial-solution-file] does not have to be a satisfiable solution, but it must be in MST format.
+}
 
 @section{Solutions}
 
