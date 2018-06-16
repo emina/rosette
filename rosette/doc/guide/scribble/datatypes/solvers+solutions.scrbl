@@ -245,6 +245,11 @@ The @racket[timeout] is in seconds.
 When @racket[verbose] is @racket[#t], the detailed output from CPLEX solver will be displayed.
 }
 
+@defproc[(cplex-available?) boolean?]{
+Returns true if the CPLEX solver is available for use (i.e., Rosette can locate a @tt{cplex} binary).
+If this returns @racket[#f], @racket[(cplex)] will not succeed
+without its optional @racket[path] argument.}
+
 @section{Solutions}
 
 A solution to a set of formulas may be satisfiable (@racket[sat?]), unsatisfiable  (@racket[unsat?]),
