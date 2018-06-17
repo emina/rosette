@@ -38,6 +38,7 @@
   
 (struct cplex (server asserts objs timeout verbose)
   #:mutable
+  #:property prop:solver-constructor make-cplex
   #:methods gen:custom-write
   [(define (write-proc self port mode) (fprintf port "#<cplex>"))]
   #:methods gen:mip-solver
