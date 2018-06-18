@@ -3,7 +3,7 @@
 @(require (for-label 
            rosette/solver/solver rosette/solver/solution 
            (only-in rosette/query/debug debug)
-           rosette/solver/smt/z3 rosette/solver/smt/cvc4 rosette/solver/smt/boolector
+           rosette/solver/smt/z3 rosette/solver/smt/cvc4 rosette/solver/smt/boolector rosette/solver/mip/cplex
            rosette/base/form/define rosette/query/query rosette/query/core
            rosette/base/core/term (only-in rosette/base/base bv?)
            (only-in rosette/base/core/safe assert) 
@@ -21,6 +21,7 @@
                    rosette/solver/solver
                    rosette/solver/solution
                    rosette/solver/smt/z3
+                   rosette/solver/mip/cplex
                    rosette/solver/smt/cvc4
                    rosette/solver/smt/boolector
                    #:use-sources 
@@ -29,6 +30,7 @@
                     rosette/solver/solver
                     rosette/solver/solution
                     rosette/solver/smt/z3
+                    rosette/solver/mip/cplex
                     rosette/solver/smt/cvc4
                     rosette/solver/smt/boolector)]
 
@@ -207,6 +209,46 @@ Returns true if the Boolector solver is available for use (i.e., Rosette can loc
 If this returns @racket[#f], @racket[(boolector)] will not succeed
 without its optional @racket[path] argument.}
 
+
+@defmodule[rosette/solver/mip/cplex #:no-declare]
+
+@defproc*[([(cplex [#:path path (or/c path-string? #f) #f] [#:timeout timeout (or/c integer? #f) #f] [#:verbose verbose boolean? #f]) solver?]
+           [(cplex? [v any/c]) boolean?])]{
+Returns a @racket[solver?] wrapper for the
+@hyperlink["https://www.ibm.com/developerworks/community/blogs/jfp/entry/CPLEX_Is_Free_For_Students?lang=en"]{CPLEX} solver from IBM.
+
+To use this solver, download and install CPLEX,
+and locate the CPLEX interactive executable,
+which is likely to be at @tt{CPLEX_Studio*/cplex/bin/x86-64*/cplex}.
+Either add this directory to your @tt{PATH},
+or pass the path to the executable as the @racket[path] argument.
+
+The @racket[timeout] is in seconds.
+When @racket[verbose] is @racket[#t], the detailed output from CPLEX solver will be displayed.
+
+The @racket[constraints] given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
+}
+
+@defproc[(cplex-available?) boolean?]{
+Returns true if the CPLEX solver is available for use (i.e., Rosette can locate a @tt{cplex} binary).
+If this returns @racket[#f], @racket[(cplex)] will not succeed
+without its optional @racket[path] argument.}
+
+@defproc[(solver-check-with-init 
+          [solver cplex?]
+          [#:mip-sol final-solution-file (or/c path-string? #f) #f]
+          [#:mip-start initial-solution-file (or/c path-string? #f) #f])
+         solution?]{
+Like @racket[solver-check], but accepts only a CPLEX solver,
+and takes optional arguments @racket[final-solution-file] and/or @racket[initial-solution-file].
+When @racket[final-solution-file] is a @racket[path-string?],
+the solver will save the solution to the given file in
+@hyperlink["https://www.ibm.com/support/knowledgecenter/bs/SSSA5P_12.6.2/ilog.odms.cplex.help/CPLEX/FileFormats/topics/MST.html"]{MST format}
+if a solution exists.
+This file can be used as the @racket[initial-solution-file] in a later call to @racket[solver-check-with-init]
+to provide starting values for variables.
+Note that @racket[initial-solution-file] does not have to be a satisfiable solution, but it must be in MST format.
+}
 
 @section{Solutions}
 
