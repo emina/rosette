@@ -130,8 +130,10 @@
      (solver-clear self))
      
    (define (solver-check self)
-     (solver-check-with-init self)
-     )
+     (solver-check-with-init self))
+   
+   (define (solver-debug self)
+     (error 'solver-debug "debugging isn't supported by solver ~v" self))
    ])
 
 (define (numeric-terms ts caller)
