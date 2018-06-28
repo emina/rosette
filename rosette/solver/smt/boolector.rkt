@@ -36,7 +36,7 @@
      '(qf_bv qf_uf))
 
    (define (solver-assert self bools)
-     (base/solver-assert self bools boolector-typecheck))
+     (base/solver-assert self bools boolector-wfcheck))
 
    (define (solver-minimize self nums)
      (base/solver-minimize self nums))
@@ -66,30 +66,35 @@
   void)
 
 
-(define (boolector-typecheck v)
-  (define (valid-type? t)
+(define (valid-type? t)
     (or (equal? t @boolean?)
         (bitvector? t)
         (and (function? t)
              (for/and ([d (in-list (function-domain t))]) (valid-type? d))
              (valid-type? (function-range t)))))
-  (cond
-    [(term? v)
-     (unless (valid-type? (type-of v))
-       (error 'boolector "boolector does not support values of type ~v (value: ~v)" (type-of v) v))
-     (match v
-       [(expression (or (== @forall) (== @exists)) vars body)
-        (error 'boolector "boolector does not support quantified formulas (value: ~v)" v)]
-       [(expression (== @extract) i j e)
-        (boolector-typecheck e)]
-       [(expression (or (== @sign-extend) (== @zero-extend)) v t)
-        (boolector-typecheck v)]
-       [(expression op es ...)
-        (map boolector-typecheck es)]
-       [_ #t])]
-    [else
-     (unless (or (boolean? v) (bv? v))
-       (error 'boolector "boolector does not support value (expected boolean? or bv?): ~v" v))]))
+; Check whether a term v is well-formed for Boolector -- it must not mention
+; types other than bitvectors, booleans, and uninterpreted functions over those
+; types. If not, raise an exception.
+(define (boolector-wfcheck v [cache (mutable-set)])
+  (unless (set-member? cache v)
+    (set-add! cache v)
+    (cond
+      [(term? v)
+       (unless (valid-type? (type-of v))
+         (error 'boolector "boolector does not support values of type ~v (value: ~v)" (type-of v) v))
+       (match v
+         [(expression (or (== @forall) (== @exists)) vars body)
+          (error 'boolector "boolector does not support quantified formulas (value: ~v)" v)]
+         [(expression (== @extract) i j e)
+          (boolector-wfcheck e cache)]
+         [(expression (or (== @sign-extend) (== @zero-extend)) v t)
+          (boolector-wfcheck v cache)]
+         [(expression op es ...)
+          (for ([e es]) (boolector-wfcheck e cache))]
+         [_ #t])]
+      [else
+       (unless (or (boolean? v) (bv? v))
+         (error 'boolector "boolector does not support value (expected boolean? or bv?): ~v" v))])))
 
 
 ; Reads the SMT solution from the server.

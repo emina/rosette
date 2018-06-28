@@ -24,13 +24,15 @@
   #:mutable)
 
 
-(define (solver-assert self bools [typecheck #f])
+(define (solver-assert self bools [wfcheck #f])
+  (define wfcheck-cache (mutable-set))
   (set-solver-asserts! self 
     (append (solver-asserts self)
             (for/list ([b bools] #:unless (equal? b #t))
               (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
                 (error 'assert "expected a boolean value, given ~s" b))
-              (when typecheck (typecheck b))
+              (when wfcheck
+                (wfcheck b wfcheck-cache))
               b))))
 
 (define (solver-minimize self nums)
