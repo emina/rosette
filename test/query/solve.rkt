@@ -14,28 +14,28 @@
     (check-sat (solve (assert #t)))
     (check-unsat (solve (assert #f)))
     
-    (check-unsat (solve (assert (> xi (+ xi yr)))
-                        (assert (= yr 2.5))))
-    (check-sat (solve (assert (< xi (+ xi yr)))
-                      (assert (= yr 2.5))))
+    (check-unsat (solve (begin (assert (> xi (+ xi yr)))
+                               (assert (= yr 2.5)))))
+    (check-sat (solve (begin (assert (< xi (+ xi yr)))
+                             (assert (= yr 2.5)))))
     
-    (check-unsat (solve (assert (> xi (+ xi (bitvector->integer yb))))
-                        (assert (bveq yb (bv 1 4)))))    
-    (check-sat (solve (assert (< xi (+ xi (bitvector->integer yb))))
-                      (assert (bveq yb (bv 1 4)))))
+    (check-unsat (solve (begin (assert (> xi (+ xi (bitvector->integer yb))))
+                               (assert (bveq yb (bv 1 4))))))    
+    (check-sat (solve (begin (assert (< xi (+ xi (bitvector->integer yb))))
+                             (assert (bveq yb (bv 1 4))))))
     
-    (check-sat (solve (assert (= (/ xr yr) zr))
-                      (assert (= zr 1.5))))
-    (check-sat (solve (assert (= (* xr yr) zr))
-                      (assert (= zr 20000))))
+    (check-sat (solve (begin (assert (= (/ xr yr) zr))
+                             (assert (= zr 1.5)))))
+    (check-sat (solve (begin (assert (= (* xr yr) zr))
+                             (assert (= zr 20000)))))
     
     (current-bitwidth 4)
     (check-sat (solve (assert #t)))
     (check-unsat (solve (assert #f)))
     (check-sat (solve (assert (bveq xb yb))))
-    (check-unsat (solve (assert (bveq xb yb))
-                        (assert (bveq xb (bv 0 4)))
-                        (assert (bveq yb (bv 1 4)))))
+    (check-unsat (solve (begin (assert (bveq xb yb))
+                               (assert (bveq xb (bv 0 4)))
+                               (assert (bveq yb (bv 1 4))))))
     ))
 
 (define finitized-tests
@@ -43,19 +43,19 @@
     (current-bitwidth 5)
     
     ; Finite model that is also a real model.
-    (check-sat (solve (assert (= (/ xr yr) zr))
-                      (assert (= zr 2))))
+    (check-sat (solve (begin (assert (= (/ xr yr) zr))
+                             (assert (= zr 2)))))
     (check-sat (solve (assert (= xr (bitvector->integer yb)))))
     
     ; No finite model that is also a real model.
-    (check-unsat (solve (assert (= (/ xr yr) zr))
-                        (assert (= zr 1.5))))
-    (check-unsat (solve (assert (= (* xr yr) zr))
-                        (assert (= zr 20000))))
+    (check-unsat (solve (begin (assert (= (/ xr yr) zr))
+                               (assert (= zr 1.5)))))
+    (check-unsat (solve (begin (assert (= (* xr yr) zr))
+                               (assert (= zr 20000)))))
     
     (current-bitwidth 3)
-    (check-unsat (solve (assert (= xr (bitvector->integer yb)))
-                        (assert (bveq yb (bv -8 4)))))
+    (check-unsat (solve (begin (assert (= xr (bitvector->integer yb)))
+                               (assert (bveq yb (bv -8 4))))))
  ))     
 
 (define unknown-tests 
@@ -64,8 +64,8 @@
       (check-pred
        unknown?
        (solve
-        (assert (> (* xi xi) 3))
-        (assert (= (+ (* xr xr xr) (* xr yr)) 3.0)))))))
+        (begin (assert (> (* xi xi) 3))
+               (assert (= (+ (* xr xr xr) (* xr yr)) 3.0))))))))
      
 (define regression-tests 
   (test-suite+ "Solve regression tests."

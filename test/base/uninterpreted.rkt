@@ -16,29 +16,35 @@
 
 (define (check-not)
   (define-symbolic ¬ (~> boolean? boolean?))
-  (define sol (solve (assert (equal? (¬ #t) #f))
-                     (assert (equal? (¬ #f) #t))))
+  (define sol
+    (solve (begin
+             (assert (equal? (¬ #t) #f))
+             (assert (equal? (¬ #f) #t)))))
   (check-equivalent (sol ¬) !))
 
 (define (check-and)
   (define-symbolic ∧ (~> boolean? boolean? boolean?))
   (define sol
-    (solve (assert (equal? (∧ #t #t) #t))
-           (assert (equal? (∧ #t #f) #f))
-           (assert (equal? (∧ #f #t) #f))
-           (assert (equal? (∧ #f #f) #f))))
+    (solve
+     (begin
+       (assert (equal? (∧ #t #t) #t))
+       (assert (equal? (∧ #t #f) #f))
+       (assert (equal? (∧ #f #t) #f))
+       (assert (equal? (∧ #f #f) #f)))))
   (check-equivalent (sol ∧) &&))
 
 (define (check-boolean-mixed)
   (define-symbolic ∧ (~> boolean? boolean? boolean?))
   (define-symbolic a b boolean?)
   (define sol
-    (solve (assert (equal? a #t))
-           (assert (equal? b #f))
-           (assert (equal? (∧ a a) a))
-           (assert (equal? (∧ a b) b))
-           (assert (equal? (∧ b a) b))
-           (assert (equal? (∧ b (&& (! a) b)) b))))
+    (solve
+     (begin
+       (assert (equal? a #t))
+       (assert (equal? b #f))
+       (assert (equal? (∧ a a) a))
+       (assert (equal? (∧ a b) b))
+       (assert (equal? (∧ b a) b))
+       (assert (equal? (∧ b (&& (! a) b)) b)))))
   (check-equivalent (sol ∧) &&))
   
 (define (check-bvnot)
@@ -70,10 +76,13 @@
 (define (check-int-real)
   (define-symbolic ⊕ (~> integer? integer? real?))
   (define-symbolic x integer?)
-  (define sol (solve (assert (= x 1))
-                     (assert (= (⊕ x 1) (+ x 1)))
-                     (assert (= (⊕ 2 x) 3))
-                     (assert (= (⊕ 2 (+ x 2)) 6))))
+  (define sol
+    (solve
+     (begin
+       (assert (= x 1))
+       (assert (= (⊕ x 1) (+ x 1)))
+       (assert (= (⊕ 2 x) 3))
+       (assert (= (⊕ 2 (+ x 2)) 6)))))
   (test-equivalent (sol ⊕) '(((1 1) . 2) ((2 1) . 3) ((2 3) . 6))))
 
 (define (check-finitization-disallowed)

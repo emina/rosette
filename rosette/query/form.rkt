@@ -7,15 +7,15 @@
 (provide solve verify synthesize optimize
          current-solver (rename-out [∃-solve+ solve+]))
 
-; The solve query evaluates the given forms, gathers all 
+; The solve query evaluates the given expression, gathers all 
 ; assertions generated during the evaluation, 
 ; and searches for a model (a binding from symbolic 
 ; constants to values) that satisfies those assertions. 
 ; If current-bitwidth is a positive integer k, and the solve form returns unsat, 
 ; this means that there is no solution under the k-bit semantics that 
 ; corresponds to a solution under the infinite precision semantics.  
-(define-syntax-rule (solve form forms ...)
-  (∃-solve (eval/asserts (thunk form forms ...))))
+(define-syntax-rule (solve expr)
+  (∃-solve (eval/asserts (thunk expr))))
 
 ; The verify query evaluates the given forms, gathers all 
 ; assumptions and assertions generated during the evaluation, 

@@ -64,23 +64,27 @@
    (unsat))
   (check-sol
    (solve
-    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
-    (assert (forall (list a) (exists (list b c) (and (not (= a b)) (= (+ a c) b))))))
+    (begin
+      (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+      (assert (forall (list a) (exists (list b c) (and (not (= a b)) (= (+ a c) b)))))))
    (sat (hash c 0)))
   (check-sol
    (solve
-    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
-    (assert (forall (list a c) (exists (list b c) (and (not (= a b)) (= (+ a c) b))))))
+    (begin
+      (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+      (assert (forall (list a c) (exists (list b c) (and (not (= a b)) (= (+ a c) b)))))))
    (sat (hash c 0)))
   (check-sol
    (solve
-    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
-    (assert (forall (list a c) (exists (list b) (= (+ a c) b)))))
+    (begin
+      (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+      (assert (forall (list a c) (exists (list b) (= (+ a c) b))))))
    (sat (hash c 0)))
   (check-sol
    (solve
-    (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
-    (assert (forall (list a) (exists (list b) (and (not (= a b)) (= (+ a c) b))))))
+    (begin 
+      (assert (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b)))))
+      (assert (forall (list a) (exists (list b) (and (not (= a b)) (= (+ a c) b)))))))
    (unsat))
 )
 
@@ -97,7 +101,7 @@
      (exists (list a) (forall (list b) (and (= a 0) (= b (+ a b)))))))
   (let* ([f (forall (list a) (exists (list b) (and (= a b) (= (+ a c) b))))]
          [g (forall (list a) (exists (list b c) (and (not (= a b)) (= (+ a c) b))))]
-         [s (solve (assert f) (assert g))])    
+         [s (solve (begin (assert f) (assert g)))])    
     (check-equal?
      (evaluate f s)
      (forall (list a) (exists (list b) (and (= a b) (= a b)))))
