@@ -42,20 +42,21 @@
   (test-suite+ "Solve tests with finitization."
     (current-bitwidth 5)
     
-    ; Finite model that is also a real model.
     (check-sat (solve (begin (assert (= (/ xr yr) zr))
                              (assert (= zr 2)))))
     (check-sat (solve (assert (= xr (bitvector->integer yb)))))
     
-    ; No finite model that is also a real model.
     (check-unsat (solve (begin (assert (= (/ xr yr) zr))
-                               (assert (= zr 1.5)))))
+                               (assert (= zr 1.5))
+                               (assert (! (= zr 1))))))
     (check-unsat (solve (begin (assert (= (* xr yr) zr))
-                               (assert (= zr 20000)))))
+                               (assert (= zr 20000))
+                               (assert (! (= zr 0))))))
     
     (current-bitwidth 3)
     (check-unsat (solve (begin (assert (= xr (bitvector->integer yb)))
-                               (assert (bveq yb (bv -8 4))))))
+                               (assert (bveq yb (bv -8 4)))
+                               (assert (! (= xr 0))))))
  ))     
 
 (define unknown-tests 

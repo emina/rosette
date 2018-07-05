@@ -49,11 +49,8 @@
 ; Searches for a model, if any, for the conjunction 
 ; of the given formulas, using the provided solver and 
 ; bitwidth.  The solver and the bitwidth are, by default, 
-; current-solver and current-bitwidth.  Returns an unsat 
-; solution if the given formulas don't have a model with 
-; the specified bitwidth that is also correct under the 
-; precise semantics. This procedure clears the solver's state 
-; before and after use.
+; current-solver and current-bitwidth. This procedure 
+; clears the solver's state before and after use.
 (define (∃-solve φs
                  #:minimize [mins '()]
                  #:maximize [maxs '()]
@@ -69,13 +66,7 @@
            (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
            (solver-minimize solver (for/list ([m mins]) (hash-ref fmap m)))
            (solver-maximize solver (for/list ([m maxs]) (hash-ref fmap m)))
-           (let loop ()
-             (define fsol (complete (solver-check solver) fmap))
-             (define sol (unfinitize fsol fmap))
-             (cond 
-               [(or (unsat? sol) (all-true? φs sol)) sol]
-               [else (solver-assert solver (list (¬solution fsol)))
-                     (loop)])))]
+           (unfinitize (solver-check solver) fmap))]
         [else 
          (solver-assert solver φs)
          (solver-minimize solver mins)
@@ -109,24 +100,16 @@
       (raise e)))
   (define sols (list (sat)))
   (if bw
-      (let ([fmap (make-hash)]
-            [φs '()])
+      (let ([fmap (make-hash)])
         (lambda (δ)
           (with-handlers ([exn? handler])            
             (cond [(or (boolean? δ) (term? δ))
                    (finitize (list δ) bw fmap)
                    (solver-push solver)
                    (solver-assert solver (list (hash-ref fmap δ)))
-                   (set! φs (cons δ φs)) 
-                   (let inner ()
-                     (define fsol (complete (solver-check solver) fmap))
-                     (define sol (unfinitize fsol fmap))
-                     (cond [(or (unsat? sol) (all-true? φs sol))
-                            (set! sols (cons sol sols))
-                            sol]
-                           [else  
-                            (solver-assert solver (list (¬solution fsol)))
-                            (inner)]))]
+                   (define sol (unfinitize (solver-check solver) fmap))
+                   (set! sols (cons sol sols))
+                   sol]
                   [(equal? δ 'shutdown)
                    (solver-shutdown solver) 
                    (custodian-shutdown-all cust)
@@ -136,7 +119,6 @@
                     (for/list ([(t ft) fmap] #:when (and (term? ft) (not (eq? t ft)))) ft))]
                   [else
                    (solver-pop solver δ)
-                   (set! φs (drop φs δ))
                    (set! sols (drop sols δ))
                    (car sols)])))) 
       (lambda (δ)

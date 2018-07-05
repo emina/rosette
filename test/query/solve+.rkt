@@ -53,16 +53,14 @@
   (test-suite+ "Solve+ tests with finitization."
     (current-bitwidth 5)
     
-    ; Finite model that is also a real model.
-    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 2) (= xr 5))
+    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 2) (= xr 5) (! (= yr 2)))
     (check-solve+ (= xr (bitvector->integer yb)) (bveq yb (bv 2 4)) (! (= xr 2)))
     
-    ; No finite model that is also a real model.
-    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 1.5))
-    (check-solve+ (= (* xr yr) zr) (= zr 20000))
+    (check-solve+ (! (= yr 0)) (= (/ xr yr) zr) (= zr 1.5) (! (= zr 1)))
+    (check-solve+ (= (* xr yr) zr) (= zr 20000) (! (= zr 0)))
     
     (current-bitwidth 3)
-    (check-solve+ (= xr (bitvector->integer yb)) (bveq yb (bv -8 4)))
+    (check-solve+ (= xr (bitvector->integer yb)) (bveq yb (bv -8 4)) (! (= xr 0)))
  )) 
 
 (module+ test             

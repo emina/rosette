@@ -12,7 +12,7 @@
          (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
          (only-in "../base/core/term.rkt" [operator-unsafe unsafe]))
 
-(provide finitize current-bitwidth unfinitize complete)
+(provide finitize current-bitwidth unfinitize)
 
 ; The current bitwidth parameter controls the finitization of real / integer terms.
 (define current-bitwidth
@@ -53,23 +53,6 @@
 
 (define (unfinitize-value t v)
   (if (infinite? t) (bv-value v) v))
-       
-                       
-; Takes as input a solution and a finitization map 
-; produced by calling the finitize procedure in finitize.rkt, 
-; and returns a solution that is complete with respect to the given map.  
-; That is, if the given solution is satisfiable but has no mapping for a
-; constant in fmap, the returned solution has a default binding  
-; for that constant (and same bindings as sol for other constants).  If 
-; the given solution is unsat, it is simply returned.
-(define (complete sol fmap) 
-  (match sol
-    [(model m)
-     (sat (for/hash ([(k fk) fmap] #:when (constant? k))
-            (values fk (if (dict-has-key? m fk)
-                           (dict-ref m fk)
-                           (solvable-default (term-type fk))))))]
-    [_ sol]))
 
 ; The finitize-any procedure takes a value (a term or a literal), 
 ; and an environment (a hash-map from terms to their QF_BV encoding), and returns  
