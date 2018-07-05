@@ -21,7 +21,7 @@
                  (exported 'rosette/query/query)))
 
 (define (clear-state!)
-  (current-bitwidth 5)
+  (current-bitwidth #f)
   (current-oracle (oracle))
   (clear-asserts!)
   (clear-terms!)

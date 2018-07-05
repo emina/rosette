@@ -16,7 +16,7 @@
 
 ; The current bitwidth parameter controls the finitization of real / integer terms.
 (define current-bitwidth
-  (make-parameter 5 
+  (make-parameter #f 
                   (lambda (bw) 
                     (unless (or (false? bw) (and (integer? bw) (positive? bw)))
                       (raise-argument-error 'current-bitwidth "positive integer or #f" bw))

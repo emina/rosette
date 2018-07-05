@@ -11,7 +11,8 @@
 (define scalar-tests
   (test-suite+
    "Tests for scalar operators"
-   
+
+   (current-bitwidth 5)
    (check-equal? ($& 3 5 7) (bitwise-and 3 5 7))
    (check-equal? ($$ 3 5 7) (bitwise-ior 3 5 7))
    (check-equal? ($^ 3 5 7) (bitwise-xor 3 5 7))
