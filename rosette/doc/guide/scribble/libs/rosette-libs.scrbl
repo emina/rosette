@@ -51,7 +51,7 @@ provided expressions.
 (print-forms 
  (synthesize #:forall (list i)
              #:guarantee (assert (equal? (div2 i) (bvudiv i (bv 2 8))))))
-'(define (div2 x) (bvlshr x (bv 1 8))))] 
+'(define (div2 x) (bvlshr x (bv #x01 8))))] 
 }
 
 @defform*[((define-synthax id
