@@ -155,7 +155,9 @@ extended with some additional options, are:
 
 }
 
-@defparam[output-smt on? (or/c boolean? path-string?)]{
+@defparam[output-smt on? (or/c boolean? path-string? output-port?)]{
+  Enables verbose output of generated SMT constraints.
+
   When the @racket[output-smt] parameter is @racket[#t] or a @racket[path-string?],
   Rosette will log the SMT encoding of all solver queries to temporary files.
   A new temporary file is created for each solver process Rosette spawns.
@@ -165,7 +167,16 @@ extended with some additional options, are:
   in the system's temporary directory; otherwise,
   the temporary files are created in the given path (which must be a directory).
   The path to each temporary file is printed to @racket[current-error-port]
-  when it is first created. Default value is @racket[#f].
+  when it is first created.
+
+  When the @racket[output-smt] parameter is an @racket[output-port?],
+  Rosette will log the SMT encoding to that output port.
+  For example, setting @racket[output-smt] to @racket[(current-output-port)]
+  will print the SMT encoding to standard output.
+  All solvers will log to the same output port,
+  so several separate encodings may be interleaved when multiple solvers are in use.
+
+  Default value is @racket[#f].
 }
 
 
