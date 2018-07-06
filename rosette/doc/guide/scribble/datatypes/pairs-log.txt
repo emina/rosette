@@ -21,7 +21,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate xs sol) ((3) 0 () 0 () () (q values (1 4))) #"" #"")
+((evaluate xs sol) ((3) 0 () 0 () () (q values (-1 0))) #"" #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define p (if b (cons 1 2) (cons 4 #f)))
  ((3) 0 () 0 () () (c values c (void)))

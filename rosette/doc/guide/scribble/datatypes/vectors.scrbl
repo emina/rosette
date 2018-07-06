@@ -48,7 +48,13 @@ if they have the same length and @racket[equal?] contents.
 (define-symbolic x y z n integer?)
 (code:line (define xs (take (list x y z) n))        (code:comment "xs is a symbolic list"))
 (code:line (define vs (list->vector xs))            (code:comment "vs is a symbolic vector"))
-(define sol (solve (assert (= 4 (vector-ref vs (sub1 n))))))
+(define sol
+  (solve
+   (begin
+     (assert (< n 3))
+     (assert (= 4 (vector-ref vs (sub1 n)))))))
+(evaluate n sol)
+(evaluate (list x y z) sol)
 (evaluate vs sol)
 (evaluate xs sol)]
 

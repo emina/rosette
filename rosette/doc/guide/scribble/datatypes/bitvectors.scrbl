@@ -2,7 +2,7 @@
 
 @(require (for-label 
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
-           rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
+           rosette/base/core/term 
            (only-in rosette/base/core/union union?)
            (only-in rosette/base/base bv bv? bitvector bitvector? bitvector-size
                     bveq bvslt bvsgt bvsle bvsge bvult bvugt bvule bvuge

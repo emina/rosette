@@ -47,7 +47,7 @@ current @tech["reasoning precision"], as determined by the @racket[current-bitwi
 parameter.  In particular, if this parameter is set to @racket[#f], operations on symbolic numbers
 retain their infinite-precision Racket semantics.  However, because infinite-precision
 reasoning is not efficiently (or at all) decidable for arbitrary numeric operations,
-@racket[current-bitwidth] is, by default, set to a small positive integer @var[k].
+programs may need to set @racket[current-bitwidth] to a small positive integer @var[k].
 With this setting, symbolic numbers are treated as signed @var[k]-bit integers. See
 @secref{sec:reasoning-precision} for details and examples.
 

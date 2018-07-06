@@ -22,9 +22,12 @@
  #""
  #"")
 ((define vs (list->vector xs)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define sol (solve (assert (= 4 (vector-ref vs (sub1 n))))))
+((define sol
+   (solve (begin (assert (< n 3)) (assert (= 4 (vector-ref vs (sub1 n)))))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
+((evaluate n sol) ((3) 0 () 0 () () (q values 2)) #"" #"")
+((evaluate (list x y z) sol) ((3) 0 () 0 () () (q values (0 4 0))) #"" #"")
 ((evaluate vs sol) ((3) 0 () 0 () () (c values c (v! 0 4))) #"" #"")
 ((evaluate xs sol) ((3) 0 () 0 () () (q values (0 4))) #"" #"")
