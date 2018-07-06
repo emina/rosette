@@ -286,36 +286,32 @@ the @racket[debug] form.}
 @section[#:tag "sec:reasoning-precision"]{Reasoning Precision}
 
 @defparam[current-bitwidth k (or/c #f positive-integer?)
-          #:value 5]{
+          #:value #f]{
   A parameter that defines the current @deftech[#:key "reasoning precision"]{reasoning precision}
   for solver-aided queries over @racket[integer?] and @racket[real?] constants.
   Setting @racket[current-bitwidth] to a positive integer @racket[k] instructs Rosette to approximate
   both reals and integers with signed @racket[k]-bit words. Setting it to @racket[#f] instructs Rosette to use
   infinite precision for real and integer operations.  As a general rule, @racket[current-bitwidth] should
-  be set once, before any numeric operations are evaluated. 
-
-  Technically, when @racket[current-bitwidth] is a positive integer @racket[k],
-  Rosette translates queries over reals and integers into constraints in the 
-  @hyperlink["http://rise4fun.com/z3/tutorial"]{theory of bitvectors}
-  (of size @racket[k]), which can be efficiently decided by SMT solvers.
-  When this form of translation is used, a @racket[solve] or @racket[verify]
-  query will produce a satisfiable result if and only if there is a
-  solution under @racket[k]-bit semantics that is also correct under infinite-precision semantics.
-  (Note that this guarantee is limited in the case of unsatisfiability---it says only
-   that no @racket[k]-bit solution corresponds to an infinite-precision solution.)
-  Rosette does not provide such a soundness guarantee for other queries because it is 
-  computationally expensive or impossible to provide.  A @racket[synthesize] query, for example, 
-  may produce a solution that is correct under @racket[k]-bit semantics, but incorrect under
-  infinite-precision semantics. 
+  be set once, before any solver-aided queries are issued. 
 
   When  @racket[current-bitwidth] is @racket[#f], Rosette translates queries over
   reals and integers into constraints in the
   @hyperlink["http://rise4fun.com/z3/tutorial"]{theories of reals and integers}. 
   These theories are effectively decidable only for linear constraints,
-  so most applications will perform better when @racket[current-bitwidth] is
-  set to a positive integer.
+  so setting @racket[current-bitwidth] to a positive integer will lead to better
+  performance for programs that perform nonlinear arithmetic.
 
-  The @racket[current-bitwidth] parameter must be set to @racket[#f] when
+  When @racket[current-bitwidth] is set to a positive integer @racket[k],
+  Rosette translates queries over reals and integers into constraints in the 
+  @hyperlink["http://rise4fun.com/z3/tutorial"]{theory of bitvectors}
+  (of size @racket[k]), which can be decided efficiently in practice.
+  When this form of translation is used, however, solver-aided queries can produce
+  counterintuitive results due to arithmetic over- and under-flow, as demonstrated below.
+
+  Rosette sets @racket[current-bitwidth] to @racket[#f] by default for two reasons.
+  First, this setting is consistent with Racket's infinite-precision semantics for integers and reals,
+  avoiding counterintuitive query behavior.
+  Second, the @racket[current-bitwidth] parameter must be set to @racket[#f] when
   executing queries over assertions that contain @tech[#:key "quantified formula"]{quantified formulas}
   or @seclink["sec:UF"]{uninterpreted functions}.
   Otherwise, such a query will throw an exception.
@@ -325,15 +321,23 @@ the @racket[debug] form.}
  (define-symbolic x y real?)
  (define-symbolic f (~> real? real?))
  (current-bitwidth 5)  
- (code:line (solve (assert (= x 3.5))) (code:comment "there is no solution under"))
- (code:line (solve (assert (= x 64)))  (code:comment "5-bit signed integer semantics"))
- (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers are not supported"))
- (code:line (solve (assert (= x (f x))))  (code:comment "same for uninterpreted functions"))
+ (code:line (solve (assert (= x 3.5)))              (code:comment "3.5 = 3 under 5-bit semantics"))
+ (code:line (solve (assert (= x 64)))               (code:comment "0 = 64 under 5-bit semantics"))
+ (code:line (solve (assert (and (= x 64) (= x 0)))) (code:comment "leading to counterintuitive results."))
+ (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "Quantifiers are not supported,"))
+ (code:line (solve (assert (= x (f x))))  (code:comment "and neither are uninterpreted functions."))
  (current-bitwidth #f)
- (code:line (solve (assert (= x 3.5))) (code:comment "but there is a solution under"))
- (code:line (solve (assert (= x 64)))  (code:comment "infinite-precision semantics"))
- (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "and quantifiers work"))
- (code:line (solve (assert (= x (f x)))) (code:comment "so do uninterpreted functions"))]
+ (code:line (solve (assert (= x 3.5))) (code:comment "Infinite-precision semantics produces expected results."))
+ (solve (assert (= x 64)))
+ (solve (assert (and (= x 64) (= x 0))))
+ (code:line (solve (assert (forall (list x) (= x (+ x y)))))  (code:comment "Quantifiers work, and"))
+ (code:line (solve (assert (= x (f x)))) (code:comment "so do uninterpreted functions."))
+ (code:line (define-symbolic i j integer?) (code:comment "But nonlinear integer arithmetic is undecidable."))
+ (solve
+  (begin
+    (assert (> i 0))
+    (assert (> j 0))
+    (assert (or (= (/ i j) 2) (= (/ j i) 2)))))]
 }
 
  

@@ -171,7 +171,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 6]\n [y 13])"))))
+  (c values c (0 (u . "(model\n [x 6]\n [y 7])"))))
  #""
  #"")
 ((inc (< y 4))
@@ -195,7 +195,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 6]\n [y 13])"))))
+  (c values c (0 (u . "(model\n [x 6]\n [y 7])"))))
  #""
  #"")
 ((inc (< y 9))
@@ -311,7 +311,7 @@
   (c values c (0 (u . "x"))))
  #""
  #"")
-((evaluate c sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
+((evaluate c sol) ((3) 0 () 0 () () (q values 77)) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -364,7 +364,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(model\n [x 3])"))))
  #""
  #"")
 ((solve (assert (= x 64)))
@@ -376,7 +376,19 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(model\n [x 0])"))))
+ #""
+ #"")
+((solve (assert (and (= x 64) (= x 0))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [x 0])"))))
  #""
  #"")
 ((solve (assert (forall (list x) (= x (+ x y)))))
@@ -428,6 +440,18 @@
   (c values c (0 (u . "(model\n [x 64])"))))
  #""
  #"")
+((solve (assert (and (= x 64) (= x 0))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
 ((solve (assert (forall (list x) (= x (+ x y)))))
  ((3)
   1
@@ -450,5 +474,22 @@
   ()
   ()
   (c values c (0 (u . "(model\n [x 0]\n [f (fv real?~>real?)])"))))
+ #""
+ #"")
+((define-symbolic i j integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((solve
+  (begin
+    (assert (> i 0))
+    (assert (> j 0))
+    (assert (or (= (/ i j) 2) (= (/ j i) 2)))))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unknown)"))))
  #""
  #"")
