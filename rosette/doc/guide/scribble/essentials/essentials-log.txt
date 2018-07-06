@@ -115,8 +115,10 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate i cex) ((3) 0 () 0 () () (q values 12)) #"" #"")
-((same poly factored 12) ((3) 0 () 0 () () (q exn "assert: failed")) #"" #"")
+((evaluate i cex) ((3) 0 () 0 () () (q values -6)) #"" #"")
+((poly -6) ((3) 0 () 0 () () (q values 360)) #"" #"")
+((factored -6) ((3) 0 () 0 () () (q values 480)) #"" #"")
+((same poly factored -6) ((3) 0 () 0 () () (q exn "assert: failed")) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((require (only-in racket/draw read-bitmap))
  ((3) 0 () 0 () () (c values c (void)))
@@ -135,7 +137,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define ucore (debug (integer?) (same poly factored 12)))
+((define ucore (debug (integer?) (same poly factored -6)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -180,14 +182,14 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate x sol) ((3) 0 () 0 () () (q values -5)) #"" #"")
-((evaluate y sol) ((3) 0 () 0 () () (q values 2)) #"" #"")
-((evaluate (poly x) sol) ((3) 0 () 0 () () (q values 120)) #"" #"")
-((evaluate (poly y) sol) ((3) 0 () 0 () () (q values 120)) #"" #"")
+((evaluate x sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
+((evaluate y sol) ((3) 0 () 0 () () (q values -4)) #"" #"")
+((evaluate (poly x) sol) ((3) 0 () 0 () () (q values 24)) #"" #"")
+((evaluate (poly y) sol) ((3) 0 () 0 () () (q values 24)) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((solve (assert (= x 64)))
+((solve (begin (assert (= x 64)) (assert (= x 0))))
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -196,10 +198,10 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(model\n [x 0])"))))
  #""
  #"")
-((verify (assert (not (= x 64))))
+((verify (assert (not (and (= x 64) (= x 0)))))
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -208,11 +210,11 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(model\n [x 0])"))))
  #""
  #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((solve (assert (= x 64)))
+((solve (begin (assert (= x 64)) (assert (= x 0))))
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -221,10 +223,10 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 64])"))))
+  (c values c (0 (u . "(unsat)"))))
  #""
  #"")
-((verify (assert (not (= x 64))))
+((verify (assert (not (and (= x 64) (= x 0)))))
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -233,7 +235,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 64])"))))
+  (c values c (0 (u . "(unsat)"))))
  #""
  #"")
 ((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")

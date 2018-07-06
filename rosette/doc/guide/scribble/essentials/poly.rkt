@@ -1,7 +1,5 @@
 #lang rosette/safe
 
-;(current-bitwidth #f)
-
 (require rosette/query/debug rosette/lib/render) 
  
 (define (poly x)
@@ -19,7 +17,7 @@
 
 (evaluate i cex)
 
-(define c (debug [integer?] (same poly factored 12)))
+(define c (debug [integer?] (same poly factored -6)))
 (render c)
 
 (require rosette/lib/synthax)

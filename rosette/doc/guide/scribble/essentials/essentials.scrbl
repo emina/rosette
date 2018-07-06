@@ -163,9 +163,11 @@ The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{bindi
 
 Bindings are first-class values in Rosette, and they can be freely manipulated by programs.  We can also interpret any Rosette value with respect to a binding using the built-in @racket[evaluate] procedure:
 @interaction[#:eval rosette-eval
-(evaluate i cex) 
-(same poly factored 12)]
-In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input 12 (thus causing the assertion in the @racket[same] procedure to fail).
+(evaluate i cex)
+(poly -6)
+(factored -6)
+(same poly factored -6)]
+In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input -6 thus causing the assertion in the @racket[same] procedure to fail.
 
 @(rosette-eval '(clear-asserts!))
 @(rosette-eval '(require (only-in racket/draw read-bitmap)))
@@ -191,7 +193,7 @@ First, save these definitions to a file:
 
 Then call the debugger after loading the above definitions:
 @racketblock[
-#, @elem{>} (define ucore (debug [integer?] (same poly factored 12)))
+#, @elem{>} (define ucore (debug [integer?] (same poly factored -6)))
 #, @elem{>} (render ucore) 
 #,(call-with-input-file (build-path root "pict.png") (lambda (in) (read-bitmap in 'png)))]
 
@@ -202,13 +204,13 @@ Then call the debugger after loading the above definitions:
        (* x (+ x 1) (+ x 2) (+ x 2))))
 @(rosette-eval '(define (same p f x)
        (assert (= (p x) (f x)))))
-@(rosette-eval '(define ucore (debug [integer?] (same poly factored 12))))
+@(rosette-eval '(define ucore (debug [integer?] (same poly factored -6))))
 
 The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bv?]) types can be used in @racket[debug] forms.}
 
 The output of a @racket[debug] query is a minimal set of program expressions, called a @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
 
-Like bindings, cores are first-class values. In our example, we simply visualize the core using the utility procedure @racket[render].@footnote{@racket[render] can only visualize cores for code that has been saved to a file.} The visualization reveals that the grayed-out subexpression @racket[(+ x 1)] is irrelevant to the failure of @racket[factored] on the input 12.  To repair this failure, we have to modify at least one of the remaining expressions, which are highlighted in red.  
+Like bindings, cores are first-class values. In our example, we simply visualize the core using the utility procedure @racket[render].@footnote{@racket[render] can only visualize cores for code that has been saved to a file.} The visualization reveals that the grayed-out subexpression @racket[(+ x 1)] is irrelevant to the failure of @racket[factored] on the input -6.  To repair this failure, we have to modify at least one of the remaining expressions, which are highlighted in red.  
 
 @subsection[#:tag "sec:synthesize"]{Synthesis}
 
@@ -273,15 +275,18 @@ Setting it to @racket[#f] instructs Rosette to use infinite precision for real a
 The following snippet shows the effect of different @racket[current-bitwdth] settings on query behavior:
 @interaction[#:eval rosette-eval
 (define-symbolic x integer?)
-(current-bitwidth 5)  (code:comment "no 5-bit solution or counterexample exists")
-(solve (assert (= x 64)))
-(verify (assert (not (= x 64)))) 
-(current-bitwidth #f) (code:comment "but an integer solution and counterexample do exist")
-(solve (assert (= x 64)))
-(verify (assert (not (= x 64))))]
+(current-bitwidth 5)  (code:comment "64 = 0 in the 5-bit representation")
+(solve (begin (assert (= x 64))
+              (assert (= x 0))))
+(verify (assert (not (and (= x 64) (= x 0))))) 
+(current-bitwidth #f) (code:comment "but no solutions exist under infinite-precision semantics")
+(solve (begin (assert (= x 64))
+              (assert (= x 0))))
+(verify (assert (not (and (= x 64) (= x 0)))))]
 
-By default, @racket[current-bitwidth] is set to 5.  Beware that using a large @var{k} or @racket[#f]
- may have a negative effect on solver performance.  In the worst case, using @racket[#f] can cause the underlying solver to run forever.@footnote{Technically, Rosette translates solver-aided queries to the theory of bitvectors when @racket[current-bitwidth] is set to an integer @var{k}. In particular, it uses @var{k}-bit bitvectors to represent integers and reals, with smaller bitvectors leading to better performance.  When @racket[current-bitwidth] is @racket[#f], Rosette uses the theories of integers and reals instead.  These theories work well for linear constraints, but reasoning about non-linear integer arithmetic is undecidable.}
+By default, @racket[current-bitwidth] is set to @racket[#f] to be consistent with Racket's
+infinite-precision semantics for integers and reals. Beware, however, that using @racket[#f] or a large @var{k}
+for @racket[current-bitwidth] may have a negative effect on solver performance.  In the worst case, using @racket[#f] can cause the underlying solver to run forever.@footnote{Technically, Rosette translates solver-aided queries to the theory of bitvectors when @racket[current-bitwidth] is set to an integer @var{k}. In particular, it uses @var{k}-bit bitvectors to represent integers and reals, with smaller bitvectors leading to better performance.  When @racket[current-bitwidth] is @racket[#f], Rosette uses the theories of integers and reals instead.  These theories work well for linear constraints, but reasoning about non-linear integer arithmetic is undecidable.}
                                                                
 Non-termination can also be caused by passing symbolic values to recursive procedures.  In particular, the expression that determines whether a recursion (or a loop) terminates must be executed on concrete values.   
 
