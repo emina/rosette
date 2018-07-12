@@ -7,7 +7,7 @@
          solver-minimize solver-maximize
          solver-check solver-debug 
          solver-shutdown solver-features
-         prop:solver-constructor solver-constructor? solver-constructor
+         prop:solver-constructor solver-constructor
          )
 
 ; The generic solver interface specifies the set of procedures that 
@@ -50,6 +50,9 @@
 ;
 ; The solver-features procedure returns a list of symbol?s specifying the
 ; SMT features (logics, optimization, etc) a solver supports.
+;
+; The solver-options procedure returns a hash table of options the solver
+; is configured with (e.g., path to its binary).
 (define-generics solver
   [solver-assert solver bools]
   [solver-push solver]
@@ -60,12 +63,18 @@
   [solver-check solver]
   [solver-debug solver]
   [solver-shutdown solver]
-  [solver-features solver])
+  [solver-features solver]
+  [solver-options solver])
 
 ; Solvers should implement the prop:solver-constructor type property
 ; to provide the procedure used to construct new solvers of the same type.
 ; Query forms will use this property to spawn new solvers when necessary
 ; (e.g., synthesize needs two solvers).
 (define-values
-  (prop:solver-constructor solver-constructor? solver-constructor)
+  (prop:solver-constructor solver-constructor? get-solver-constructor)
   (make-struct-type-property 'solver-constructor))
+
+(define (solver-constructor solver)
+  (case-lambda
+    [() ((get-solver-constructor solver) (solver-options solver))]
+    [(opts) ((get-solver-constructor solver) opts)]))

@@ -28,7 +28,7 @@
   (current-solver (z3)))
 
 (provide
- (except-out (all-from-out "solver/solver.rkt") prop:solver-constructor solver-constructor? solver-constructor)
+ (except-out (all-from-out "solver/solver.rkt") prop:solver-constructor solver-constructor)
  (all-from-out  
   "solver/solution.rkt" 
   "base/base.rkt"
