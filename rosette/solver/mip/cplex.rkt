@@ -26,12 +26,21 @@
 (define (cplex-available?)
   (not (false? (find-cplex #f))))
 
-(define (make-cplex #:path [path #f] #:timeout [timeout #f] #:verbose [verbose #f])
-  (define real-cplex-path (find-cplex path))
-  (if (and (false? real-cplex-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-      (let ([p (path->string (simplify-path cplex-path))])
-        (error 'cplex "cplex binary is not available (expected to be at ~a, or try `(cplex \"path/to/cplex\")`)" p))
-      (cplex (server real-cplex-path cplex-opts) '() '() timeout verbose)))
+(define (make-cplex [solver #f] #:options [options (hash)] #:path [path #f])
+  (define-values (pt verb tim)
+    (cond
+      [(cplex? solver)
+       (values (server-path (cplex-server solver))
+               (cplex-verbose solver)
+               (cplex-timeout solver))]
+      [else
+       (define real-cplex-path (find-cplex path))
+       (when (and (false? real-cplex-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+         (error 'boolector "cplex binary is not available (expected to be at ~a); try passing the #:path argument to (cplex)" (path->string (simplify-path cplex-path))))
+       (values real-cplex-path
+               (hash-ref options 'verbose #f)
+               (hash-ref options 'timeout #f))]))
+  (cplex (server pt cplex-opts) '() '() tim verb))
 
 (define-generics mip-solver
   [solver-check-with-init mip-solver #:mip-start [mip-start] #:mip-sol [mip-sol]])

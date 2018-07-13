@@ -16,7 +16,7 @@
 (define (make-cvc4 [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
   (define config
     (cond
-      [solver
+      [(cvc4? solver)
        (base/solver-config solver)]
       [else
        (define real-cvc4-path (base/find-solver "cvc4" cvc4-path (hash-ref options 'path #f)))

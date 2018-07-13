@@ -24,7 +24,7 @@
 (define (make-z3 [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
   (define config
     (cond
-      [solver
+      [(z3? solver)
        (base/solver-config solver)]
       [else
        (define real-z3-path (base/find-solver "z3" z3-path path))

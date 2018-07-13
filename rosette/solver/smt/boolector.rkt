@@ -23,7 +23,7 @@
 (define (make-boolector [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
   (define config
     (cond
-      [solver
+      [(boolector? solver)
        (base/solver-config solver)]
       [else
        (define real-boolector-path (base/find-solver "boolector" boolector-path (hash-ref options 'path #f)))
