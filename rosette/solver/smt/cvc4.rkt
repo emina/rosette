@@ -13,13 +13,17 @@
 (define (cvc4-available?)
   (not (false? (base/find-solver "cvc4" cvc4-path #f))))
 
-(define (make-cvc4 [options-or-solver (hash)])
-  (define options (if (cvc4? options-or-solver) (base/solver-options options-or-solver) options-or-solver))
-  (define real-cvc4-path (base/find-solver "cvc4" cvc4-path (hash-ref options 'path #f)))
-  (if (and (false? real-cvc4-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-      (error 'cvc4 "cvc4 binary is not available (expected to be at ~a); try passing the 'path option to (cvc4)" (path->string (simplify-path cvc4-path)))
-      (let* ([opts (hash-remove options 'path)])
-        (cvc4 (server real-cvc4-path cvc4-opts (base/make-send-options opts)) options '() '() '() (env) '()))))
+(define (make-cvc4 [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
+  (define config
+    (cond
+      [solver
+       (base/solver-config solver)]
+      [else
+       (define real-cvc4-path (base/find-solver "cvc4" cvc4-path (hash-ref options 'path #f)))
+       (when (and (false? real-cvc4-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+         (error 'cvc4 "cvc4 binary is not available (expected to be at ~a); try passing the #:path argument to (cvc4)" (path->string (simplify-path cvc4-path))))
+       (base/config options real-cvc4-path logic)]))
+  (cvc4 (server (base/config-path config) cvc4-opts (base/make-send-options config)) config '() '() '() (env) '()))
 
 (struct cvc4 base/solver ()
   #:property prop:solver-constructor make-cvc4

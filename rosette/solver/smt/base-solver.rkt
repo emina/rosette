@@ -20,17 +20,21 @@
     [else (or (find-executable-path binary) #f)]))
 
 
-(define (make-send-options opts)
+(define (make-send-options conf)
+  (match-define (config options _ logic) conf)
   (lambda (server)
     (server-write server
-      (when (hash-has-key? opts 'logic)
-        (set-logic (hash-ref opts 'logic)))
-      (for ([opt (in-list (sort (hash-keys opts) symbol<?))] #:unless (eq? opt 'logic))
-        (set-option opt (hash-ref opts opt))))))
+      (unless (false? logic)
+        (set-logic logic))
+      (for ([opt (in-list (sort (hash-keys options) symbol<?))])
+        (set-option opt (hash-ref options opt))))))
 
 
-(struct solver (server options asserts mins maxs env level)
+(struct solver (server config asserts mins maxs env level)
   #:mutable)
+
+
+(struct config (options path logic))
 
 
 (define (solver-assert self bools [wfcheck #f])
@@ -93,6 +97,8 @@
 (define (solver-debug self)
   (error 'solver-debug "debugging isn't supported by solver ~v" self))
 
+(define (solver-options self)
+  (config-options (solver-config self)))
 
 (define (solver-clear-stacks! self)
   (set-solver-asserts! self '())

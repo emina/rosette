@@ -52,7 +52,7 @@
 ; SMT features (logics, optimization, etc) a solver supports.
 ;
 ; The solver-options procedure returns a hash table of options the solver
-; is configured with (e.g., path to its binary).
+; is configured with.
 (define-generics solver
   [solver-assert solver bools]
   [solver-push solver]
@@ -75,6 +75,8 @@
   (make-struct-type-property 'solver-constructor))
 
 (define (solver-constructor solver)
-  (case-lambda
-    [() ((get-solver-constructor solver) (solver-options solver))]
-    [(opts) ((get-solver-constructor solver) opts)]))
+  (make-keyword-procedure
+    (lambda (kws kw-args . rest)
+      (keyword-apply (get-solver-constructor solver) kws kw-args rest))
+    (lambda args
+      (apply (get-solver-constructor solver) solver args))))

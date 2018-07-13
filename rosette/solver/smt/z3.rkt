@@ -21,14 +21,18 @@
         ':smt.relevancy 2
         ':smt.mbqi.max_iterations 10000000))
 
-(define (make-z3 [options-or-solver (hash)])
-  (define options (if (z3? options-or-solver) (base/solver-options options-or-solver) options-or-solver))
-  (define real-z3-path (base/find-solver "z3" z3-path (hash-ref options 'path #f)))
-  (when (and (false? real-z3-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-    (printf "warning: could not find z3 executable at ~a\n" (path->string (simplify-path z3-path))))
-  (define opts (hash-union default-options options #:combine (lambda (a b) b)))
-  (define send-opts (hash-remove opts 'path))
-  (z3 (server real-z3-path z3-opts (base/make-send-options send-opts)) opts '() '() '() (env) '()))
+(define (make-z3 [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
+  (define config
+    (cond
+      [solver
+       (base/solver-config solver)]
+      [else
+       (define real-z3-path (base/find-solver "z3" z3-path path))
+       (when (and (false? real-z3-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+         (printf "warning: could not find z3 executable at ~a\n" (path->string (simplify-path z3-path))))
+       (define opts (hash-union default-options options #:combine (lambda (a b) b)))
+       (base/config opts real-z3-path logic)]))
+  (z3 (server (base/config-path config) z3-opts (base/make-send-options config)) config '() '() '() (env) '()))
   
 (struct z3 base/solver ()
   #:mutable

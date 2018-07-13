@@ -20,13 +20,17 @@
 (define (boolector-available?)
   (not (false? (base/find-solver "boolector" boolector-path #f))))
 
-(define (make-boolector [options-or-solver (hash)])
-  (define options (if (boolector? options-or-solver) (base/solver-options options-or-solver) options-or-solver))
-  (define real-boolector-path (base/find-solver "boolector" boolector-path (hash-ref options 'path #f)))
-  (if (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-      (error 'boolector "boolector binary is not available (expected to be at ~a); try passing a 'path option to (boolector)" (path->string (simplify-path boolector-path)))
-      (let* ([opts (hash-remove options 'path)])
-        (boolector (server real-boolector-path boolector-opts (base/make-send-options opts)) options '() '() '() (env) '()))))
+(define (make-boolector [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
+  (define config
+    (cond
+      [solver
+       (base/solver-config solver)]
+      [else
+       (define real-boolector-path (base/find-solver "boolector" boolector-path (hash-ref options 'path #f)))
+       (when (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+         (error 'boolector "boolector binary is not available (expected to be at ~a); try passing the #:path argument to (boolector)" (path->string (simplify-path boolector-path))))
+       (base/config options real-boolector-path logic)]))
+  (boolector (server (base/config-path config) boolector-opts (base/make-send-options config)) config '() '() '() (env) '()))
 
 (struct boolector base/solver ()
   #:property prop:solver-constructor make-boolector
