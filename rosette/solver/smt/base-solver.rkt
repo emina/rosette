@@ -38,6 +38,8 @@
 
 
 (define (solver-assert self bools [wfcheck #f])
+  (unless (list? bools)
+    (raise-argument-error 'solver-assert "(listof boolean?)" bools))
   (define wfcheck-cache (mutable-set))
   (set-solver-asserts! self 
     (append (solver-asserts self)

@@ -115,6 +115,8 @@
      '(qf_lia qf_lra))
    
    (define (solver-assert self bools)
+     (unless (list? bools)
+       (raise-argument-error 'solver-assert "(listof boolean?)" bools))
      (set-cplex-asserts! self 
       (append (cplex-asserts self)
               (for/list ([b bools] #:unless (equal? b #t))
