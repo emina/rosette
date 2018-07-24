@@ -3,7 +3,7 @@
 (require "server.rkt" "cmd.rkt" "env.rkt" 
          "../solution.rkt" 
          (only-in racket [remove-duplicates unique])
-         (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core push pop)
+         (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core push pop set-logic)
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
@@ -20,11 +20,26 @@
     [else (or (find-executable-path binary) #f)]))
 
 
-(struct solver (server asserts mins maxs env level)
+(define (make-send-options conf)
+  (match-define (config options _ logic) conf)
+  (lambda (server)
+    (server-write server
+      (unless (false? logic)
+        (set-logic logic))
+      (for ([opt (in-list (sort (hash-keys options) symbol<?))])
+        (set-option opt (hash-ref options opt))))))
+
+
+(struct solver (server config asserts mins maxs env level)
   #:mutable)
 
 
+(struct config (options path logic))
+
+
 (define (solver-assert self bools [wfcheck #f])
+  (unless (list? bools)
+    (raise-argument-error 'solver-assert "(listof boolean?)" bools))
   (define wfcheck-cache (mutable-set))
   (set-solver-asserts! self 
     (append (solver-asserts self)
@@ -52,7 +67,7 @@
   (server-shutdown (solver-server self)))
 
 (define (solver-push self)
-  (match-define (solver server (app unique asserts) (app unique mins) (app unique maxs) env level) self)
+  (match-define (solver server _ (app unique asserts) (app unique mins) (app unique maxs) env level) self)
   (server-write
    server
    (begin
@@ -62,7 +77,7 @@
   (set-solver-level! self (cons (dict-count env) level)))
    
 (define (solver-pop self [k 1])
-  (match-define (solver server _ _ _ env level) self)
+  (match-define (solver server _ _ _ _ env level) self)
   (when (or (<= k 0) (> k (length level)))
     (error 'solver-pop "expected 1 < k <= ~a, given ~a" (length level) k))
   (server-write server (pop k))
@@ -72,7 +87,7 @@
   (set-solver-level! self (drop level k)))
      
 (define (solver-check self [read-solution read-solution])
-  (match-define (solver server (app unique asserts) (app unique mins) (app unique maxs) env _) self)
+  (match-define (solver server _ (app unique asserts) (app unique mins) (app unique maxs) env _) self)
   (cond [(ormap false? asserts) (unsat)]
         [else (server-write
                server
@@ -84,6 +99,8 @@
 (define (solver-debug self)
   (error 'solver-debug "debugging isn't supported by solver ~v" self))
 
+(define (solver-options self)
+  (config-options (solver-config self)))
 
 (define (solver-clear-stacks! self)
   (set-solver-asserts! self '())

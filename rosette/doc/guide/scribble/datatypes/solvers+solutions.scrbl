@@ -155,6 +155,11 @@ extended with some additional options, are:
 
 }
 
+@defproc[(solver-options [solver solver?]) (hash/c symbol? any/c)]{
+Returns the options the given solver is configured with
+(as specified by the @racket[#:options] argument to solver constructors).
+}
+
 @defparam[output-smt on? (or/c boolean? path-string? output-port?)]{
   Enables verbose output of generated SMT constraints.
 
@@ -182,22 +187,48 @@ extended with some additional options, are:
 
 @defmodule[rosette/solver/smt/z3 #:no-declare]
 
-@defproc*[([(z3 [#:path path (or/c path-string? #f) #f]) solver?]
+@defproc*[([(z3 [#:path path (or/c path-string? #f) #f]
+                [#:logic logic (or/c symbol? #f) #f]
+                [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(z3? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.
 Rosette automatically installs a version of Z3;
-the optional @racket[path] argument overrides this version with a path to a new Z3 binary.}
+the optional @racket[path] argument overrides this version with a path to a new Z3 binary.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket[#f],
+which uses Z3's default logic.
+
+The @racket[options] argument provides additional options that are sent to Z3
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':smt.relevancy 0)]
+will send the command @tt{(set-option :smt.relevancy 0)} to Z3 prior to solving.
+}
 
 
 @defmodule[rosette/solver/smt/cvc4 #:no-declare]
 
-@defproc*[([(cvc4 [#:path path (or/c path-string? #f) #f]) solver?]
+@defproc*[([(cvc4 [#:path path (or/c path-string? #f) #f]
+                  [#:logic logic (or/c symbol? #f) #f]
+                  [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(cvc4? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the @hyperlink["http://cvc4.cs.stanford.edu/web/"]{CVC4} solver from NYU and UIowa.
 
 To use this solver, download and install CVC4,
 and either add the @tt{cvc4} executable to your @tt{PATH}
-or pass the path to the executable as the optional @racket[path] argument.}
+or pass the path to the executable as the optional @racket[path] argument.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket[#f],
+which uses CVC4's default logic.
+
+The @racket[options] argument provides additional options that are sent to CVC4
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':bv-propagate 'true)]
+will send the command @tt{(set-option :bv-propagate true)} to CVC4 prior to solving.
+}
 
 @defproc[(cvc4-available?) boolean?]{
 Returns true if the CVC4 solver is available for use (i.e., Rosette can locate a @tt{cvc4} binary).
@@ -207,13 +238,26 @@ without its optional @racket[path] argument.}
 
 @defmodule[rosette/solver/smt/boolector #:no-declare]
 
-@defproc*[([(boolector [#:path path (or/c path-string? #f) #f]) solver?]
+@defproc*[([(boolector [#:path path (or/c path-string? #f) #f]
+                       [#:logic logic (or/c symbol? #f) #f]
+                       [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(boolector? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the @hyperlink["http://fmv.jku.at/boolector/"]{Boolector} solver from JKU.
 
 To use this solver, download and install Boolector,
 and either add the @tt{boolector} executable to your @tt{PATH}
-or pass the path to the executable as the optional @racket[path] argument.}
+or pass the path to the executable as the optional @racket[path] argument.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket[#f],
+which uses Boolector's default logic.
+
+The @racket[options] argument provides additional options that are sent to Boolector
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':seed 5)]
+will send the command @tt{(set-option :seed 5)} to Boolector prior to solving.
+}
 
 @defproc[(boolector-available?) boolean?]{
 Returns true if the Boolector solver is available for use (i.e., Rosette can locate a @tt{boolector} binary).
@@ -223,7 +267,8 @@ without its optional @racket[path] argument.}
 
 @defmodule[rosette/solver/mip/cplex #:no-declare]
 
-@defproc*[([(cplex [#:path path (or/c path-string? #f) #f] [#:timeout timeout (or/c integer? #f) #f] [#:verbose verbose boolean? #f]) solver?]
+@defproc*[([(cplex [#:path path (or/c path-string? #f) #f]
+                   [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(cplex? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the
 @hyperlink["https://www.ibm.com/developerworks/community/blogs/jfp/entry/CPLEX_Is_Free_For_Students?lang=en"]{CPLEX} solver from IBM.
@@ -234,10 +279,11 @@ which is likely to be at @tt{CPLEX_Studio*/cplex/bin/x86-64*/cplex}.
 Either add this directory to your @tt{PATH},
 or pass the path to the executable as the @racket[path] argument.
 
-The @racket[timeout] is in seconds.
-When @racket[verbose] is @racket[#t], the detailed output from CPLEX solver will be displayed.
+The @racket[options] argument provides additional options for configuring CPLEX.
+Setting the key @racket['timeout] in @racket[options] to an integer controls the solving timeout in seconds.
+Setting the key @racket['verbose] in @racket[options] to @racket[#t] displays detailed output from the CPLEX solver.
 
-The @racket[constraints] given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
+The assertions given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
 }
 
 @defproc[(cplex-available?) boolean?]{

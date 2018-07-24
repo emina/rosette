@@ -3,7 +3,7 @@
 (require racket/runtime-path racket/file)
 
 (provide server server-start server-running? server-shutdown 
-         server-write server-read server-error
+         server-write server-read server-error server-initialize
          output-smt printf/current-server)
 
 (define current-server (make-parameter #f))
@@ -62,8 +62,12 @@
       (define-values (p out in err) 
         (apply subprocess #f #f #f (server-path s) (server-opts s)))
       (set-server-values! s (current-custodian) p out in err (open-output-nowhere))
-      ((server-init s) s)))
+      (server-initialize s)))
   s)
+
+; Invoke the server's initialize procedure
+(define (server-initialize s)
+  ((server-init s) s))
 
 ; Initialize the server's log output if required
 (define (server-initialize-log s)

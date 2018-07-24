@@ -20,11 +20,17 @@
 (define (boolector-available?)
   (not (false? (base/find-solver "boolector" boolector-path #f))))
 
-(define (make-boolector #:path [path #f])
-  (define real-boolector-path (base/find-solver "boolector" boolector-path path))
-  (if (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-      (error 'boolector "boolector binary is not available (expected to be at ~a); try passing the #:path argument to (boolector)" (path->string (simplify-path boolector-path)))
-      (boolector (server real-boolector-path boolector-opts set-default-options) '() '() '() (env) '())))
+(define (make-boolector [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
+  (define config
+    (cond
+      [(boolector? solver)
+       (base/solver-config solver)]
+      [else
+       (define real-boolector-path (base/find-solver "boolector" boolector-path (hash-ref options 'path #f)))
+       (when (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+         (error 'boolector "boolector binary is not available (expected to be at ~a); try passing the #:path argument to (boolector)" (path->string (simplify-path boolector-path))))
+       (base/config options real-boolector-path logic)]))
+  (boolector (server (base/config-path config) boolector-opts (base/make-send-options config)) config '() '() '() (env) '()))
 
 (struct boolector base/solver ()
   #:property prop:solver-constructor make-boolector
@@ -34,6 +40,9 @@
   [
    (define (solver-features self)
      '(qf_bv qf_uf))
+   
+   (define (solver-options self)
+     (base/solver-options self))
 
    (define (solver-assert self bools)
      (base/solver-assert self bools boolector-wfcheck))
