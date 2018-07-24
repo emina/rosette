@@ -36,7 +36,7 @@
       [else
        (define real-cplex-path (find-cplex path))
        (when (and (false? real-cplex-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-         (error 'boolector "cplex binary is not available (expected to be at ~a); try passing the #:path argument to (cplex)" (path->string (simplify-path cplex-path))))
+         (error 'cplex "cplex binary is not available (expected to be at ~a); try passing the #:path argument to (cplex)" (path->string (simplify-path cplex-path))))
        (values real-cplex-path
                (hash-ref options 'verbose #f)
                (hash-ref options 'timeout #f))]))
