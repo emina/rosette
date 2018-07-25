@@ -1,7 +1,7 @@
 #lang racket
 
 (require (only-in rosette sat unsat) racket/file)
-(provide server server-run)
+(provide server server-run server-path)
 
 (struct server (path opts))
 

@@ -1,6 +1,6 @@
 #lang racket
 
-(require racket/runtime-path 
+(require racket/runtime-path racket/hash
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt"
          (prefix-in base/ "base-solver.rkt")
@@ -15,11 +15,24 @@
 (define-runtime-path z3-path (build-path ".." ".." ".." "bin" "z3"))
 (define z3-opts '("-smt2" "-in"))
 
-(define (make-z3 #:path [path #f])
-  (define real-z3-path (base/find-solver "z3" z3-path path))
-  (when (and (false? real-z3-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-    (printf "warning: could not find z3 executable at ~a\n" (path->string (simplify-path z3-path))))
-  (z3 (server real-z3-path z3-opts set-default-options) '() '() '() (env) '()))
+(define default-options
+  (hash ':produce-unsat-cores 'false
+        ':auto-config 'true
+        ':smt.relevancy 2
+        ':smt.mbqi.max_iterations 10000000))
+
+(define (make-z3 [solver #f] #:options [options (hash)] #:logic [logic #f] #:path [path #f])
+  (define config
+    (cond
+      [(z3? solver)
+       (base/solver-config solver)]
+      [else
+       (define real-z3-path (base/find-solver "z3" z3-path path))
+       (when (and (false? real-z3-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
+         (printf "warning: could not find z3 executable at ~a\n" (path->string (simplify-path z3-path))))
+       (define opts (hash-union default-options options #:combine (lambda (a b) b)))
+       (base/config opts real-z3-path logic)]))
+  (z3 (server (base/config-path config) z3-opts (base/make-send-options config)) config '() '() '() (env) '()))
   
 (struct z3 base/solver ()
   #:mutable
@@ -30,6 +43,9 @@
   [
    (define (solver-features self)
      '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers optimize unsat-cores))
+   
+   (define (solver-options self)
+     (base/solver-options self))
 
    (define (solver-assert self bools)
      (base/solver-assert self bools))
@@ -44,7 +60,7 @@
      (base/solver-clear-stacks! self)
      (base/solver-clear-env! self)
      (server-write (base/solver-server self) (reset))
-     (set-default-options (base/solver-server self)))
+     (server-initialize (base/solver-server self)))
    
    (define (solver-shutdown self)
      (solver-clear self)
@@ -60,7 +76,7 @@
      (base/solver-check self))
 
    (define (solver-debug self)
-     (match-define (z3 server (app unique asserts) _ _ _ _) self)
+     (match-define (z3 server _ (app unique asserts) _ _ _ _) self)
      (cond [(ormap false? asserts) (unsat (list #f))]
            [else (base/solver-clear-env! self)
                  (server-write (base/solver-server self) (reset))
@@ -70,13 +86,6 @@
                   (begin (encode-for-proof (base/solver-env self) asserts)
                          (check-sat)))
                  (base/read-solution server (base/solver-env self) #:unsat-core? #t)]))])
-
-(define (set-default-options server)
-  (server-write server
-    (set-option ':produce-unsat-cores 'false)
-    (set-option ':auto-config 'true)
-    (set-option ':smt.relevancy 2)
-    (set-option ':smt.mbqi.max_iterations 10000000)))
 
 (define (set-core-options server)
   (server-write server

@@ -3,7 +3,7 @@
 (require racket/runtime-path racket/file)
 
 (provide server server-start server-running? server-shutdown 
-         server-write server-read server-error
+         server-write server-read server-error server-initialize
          output-smt printf/current-server)
 
 (define current-server (make-parameter #f))
@@ -11,8 +11,8 @@
 ; If true, log all SMT output to a temporary file
 (define output-smt
   (make-parameter #f (lambda (on?)
-                       (unless (or (boolean? on?) (path-string? on?))
-                         (raise-argument-error 'output-smt2 "boolean? or path-string?" on?))
+                       (unless (or (boolean? on?) (path-string? on?) (output-port? on?))
+                         (raise-argument-error 'output-smt "(or/c boolean? path-string? output-port?)" on?))
                        (if (path-string? on?) (expand-user-path on?) on?))))
 
 ; A server manages the creation, use, and shutdown of external processes.  
@@ -62,18 +62,26 @@
       (define-values (p out in err) 
         (apply subprocess #f #f #f (server-path s) (server-opts s)))
       (set-server-values! s (current-custodian) p out in err (open-output-nowhere))
-      ((server-init s) s)))
+      (server-initialize s)))
   s)
+
+; Invoke the server's initialize procedure
+(define (server-initialize s)
+  ((server-init s) s))
 
 ; Initialize the server's log output if required
 (define (server-initialize-log s)
   (unless (file-stream-port? (server-log s))
-    (when (path-string? (output-smt))
-      (make-directory* (output-smt)))
-    (define dir (if (path-string? (output-smt)) (output-smt) #f))
-    (define log (make-temporary-file "rosette~a.smt2" #f dir))
-    (eprintf "Outputting SMT to file: ~a\n" (path->string log))
-    (set-server-log! s (open-output-file log #:exists 'truncate)))
+    (cond
+      [(output-port? (output-smt))
+       (set-server-log! s (output-smt))]
+      [else
+       (when (path-string? (output-smt))
+         (make-directory* (output-smt)))
+       (define dir (if (path-string? (output-smt)) (output-smt) #f))
+       (define log (make-temporary-file "rosette~a.smt2" #f dir))
+       (eprintf "Outputting SMT to file: ~a\n" (path->string log))
+       (set-server-log! s (open-output-file log #:exists 'truncate))]))
   (server-log s))
 
 ; Evaluates the given expression with current-server set
