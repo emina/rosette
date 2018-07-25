@@ -35,3 +35,45 @@
   (c values c (0 (u . "b"))))
  #""
  #"")
+((define-symbolic a boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define sol (solve (assert a)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(sol
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [a #t])"))))
+ #""
+ #"")
+((complete-solution sol (list a x))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [a #t]\n [x 0])"))))
+ #""
+ #"")
+((complete-solution (solve (assert #f)) (list a x))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")

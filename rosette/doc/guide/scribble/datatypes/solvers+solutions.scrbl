@@ -382,5 +382,20 @@ with @racket[(solution #, @var[c])] and simplifying the result.
 (evaluate (and a b) sol) 
 ]}
 
+@defproc[(complete-solution [sol solution?] [consts (listof constant?)]) solution?]{
+Given a solution @racket[sol] and a list of symbolic constants @racket[consts],
+returns a solution that is complete with respect to the given list.
+In particular, if @racket[sol] is satisfiable, the returned solution is also satisfiable, and
+it extends the @racket[sol] model with default bindings for all constants in @racket[consts]
+that are not bound by @racket[sol]. Otherwise, @racket[sol] itself is returned.
+@examples[#:eval rosette-eval                
+(define-symbolic a boolean?)
+(define-symbolic x integer?)
+(define sol (solve (assert a)))
+(code:line sol (code:comment "no binding for x"))
+(complete-solution sol (list a x))
+(complete-solution (solve (assert #f)) (list a x))
+]}
+
 @(kill-evaluator rosette-eval)
  
