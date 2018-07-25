@@ -1,5 +1,24 @@
 # Release Notes
 
+## Version 3.0
+
+This is a major release with significant changes to the language and the runtime.  Rosette 3.0 is *not backward compatible* with Rosette 2.x. But porting Rosette 2.x code to Rosette 3.0 should be straightforward for most applications.
+
+The semantics of Rosette 3.0 differs from Rosette 2.x in two ways:
+
+- The `current-bitwidth` parameter that controls the reasoning precision is set to `#f` by default. As a result, symbolic constants that are declared to be integers or reals are interpreted in the theories of integers and reals, respectively. This means that the semantics of assertions over these types follows that of Racket. But reasoning about such assertions is expensive (or undecidable), so Rosette 3.0 still provides the option of approximating integer and real constants with finite-precision bitvectors. The key difference is that programs must now *explicitly opt into* this approximation by setting `current-bitwidth` to a positive integer.
+- If `current-bitwidth` is set to a positive integer _k_, the solutions produced by the `verify`, `synthesize`, `solve`, and `debug` queries are guaranteed to be correct under the _k_-bit semantics for integer and real constants. They are _not_ guaranteed to be sound with respect to the infinite-precision semantics.
+
+This release also includes the following new functionality and features contributed by [James Bornholt][] and [Phitchaya Mangpo Phothilimthana][]:
+
+- Extended and generalized the interface to constraint solvers. The new interface allows the client code to specify a path to the solver, set the logic, and provide solver-specific configuration options.
+- Added support for three new solvers: [Boolector][], [CVC4][], and [CPLEX][]. These solvers are not included in the default distribution and need to be installed separately for use with Rosette.
+
+[Boolector]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fboolector..rkt%29._boolector%29%29
+[CVC4]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fcvc4..rkt%29._cvc4%29%29
+[CPLEX]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fmip%2Fcplex..rkt%29._cplex%29%29
+[Phitchaya Mangpo Phothilimthana]: https://github.com/mangpo
+
 ## Version 2.2
 
 This release includes bug fixes and the following updates:
@@ -13,7 +32,7 @@ This release includes bug fixes and the following updates:
 This release includes the following updates to Rosette 2.0:
 
 - Added support for the `push` / `pop` interface to Z3.
-- Switched to log-based evaluation for Rosette documentation.  Documentation generation no longer depends on Z3. 
+- Switched to log-based evaluation for Rosette documentation.  Documentation generation no longer depends on Z3.
 - Improved the implementation of the lifted `struct` construct. The new implementation is a minimal patch to the corresponding Racket implementation, and it enables creation and use of `struct`s in the REPL.
 - Improved the implementation of `#%top-interaction` to disallow mutation of top-level variables in the REPL.  This enables definition and use of recursive procedures in the REPL, as well as definition and use of generic interfaces.
 
@@ -31,7 +50,7 @@ This release includes the following features:
     These datatypes are translated to the theories of integers and
     reals if `current-bitwidth` is set to `#f`.  Otherwise, they are
     translated to bitvectors of length `(current-bitwidth)`.
-	
+
    - Added the `bitvector?` datatype, which embeds the SMT theory of
      bitvectors into Rosette.
 
@@ -53,8 +72,8 @@ This release includes the following features:
 
 - Improved implementation for the `define-synthax` form and other
   high-level synthesis constructs.
-  
-- Improved printing of symbolic values by [James Bornholt](https://homes.cs.washington.edu/~bornholt/).
+
+- Improved printing of symbolic values by [James Bornholt][].
 
 - Ported sample SDSLs to Rosette 2.0.
 
@@ -67,6 +86,8 @@ The following features have been removed:
 - Support for the `enum` datatype.
 
 - Support for internal logging via `current-log-handler`.
+
+[James Bornholt]: https://github.com/jamesbornholt
 
 ## Version 1.1
 
