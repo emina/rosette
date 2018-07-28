@@ -9,7 +9,7 @@ The Rosette Language
 
 The easiest way to install Rosette is from Racket's package manager:
 
-* Download and install Racket 6.6 from http://racket-lang.org
+* Download and install Racket 6.9 or later from http://racket-lang.org
 
 * Use Racket's `raco` tool to install Rosette:
 
@@ -19,7 +19,7 @@ The easiest way to install Rosette is from Racket's package manager:
 
 Alternatively, you can install Rosette from source:
 
-* Download and install Racket 6.6 from http://racket-lang.org
+* Download and install Racket 6.9 or later from http://racket-lang.org
 
 * Clone the rosette repository:
 
