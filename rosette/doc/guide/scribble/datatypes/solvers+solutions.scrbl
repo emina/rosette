@@ -3,7 +3,7 @@
 @(require (for-label 
            rosette/solver/solver rosette/solver/solution 
            (only-in rosette/query/debug debug)
-           rosette/solver/smt/z3 rosette/solver/smt/cvc4 rosette/solver/smt/boolector rosette/solver/mip/cplex
+           rosette/solver/smt/z3 rosette/solver/smt/cvc4 rosette/solver/smt/boolector rosette/solver/smt/yices rosette/solver/mip/cplex
            rosette/base/form/define rosette/query/query rosette/query/core
            rosette/base/core/term (only-in rosette/base/base bv?)
            (only-in rosette/base/core/safe assert) 
@@ -23,6 +23,7 @@
                    rosette/solver/smt/z3
                    rosette/solver/mip/cplex
                    rosette/solver/smt/cvc4
+                   rosette/solver/smt/yices
                    rosette/solver/smt/boolector
                    #:use-sources 
                    (rosette/query/finitize
@@ -32,6 +33,7 @@
                     rosette/solver/smt/z3
                     rosette/solver/mip/cplex
                     rosette/solver/smt/cvc4
+                    rosette/solver/smt/yices
                     rosette/solver/smt/boolector)]
 
 A @deftech{solver} is an automatic reasoning engine, used to answer 
@@ -185,6 +187,17 @@ Returns the options the given solver is configured with
 }
 
 
+@section{Supported Solvers}
+
+Rosette supports several SMT solvers as well as the CPLEX mixed-integer programming solver.
+The @racket[current-solver] parameter controls the solver used for answering solver-aided queries.
+Each supported solver is contained in a separate module
+(e.g., @racketmodname[rosette/solver/smt/z3]),
+which exports a constructor (e.g., @racket[z3])
+to create a new solver instance.
+
+@subsection{Z3}
+
 @defmodule[rosette/solver/smt/z3 #:no-declare]
 
 @defproc*[([(z3 [#:path path (or/c path-string? #f) #f]
@@ -206,6 +219,8 @@ For example, setting @racket[options] to @racket[(hash ':smt.relevancy 0)]
 will send the command @tt{(set-option :smt.relevancy 0)} to Z3 prior to solving.
 }
 
+
+@subsection{CVC4}
 
 @defmodule[rosette/solver/smt/cvc4 #:no-declare]
 
@@ -236,6 +251,8 @@ If this returns @racket[#f], @racket[(cvc4)] will not succeed
 without its optional @racket[path] argument.}
 
 
+@subsection{Boolector}
+
 @defmodule[rosette/solver/smt/boolector #:no-declare]
 
 @defproc*[([(boolector [#:path path (or/c path-string? #f) #f]
@@ -264,6 +281,38 @@ Returns true if the Boolector solver is available for use (i.e., Rosette can loc
 If this returns @racket[#f], @racket[(boolector)] will not succeed
 without its optional @racket[path] argument.}
 
+
+@subsection{Yices}
+
+@defmodule[rosette/solver/smt/yices #:no-declare]
+
+@defproc*[([(yices [#:path path (or/c path-string? #f) #f]
+                   [#:logic logic symbol? 'ALL]
+                   [#:options options (hash/c symbol? any/c) (hash)]) solver?]
+           [(yices? [v any/c]) boolean?])]{
+Returns a @racket[solver?] wrapper for the @hyperlink["http://yices.csl.sri.com/"]{Yices} solver from SRI.
+
+To use this solver, download and install Yices (version 2.6.0 or later),
+and either add the @tt{yices-smt2} executable to your @tt{PATH}
+or pass the path to the executable as the optional @racket[path] argument.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket['ALL].
+
+The @racket[options] argument provides additional options that are sent to Yices
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':random-seed 5)]
+will send the command @tt{(set-option :random-seed 5)} to Yices prior to solving.
+}
+
+@defproc[(yices-available?) boolean?]{
+Returns true if the yices solver is available for use (i.e., Rosette can locate a @tt{yices-smt2} binary).
+If this returns @racket[#f], @racket[(yices)] will not succeed
+without its optional @racket[path] argument.}
+
+
+@subsection{CPLEX}
 
 @defmodule[rosette/solver/mip/cplex #:no-declare]
 

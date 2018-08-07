@@ -904,7 +904,7 @@
 (define tests:integer->bitvector
   (test-suite+
    "Tests for integer->bitvector in rosette/base/bitvector.rkt"
-   #:features '(qf_bv qf_lia)
+   #:features '(qf_bv qf_lia int2bv)
    (check-integer->bitvector-semantics)))
 
 (define tests:lifted-operators

@@ -18,6 +18,7 @@
 (define (get-model)      (printf-smt "(get-model)\n"))
 (define (get-unsat-core) (printf-smt "(get-unsat-core)\n"))
 (define (get-info kw)    (printf-smt "(get-info ~a)\n" kw))
+(define (echo s)         (printf-smt "(echo \"~a\")\n" s))
 
 (define (reset)          (printf-smt "(reset)\n"))
 (define (push [n 1])     (printf-smt "(push ~a)\n" n))

@@ -8,7 +8,8 @@
                   solution? sat? unsat?))
 (require (for-syntax syntax/parse))
 
-(provide run-all-tests test-groups test-suite+ run-generic-tests run-solver-specific-tests
+(provide run-all-tests test-groups test-suite+
+         run-generic-tests run-solver-specific-tests check-all-tests-executed
          test-sat test-unsat check-sol check-sat check-unsat)
 
 ; Groups tests into N modules with names id ..., each 
@@ -76,7 +77,8 @@
 ; Each element of the list is a rosette-test-suite?.
 ; A test should only be run if the current-solver satisfies the test's feature list.
 (define discovered-tests (box '()))
-(struct rosette-test-suite (features ts term-cache bitwidth oracle))
+(define executed-tests (mutable-seteq))
+(struct rosette-test-suite (features ts term-cache bitwidth oracle) #:transparent)
 
 
 ; Run all discovered tests that the given list of features satisfies.
@@ -88,6 +90,7 @@
       (parameterize ([term-cache (hash-copy tc)]
                      [current-bitwidth bw]
                      [current-oracle (oracle o)])
+        (set-add! executed-tests rts)
         (time (run-tests ts))))))
 
 ; The same as run-all-discovered-tests, but only for tests
@@ -99,7 +102,15 @@
       (parameterize ([term-cache (hash-copy tc)]
                      [current-bitwidth bw]
                      [current-oracle (oracle o)])
+        (set-add! executed-tests rts)
         (time (run-tests ts))))))
+
+
+; Check that every discovered test was executed at least once
+(define (check-all-tests-executed)
+  (define all-tests (list->seteq (unbox discovered-tests)))
+  (define unexecuted (set-subtract all-tests executed-tests))
+  (check-equal? unexecuted (seteq) "some tests were not executed"))
 
     
 (define-syntax-rule (check-sol pred test)

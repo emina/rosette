@@ -42,7 +42,7 @@
   #:methods gen:solver
   [
    (define (solver-features self)
-     '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers optimize unsat-cores))
+     '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers optimize unsat-cores int2bv))
    
    (define (solver-options self)
      (base/solver-options self))

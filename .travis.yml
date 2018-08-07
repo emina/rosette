@@ -6,6 +6,7 @@ env:
     - RACKET_DIR=~/racket
     - CVC4_URL="http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.5-x86_64-linux-opt"
     - BOOLECTOR_URL="http://fmv.jku.at/boolector/boolector-2.4.1-with-lingeling-bbc.tar.bz2"
+    - YICES_URL="http://yices.csl.sri.com/releases/2.6.0/yices-2.6.0-x86_64-pc-linux-gnu-static-gmp.tar.gz"
   matrix:
     - RACKET_VERSION=6.9
     - RACKET_VERSION=7.0
@@ -30,6 +31,10 @@ before_install:
       make -C boolector-*;
       cp boolector-*/boolector/bin/boolector bin/;
       rm -rf boolector*;
+      wget $YICES_URL -q -O yices.tar.gz;
+      tar xzf yices.tar.gz;
+      cp yices-*/bin/yices-smt2 bin/;
+      rm -rf yices-*;
     fi
 
 
