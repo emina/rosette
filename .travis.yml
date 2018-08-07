@@ -23,17 +23,17 @@ before_install:
   - cat travis-racket/install-racket.sh | bash # pipe to bash not sh!
   - export PATH="${RACKET_DIR}/bin:${PATH}"
   - if [ "$ALL_SOLVERS" == "1" ]; then
-      mkdir bin;
-      wget $CVC4_URL -q -O bin/cvc4;
-      chmod +x bin/cvc4;
-      wget $BOOLECTOR_URL -q -O boolector.tar.bz2;
-      tar xjf boolector.tar.bz2;
-      make -C boolector-*;
-      cp boolector-*/boolector/bin/boolector bin/;
-      rm -rf boolector*;
-      wget $YICES_URL -q -O yices.tar.gz;
-      tar xzf yices.tar.gz;
-      cp yices-*/bin/yices-smt2 bin/;
+      mkdir bin &&
+      wget $CVC4_URL -nv -O bin/cvc4 &&
+      chmod +x bin/cvc4 &&
+      wget $BOOLECTOR_URL -nv -O boolector.tar.bz2 &&
+      tar xjf boolector.tar.bz2 &&
+      make -C boolector-* &&
+      cp boolector-*/boolector/bin/boolector bin/ &&
+      rm -rf boolector* &&
+      wget $YICES_URL -nv -O yices.tar.gz &&
+      tar xzf yices.tar.gz &&
+      cp yices-*/bin/yices-smt2 bin/ &&
       rm -rf yices-*;
     fi
 
