@@ -11,11 +11,12 @@ The semantics of Rosette 3.0 differs from Rosette 2.x in two ways:
 
 This release also includes the following new functionality and features contributed by [James Bornholt][] and [Phitchaya Mangpo Phothilimthana][]:
 
-- Extended and generalized the interface to constraint solvers. The new interface allows the client code to specify a path to the solver, set the logic, and provide solver-specific configuration options.
-- Added support for three new solvers: [Boolector][], [CVC4][], and [CPLEX][]. These solvers are not included in the default distribution and need to be installed separately for use with Rosette.
+- Extended and generalized the interface to constraint solvers. The new interface allows the client code to specify a path to the solver, set the logic, provide solver-specific configuration options, and export the problem encodings sent to the solver.
+- Added support for four new solvers: [Boolector][], [CVC4][], [Yices][], and [CPLEX][]. These solvers are not included in the default distribution and need to be installed separately for use with Rosette.
 
 [Boolector]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fboolector..rkt%29._boolector%29%29
 [CVC4]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fcvc4..rkt%29._cvc4%29%29
+[Yices]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fyices..rkt%29._yices%29%29
 [CPLEX]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fmip%2Fcplex..rkt%29._cplex%29%29
 [Phitchaya Mangpo Phothilimthana]: https://github.com/mangpo
 
