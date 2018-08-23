@@ -9,6 +9,7 @@
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv)
          (only-in "../../base/core/real.rkt" @integer? @real?)
+         "../../base/core/reporter.rkt"
          "../solution.rkt")
 
 (provide encode encode-for-proof decode)
@@ -22,6 +23,7 @@
 ; be augmented, if needed, with additional declarations and 
 ; definitions.  This procedure will not emit any other commands.
 (define (encode env asserts mins maxs)
+  ((current-reporter) 'to-solver asserts mins maxs)
   (for ([a asserts])
     (assert (enc a env)))
   (for ([m mins])

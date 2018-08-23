@@ -52,12 +52,12 @@
 (define-syntax (define/lift stx)
   (syntax-case stx (: :: ->)
     [(_ (id0 id ...) :: contracted? -> rosette-type?)
-     (or (identifier? #'contracted) (raise-argument-error "identifier?" #'contracted?))
+     (or (identifier? #'contracted?) (raise-argument-error "identifier?" #'contracted?))
      #'(begin 
          (define/lift id0 :: contracted? -> rosette-type?)
          (define/lift id  :: contracted? -> rosette-type?) ...)]
     [(_ id :: contracted? -> rosette-type?) ; repeated from (_ id : contracted? -> rosette-type?) - params don't work
-     (or (identifier? #'contracted) (raise-argument-error "identifier?" #'contracted?))
+     (or (identifier? #'contracted?) (raise-argument-error "identifier?" #'contracted?))
      #`(define (#,(lift-id #'id) val)
          (if (contracted? val) 
              (id val)

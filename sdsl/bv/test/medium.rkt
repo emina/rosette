@@ -1,5 +1,6 @@
-#lang s-exp "../bv.rkt"
+#lang rosette
 
+(require "../bv.rkt")
 (require rackunit rackunit/text-ui "util.rkt" rosette/lib/roseunit)
 (require "../examples/reference.rkt")
 

@@ -40,7 +40,8 @@
  "query/solve+.rkt"
  "query/synthax.rkt"
  "query/debug.rkt"
- "query/optimize.rkt")
+ "query/optimize.rkt"
+ "profile/test.rkt")
 
 
 (define (run-tests-with-solver solver%)

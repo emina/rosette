@@ -26,14 +26,14 @@
     [(? symbol?) (printf "'~a" v)]
     [_  (printf "~a" v)]))
 
-(define (rosette-evaluator [eval-limits #f])
+(define (rosette-evaluator [eval-limits #f] [lang 'rosette/safe])
    (parameterize ([sandbox-output 'string]
                   [sandbox-error-output 'string]
                   [sandbox-path-permissions `((execute ,(byte-regexp #".*")))]
                   [sandbox-memory-limit #f]
                   [sandbox-eval-limits eval-limits]
                   [current-print rosette-printer])
-     (make-evaluator 'rosette/safe)))
+     (make-evaluator lang)))
 
 (define (logfile root [filename "log"])
   (build-path root (format "~a.txt" filename)))
@@ -59,9 +59,9 @@
 (define (serializing-evaluator evaluator)
   (lambda (expr) (serialize-for-logging (evaluator expr))))
 
-(define (rosette-log-evaluator logfile [eval-limits #f])  
+(define (rosette-log-evaluator logfile [eval-limits #f] [lang 'rosette/safe])  
   (if (file-exists? logfile)
       (make-log-based-eval logfile 'replay)
-      (parameterize ([current-eval (serializing-evaluator (rosette-evaluator eval-limits))])
+      (parameterize ([current-eval (serializing-evaluator (rosette-evaluator eval-limits lang))])
         (make-log-based-eval logfile 'record))))
 

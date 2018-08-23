@@ -7,7 +7,8 @@
          (only-in "../../base/core/term.rkt" term term? term-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
          (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
-         (only-in "../../base/core/real.rkt" @integer? @real?))
+         (only-in "../../base/core/real.rkt" @integer? @real?)
+         (only-in "../../base/core/reporter.rkt" current-reporter))
 
 (provide (all-defined-out))
 
@@ -71,7 +72,9 @@
   (server-write
    server
    (begin
+     ((current-reporter) 'encode-start)
      (encode env asserts mins maxs)
+     ((current-reporter) 'encode-finish)
      (push)))
   (solver-clear-stacks! self)
   (set-solver-level! self (cons (dict-count env) level)))
@@ -91,10 +94,16 @@
   (cond [(ormap false? asserts) (unsat)]
         [else (server-write
                server
-               (begin (encode env asserts mins maxs)
-                      (check-sat)))
+               (begin
+                 ((current-reporter) 'encode-start)
+                 (encode env asserts mins maxs)
+                 ((current-reporter) 'encode-finish)
+                 (check-sat)))
+              ((current-reporter) 'solve-start)
               (solver-clear-stacks! self)
-              (read-solution server env)]))
+              (define ret (read-solution server env))
+              ((current-reporter) 'solve-finish (sat? ret))
+              ret]))
    
 (define (solver-debug self)
   (error 'solver-debug "debugging isn't supported by solver ~v" self))

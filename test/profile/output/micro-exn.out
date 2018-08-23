@@ -1,0 +1,1 @@
+(the-profiled-thunk (bar (foo (=) (raise-argument-error) (@add1))))

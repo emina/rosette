@@ -34,7 +34,7 @@ before_install:
 
 
 install:
-  - raco pkg install
+  - raco pkg install --auto
 
 script:
   - time raco make test/all-rosette-tests.rkt

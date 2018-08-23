@@ -1,11 +1,10 @@
 #lang racket
 
-(require "term.rkt")
+(require "term.rkt" "reporter.rkt")
 
 (provide union? (rename-out [a-union union])
          union-contents union-type union-guards union-values union-filter
-         in-union in-union* in-union-guards in-union-values
-         union-count union-sum) 
+         in-union in-union* in-union-guards in-union-values)
 
 ; Represents a symbolic union of guarded values that evaluates either to a 
 ; single value of a given type, or no value at all.  
@@ -51,12 +50,8 @@
   #:transparent
   #:property prop:procedure [struct-field-index procedure])
 
-(define union-count (make-parameter 0))
-(define union-sum (make-parameter 0))
-
 (define (make-union . vs)
-  (union-count (add1 (union-count)))
-  (union-sum (+ (length vs) (union-sum)))
+  ((current-reporter) 'new-union (length vs))
   (match vs
     [(list) nil]
     [_ 

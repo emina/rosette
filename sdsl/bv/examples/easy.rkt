@@ -1,5 +1,6 @@
-#lang s-exp "../bv.rkt"
+#lang rosette
 
+(require "../bv.rkt")
 (require "reference.rkt")
 (provide (all-defined-out))
 

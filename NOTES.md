@@ -11,9 +11,11 @@ The semantics of Rosette 3.0 differs from Rosette 2.x in two ways:
 
 This release also includes the following new functionality and features contributed by [James Bornholt][] and [Phitchaya Mangpo Phothilimthana][]:
 
+- Developed a new *symbolic profiler* for diagnosing performance issues in Rosette programs. The symbolic profiler instruments Rosette and tracks key performance metrics to identify potential issues. To use the symbolic profiler, run the command `raco symprofile program.rkt`. A new [performance][] chapter in the Rosette guide details common performance issues and how to use the symbolic profiler to identify them.
 - Extended and generalized the interface to constraint solvers. The new interface allows the client code to specify a path to the solver, set the logic, provide solver-specific configuration options, and export the problem encodings sent to the solver.
 - Added support for four new solvers: [Boolector][], [CVC4][], [Yices][], and [CPLEX][]. These solvers are not included in the default distribution and need to be installed separately for use with Rosette.
 
+[performance]: https://docs.racket-lang.org/rosette-guide/ch_performance.html
 [Boolector]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fboolector..rkt%29._boolector%29%29
 [CVC4]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fcvc4..rkt%29._cvc4%29%29
 [Yices]: https://docs.racket-lang.org/rosette-guide/sec_solvers-and-solutions.html#%28def._%28%28lib._rosette%2Fsolver%2Fsmt%2Fyices..rkt%29._yices%29%29

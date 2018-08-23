@@ -1,6 +1,7 @@
 #lang racket
 
-(require racket/syntax (for-syntax racket racket/syntax) racket/generic "type.rkt")
+(require racket/syntax (for-syntax racket racket/syntax) racket/generic
+         "type.rkt" "reporter.rkt")
 
 (provide
  term-cache clear-terms!
@@ -18,7 +19,7 @@
 ; of expressions with commutative operators.
 #|-----------------------------------------------------------------------------------|#
 (define term-cache (make-parameter (make-hash)))
-(define term-count (make-parameter 0)) 
+(define term-count (make-parameter 0))
 
 ; Clears the entire term-cache if invoked with #f (default), or 
 ; it clears all terms reachable from the given set of leaf terms.
@@ -67,11 +68,12 @@
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
 (define-syntax-rule (make-term term-constructor args type rest ...) 
-  (let ([val args]) 
+  (let ([val args])
     (or (hash-ref (term-cache) val #f)
         (let* ([ord (term-count)]
                [out (term-constructor val type ord rest ...)])
           (term-count (add1 ord))
+          ((current-reporter) 'new-term out)
           (hash-set! (term-cache) val out)
           out))))
            

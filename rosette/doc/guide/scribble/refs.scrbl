@@ -21,3 +21,9 @@
     #:date 2014
     #:location "Programming Language Design and Implementation (PLDI)"))
 
+@(define sympro:oopsla18
+   (make-bib
+    #:title @hyperlink["https://unsat.cs.washington.edu/papers/bornholt-sympro.pdf"]{Finding Code That Explodes Under Symbolic Evaluation}
+    #:author (authors "James Bornholt" "Emina Torlak")
+    #:date 2018
+    #:location "Object Oriented Programming, Systems, Languages, and Applications (OOPSLA)"))

@@ -9,6 +9,7 @@
          "../base/core/polymorphic.rkt"
          "../base/core/merge.rkt"
          "../base/core/union.rkt"
+         "../base/core/reporter.rkt"
          (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
          (only-in "../base/core/term.rkt" [operator-unsafe unsafe]))
 
@@ -32,9 +33,13 @@
 ; their subterms, to their corresponding BV finitizations.  Terms that are already in BV 
 ; finitize to themselves.
 (define (finitize terms [bw (current-bitwidth)] [env (make-hash)])
+  ; lie to the profiler: any term that gets finitized makes it to the solver
+  ((current-reporter) 'to-solver terms)
   (parameterize ([current-bitwidth bw])
+    ((current-reporter) 'finitize-start)
     (for ([t terms])
       (finitize-any t env))
+    ((current-reporter) 'finitize-finish)
     env))
 
 ; Takes as input a solution and a finitization map 

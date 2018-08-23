@@ -17,3 +17,9 @@
 ;; Runs the code in `private/install.rkt` before installing this collection.
 (define pre-install-collection "private/install.rkt")
 (define compile-omit-files '("private/install.rkt"))
+
+(define raco-commands
+  '(("symprofile"
+     rosette/lib/profile/raco
+     "profile Rosette symbolic execution"
+     #f)))

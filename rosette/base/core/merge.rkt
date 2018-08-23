@@ -2,7 +2,7 @@
 
 (require (only-in rnrs/base-6 assert)
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
-         "term.rkt" "union.rkt" "bool.rkt")
+         "term.rkt" "union.rkt" "bool.rkt" "reporter.rkt")
 
 (provide merge merge* unsafe-merge* merge-same)
 
@@ -32,10 +32,12 @@
   (do-merge* #t ps))
 
 (define-syntax-rule (do-merge* force? ps)
-  (match (compress force? (simplify ps)) 
-    [(list (cons g v)) (assert (not (false? g))) v]
-    [(list _ (... ...) (cons #t v) _ (... ...)) v]
-    [vs (apply union vs)]))
+  (let ([simp (simplify ps)])
+    ((current-reporter) 'merge (length simp))
+    (match (compress force? simp)
+      [(list (cons g v)) (assert (not (false? g))) v]
+      [(list _ (... ...) (cons #t v) _ (... ...)) v]
+      [vs (apply union vs)])))
 
 (define (guard-&& a b)
   (match b  

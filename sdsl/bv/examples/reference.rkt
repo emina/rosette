@@ -1,5 +1,6 @@
-#lang s-exp "../bv.rkt"
+#lang rosette
 
+(require "../bv.rkt")
 (provide (all-defined-out))
 
 ; The 25 Hacker's Delight benchmarks from the following paper:

@@ -1,0 +1,21 @@
+.stack-graph-rect {
+    stroke: #EEEEEE;
+}
+
+.stack-graph-rect:hover {
+    stroke: #474747;
+    stroke-width: 0.8;
+    cursor: pointer;
+}
+
+.stack-graph-label {
+    pointer-events: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin-left: 4px;
+    margin-right: 4px;
+    line-height: 1.5;
+    padding: 0 0 0;
+    text-align: left;
+}

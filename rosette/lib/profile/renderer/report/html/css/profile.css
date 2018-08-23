@@ -1,0 +1,158 @@
+html {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+#header {
+    padding: 0.5em 1em;
+    background: #002546;
+    color: #dddddd;
+}
+#profile-source {
+    color: #efefef;
+    font-weight: 600;
+}
+#progress {
+    float: right;
+    display: none;
+}
+
+#content {
+    padding: 1em;
+}
+
+.help {
+    display: inline-block;
+    background-color: #777777;
+    color: #efefef;
+    width: 1em;
+    height: 1em;
+    border-radius: 0.5em;
+    font-weight: normal;
+    cursor: default;
+    text-align: center;
+}
+
+.ylabel {
+    font-size: 16px;
+}
+
+.trendgraph-bar {
+    fill: #0F5492;
+}
+
+.stack-graph-unzoom {
+    fill: #002546;
+}
+.stack-graph-unzoom + * .stack-graph-label {
+    color: #efefef !important;
+}
+
+.stack-graph-label {
+    font-size: 12px;
+    font-family: Helvetica, Arial, sans-serif;
+    color: black;
+}
+
+.stack-graph-node-highlight {
+    fill: #0F5492;
+}
+.stack-graph-node-highlight + * .stack-graph-label {
+    color: #efefef !important;
+}
+
+#stackgraph {
+    margin-top: 0.5em;
+}
+
+#calls {
+    margin-top: 1em;
+}
+
+#calltable {
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+#calltable th,
+#calltable td {
+    padding: 0.25rem 0.15rem;
+}
+
+#calltable-config {
+    text-align: left;
+    font-weight: normal;
+    font-size: 90%;
+}
+#calltable-config-more {
+    margin-top: 0.5rem;
+    display: none;
+}
+#calltable-config label + label,
+#calltable-config-toggle-more {
+    margin-left: 1.5rem;
+}
+#calltable-config-toggle-more,
+#calltable-config-toggle-more:active,
+#calltable-config-toggle-more:hover,
+#calltable-config-toggle-more:visited {
+    color: #333;
+}
+#calltable td {
+    text-align: right;
+}
+#calltable td.score,
+#calltable td.name {
+    text-align: left;
+}
+.calltable-highlight,
+#calltable tbody tr:hover {
+    background-color: #E3F2FF;
+}
+#calltable-score-header {
+    min-width: 8.3em;
+}
+#calltable .scorebar {
+    height: 0.5em;
+}
+#calltable .scorecell-bar {
+    width: 6em;
+    text-align: right;
+    display: inline-block;
+}
+#calltable .scorecell-score {
+    width: 2em;
+    text-align: right;
+    display: inline-block;
+    margin-right: 0.3em;
+}
+#calltable .score-checkbox {
+    display: none;
+}
+
+.source, .numcalls, .signature {
+    font-size: 80%;
+    color: #aaaaaa;
+    margin-left: 0.4rem;
+}
+
+ul.context-list {
+    margin: 0;
+    font-size: 80%;
+    padding-left: 1em;
+    list-style-type: none;
+    color: #777777;
+}
+ul.context-list li:before {
+    content: '↴';
+    display: inline-block;
+    font-size: 100%;
+    transform: rotate(180deg) translateY(0.3em);
+    color: #777777;
+}
+
+.tooltip {
+    background-color: #dddddd;
+    font-size: 90%;
+    padding: 0.5rem;
+    max-width: 22em;
+}
