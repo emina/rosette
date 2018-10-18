@@ -82,7 +82,7 @@
 (define (solver-pop self [k 1])
   (match-define (solver server _ _ _ _ env level) self)
   (when (or (<= k 0) (> k (length level)))
-    (error 'solver-pop "expected 1 < k <= ~a, given ~a" (length level) k))
+    (error 'solver-pop "expected 1 <= k <= ~a, given ~a" (length level) k))
   (server-write server (pop k))
   (solver-clear-stacks! self)
   (for ([lvl level][i k])
