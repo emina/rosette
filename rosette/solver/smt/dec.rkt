@@ -13,7 +13,8 @@
                   bitvector? bitvector bv bv? bitvector-size 
                   @bvslt @bvsle @bvult @bvule   
                   @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
-                  @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod))
+                  @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
+                  @concat @extract))
 
 
 (provide decode-model)
@@ -117,6 +118,8 @@
         (cond [(hash-has-key? ~env expr) (hash-ref ~env expr)]
               [(hash-has-key? sol expr) (inline (hash-ref sol expr) sol ~env)]
               [else expr])]
+       [(list (list (== '_) (== 'extract) i j) s)
+        `(, @extract ,(inline i sol ~env) ,(inline j sol ~env) ,(inline s sol ~env))]
        [(list op args ...)
         (let ([i-args (for/list ([arg args]) (inline arg sol ~env))])
           (match (inline op sol ~env)
@@ -137,4 +140,4 @@
         'bvneg @bvneg 'bvadd @bvadd 'bvmul @bvmul
         'bvudiv @bvudiv 'bvsdiv @bvsdiv
         'bvurem @bvurem 'bvsrem @bvsrem
-        'bvsmod @bvsmod))   
+        'bvsmod @bvsmod 'concat @concat))   
