@@ -45,11 +45,11 @@
 ; If v is not quantified, then v is bound to id in env, and d is declared in the SMT
 ; encoding using declare-fun. Otherwise, v is bound to (variable id) in env.
 (define (ref-const! v env quantified)
-  (match (dict-ref env v #f)
+  (match (hash-ref env v #f)
     [#f
-     (let ([id (smt-id 'c (dict-count env))])
+     (let ([id (smt-id 'c (hash-count env))])
        (if (member v quantified)
-           (dict-set! env v (variable id))
+           (hash-set! env v (variable id))
            (declare-fun! env v id))
        id)]
     [(? symbol? id) id]
@@ -63,7 +63,7 @@
 (define (declare-fun! defs v id)
   (let ([t (term-type v)])
     (declare-fun id (map smt-type (solvable-domain t)) (smt-type (solvable-range t)))
-    (dict-set! defs v id)))
+    (hash-set! defs v id)))
 
 ; Retrieves the SMT encoding for the Rosette expression e in the environment env.
 ; If env has a binding for (cons e quantified), that binding is returned. 
@@ -77,24 +77,24 @@
 ; (e arg-id ...) is returned.
 (define (ref-expr! e env quantified encoder)
   (let ([k (cons e quantified)])
-    (or (dict-ref env k #f) 
+    (or (hash-ref env k #f) 
         (match (encoder e env quantified) 
           [(? pair? enc)
-           (let ([id (smt-id 'e (dict-count env))])
+           (let ([id (smt-id 'e (hash-count env))])
              (cond [(null? quantified)
-                    (dict-set! env k id)
+                    (hash-set! env k id)
                     (define-const id (smt-type (type-of e)) enc)
                     id]
                    [else
                     (define qids
                       (for/list ([q quantified])
-                        (match (dict-ref env q)
+                        (match (hash-ref env q)
                           [(? symbol? qid) qid]
                           [(variable qid) qid])))
                     (define-fun id (for/list ([q quantified][qid qids]) (list qid (smt-type (type-of q))))
                       (smt-type (type-of e))
                       enc)
                     (define app-id (cons id qids))
-                    (dict-set! env k app-id)
+                    (hash-set! env k app-id)
                     app-id]))]
           [enc enc]))))
