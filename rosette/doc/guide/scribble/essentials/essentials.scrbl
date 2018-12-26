@@ -272,7 +272,7 @@ by the @racket[current-bitwidth] parameter.  Setting @racket[current-bitwidth]
 to a positive integer @var{k} instructs Rosette to approximate both reals and integers with @var{k}-bit words.
 Setting it to @racket[#f] instructs Rosette to use infinite precision for real and integer operations.
 
-The following snippet shows the effect of different @racket[current-bitwdth] settings on query behavior:
+The following snippet shows the effect of different @racket[current-bitwidth] settings on query behavior:
 @interaction[#:eval rosette-eval
 (define-symbolic x integer?)
 (current-bitwidth 5)  (code:comment "64 = 0 in the 5-bit representation")
