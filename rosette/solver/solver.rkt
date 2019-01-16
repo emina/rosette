@@ -6,7 +6,7 @@
          solver-assert solver-push solver-pop solver-clear
          solver-minimize solver-maximize
          solver-check solver-debug 
-         solver-shutdown solver-features
+         solver-shutdown solver-features solver-options
          prop:solver-constructor solver-constructor
          )
 
