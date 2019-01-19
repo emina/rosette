@@ -1,6 +1,7 @@
 #lang racket
 
 (require rackunit rackunit/text-ui  "common.rkt" "solver.rkt"
+         rosette/solver/smt/z3
          rosette/solver/solution 
          rosette/lib/roseunit 
          rosette/base/core/term rosette/base/core/bool
@@ -243,6 +244,15 @@
   (check-valid? (@* (@* x y) (@* (@/ 1 x) (@/ 1.0 y))) 1)
   )
 
+(define (check-irrationals)
+  (check-unsat (solve (@= (@* xi xi) 2)))
+  (parameterize ([solver (z3)])
+    (check-exn #px"root-obj" (thunk  (solve (@= (@* xr xr) 2))))
+    (solver-shutdown (solver)))
+  (parameterize ([solver (z3  #:options (hash ':pp.decimal 'true ':pp.decimal-precision 15))])
+    (check-= (abs ((solve (@= (@* xr xr) 2)) xr)) (abs (sqrt 2)) 1e-15)
+    (solver-shutdown (solver))))
+  
 (define (check-division-simplifications div x y z [epsilon 0])
   (check-valid? (div 0 x) 0)
   (check-valid? (div x 1) x)
@@ -549,6 +559,7 @@
    (check-*-simplifications xi yi zi)
    (check-*-simplifications xr yr zr)
    (check-*-real-simplifications)
+   (check-irrationals)
    (check-semantics @* xi yi zi)
    (check-semantics @* xr yr zr)))
 

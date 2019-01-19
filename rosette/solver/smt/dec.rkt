@@ -108,26 +108,37 @@
        [(== false) #f]
        [(? integer?) (inexact->exact expr)]
        [(? real?) expr]
+       [(? symbol?)
+        (cond
+          [(hash-has-key? ~env expr) (hash-ref ~env expr)]
+          [(hash-has-key? sol expr)  (inline (hash-ref sol expr) sol ~env)]
+          [else
+           (match (symbol->string expr)
+             [(regexp #px"(\\d*\\.?\\d+)\\?" (list _ (app string->number r))) r]
+             [(regexp #px"#b(\\d+)" (list str (app string-length len))) (bv (string->number str) (bitvector len))]
+             [(regexp #px"#x(.+)" (list str (app string-length len))) (bv (string->number str) (bitvector (* 4 len)))]
+             [_ expr])])]
        [(list (== '_) (app symbol->string (regexp #px"bv(\\d+)" (list _ (app string->number n)))) len)
         (bv n (bitvector len))]
-       [(and (? symbol?) (app symbol->string (regexp #px"#b(\\d+)" (list str (app string-length len)))))
-        (bv (string->number str) (bitvector len))]
-       [(and (? symbol?) (app symbol->string (regexp #px"#x(.+)" (list str (app string-length len)))))
-        (bv (string->number str) (bitvector (* 4 len)))]
-       [(? symbol?) 
-        (cond [(hash-has-key? ~env expr) (hash-ref ~env expr)]
-              [(hash-has-key? sol expr) (inline (hash-ref sol expr) sol ~env)]
-              [else expr])]
        [(list (list (== '_) (== 'extract) i j) s)
         `(, @extract ,(inline i sol ~env) ,(inline j sol ~env) ,(inline s sol ~env))]
        [(list op args ...)
-        (let ([i-args (for/list ([arg args]) (inline arg sol ~env))])
           (match (inline op sol ~env)
             [(and (or (? procedure?) (? constant?)) ~op)
-             `(,~op ,@i-args)]
+             `(,~op ,@(for/list ([arg args]) (inline arg sol ~env)))]
             [(list (== 'λ) params body)
-             (substitute body (for/hash ([p params] [i-arg i-args])
-                                (values p i-arg)))]))])]))
+             (substitute body (for/hash ([p params] [arg args])
+                                (values p (inline arg sol ~env))))]
+            [(== 'root-obj)
+             (error (format
+                     "~a
+                     The solver returned an algebraic real number as part of the solution.
+                     Algebraic numbers cannot be precisely represented by Rosette or Racket.
+                     To obtain a solution that approximates all real numbers to N decimal places,
+                     re-solve the constraints using a Z3 instance with the following options:
+                     (z3 #:options (hash ':pp.decimal 'true ':pp.decimal-precision N))"
+                     expr))]
+            [sym (error "Unrecognized symbol: ~s" sym)])])]))
               
 (define optable
   (hash '= @equal? 'ite ite
