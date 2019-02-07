@@ -490,6 +490,7 @@
     [((expression (== @bvadd) (bv a _) b) (bv (app - a) _)) b]
     [((expression (== @bvadd) a b) (expression (== @bvneg) a)) b]
     [((expression (== @bvadd) a b) (expression (== @bvneg) b)) a]
+    [((expression (== ite) a (? bv? b) (? bv? c)) (? bv?)) (ite a (bvadd b y) (bvadd c y))]
     [((expression (== @bvadd) a ...) (expression (== @bvadd) b ...))
      (let ([alen (length a)] 
            [blen (length b)])
