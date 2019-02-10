@@ -19,7 +19,7 @@
       [(cvc4? solver)
        (base/solver-config solver)]
       [else
-       (define real-cvc4-path (base/find-solver "cvc4" cvc4-path (hash-ref options 'path #f)))
+       (define real-cvc4-path (base/find-solver "cvc4" cvc4-path path))
        (when (and (false? real-cvc4-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
          (error 'cvc4 "cvc4 binary is not available (expected to be at ~a); try passing the #:path argument to (cvc4)" (path->string (simplify-path cvc4-path))))
        (base/config options real-cvc4-path logic)]))
