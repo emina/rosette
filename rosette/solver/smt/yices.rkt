@@ -69,7 +69,7 @@
      (base/solver-debug self))])
 
 
-; Check whether a term v is well-formed for Boolector -- it must not 
+; Check whether a term v is well-formed for Yices -- it must not 
 ; use integer->bitvector, which Yices doesn't support natively,
 ; nor a quantifier.
 (define (yices-wfcheck v [cache (mutable-set)])
