@@ -23,7 +23,7 @@
       [(yices? solver)
        (base/solver-config solver)]
       [else
-       (define real-yices-path (base/find-solver "yices" yices-path (hash-ref options 'path #f)))
+       (define real-yices-path (base/find-solver "yices" yices-path path))
        (when (and (false? real-yices-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
          (error 'yices "yices binary is not available (expected to be at ~a); try passing the #:path argument to (yices)" (path->string (simplify-path yices-path))))
        (base/config options real-yices-path logic)]))
@@ -69,7 +69,7 @@
      (base/solver-debug self))])
 
 
-; Check whether a term v is well-formed for Boolector -- it must not 
+; Check whether a term v is well-formed for Yices -- it must not 
 ; use integer->bitvector, which Yices doesn't support natively,
 ; nor a quantifier.
 (define (yices-wfcheck v [cache (mutable-set)])

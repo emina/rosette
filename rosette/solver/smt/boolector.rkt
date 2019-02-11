@@ -26,7 +26,7 @@
       [(boolector? solver)
        (base/solver-config solver)]
       [else
-       (define real-boolector-path (base/find-solver "boolector" boolector-path (hash-ref options 'path #f)))
+       (define real-boolector-path (base/find-solver "boolector" boolector-path path))
        (when (and (false? real-boolector-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
          (error 'boolector "boolector binary is not available (expected to be at ~a); try passing the #:path argument to (boolector)" (path->string (simplify-path boolector-path))))
        (base/config options real-boolector-path logic)]))
@@ -35,7 +35,7 @@
 (struct boolector base/solver ()
   #:property prop:solver-constructor make-boolector
   #:methods gen:custom-write
-  [(define (write-proc self port mode) (fprintf port "#<cvc4>"))]
+  [(define (write-proc self port mode) (fprintf port "#<boolector>"))]
   #:methods gen:solver
   [
    (define (solver-features self)
