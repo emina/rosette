@@ -35,7 +35,7 @@
 (struct boolector base/solver ()
   #:property prop:solver-constructor make-boolector
   #:methods gen:custom-write
-  [(define (write-proc self port mode) (fprintf port "#<cvc4>"))]
+  [(define (write-proc self port mode) (fprintf port "#<boolector>"))]
   #:methods gen:solver
   [
    (define (solver-features self)
