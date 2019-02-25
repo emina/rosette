@@ -42,8 +42,21 @@
    (define (hash-proc a rec) (rec (h0-x a)))
    (define (hash2-proc a rec) (rec (h0-x a)))])
 
+(struct h00 (x)
+  #:methods gen:equal+hash
+  [(define (equal-proc a b rec) (@= (h00-x a) (h00-x b)))
+   (define (hash-proc a rec) 1)
+   (define (hash2-proc a rec) 2)])
+
+(struct h01 (x)
+  #:methods gen:equal+hash
+  [(define (equal-proc a b rec) (@equal? (h01-x a) (h01-x b)))
+   (define (hash-proc a rec) 1)
+   (define (hash2-proc a rec) 2)])
+
 (struct h1 h0 (y))
 (struct h2 h0 ())
+
 
 ; mutable structs
 (struct m0 (m) #:mutable #:transparent)
@@ -129,6 +142,9 @@
   (check-equal? (@equal? (h1 1 2) (h0 1)) #t)
   (check-equal? (@equal? (h1 1 2) (h0 x)) (@= x 1))
   (check-equal? (@equal? (h1 1 x) (h1 y 2)) (@= y 1))
+  (check-equal? (@equal? (h0 x) (h0 y)) (@= x y))
+  (check-equal? (@equal? (h00 x) (h00 y)) (@= x y))
+  (check-equal? (@equal? (h01 x) (h01 y)) (@= x y))
   (define m31 (m3 4))
   (define m32 (m3 4))
   (check-equal? (@equal? m31 m32) #t)
@@ -279,6 +295,28 @@
   (cyclic4)
   (cyclic5))
 
+(define (asymmetric-equal)
+  (struct thing (f) #:transparent
+    #:methods gen:equal+hash
+    [(define (equal-proc a b equal?-recur)
+       (equal?-recur ((thing-f a) 1) ((thing-f b) 2 3)))
+     (define (hash-proc a hash-recur) 1)
+     (define (hash2-proc a hash2-recur) 2)])
+
+  (struct Thing (t1 t2) #:transparent)
+
+  (define T1 (Thing (thing add1) (thing list)))
+  (define T2 (Thing (thing vector) (thing +)))
+
+  (check-equal? (@equal? T1 T2) #f)
+  (check-exn exn:fail? (thunk (@equal? T2 T1)))
+
+  (define T3 (Thing (thing (lambda (a) (@+ x a))) (thing (lambda (a) (@+ y a)))))
+  (define T4 (Thing (thing @+) (thing @*)))
+
+  (check-equal? (@equal? T3 T4) (&& (@= (@+ x 1) (@+ 2 3)) (@= (@+ y 1) (@* 2 3))))
+  (check-sat (solve (@assert (@equal? T3 T4)))))
+
 (define equality-tests
   (test-suite+ 
    "Tests for rosette/base/equality.rkt"
@@ -316,6 +354,8 @@
    (struct-hash-tests)
    ; cyclic tests
    (cyclic-tests)
+   ; asymmetric equal
+   (asymmetric-equal)
    ))
 
 (module+ test
