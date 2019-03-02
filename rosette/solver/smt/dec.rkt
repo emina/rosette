@@ -28,6 +28,7 @@
                #:when (and (constant? decl) (hash-has-key? i-sol id)))
       (values decl (interpret (hash-ref i-sol id) (term-type decl)))))) 
 
+
 ; Given an expression produced by the inline procedure, along with the type of
 ; its corresponding Rosette constant?, returns the Rosette value encoded
 ; by the given expression.
@@ -59,7 +60,8 @@
     (values
      k        
      (match v
-       [(list (== 'define-fun) _ '() _ _) v]
+       [(list (== 'define-fun) id '() ret body)
+        `(define-fun ,id () ,ret ,(substitute body (hash)))]
        [(list (== 'define-fun) id params ret body)
         (let ([α-params (for/list ([p params]) (gensym (car p)))])
           `(define-fun
@@ -74,6 +76,14 @@
 ; returns a B' that replaces each occurrence of a key K in M with M[K].
 (define (substitute body env)
   (match body
+    [(list (== 'let) binds body)
+     (let ([α-ids (for/list ([id:expr binds]) (gensym (car id:expr)))])
+       `(let ,(for/list ([α-id α-ids][id:expr binds])
+                (list α-id (substitute (cadr id:expr) env)))
+          ,(substitute
+            body
+            (apply hash-set* env (for/fold ([out '()]) ([id:expr binds][α-id α-ids])
+                                   `(,(car id:expr) ,α-id ,@out))))))]
     [(list es ...) (for/list ([e es]) (substitute e env))]
     [e (if (hash-has-key? env e) (hash-ref env e) e)]))
 
@@ -122,6 +132,10 @@
         (bv n (bitvector len))]
        [(list (list (== '_) (== 'extract) i j) s)
         `(, @extract ,(inline i sol ~env) ,(inline j sol ~env) ,(inline s sol ~env))]
+       [(list (== 'let) binds body)
+        (substitute (inline body sol ~env)
+                    (for/hash ([id:expr binds])
+                      (values (car id:expr) (inline (cadr id:expr) sol ~env))))]
        [(list op args ...)
           (match (inline op sol ~env)
             [(and (or (? procedure?) (? constant?)) ~op)
@@ -138,7 +152,7 @@
                      re-solve the constraints using a Z3 instance with the following options:
                      (z3 #:options (hash ':pp.decimal 'true ':pp.decimal-precision N))"
                      expr))]
-            [sym (error "Unrecognized symbol: ~s" sym)])])]))
+            [sym (error "Unrecognized symbol: " sym)])])]))
               
 (define optable
   (hash '= @equal? 'ite ite

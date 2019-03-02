@@ -34,6 +34,7 @@
  "base/distinct.rkt"
  "base/generics.rkt"
  "base/push-pop.rkt"
+ "base/decode.rkt"
  "query/solve.rkt"
  "query/verify.rkt"
  "query/synthesize.rkt"
