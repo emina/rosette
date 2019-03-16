@@ -92,7 +92,7 @@
      @if @and @or @not @nand @nor @xor @implies
      @unless @when @cond @case else
      ; form/module.rkt
-     @#%module-begin @#%top-interaction @module @module @module+
+     @#%module-begin @#%top-interaction @module @module* @module+
      ; form/app.rkt
      #%app #%plain-app 
      )))
