@@ -488,6 +488,7 @@
     [((expression (== @bvadd) (expression (== @bvneg) (== y)) z) _) z]
     [((expression (== @bvadd) z (expression (== @bvneg) (== y))) _) z]
     [((expression (== @bvadd) (bv a _) b) (bv (app - a) _)) b]
+    [((expression (== @bvadd) (? bv? a) b) (? bv?)) (@bvadd (@bvadd a y) b)]
     [((expression (== @bvadd) a b) (expression (== @bvneg) a)) b]
     [((expression (== @bvadd) a b) (expression (== @bvneg) b)) a]
     [((expression (== ite) a (? bv? b) (? bv? c)) (? bv?)) (ite a (bvadd b y) (bvadd c y))]
