@@ -149,13 +149,13 @@ always refers to the same hole, as shown below.
       (assert (= (+ (* x 2) (* y 1)) (+ (* 2 x) y))))))]
 }
 
-@defproc[(generate-forms [solution solution?]) (listof syntax?)]{
+@defproc[(generate-forms [solution sat?]) (listof syntax?)]{
 Given a satisfiable @racket[solution?] to a @racket[synthesize]  query,
 returns a list of @tech{sketch} completions for that query.  
 Sketch completions can only be generated for programs that have been saved to disk.  
 }
 
-@defproc[(print-forms [solution solution?]) void?]{
+@defproc[(print-forms [solution sat?]) void?]{
   Pretty-prints the result of applying @racket[generate-forms] to the given  
   @racket[solution]. Sketch completions can only be generated and printed
  for programs that have been saved to disk. 

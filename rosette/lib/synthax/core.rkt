@@ -4,9 +4,12 @@
          (for-syntax "../util/syntax-properties.rkt")  
          "../util/syntax-properties.rkt"
          (only-in rosette/lib/util/syntax read-module)
-         (only-in rosette constant model term-cache))
+         (only-in rosette constant model term-cache sat?))
 
-(provide hole completion define-synthax generate-forms print-forms)
+(provide hole completion define-synthax
+         (contract-out
+          [generate-forms (-> sat? (listof syntax?))]
+          [print-forms (-> sat? any)]))
 
 ; Stores the current synthax-expansion context, represented 
 ; as a list of tags, where the most recent tag identifies the 
