@@ -37,7 +37,7 @@ first-time users of Rosette in just a few days or weeks.
 [Neutrons]: http://neutrons.uwplse.org
 [Nonograms]: https://github.com/edbutler/nonograms-rule-synthesis
 [Ocelot]: https://jamesbornholt.github.io/ocelot/
-[Quivela]: https://github.com/awslabs/quivela
+[Quivela]: https://github.com/jamesbornholt/quivela
 [EPICS]: http://www.aps.anl.gov/epics/
 [CNTS]: https://staff.washington.edu/jon/cnts/
 [Synapse]: http://synapse.uwplse.org
