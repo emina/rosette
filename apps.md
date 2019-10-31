@@ -10,7 +10,8 @@ verification of radiotherapy software to synthesis of code for
 ultra-low power hardware. Several of these tools have been developed by
 first-time users of Rosette in just a few days or weeks.
 
-
+| [Serval][] | A framework for developing automated verifiers for systems software.  |
+| [Notary][] | A verified device for secure transaction approval. |
 | [MemSynth][] | A language and tool for verifying, synthesizing, and disambiguating memory consistency models. |
 | [Ocelot][] | An engine for solving, verifying, and synthesizing specifications in bounded relational logic. |
 | [Cosette][] |  A framework for reasoning about SQL equivalences. |
@@ -26,6 +27,8 @@ first-time users of Rosette in just a few days or weeks.
 | [More][] |  Demo languages and tools for [secure stack machines][SSM], data-parallel programing, and web-scraping.  |
 
 
+[Serval]: https://unsat.cs.washington.edu/projects/serval/
+[Notary]: https://github.com/anishathalye/notary
 [Bagpipe]: http://www.konne.me/bagpipe/
 [BGP]: https://en.wikipedia.org/wiki/Border_Gateway_Protocol
 [Chlorophyll]: http://pl.eecs.berkeley.edu/projects/chlorophyll/
