@@ -1,0 +1,56 @@
+[
+  {
+    "author": "Sorawee Porncharoenwase and James Bornholt and Emina Torlak",
+    "booktitle": "Verification, Model Checking, and Abstract Interpretation (VMCAI)",
+    "key": "symfix:vmcai20",
+    "title": "Fixing Code That Explodes Under Symbolic Evaluation",
+    "type": "inproceedings",
+    "year": "2020",
+  },   
+  {
+    "author": "James Bornholt and Emina Torlak",
+    "award": "Distinguished Artifact Award",
+    "booktitle": "Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA)",
+    "key": "sympro:oopsla18",
+    "title": "Finding Code That Explodes Under Symbolic Evaluation",
+    "type": "inproceedings",
+    "year": "2018",
+    "preprint": "https://unsat.cs.washington.edu/papers/bornholt-sympro.pdf",
+    "web": "https://unsat.cs.washington.edu/projects/sympro/",
+    "url": "https://dl.acm.org/citation.cfm?id=3276519"
+  },
+  {
+    "author": "Stephen Chang and Alex Knauth and Emina Torlak",
+    "booktitle": "Principles of Programming Languages (POPL)",
+    "key": "typedrosette:popl18",
+    "preprint": "http://homes.cs.washington.edu/~emina/doc/typedrosette.popl18.pdf",
+    "title": "Symbolic Types for Lenient Symbolic Execution",
+    "type": "inproceedings",
+    "url": "https://dl.acm.org/citation.cfm?doid=3158128",
+    "web": "https://github.com/stchang/typed-rosette",
+    "year": "2018"
+  },
+  {
+    "author": "Emina Torlak and Rastislav Bodik",
+    "booktitle": "Programming Language Design and Implementation (PLDI)",
+    "key": "rosette:pldi14",
+    "preprint": "http://homes.cs.washington.edu/~emina/doc/rosette.pldi14.pdf",
+    "title": "A Lightweight Symbolic Virtual Machine for Solver-Aided Host Languages",
+    "type": "inproceedings",
+    "url": "http://dl.acm.org/citation.cfm?id=2594340",
+    "web": "http://emina.github.io/rosette/",
+    "year": "2014"
+  },
+{
+  "author": "Emina Torlak and Rastislav Bodik",
+  "booktitle": "New Ideas, New Paradigms, and Reflections on Programming \\& Software (Onward!)",
+  "key": "rosette:onward13",
+  "preprint": "http://homes.cs.washington.edu/~emina/doc/rosette.onward13.pdf",
+  "title": "Growing Solver-Aided Languages with {Rosette}",
+  "type": "inproceedings",
+  "url": "http://dl.acm.org/citation.cfm?id=2509586",
+  "web": "http://emina.github.io/rosette/",
+  "year": "2013"
+},
+ 
+]

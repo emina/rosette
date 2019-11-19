@@ -12,6 +12,7 @@ first-time users of Rosette in just a few days or weeks.
 
 | [Serval][] | A framework for developing automated verifiers for systems software.  |
 | [Notary][] | A verified device for secure transaction approval. |
+| [SwizzleInventor][] | A framework for synthesizing swizzle GPU kernels.  |
 | [MemSynth][] | A language and tool for verifying, synthesizing, and disambiguating memory consistency models. |
 | [Ocelot][] | An engine for solving, verifying, and synthesizing specifications in bounded relational logic. |
 | [Cosette][] |  A framework for reasoning about SQL equivalences. |
@@ -29,6 +30,7 @@ first-time users of Rosette in just a few days or weeks.
 
 [Serval]: https://unsat.cs.washington.edu/projects/serval/
 [Notary]: https://github.com/anishathalye/notary
+[SwizzleInventor]: https://github.com/mangpo/swizzle-inventor
 [Bagpipe]: http://www.konne.me/bagpipe/
 [BGP]: https://en.wikipedia.org/wiki/Border_Gateway_Protocol
 [Chlorophyll]: http://pl.eecs.berkeley.edu/projects/chlorophyll/
