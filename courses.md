@@ -7,7 +7,7 @@ title: Courses
 Rosette is used for teaching in the following courses and tutorials on
 solver-aided programming and, more generally, computer-aided reasoning for
 software. Contact [our team][UNSAT contact] if you would like to use our teaching
-materials (starred) in your own course, or have the course listed here. 
+materials (starred) in your own course, or have your course listed here. 
 
 
 ### Courses
