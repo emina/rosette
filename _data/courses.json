@@ -1,0 +1,37 @@
+[
+  { "course": "CSE 507",
+    "title": "Computer-Aided Reasoning for Software",
+    "level": "graduate",
+    "institution": "University of Washington", 
+    "unsat": true,
+    "url": "https://courses.cs.washington.edu/courses/cse507/19au/index.html",
+    "terms": [ "19au", "19wi", "18sp", "17wi", "16sp", "14au" ]},
+  
+  { "course": "CS292C",
+    "title": "Computer-Aided Reasoning for Software",
+    "level": "graduate",
+    "institution": "UC Santa Barbara", 
+    "url": "https://github.com/fredfeng/CS292C",
+    "terms": [ "19au" ]},
+
+  { "course": "CSE290Q",
+    "title": "SMT Solving and Solver-Aided Systems",
+    "level": "graduate",
+    "institution": "UC Santa Cruz", 
+    "url": "http://composition.al/CSE290Q-2019-09/index.html",
+    "terms": [ "19au" ]},
+
+  { "course": "COS IW09",
+    "title": "Programs Generating Programs",
+    "level": "undergraduate",
+    "institution": "Princeton", 
+    "url": "https://www.cs.princeton.edu/courses/archive/fall18/cosIW09/index.html",
+    "terms": [ "18au" ]},
+
+  { "course": "CS294",
+    "title": "Program Synthesis for Everyone",
+    "level": "graduate",
+    "institution": "UC Berkeley", 
+    "url": "https://homes.cs.washington.edu/~bodik/ucb/cs294fa12.html",
+    "terms": [ "12au" ]}
+]

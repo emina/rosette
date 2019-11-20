@@ -1,0 +1,19 @@
+[
+    { 
+        "title": "Solver-Aided Programming",
+        "url": "https://homes.cs.washington.edu/~emina/media/cav19-tutorial/index.html",   
+        "unsat": true,
+        "events": [ 
+            {"venue": "CAV 2019", "year": "2019", "url": "http://i-cav.org/2019/tutorials/"},
+            {"venue": "SSFT 2018", "year": "2018", "url": "http://fm.csl.sri.com/SSFT18/"}
+        ]
+    },
+    { 
+        "title": "Automated Verification of Systems Software with Serval",
+        "url": "https://github.com/uw-unsat/serval-tutorial-sosp19",   
+        "unsat": true,
+        "events": [ 
+            {"venue": "SOSP 2019", "year": "2019", "url": "https://sosp19.rcs.uwaterloo.ca/tutorials.html"}
+        ]
+    }
+]
