@@ -110,9 +110,7 @@
        (when (null? guards) (assert #f all-path-infeasible))
        (when (ormap pair? states)
          (merge-states guards states))
-       (apply merge* (map cons guards outputs))]))
-
-  )
+       (apply merge* (map cons guards outputs))])))
   
 ; Speculatively executes the given procedure on the provided 
 ; guarded values and returns three lists---guards, outputs, 
