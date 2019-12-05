@@ -5,19 +5,22 @@
 
 (define-syntax (check-for/all stx)
   (syntax-case stx ()
-    [(_ (head ([v val mod ...]) expr) expected-values)
+    [(_ (head ([v val mod ...]) expr ...) expected-values)
      (free-identifier=? #'head #'for/all)
-     #'(check-for/all #:assume #t (head ([v val mod ...]) expr) expected-values)]
-    [(_ #:assume pre (head ([v val mod ...]) expr) expected-values)
+     #'(check-for/all #:assume #t (head ([v val mod ...]) expr ...)
+                      expected-values)]
+    [(_ #:assume pre (head ([v val mod ...]) expr ...) expected-values)
      (free-identifier=? #'head #'for/all)
-     #'(let ([actual-values (mutable-set)])
+     #'(let ([actual-values (mutable-set)]
+             [proc (λ (v) expr ...)])
          (check-unsat
           (verify
            #:assume pre
            #:guarantee 
            (assert
-            (equal? (head ([v val mod ...]) (begin (set-add! actual-values v) expr))
-                    (let ([v val]) expr)))))
+            (equal? (head ([v val mod ...])
+                          (begin (set-add! actual-values v) (proc v)))
+                    (proc val)))))
          (check set=? actual-values expected-values))]))
 
 (define-symbolic a b c d e boolean?)
@@ -42,6 +45,11 @@
    (for/all ([v (if a f (if b p (if c u w)))])
      (equal? v 1.0))
    (set f p (if c u w)))
+  (check-for/all ; union with multiple expressions in the body
+   (for/all ([v (if a f (if b p 'p))])
+     (void)
+     (equal? v 1.0))
+   (set f p 'p))
   )
 
 (define (check-exhaustive-for/all)
@@ -81,23 +89,26 @@
    (for/all ([v i (list 1 2 3)])
      (add1 v))
    (set 1 2 3))
+  (check-for/all
+   (for/all ([v 2 '(1 2)]) v)
+   (set 2))
   )
 
 (define tests:basic
   (test-suite+
-   "Check the (for/all ([v val]) expr) form."
+   "Check the (for/all ([v val]) expr ...+) form."
    (current-bitwidth #f)
    (check-basic-for/all)))
 
 (define tests:exhaustive
   (test-suite+
-   "Check the (for/all ([v val #:exhaustive]) expr) form."
+   "Check the (for/all ([v val #:exhaustive]) expr ...+) form."
    (current-bitwidth #f)
    (check-exhaustive-for/all)))
 
 (define tests:concretized
   (test-suite+
-   "Check the (for/all ([v val concretized]) expr) form."
+   "Check the (for/all ([v val concretized]) expr ...+) form."
    (current-bitwidth #f)
    (check-concretized-for/all)))
 
