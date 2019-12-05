@@ -81,7 +81,7 @@
                        (cdr gv))))]
        [_ (list (cons (apply && guards) val))]))))
 
-(define (all-path-infeasible)
+(define (all-paths-infeasible)
   (error 'for/all "all paths infeasible"))
 
 ; Applies the given procedure to each of the guarded values,
@@ -95,22 +95,23 @@
 ; All given guards are required to be pairwise mutually exclusive, 
 ; and at least one of the guards must always evaluate to true.
 (define (guard-apply proc guarded-values [guard-of car] [value-of cdr])
-  (let ([guards (map guard-of guarded-values)])
-    (cond
-      [(andmap boolean? guards)
-       ;; Either (1) concrete is empty or (2) the value is also concrete.
-       ;; We want to search for a value whose guard is true and
-       ;; apply proc to it if there's one, error otherwise.
-       (cond
-         [(findf guard-of guarded-values) => (compose1 proc value-of)]
-         [else (assert #f all-path-infeasible)])]
-      [else
-       (define-values (guards outputs states)
-         (guard-speculate* proc guarded-values guard-of value-of))
-       (when (null? guards) (assert #f all-path-infeasible))
-       (when (ormap pair? states)
-         (merge-states guards states))
-       (apply merge* (map cons guards outputs))])))
+  (cond
+    [(andmap (compose1 boolean? guard-of) guarded-values)
+     ;; Either (1) concrete is empty or (2) the value is also concrete.
+     ;; This case doesn't require speculation which is expensive.
+     ;; Simply search for a value in gv pairs whose guard is true
+     ;; and apply proc to it if there's one, error otherwise.
+     (define gv (findf guard-of guarded-values))
+     (cond
+       [gv (proc (value-of gv))]
+       [else (assert #f all-paths-infeasible)])]
+    [else
+     (define-values (guards outputs states)
+       (guard-speculate* proc guarded-values guard-of value-of))
+     (when (null? guards) (assert #f all-paths-infeasible))
+     (when (ormap pair? states)
+       (merge-states guards states))
+     (apply merge* (map cons guards outputs))]))
   
 ; Speculatively executes the given procedure on the provided 
 ; guarded values and returns three lists---guards, outputs, 
@@ -134,7 +135,7 @@
        (parameterize ([pc guard]) 
          (proc val))))
     (cond [state (values (cons guard guards) (cons output outputs) (cons state states))]
-          [else  (assert (! guard) all-path-infeasible)
+          [else  (assert (! guard) all-paths-infeasible)
                  (values guards outputs states)])))
 
 
