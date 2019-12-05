@@ -183,7 +183,7 @@ to lift operations on @tech[#:key "unsolvable type"]{unsolvable types}.  The
 @declare-exporting[rosette/base/core/forall rosette/lib/lift
                    #:use-sources (rosette/base/core/forall rosette/lib/lift)]
 
-@defform[(for/all ([id val-expr]) body)]{
+@defform[(for/all ([id val-expr]) body ...+)]{
 If @racket[val-expr] evaluates to a value that is not a @racket[union?], 
 @racket[for/all] behaves like a @racket[let] expression.  It binds 
 @racket[id] to the value and evaluates the @racket[body] with that binding.  
@@ -250,7 +250,7 @@ Experimenting is the best way to determine whether and where to insert
 performance-guiding @racket[for/all]s.
 }]}
 
-@defform[(for*/all ([id val-expr] ...+) body)]{
+@defform[(for*/all ([id val-expr] ...+) body ...+)]{
 Expands to a nested use of @racket[for/all], 
 just like @racket[let*] expands to a nested use of @racket[let].}                                             
                                     

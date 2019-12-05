@@ -1,6 +1,7 @@
 #lang racket
 
-(require racket/splicing (for-syntax racket/syntax) 
+(require racket/splicing (for-syntax racket/syntax)
+         syntax/parse/define
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          (only-in "merge.rkt" merge merge* merge-same)
          (only-in "bool.rkt" ! || && pc)
@@ -20,15 +21,13 @@
 ; (for/all ([v0 val0])
 ;  (for/all ([v1 val1])
 ;    expr))
-(define-syntax for*/all
-  (syntax-rules ()
-    [(_ () expr) expr]
-    [(_ (v:gv) expr)
-     (for/all (v:gv) expr)]
-    [(_ (v0:gv0 v:gv ...) expr)
+(define-syntax-parser for*/all
+  #:disable-colon-notation
+  [(_ () e ...+) (syntax/loc this-syntax (begin e ...))]
+  [(_ (v0:gv0 v:gv ...) e ...+)
+   (syntax/loc this-syntax
      (for/all (v0:gv0)
-       (for*/all (v:gv ...) expr))]))
-
+       (for*/all (v:gv ...) e ...)))])
 
 ; This macro takes the following form:
 ; (for/all ([v val]) expr)
@@ -39,33 +38,29 @@
 ; symbolic reference could point.  If the provided 
 ; value is not a symbolic reference, then the expression 
 ; is simply evaluated with v bound to the value itself.
-(define-syntax (for/all stx)
-  (syntax-case stx ()
-    [(_ ([v val]) expr)
-     (identifier? #'v)
-     (syntax/loc stx
-       (let ([proc (lambda (v) expr)])
-         (match val
-           [(union gvs) (guard-apply proc gvs)]
-           [other       (proc other)])))]
-    [(_ ([v val #:exhaustive]) expr)
-     (identifier? #'v)
-     (syntax/loc stx
-       (let ([proc (lambda (v) expr)])
-         (match val
-           [(or (? union? sym) (and (expression (or (== ite) (== ite*)) _ (... ...)) sym)) 
-            (guard-apply proc (flatten-guarded sym))]
-           [other (proc other)])))]
-    [(_ ([v val concrete]) expr)
-     (identifier? #'v)
-     (syntax/loc stx (for/all ([v val concrete @equal?]) expr))]
-    [(_ ([v val concrete ==]) expr)
-     (identifier? #'v)
-     (syntax/loc stx
-       (let ([sym val])
-         (guard-apply
-          (lambda (v) expr)
-          (for/list ([c concrete]) (cons (== sym c) c)))))]))
+(define-syntax-parser for/all
+  [(_ ([v:id val]) e ...+)
+   (syntax/loc this-syntax
+     (let ([proc (lambda (v) e ...)])
+       (match val
+         [(union gvs) (guard-apply proc gvs)]
+         [other       (proc other)])))]
+  [(_ ([v:id val #:exhaustive]) e ...+)
+   #:with ooo (quote-syntax ...)
+   (syntax/loc this-syntax
+     (let ([proc (lambda (v) e ...)])
+       (match val
+         [(or (? union? sym) (and (expression (or (== ite) (== ite*)) _ ooo) sym))
+          (guard-apply proc (flatten-guarded sym))]
+         [other (proc other)])))]
+  [(_ ([v:id val concrete]) e ...+)
+   (syntax/loc this-syntax (for/all ([v val concrete @equal?]) e ...))]
+  [(_ ([v:id val concrete ==]) e ...+)
+   (syntax/loc this-syntax
+     (let ([sym val] [=== ==])
+       (guard-apply
+        (lambda (v) e ...)
+        (for/list ([c concrete]) (cons (=== sym c) c)))))])
 
 (define (flatten-guarded v)
   (merge-same 
@@ -86,6 +81,9 @@
                        (cdr gv))))]
        [_ (list (cons (apply && guards) val))]))))
 
+(define (all-path-infeasible)
+  (error 'for/all "all paths infeasible"))
+
 ; Applies the given procedure to each of the guarded values,
 ; given as guard/value structures.  The application of the procedure 
 ; to each value is done under the value's guard, and so are all 
@@ -97,13 +95,24 @@
 ; All given guards are required to be pairwise mutually exclusive, 
 ; and at least one of the guards must always evaluate to true.
 (define (guard-apply proc guarded-values [guard-of car] [value-of cdr])
-  (define-values (guards outputs states)
-    (guard-speculate* proc guarded-values guard-of value-of))
-  (when (null? guards)
-    (assert #f (thunk (error 'for/all "all paths infeasible"))))
-  (when (ormap pair? states)
-    (merge-states guards states))
-  (apply merge* (map cons guards outputs)))
+  (let ([guards (map guard-of guarded-values)])
+    (cond
+      [(andmap boolean? guards)
+       ;; Either (1) concrete is empty or (2) the value is also concrete.
+       ;; We want to search for a value whose guard is true and
+       ;; apply proc to it if there's one, error otherwise.
+       (cond
+         [(findf guard-of guarded-values) => (compose1 proc value-of)]
+         [else (assert #f all-path-infeasible)])]
+      [else
+       (define-values (guards outputs states)
+         (guard-speculate* proc guarded-values guard-of value-of))
+       (when (null? guards) (assert #f all-path-infeasible))
+       (when (ormap pair? states)
+         (merge-states guards states))
+       (apply merge* (map cons guards outputs))]))
+
+  )
   
 ; Speculatively executes the given procedure on the provided 
 ; guarded values and returns three lists---guards, outputs, 
@@ -127,7 +136,7 @@
        (parameterize ([pc guard]) 
          (proc val))))
     (cond [state (values (cons guard guards) (cons output outputs) (cons state states))]
-          [else  (assert (! guard) (thunk (error 'for/all "all paths infeasible")))
+          [else  (assert (! guard) all-path-infeasible)
                  (values guards outputs states)])))
 
 
