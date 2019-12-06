@@ -45,6 +45,22 @@
                                #:guarantee (assert (and (= (+ (* 2 n) 1) 0) (not (= n 0))))))
     ))
 
+(define (r0)
+  (define-symbolic y boolean?)
+  (define expression
+    (+ (if x (if y 0.5 0) 1) (if y 0.5 0)))
+
+  (define evaluated
+    (evaluate expression (sat (hash x #t))))
+
+  (verify (assert (= 0 evaluated))))
+  
+  
+(define regression-tests
+  (test-suite+ "Verify regression tests."
+    (check-not-exn r0)))
+
 (module+ test
   (time (run-tests verify-tests))
-  (time (run-tests short-circuit-tests)))
+  (time (run-tests short-circuit-tests))
+  (time (run-tests regression-tests)))

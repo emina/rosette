@@ -34,14 +34,14 @@
                   [(union (? null?)) (solvable-default (get-type expr))]
                   [other other])]
                [(expression (and op (or (== @forall) (== @exists))) vars body)
-                ((operator-unsafe op)
+                (op
                  vars
                  (eval-rec
                   body
                   (sat (for/hash ([(k v) (model sol)] #:unless (member k vars)) (values k v)))
                   (make-hash)))]
                [(expression op child ...)  
-                (apply (operator-unsafe op) (for/list ([e child]) (eval-rec e sol cache)))]
+                (apply op (for/list ([e child]) (eval-rec e sol cache)))]
                [(? list?)                
                 (for/list ([e expr]) (eval-rec e sol cache))]
                [(cons x y)               
