@@ -121,12 +121,11 @@
        (match (server-read server (read))
          [(== 'sat)
           (server-write server (get-model))
-          (let loop ()
-            (match (server-read server (read))
-              [(list (== 'model) def ...)
-               (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
-                 (values (cadr d) d))]
-              [other (error 'read-solution "expected model, given ~a" other)]))]
+          (match (server-read server (read))
+            [(list (== 'model) def ...)
+             (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
+               (values (cadr d) d))]
+            [other (error 'read-solution "expected model, given ~a" other)])]
          [(== 'unsat) 'unsat]
          [(== 'unknown) 'unknown]
          [other (error 'read-solution "unrecognized solver output: ~a" other)])))
@@ -138,30 +137,33 @@
   (fixup-model m))
 
 
-; Boolector adds a BTOR@level prefix to constant names in incremental mode,
+; Boolector adds a prefix to constant names in incremental mode,
 ; and repeats bindings for the same constant at different levels.
 ; For example:
 ;   (model
-;     (define-fun BTOR@3c1 () (_ BitVec 8) #b00000000)
-;     (define-fun BTOR@3c2 () (_ BitVec 8) #b00001010)
 ;     (define-fun BTOR@5c10 () (_ BitVec 1) #b1)
 ;     (define-fun BTOR@5c11 () (_ BitVec 1) #b0)
 ;     (define-fun BTOR@5c13 () (_ BitVec 1) #b1)
 ;     (define-fun BTOR@6c10 () (_ BitVec 1) #b0)
 ;     (define-fun BTOR@7c12 () (_ BitVec 1) #b1)
 ;     (define-fun BTOR@8c13 () (_ BitVec 1) #b0))
-; For each constant, we need to choose the binding with the highest such level, and then
-; strip that the prefix so the names match their actual definitions.
+; For each constant, we need to choose the binding with the highest such level,
+; and then strip the prefix so the names match their actual definitions.
+; There are two different styles of prefix, "BTOR@0x" or "BTOR_0@x", depending
+; on the version of Boolector (where 0 is the level and x the original name).
 (define (strip-BTOR@-prefix-from-define-fun v)
   (match v
     [(list (== 'define-fun) id params ret body)
-     `(define-fun ,(regexp-replace #rx"^BTOR@[0-9]+c" (symbol->string id) "c") ,params ,ret ,body)]
+     `(define-fun ,(regexp-replace #rx"^BTOR((@[0-9]+)|(_[0-9]+@))c" (symbol->string id) "c") ,params ,ret ,body)]
     [_ v]))
 (define (BTOR@-level k)
   (let ([match (regexp-match #rx"^BTOR@([0-9]+)(c.*)$" (symbol->string k))])
     (if match
         (values (string->number (second match)) (string->symbol (third match)))
-        (values 0 k))))
+        (let ([match (regexp-match #rx"^BTOR_([0-9]+)@(c.*)$" (symbol->string k))])
+          (if match
+              (values (string->number (second match)) (string->symbol (third match)))
+              (values 0 k))))))
 (define (fixup-incremental-names raw-model)
   (define leveled
     (for/fold ([ret (hash)]) ([(k v) raw-model])
@@ -173,16 +175,18 @@
     (values k (cdr l/v))))
 
 
-; Boolector interprets booleans as 1-bit bitvectors.
-; We need to temporarily makes this same transformation in the types
+; Boolector sometimes interprets booleans as 1-bit bitvectors.
+; We need to temporarily make this same transformation in the types
 ; in an environment before passing it to `decode`, so that decoded
 ; uninterpreted functions perform the right type casts and checks
 ; (i.e., they check their inputs are 1-bit BVs instead of booleans).
 ; Then, once the model has been decoded, we need to undo this transformation,
 ; so that the final model matches its expected Rosette types.
+; More recent versions of Boolector removed this transformation for arity-0
+; booleans, but kept it for higher arities (i.e., uninterpreted functions).
 
 ; A fake-function? proxies an original function?,
-; but with booleans in the original function's type
+; but with all booleans in the original function's type
 ; replaced with 1-bit bitvectors.
 (struct fake-function function (original) #:transparent)
 
@@ -206,26 +210,34 @@
 
 ; Replace all values with type fake-function? in a model with their
 ; original types, wrapping their procedures in a cast from booleans to
-; 1-bit bitvectors.
+; 1-bit bitvectors where necessary.
+(define bv1 (bitvector 1))
 (define (fixup-model m)
   (match m
     [(model dict)
      (sat (for/hash ([(var val) (in-dict dict)])
             (match (type-of var)
-              [(== @boolean?) (values var (not (= (bv-value val) 0)))]
-               [(fake-function _ _ original)
-                (match-define (function domain range) (type-of original))
-                (match val
-                  [(fv type)
-                   (define inner
-                     (lambda args
-                       (apply val
-                              (for/list ([a (in-list args)][t (in-list domain)])
-                                (if (eq? t @boolean?) (@if a (bv 1 1) (bv 0 1)) a)))))
-                   (define outer
-                     (if (eq? range @boolean?)
-                         (lambda args (@bveq (apply inner args) (bv 1 1)))
-                         inner))
-                   (values original (fv (type-of original) outer))])]
+              [(== @boolean?)
+               (values var (if (bv? val)
+                               (not (= (bv-value val) 0))
+                               val))]
+              [(fake-function fake-domain fake-range original)
+               (match-define (function orig-domain orig-range) (type-of original))
+               (match val
+                 [(fv type)
+                  (define inner
+                    (lambda args
+                      (apply val
+                             (for/list ([a (in-list args)]
+                                        [ot (in-list orig-domain)]
+                                        [ft (in-list fake-domain)])
+                               (if (and (eq? ot @boolean?) (eq? ft bv1))
+                                   (@if a (bv 1 1) (bv 0 1))
+                                   a)))))
+                  (define outer
+                    (if (and (eq? orig-range @boolean?) (eq? fake-range bv1))
+                        (lambda args (@bveq (apply inner args) (bv 1 1)))
+                        inner))
+                  (values original (fv (type-of original) outer))])]
               [_ (values var val)])))]
     [_ m]))
