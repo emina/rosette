@@ -261,7 +261,7 @@ without its optional @racket[path] argument.}
            [(boolector? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the @hyperlink["http://fmv.jku.at/boolector/"]{Boolector} solver from JKU.
 
-To use this solver, download and install Boolector,
+To use this solver, download and install Boolector (version 2.4.1 or later),
 and either add the @tt{boolector} executable to your @tt{PATH}
 or pass the path to the executable as the optional @racket[path] argument.
 
@@ -307,7 +307,7 @@ will send the command @tt{(set-option :random-seed 5)} to Yices prior to solving
 }
 
 @defproc[(yices-available?) boolean?]{
-Returns true if the yices solver is available for use (i.e., Rosette can locate a @tt{yices-smt2} binary).
+Returns true if the Yices solver is available for use (i.e., Rosette can locate a @tt{yices-smt2} binary).
 If this returns @racket[#f], @racket[(yices)] will not succeed
 without its optional @racket[path] argument.}
 
