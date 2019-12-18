@@ -3,7 +3,7 @@
 @(require (for-label 
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
            rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
-           (only-in rosette/base/base ! && || => <=> exists forall function?)
+           (only-in rosette/base/base ! && || => <=> exists forall ∀ ∃ function?)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts))
           (except-in (for-label racket) =>)
@@ -53,12 +53,15 @@ With this setting, symbolic numbers are treated as signed @var[k]-bit integers. 
 
 @section[#:tag "sec:extra-bools"]{Additional Logical Operators}
 
-In addition to lifting Racket's operations on booleans, Rosette also supports the following
-logical operations:  conjunction (@racket[&&]), disjunction (@racket[||]), implication (@racket[=>]),
-bi-implication (@racket[<=>]), negation (@racket[!]), universal quantification (@racket[forall]), and
-existential quantification (@racket[exists]). These operations have their usual logical meaning
-(e.g., unlike Racket's shortcircuiting @racket[and] operator, the logical @racket[&&] operator
-evaluates all of its arguments before taking their conjunction). 
+In addition to lifting Racket's operations on booleans,
+Rosette supports the following logical operations:
+conjunction (@racket[&&]), disjunction (@racket[||]),
+implication (@racket[=>]), bi-implication (@racket[<=>]),
+and negation (@racket[!]). These operations have their usual
+logical meaning; e.g., unlike Racket's shortcircuiting
+@racket[and] operator, the logical @racket[&&] operator
+evaluates all of its arguments before taking their
+conjunction.
 
 @(rosette-eval '(clear-asserts!))
 
@@ -76,7 +79,7 @@ evaluates all of its arguments before taking their conjunction).
 
 @defproc*[([(&& [v boolean?] ...) boolean?]
            [(|| [v boolean?] ...) boolean?])]{
-Returns the logical conjunction or disjunciton of zero or more boolean values.
+Returns the logical conjunction or disjunction of zero or more boolean values.
  @examples[#:eval rosette-eval
  (&&)
  (||)
@@ -98,40 +101,73 @@ Returns the logical implication or bi-implication of two boolean values.
  (code:line (asserts)           (code:comment "so Rosette emits a corresponding assertion"))]
 }
 
-@(rosette-eval '(clear-asserts!))
-@defproc*[([(forall [vs (listof constant?)] [body boolean?]) boolean?]
-           [(exists [vs (listof constant?)] [body boolean?]) boolean?])]{
-Returns a universally or existentially @deftech{quantified formula}, where the
-symbolic constants @racket[vs] are treated as quantified variables.  The @racket[body]
-of the formula is a boolean expression over the quantified variables @racket[vs] and,
-optionally, over free symbolic (Skolem) constants.
+@section[#:tag "sec:quantifiers"]{Quantifiers}
 
-If a set of constraints is satisfiable, their @racket[model] includes bindings only for
-free symbolic constants:  no bindings are provided for constants that do not appear freely in any formula.
-All quantified symbolics must be have a non-@racket[function?] @racket[solvable?] type.
+Rosette also provides constructs for creating universally
+(@racket[∀], @racket[forall]) and existentially (@racket[∃],
+@racket[exists]) quantified formulas. These differ from the
+usual logical quantifiers in that the evaluation of a
+quantified formula's body may have side effects (e.g.,
+generate assertions). When there are no side effects,
+however, these constructs have their usual logical meaning.
+
+@(rosette-eval '(clear-asserts!))
+@(rosette-eval '(current-bitwidth #f))
+@defproc*[([(∀ [vs (listof constant?)] [body (-> boolean?)]) boolean?]
+           [(∃ [vs (listof constant?)] [body (-> boolean?)]) boolean?])]{
+
+Returns a universally or existentially @deftech{quantified formula}, where the
+symbolic constants @racket[vs] are treated as quantified variables.
+Each constant in @racket[vs] must have a non-@racket[function?] @racket[solvable?] type.
+The @racket[body] argument is a thunk that produces a boolean value, which is usually a symbolic
+boolean expression over the quantified variables @racket[vs] and,
+optionally, over free symbolic (Skolem) constants. Any assertions emitted during
+the evaluation of @racket[body] are conjoined to the thunk's output value, and
+this conjunction forms the body of the resulting quantified formula. 
+
+@examples[#:eval rosette-eval
+ (current-bitwidth #f)
+ (define-symbolic x y integer?)
+ (code:line (∃ (list x y) (thunk (= x y))) (code:comment "pure body expression"))
+ (define-symbolic t boolean?)
+ (code:line (∃ (list t x) (thunk (= (+ (if t x 'x) 1) y))) (code:comment "body emits a type assertion"))
+] 
+
 The usual lexical scoping rules apply to quantified symbolics; if @racket[body] is
 a quantified formula over a variable @var[v] in @racket[vs], then the
 innermost quantification of @var[v] shadows any enclosing quantifications.
+Quantified symbolics are not bound in a @racket[model], unless they also appear
+freely in some formulas. 
+
+@examples[#:eval rosette-eval
+ (code:comment "forall/exists are convenience macros for calling ∀/∃ procedures.")
+ (define-symbolic a b integer?)
+ (code:line (define f (forall (list a) (exists (list b) (= a (+ a b))))) (code:comment "a and b are not free in f,"))
+ (code:line (solve (assert f))                                           (code:comment "so not bound in the model."))
+ (code:line (define g (forall (list a) (= a (+ a b))))                   (code:comment "b is free in g,")) 
+ (code:line (solve (assert g))                                           (code:comment "so it is bound in the model."))
+ (code:line (define h (exists (list a) (forall (list a) (= a (+ a a))))) (code:comment "body refers to the innermost a,"))
+ (code:line (solve (assert h))                                           (code:comment "so h is unsatisfiable."))
+]
 
 When executing queries over assertions that contain quantified formulas,
 the @racket[current-bitwidth] parameter must be set to @racket[#f].
 Quantified formulas may not appear in any assertion that is passed to a @racket[synthesize] query,
 either via an (implicit or explicit) assumption or a guarantee expression.
+}
 
-@examples[#:eval rosette-eval
- (current-bitwidth #f)
- (define-symbolic a b integer?)
- (forall (list) (= a b))
- (code:line (define f (forall (list a) (exists (list b) (= a (+ a b))))) (code:comment "no free constants"))
- (code:line (solve (assert f)) (code:comment "so the model has no bindings"))
- (code:line (define g (forall (list a) (= a (+ a b)))) (code:comment "b is free in g")) 
- (code:line (solve (assert g)) (code:comment "so the model has a binding for b"))
- (code:line (define h (exists (list a) (forall (list a) (= a (+ a a))))) (code:comment "body refers to the innermost a"))
- (code:line (solve (assert h)) (code:comment "so h is unsatisfiable."))
-]
+@defform[(forall vs body)
+         #:contracts [(vs (listof constant?))
+                      (body boolean?)]]{
 
+Expands to @racket[(∀ vs (thunk body))].
+}
 
+@defform[(exists vs body)
+         #:contracts [(vs (listof constant?))
+                      (body boolean?)]]{
 
+Expands to @racket[(∃ vs (thunk body))].
 }
 
 @(kill-evaluator rosette-eval)

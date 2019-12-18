@@ -36,10 +36,11 @@
                [(expression (and op (or (== @forall) (== @exists))) vars body)
                 (op
                  vars
-                 (eval-rec
-                  body
-                  (sat (for/hash ([(k v) (model sol)] #:unless (member k vars)) (values k v)))
-                  (make-hash)))]
+                 (thunk
+                  (eval-rec
+                   body
+                   (sat (for/hash ([(k v) (model sol)] #:unless (member k vars)) (values k v)))
+                   (make-hash))))]
                [(expression op child ...)  
                 (apply op (for/list ([e child]) (eval-rec e sol cache)))]
                [(? list?)                
