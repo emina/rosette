@@ -17,8 +17,7 @@
     (combine-out   
      ; core/bool.rkt
      pc with-asserts with-asserts-only asserts clear-asserts!
-     @assert @boolean? @false? @! @&& @=> @<=>
-     forall exists [rename-out [@forall ∀] [@exists ∃]]
+     @assert @boolean? @false? @! @&& @=> @<=> @forall @exists
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs

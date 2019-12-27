@@ -2,7 +2,7 @@
 
 (require "core.rkt" 
          (only-in "../base/core/reflect.rkt" symbolics)
-         (only-in "../base/core/bool.rkt" ! ||))
+         (only-in "../base/core/bool.rkt" ! || asserts))
 
 (provide solve verify synthesize optimize
          current-solver (rename-out [∃-solve+ solve+]))
@@ -15,7 +15,7 @@
 ; this means that there is no solution under the k-bit semantics that 
 ; corresponds to a solution under the infinite precision semantics.  
 (define-syntax-rule (solve expr)
-  (∃-solve (eval/asserts (thunk expr))))
+  (∃-solve `(,@(asserts) ,@(eval/asserts (thunk expr)))))
 
 ; The verify query evaluates the given forms, gathers all 
 ; assumptions and assertions generated during the evaluation, 
@@ -28,7 +28,8 @@
 (define-syntax verify
   (syntax-rules ()
     [(_ #:assume pre #:guarantee post)
-     (∃-solve `(,@(eval/asserts (thunk pre)) 
+     (∃-solve `(,@(asserts)
+                ,@(eval/asserts (thunk pre)) 
                 ,(apply || (map ! (eval/asserts (thunk post))))))]
     [(_ #:guarantee post) (verify #:assume #t #:guarantee post)]
     [(_ post) (verify #:assume #t #:guarantee post)]))
@@ -42,7 +43,7 @@
   (syntax-rules (synthesize)
     [(_ #:forall inputs #:assume pre #:guarantee post)
      (∃∀-solve (symbolics inputs) 
-               (eval/asserts (thunk pre)) 
+               `(,@(asserts) ,@(eval/asserts (thunk pre))) 
                (eval/asserts (thunk post)))]    
     [(_ #:forall inputs #:guarantee post)
      (synthesize #:forall inputs #:assume #t #:guarantee post)]
@@ -61,8 +62,8 @@
   (syntax-rules ()
     [(_ kw opt #:guarantee form)
      (let ([obj opt]) ; evaluate objective first to push its assertions onto the stack
-       (∃-solve (eval/asserts (thunk form)) kw obj))]
+       (∃-solve `(,@(asserts) ,@(eval/asserts (thunk form))) kw obj))]
     [(_ kw1 opt1 kw2 opt2 #:guarantee form)
      (let ([obj1 opt1]
            [obj2 opt2]) ; evaluate objectives first to push their assertions onto the stack
-       (∃-solve (eval/asserts (thunk form)) kw1 obj1 kw2 obj2))]))
+       (∃-solve `(,@(asserts) ,@(eval/asserts (thunk form))) kw1 obj1 kw2 obj2))]))

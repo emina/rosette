@@ -99,7 +99,7 @@
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((∃ (list x y) (thunk (= x y)))
+((exists (list x y) (= x y))
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -108,11 +108,11 @@
   0
   ()
   ()
-  (c values c (0 (u . "(∃ (x y) (= x y))"))))
+  (c values c (0 (u . "(exists (x y) (= x y))"))))
  #""
  #"")
 ((define-symbolic t boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((∃ (list t x) (thunk (= (+ (if t x 'x) 1) y)))
+((forall (list t x y) (= (+ (if t x 'x) 1) y))
  ((3)
   1
   (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
@@ -121,9 +121,63 @@
   0
   ()
   ()
-  (c values c (0 (u . "(∃ (t x) (&& t (= y (+ 1 x))))"))))
+  (c values c (0 (u . "(forall (t x y) (= y (+ 1 x)))"))))
  #""
  #"")
+((asserts)
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "t")))))
+ #""
+ #"")
+((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-values (q-body q-asserts) (with-asserts (= (+ (if t x 'x) 1) y)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(q-body
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(= y (+ 1 x))"))))
+ #""
+ #"")
+(q-asserts
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (c (0 (u . "t")))))
+ #""
+ #"")
+((forall (list t x y) (=> (apply && q-asserts) q-body))
+ ((3)
+  1
+  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(forall (t x y) (|| (! t) (= y (+ 1 x))))"))))
+ #""
+ #"")
+((asserts) ((3) 0 () 0 () () (q values ())) #"" #"")
 ((define-symbolic a b integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define f (forall (list a) (exists (list b) (= a (+ a b)))))
  ((3) 0 () 0 () () (c values c (void)))

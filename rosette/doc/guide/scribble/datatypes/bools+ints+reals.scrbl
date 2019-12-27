@@ -3,9 +3,9 @@
 @(require (for-label 
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
            rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
-           (only-in rosette/base/base ! && || => <=> exists forall ∀ ∃ function?)
+           (only-in rosette/base/base ! && || => <=> exists forall function?)
            (only-in rosette/base/core/safe assert) 
-           (only-in rosette/base/core/bool asserts))
+           (only-in rosette/base/core/bool asserts with-asserts))
           (except-in (for-label racket) =>)
           scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
@@ -104,33 +104,44 @@ Returns the logical implication or bi-implication of two boolean values.
 @section[#:tag "sec:quantifiers"]{Quantifiers}
 
 Rosette also provides constructs for creating universally
-(@racket[∀], @racket[forall]) and existentially (@racket[∃],
-@racket[exists]) quantified formulas. These differ from the
-usual logical quantifiers in that the evaluation of a
-quantified formula's body may have side effects (e.g.,
-generate assertions). When there are no side effects,
-however, these constructs have their usual logical meaning.
+(@racket[forall]) and existentially (@racket[exists])
+quantified formulas. These differ from the usual logical
+quantifiers in that the evaluation of a quantified formula's
+body may have side effects (e.g., generate assertions). When
+there are no side effects, however, these constructs have
+their usual logical meaning.
 
 @(rosette-eval '(clear-asserts!))
 @(rosette-eval '(current-bitwidth #f))
-@defproc*[([(∀ [vs (listof constant?)] [body (-> boolean?)]) boolean?]
-           [(∃ [vs (listof constant?)] [body (-> boolean?)]) boolean?])]{
+@defproc*[([(forall [vs (listof constant?)] [body boolean?]) boolean?]
+           [(exists [vs (listof constant?)] [body boolean?]) boolean?])]{
 
 Returns a universally or existentially @deftech{quantified formula}, where the
 symbolic constants @racket[vs] are treated as quantified variables.
 Each constant in @racket[vs] must have a non-@racket[function?] @racket[solvable?] type.
-The @racket[body] argument is a thunk that produces a boolean value, which is usually a symbolic
+The @racket[body] argument is a boolean value, which is usually a symbolic 
 boolean expression over the quantified variables @racket[vs] and,
 optionally, over free symbolic (Skolem) constants. Any assertions emitted during
-the evaluation of @racket[body] are conjoined to the thunk's output value, and
-this conjunction forms the body of the resulting quantified formula. 
+the evaluation of @racket[body] are @emph{added to the assertion store}. This
+may be the desired behavior in some circumstances but not in others, so to avoid
+surprises, it is best to handle these assertions separately and call quantifiers
+with pure bodies, as shown below.
 
 @examples[#:eval rosette-eval
  (current-bitwidth #f)
  (define-symbolic x y integer?)
- (code:line (∃ (list x y) (thunk (= x y))) (code:comment "pure body expression"))
+ (code:line (exists (list x y) (= x y)) (code:comment "pure body expression"))
  (define-symbolic t boolean?)
- (code:line (∃ (list t x) (thunk (= (+ (if t x 'x) 1) y))) (code:comment "body emits a type assertion"))
+ (code:line (forall (list t x y) (= (+ (if t x 'x) 1) y)) (code:comment "body emits a type assertion"))
+ (asserts)
+ (clear-asserts!)
+ (code:comment "To avoid surprises, capture assertions using with-asserts,")
+ (code:comment "and handle as desired, e.g.:")
+ (define-values (q-body q-asserts) (with-asserts (= (+ (if t x 'x) 1) y)))
+ q-body
+ q-asserts
+ (forall (list t x y) (=> (apply && q-asserts) q-body))
+ (asserts)
 ] 
 
 The usual lexical scoping rules apply to quantified symbolics; if @racket[body] is
@@ -140,7 +151,6 @@ Quantified symbolics are not bound in a @racket[model], unless they also appear
 freely in some formulas. 
 
 @examples[#:eval rosette-eval
- (code:comment "forall/exists are convenience macros for calling ∀/∃ procedures.")
  (define-symbolic a b integer?)
  (code:line (define f (forall (list a) (exists (list b) (= a (+ a b))))) (code:comment "a and b are not free in f,"))
  (code:line (solve (assert f))                                           (code:comment "so not bound in the model."))
@@ -156,18 +166,5 @@ Quantified formulas may not appear in any assertion that is passed to a @racket[
 either via an (implicit or explicit) assumption or a guarantee expression.
 }
 
-@defform[(forall vs body)
-         #:contracts [(vs (listof constant?))
-                      (body boolean?)]]{
-
-Expands to @racket[(∀ vs (thunk body))].
-}
-
-@defform[(exists vs body)
-         #:contracts [(vs (listof constant?))
-                      (body boolean?)]]{
-
-Expands to @racket[(∃ vs (thunk body))].
-}
 
 @(kill-evaluator rosette-eval)

@@ -3,7 +3,7 @@
 (require "term.rkt" "union.rkt")
 
 (provide @boolean? @false? 
-         ! && || => <=> @! @&& @|| @=> @<=> @exists @forall exists forall
+         ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only 
          (rename-out [export-asserts asserts]) clear-asserts!
@@ -55,40 +55,25 @@
     #:unsafe $op
     #:safe (lift-op $op)))
 
-(define-syntax-rule (define-quantifier op macro-op @op $op)
+(define-syntax-rule (define-quantifier $op @op)
   (begin
     (define $op (quantifier @op))
     (define-operator @op
-      #:identifier 'op
+      #:identifier '$op
       #:range T*->boolean?
       #:unsafe $op
       #:safe
       (lambda (@vars @body)
-        (match @vars
-          [(list (constant _ (? primitive-solvable?)) (... ...))
-           ; the body must be a thunk ...
-           (if (and (procedure? @body) (= 0 (procedure-arity @body)))
-               (let-values
-                   ([(val bools) (evaluate-with-asserts
-                                  (thunk (type-cast @boolean? (@body) 'op))
-                                  '())])
-                 ($op @vars (apply && val bools)))                
-               (@assert
-                #f
-                (thunk
-                 (raise-argument-error
-                  'op
-                  "expected a thunk" @body))))]
-          [_
+        (match* (@vars (type-cast @boolean? @body '$op))
+          [((list (constant _ (? primitive-solvable?)) (... ...)) body)
+           ($op @vars body)]
+          [(_ _)
            (@assert
             #f
             (thunk
              (raise-argument-error
-              'op
-              "expected a list of symbolic constants of primitive solvable types" @vars)))])))
-    (define-syntax-rule (macro-op vars body)
-      (@op vars (thunk body)))
-    ))
+              '$op
+              "expected a list of symbolic constants of primitive solvable types" @vars)))])))))
 
 ;; ----------------- Basic boolean operators ----------------- ;; 
 (define (! x)
@@ -129,8 +114,8 @@
          [_ (loop (cdr xs))]))]
     [_ #f]))
 
-(define-quantifier ∃ exists @exists $exists)
-(define-quantifier ∀ forall @forall $forall)
+(define-quantifier exists @exists)
+(define-quantifier forall @forall)
 
 
        
@@ -316,14 +301,14 @@
       (msg)
       (error 'assert (if msg (format "~a" msg) "failed"))))
 
-(define (evaluate-with-asserts closure state)
-  (parameterize ([asserts state])
+(define (evaluate-with-asserts closure)
+  (parameterize ([asserts '()])
     (let* ([val (closure)]
            [bools (remove-duplicates (asserts))])
       (values val bools))))
 
 (define-syntax-rule (with-asserts form)
-  (evaluate-with-asserts (thunk form) (asserts)))
+  (evaluate-with-asserts (thunk form)))
 
 (define-syntax-rule (with-asserts-only form)
   (let-values ([(out asserts) (with-asserts form)])
