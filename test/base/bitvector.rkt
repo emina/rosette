@@ -18,6 +18,7 @@
 (define-symbolic x y z BV)
 (define-symbolic a b c d e f g @boolean?)
 
+
 (define minval (- (expt 2 (sub1 (bitvector-size BV)))))
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
 (define maxval (sub1 maxval+1))
@@ -325,7 +326,10 @@
   (check-valid? (@extract 3 0 (@bvadd x y)) (@bvadd x y))
   (check-valid? (@extract 0 0 (@concat x (bv 1 1))) (bv 1 1))
   (check-valid? (@extract 3 0 (@concat x y)) y)
-  (check-valid? (@extract 7 4 (@concat x y)) x))
+  (check-valid? (@extract 7 4 (@concat x y)) x)
+  (define-symbolic* n @integer?)
+  (check-equal? (type-of (@extract n n x)) (bitvector 1))
+  )
 
 (define (check-extend-simplifications op)
   (check-valid? (op x BV) x)

@@ -607,9 +607,14 @@
               [((? number?) _) (merge+ (for*/list ([k (in-range i -1 -1)])
                                                (cons (@= k j) (extract i k x)))
                                        #:unless (+ i 1) #:error (extract*-err x i j))]
-              [(_ _) (merge+ (for*/list ([n size] [k (add1 n)])
-                               (cons (&& (@= n i) (@= k j)) (extract n k x)))
-                             #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j))]))]
+              [(_ _)
+               (if (equal? i j)
+                   (merge+ (for*/list ([n size])
+                             (cons (&& (@= n i) (@= n j)) (extract n n x)))
+                           #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j))
+                   (merge+ (for*/list ([n size] [k (add1 n)])
+                             (cons (&& (@= n i) (@= k j)) (extract n k x)))
+                           #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j)))]))]
     (lambda (@i @j @x)
       (define i (type-cast @integer? @i 'extract))
       (define j (type-cast @integer? @j 'extract))
