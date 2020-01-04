@@ -611,7 +611,7 @@
                (if (equal? i j)
                    (merge+ (for*/list ([n size])
                              (cons (&& (@= n i) (@= n j)) (extract n n x)))
-                           #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j))
+                           #:unless size #:error (extract*-err x i j))
                    (merge+ (for*/list ([n size] [k (add1 n)])
                              (cons (&& (@= n i) (@= k j)) (extract n k x)))
                            #:unless (+ size (/ (* size (- size 1)) 2)) #:error (extract*-err x i j)))]))]
