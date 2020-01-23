@@ -78,8 +78,11 @@
           [(? bv?)
            `([(emph "Kind: ")  "bitvector"]
              [(emph "Value: ")  ,(~v in)])]
-          [(? number?)
-           `([(emph "Kind: ")  "number"]
+          [(? integer?)
+           `([(emph "Kind: ")  "integer"]
+             [(emph "Value: ")  ,(~v in)])]
+          [(? real?)
+           `([(emph "Kind: ")  "real"]
              [(emph "Value: ")  ,(~v in)])]
           [(? boolean?)
            `([(emph "Kind: ")  "boolean"]
@@ -93,10 +96,11 @@
              (match (type-deconstruct t in)
                [(list (== in))
                 `([(emph "Kind: ") "typed"]
+                  [(emph "Type: ") ,(~a t)]
                   [(emph "Value: ") ,(~v in)])]
                [vs
                 `([(emph "Kind: ") "struct"]
-                  [(emph "Name: ") ,(~a (get-type in))]
+                  [(emph "Name: ") ,(~a t)]
                   ,@(for/list ([v (in-list vs)])
                       `[,(browse-term* v)]))]))]
           [_ (or (handler in browse-term*)

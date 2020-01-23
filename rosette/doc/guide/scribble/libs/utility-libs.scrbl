@@ -64,6 +64,7 @@ The following are values of lifted datatypes, so the value browser can display t
 @racketblock[
 #, @elem{>} (define-symbolic n integer?)
 #, @elem{>} (render-value/snip (list 1
+                                     1.2
                                      #t
                                      n
                                      (bv 1 (bitvector 2))
