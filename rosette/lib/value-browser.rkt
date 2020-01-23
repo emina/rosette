@@ -66,8 +66,8 @@
                  `[,(~a i " ") ,(browse-term* child)]))]
           [(? box?)
            `([(emph "Kind: ") ,(if (immutable? in)
-                                  "immutable-box"
-                                  "box")]
+                                   "immutable-box"
+                                   "box")]
              [(emph "Value: ") ,(browse-term* (unbox in))])]
           [(cons a b)
            `([(emph "Kind: ")  "cons"]

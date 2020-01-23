@@ -26,7 +26,7 @@ Constructs a @racket[snip%] object that displays information about @racket[val] 
 In DrRacket, evaluating the snip at the top-level will display the snip in the REPL.
 It could be similarly displayed via @racket[print].
 
-The snip can correctly display any value of @seclink["ch:built-in-datatypes"]{lifted datatypes}. Any other kind of values (e.g., @racket[string], @racket[hash]) will be displayed with the kind @racket[other] even if it is a compound data. The optional argument @racket[handler] can be supplied to customize the display of the other kind of values. See @tech{layout} and the examples below for more details.
+The snip can correctly display any value of @seclink["ch:built-in-datatypes"]{lifted datatypes}. Any other kind of values (e.g., @racket[string], @racket[hash]) will be displayed with the kind @racket[other] without further details. The optional argument @racket[handler] can be supplied to customize the display of the other kind of values. See @tech{layout} and the examples below for more details.
 }
 
 @defproc[(render-value/window [val any/c] [#:handler handler (-> any/c (-> any/c (is-a?/c snip%)) #,(tech "layout")) (λ (value rec) #f)]) (is-a?/c snip%)]{
@@ -35,7 +35,7 @@ Similar to @racket[render-value/snip], but displays the snip in a new window fra
 
 @subsection{Layout}
 
-A @deftech{layout} is an embedded DSL describing the tabular layout to display a value in the value browser. It has the following grammar:
+A @deftech{layout} is an embedded DSL describing the tabular layout to display a value of unlifted datatypes in the value browser. It has the following grammar:
 
 @BNF[(list @nonterm{layout}
            @BNF-alt[@litchar{#f}
@@ -51,7 +51,7 @@ A @deftech{layout} is an embedded DSL describing the tabular layout to display a
      (list @nonterm{string}
            @elem{a @racket[string]})]
 
-where the @racket[#f] value means the value is atomic (which will be categorized under the kind @racket[other]), @racket['#:gap] means a vertical gap, and @racket[emph] means emphasis.
+where @racket[#f] means the value is atomic (which will be categorized under the kind @code{other}), @racket['#:gap] means a vertical gap, and @racket[emph] means emphasis.
 
 @subsection{Examples}
 
@@ -84,7 +84,7 @@ The following are values of lifted datatypes, so the value browser can display t
 #,(get-image "browser-compound.png")
 ]
 
-However, when we try to display values of unlifted datatypes like a @racket[hash] or a @racket[set], it doesn't work correctly anymore.
+However, when we try to display a value of unlifted datatypes like a @racket[hash] or a @racket[set], the browser will simply categorize it as @code{other} without further details.
 
 @racketblock[
 #, @elem{>} (render-value/snip (list (hash 1 2 3 4)
@@ -92,7 +92,7 @@ However, when we try to display values of unlifted datatypes like a @racket[hash
 #,(get-image "browser-unlifted.png")
 ]
 
-To correct the display of hashes, supply a @racket[handler] that
+To allow a detailed display of hashes, supply a @racket[handler] that
 returns a desired @tech{layout} when a hash is passed in.
 For instance, we might want @racket[(hash a b c d)] to have the following layout:
 
@@ -110,7 +110,7 @@ where @racket[snip-a], @racket[snip-b], @racket[snip-c], and @racket[snip-d] can
 obtained by applying the recursive renderer to @racket[a], @racket[b], @racket[c],
 and @racket[d] respectively.
 
-The complete code then would be:
+The revised code then would be:
 
 @racketblock[
 #, @elem{>} (render-value/snip (list (hash 1 2 3 4)
@@ -128,4 +128,4 @@ The complete code then would be:
 #,(get-image "browser-unlifted-corrected.png")
 ]
 
-which now displays hashes correctly. Note that you should use the recursive renderer, provided as the second argument, rather than calling @racket[render-value/snip], so that the correct handler is used when rendering sub-value (e.g., a hash of hashes).
+which now displays hashes with details. Note that you should use the recursive renderer (provided as the second argument) rather than calling @racket[render-value/snip] directly so that the correct handler is used when rendering sub-value (e.g., a hash of hashes).
