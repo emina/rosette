@@ -45,18 +45,17 @@ A @deftech{layout} is an embedded DSL describing the tabular layout to display a
                     @elem{a @racket[list] of @nonterm{col}s}])
      (list @nonterm{col}
            @BNF-alt[
-             @nonterm{prim}
-             @BNF-seq[
-               @litchar{(emph} @nonterm{prim} @litchar{)}]])
-     (list @nonterm{prim}
-           @BNF-alt[@elem{a @racket[snip%]}
-                    @elem{a  @racket[string]}])]
+             @elem{a @racket[snip%]}
+             @nonterm{string}
+             @BNF-seq[@litchar{(emph} @nonterm{string} @litchar{)}]])
+     (list @nonterm{string}
+           @elem{a @racket[string]})]
 
 where the @racket[#f] value means the value is atomic (which will be categorized under the kind @racket[other]), @racket['#:gap] means a vertical gap, and @racket[emph] means emphasis.
 
 @subsection{Examples}
 
-The following are all values of lifted datatypes, so the value browser can display them correctly.
+The following are values of lifted datatypes, so the value browser can display them correctly.
 
 @(define (get-image name)
    (call-with-input-file (build-path root name)
@@ -98,7 +97,7 @@ returns a desired @tech{layout} when a hash is passed in.
 For instance, we might want @racket[(hash a b c d)] to have the following layout:
 
 @racketblock[
-`([(emph "Kind:") "hash"]
+`([(emph "Kind: ") "hash"]
   #:gap
   [,snip-a]
   [,snip-b]
@@ -120,7 +119,7 @@ The complete code then would be:
                                  (cond
                                    [(hash? value)
                                     (append*
-                                     '([(emph "Kind:") "hash"])
+                                     '([(emph "Kind: ") "hash"])
                                      (for/list ([(k v) (in-hash value)])
                                        `(#:gap
                                          [,(rec k)]
@@ -129,4 +128,4 @@ The complete code then would be:
 #,(get-image "browser-unlifted-corrected.png")
 ]
 
-which now displays hashes correctly.
+which now displays hashes correctly. Note that you should use the recursive renderer, provided as the second argument, rather than calling @racket[render-value/snip], so that the correct handler is used when rendering sub-value (e.g., a hash of hashes).
