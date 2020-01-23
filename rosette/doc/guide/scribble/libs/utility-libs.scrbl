@@ -26,7 +26,7 @@ Constructs a @racket[snip%] object that displays information about @racket[val] 
 In DrRacket, evaluating the snip at the top-level will display the snip in the REPL.
 It could be similarly displayed via @racket[print].
 
-The snip can correctly display any value of @seclink["ch:built-in-datatypes"]{lifted datatypes}. Any other kind of values (e.g., @racket[string], @racket[hash]) will be displayed with the kind @racket[other] without further details. The optional argument @racket[handler] can be supplied to customize the display of the other kind of values. See @tech{layout} and the examples below for more details.
+The snip can correctly display any value of @seclink["ch:built-in-datatypes"]{lifted datatypes}. Any other kind of values (e.g., @racket[string], @racket[hash]) will be displayed with the kind @code{other} without further details. The optional argument @racket[handler] can be supplied to customize the display of the other kind of values. See @tech{layout} and the examples below for more details.
 }
 
 @defproc[(render-value/window [val any/c] [#:handler handler (-> any/c (-> any/c (is-a?/c snip%)) #,(tech "layout")) (λ (value rec) #f)]) (is-a?/c snip%)]{
@@ -47,7 +47,7 @@ A @deftech{layout} is an embedded DSL describing the tabular layout to display a
            @BNF-alt[
              @elem{a @racket[snip%]}
              @nonterm{string}
-             @BNF-seq[@litchar{(emph} @nonterm{string} @litchar{)}]])
+             @BNF-seq[@litchar{'(emph} @nonterm{string} @litchar{)}]])
      (list @nonterm{string}
            @elem{a @racket[string]})]
 
