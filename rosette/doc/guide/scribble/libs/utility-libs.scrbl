@@ -5,22 +5,17 @@
           (for-label
            rosette/lib/value-browser
            (only-in racket/gui snip%)
-           rosette/base/form/define rosette/solver/solution rosette/query/query rosette/query/eval 
-           rosette/base/core/term rosette/lib/angelic
-           (except-in rosette/query/debug assert )
-           (only-in rosette/lib/synthax ?? choose define-synthax generate-forms print-forms)
-           (only-in rosette/base/core/safe assert)
-           (only-in rosette/base/base function? bitvector bvshl bvashr bvlshr bvadd bvsub bvmul)
-           rosette/lib/render
-           racket (only-in pict pict?))
-          scribble/core scribble/html-properties scribble/eval racket/sandbox  racket/runtime-path
-          "../util/lifted.rkt")
+           rosette/base/form/define
+           rosette/base/core/term
+           (only-in rosette/base/base bv bitvector ~>)
+           racket)
+          scribble/core scribble/html-properties racket/runtime-path)
 
 @(define-runtime-path root ".")
 
 @title[#:tag "sec:utility-libs"]{Utility Libraries}
 
-Following are utilities that help aiding development of solver-aided programming.
+Following are utilities that help aiding development of solver-aided programs.
 
 @section{Value Browser Library}
 
@@ -61,7 +56,7 @@ where the @racket[#f] value means the value is atomic (which will be categorized
 
 @subsection{Examples}
 
-The following are all values of lifted datatypes, so the value browser can display correctly.
+The following are all values of lifted datatypes, so the value browser can display them correctly.
 
 @(define (get-image name)
    (call-with-input-file (build-path root name)
