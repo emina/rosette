@@ -21,16 +21,16 @@ Following are utilities that help aiding development of solver-aided programs.
 
 @defmodule[rosette/lib/value-browser]
 
-@defproc[(render-value/snip [val any/c] [#:handler handler (-> any/c (-> any/c (is-a?/c snip%)) #,(tech "layout")) (λ (value rec) #f)]) (is-a?/c snip%)]{
-Constructs a @racket[snip%] object that displays information about @racket[val] and could switch between short form and long form.
-In DrRacket, evaluating the snip at the top-level will display the snip in the REPL.
-It could be similarly displayed via @racket[print].
+A Rosette value can be difficult to read due to its large size and complexity. Furthermore, when printing a value, the printer might elide sub-values when the size exceeds some threshold. Debugging a Rosette program via printing therefore could be a challenging task. This library provides a @deftech{value browser}, which allows users to navigate and expand/collapse sub-values, enabling an effective value reading.
 
-The snip can correctly display any value of @seclink["ch:built-in-datatypes"]{lifted datatypes}. Any other kind of values (e.g., @racket[string], @racket[hash]) will be displayed with the kind @code{other} without further details. The optional argument @racket[handler] can be supplied to customize the display of the other kind of values. See @tech{layout} and the examples below for more details.
+@defproc[(render-value/snip [val any/c] [#:handler handler (-> any/c (-> any/c (is-a?/c snip%)) #,(tech "layout")) (λ (value rec) #f)]) (is-a?/c snip%)]{
+Constructs a @racket[snip%] object that displays a @tech{value browser}. In DrRacket, either evaluating the snip object at the top-level or calling @racket[print] on the snip object will display the value browser in the REPL.
+
+The value browser can display any value of @seclink["ch:built-in-datatypes"]{lifted datatypes}. Any other kind of values (e.g., @racket[string], @racket[hash]) will be displayed with the kind @code{other} without the ability to nagivate its sub-values. The optional argument @racket[handler] can be supplied to customize the display of the other kind of values and recover the ability to navigate sub-values. See @tech{layout} and the examples below for more details.
 }
 
 @defproc[(render-value/window [val any/c] [#:handler handler (-> any/c (-> any/c (is-a?/c snip%)) #,(tech "layout")) (λ (value rec) #f)]) (is-a?/c snip%)]{
-Similar to @racket[render-value/snip], but displays the snip in a new window frame. This is useful when the program is run in command-line.
+Similar to @racket[render-value/snip], but displays the snip object in a new window frame instead of the REPL. This is useful when the program is run in command-line.
 }
 
 @subsection{Layout}
@@ -55,7 +55,7 @@ where @racket[#f] means the value is atomic (which will be categorized under the
 
 @subsection{Examples}
 
-The following are values of lifted datatypes, so the value browser can display them correctly.
+The following shows how users can navigate values of lifted datatypes with the value browser.
 
 @(define (get-image name)
    (call-with-input-file (build-path root name)
@@ -85,7 +85,7 @@ The following are values of lifted datatypes, so the value browser can display t
 #,(get-image "browser-compound.png")
 ]
 
-However, when we try to display a value of unlifted datatypes like a @racket[hash] or a @racket[set], the browser will simply categorize it as @code{other} without further details.
+However, when we try to display a value of unlifted datatypes like a @racket[hash] or a @racket[set], the browser will categorize it with the kind @code{other}, with navigation disabled.
 
 @racketblock[
 #, @elem{>} (render-value/snip (list (hash 1 2 3 4)
@@ -93,8 +93,8 @@ However, when we try to display a value of unlifted datatypes like a @racket[has
 #,(get-image "browser-unlifted.png")
 ]
 
-To allow a detailed display of hashes, supply a @racket[handler] that
-returns a desired @tech{layout} when a hash is passed in.
+To allow hash navigation, supply a @racket[handler] that
+returns a desired @tech{layout} when a hash is passed in (as the first argument).
 For instance, we might want @racket[(hash a b c d)] to have the following layout:
 
 @racketblock[
@@ -129,4 +129,4 @@ The revised code then would be:
 #,(get-image "browser-unlifted-corrected.png")
 ]
 
-which now displays hashes with details. Note that you should use the recursive renderer (provided as the second argument) rather than calling @racket[render-value/snip] directly so that the correct handler is used when rendering sub-value (e.g., a hash of hashes).
+which now enable hash navigation. Note that you should use the recursive renderer (provided as the second argument) rather than calling @racket[render-value/snip] directly so that the correct handler is used when rendering sub-value (e.g., a hash of hashes).
