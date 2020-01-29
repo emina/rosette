@@ -42,7 +42,7 @@
         (match in
           [(constant id type)
            `([(emph "Kind: ") "constant"]
-             [(emph "Id: ") ,(~a in)]
+             [(emph "Id: ")   ,(~a in)]
              [(emph "Type: ") ,(~a type)])]
           [(union gvs)
            `([(emph "Kind: ") "union"]
@@ -53,7 +53,7 @@
                     [,(browse-term* (cdr child))]))))]
           [(expression op child ...)
            `([(emph "Kind: ") "expression"]
-             [(emph "Op: ") ,(~a op)]
+             [(emph "Op: ")   ,(~a op)]
              ,@(for/list ([child (in-list child)] [i (in-naturals)])
                  `[,(~a i " ") ,(browse-term* child)]))]
           [(list child ...)
@@ -76,39 +76,45 @@
 
           [(? integer?)
            `([(emph "Kind: ")  "integer"]
-             [(emph "Value: ")  ,(~v in)])]
+             [(emph "Value: ") ,(~v in)])]
           [(? real?)
            `([(emph "Kind: ")  "real"]
-             [(emph "Value: ")  ,(~v in)])]
+             [(emph "Value: ") ,(~v in)])]
           [(? boolean?)
            `([(emph "Kind: ")  "boolean"]
-             [(emph "Value: ")  ,(~v in)])]
-             
-          ;; bitvector is typed, so this test should precede the typed test 
-          [(? bv?)
-           `([(emph "Kind: ")  "bitvector"]
-             [(emph "Value: ")  ,(~v in)])]
+             [(emph "Value: ") ,(~v in)])]
 
           [(? typed?)
-           (let ([t (get-type in)])
-             (match (type-deconstruct t in)
-               [(list (== in))
-                `([(emph "Kind: ") "typed"]
-                  [(emph "Type: ") ,(~a t)]
-                  [(emph "Value: ") ,(~v in)])]
-               [vs
-                `([(emph "Kind: ") "struct"]
-                  [(emph "Name: ") ,(~a t)]
-                  ,@(for/list ([v (in-list vs)])
-                      `[,(browse-term* v)]))]))]
-                      
-          ;; a struct could have prop:procedure, so this test should follow the typed test
+           (define t (get-type in))
+           (match (type-deconstruct t in)
+             [(list (== in))
+              ;; typed value
+              (match in
+                [(? bv?)
+                 `([(emph "Kind: ")  "bitvector"]
+                   [(emph "Value: ") ,(~v in)])]
+                [(? procedure?)
+                 `([(emph "Kind: ")  "computed procedure"]
+                   [(emph "Value: ") ,(~v in)])]
+                [_
+                 ;; this should be a dead code in principle
+                 `([(emph "Kind: ")  "typed"]
+                   [(emph "Type: ")  ,(~a t)]
+                   [(emph "Value: ") ,(~v in)])])]
+             [vs
+              `([(emph "Kind: ") "struct"]
+                [(emph "Name: ") ,(~a t)]
+                ,@(for/list ([v (in-list vs)])
+                    `[,(browse-term* v)]))])]
+
+          ;; a struct could have prop:procedure, so this test should
+          ;; follow the struct test
           [(? procedure?)
            `([(emph "Kind: ")  "procedure"]
-             [(emph "Value: ")  ,(~v in)])]
+             [(emph "Value: ") ,(~v in)])]
 
           [_ (or (handler in browse-term*)
-                 `([(emph "Kind: ") "other"]
+                 `([(emph "Kind: ")  "other"]
                    [(emph "Value: ") ,(~v in)]))]))
 
       (change-style summary-t 'change-family 'modern)
