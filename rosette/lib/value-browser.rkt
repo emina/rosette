@@ -74,10 +74,6 @@
              [(emph "Left: ")  ,(browse-term* a)]
              [(emph "Right: ") ,(browse-term* b)])]
 
-          ;; elaborate built-in typed and other
-          [(? bv?)
-           `([(emph "Kind: ")  "bitvector"]
-             [(emph "Value: ")  ,(~v in)])]
           [(? integer?)
            `([(emph "Kind: ")  "integer"]
              [(emph "Value: ")  ,(~v in)])]
@@ -87,8 +83,10 @@
           [(? boolean?)
            `([(emph "Kind: ")  "boolean"]
              [(emph "Value: ")  ,(~v in)])]
-          [(? procedure?)
-           `([(emph "Kind: ")  "procedure"]
+             
+          ;; bitvector is typed, so this test should precede the typed test 
+          [(? bv?)
+           `([(emph "Kind: ")  "bitvector"]
              [(emph "Value: ")  ,(~v in)])]
 
           [(? typed?)
@@ -103,6 +101,12 @@
                   [(emph "Name: ") ,(~a t)]
                   ,@(for/list ([v (in-list vs)])
                       `[,(browse-term* v)]))]))]
+                      
+          ;; a struct could have prop:procedure, so this test should follow the typed test
+          [(? procedure?)
+           `([(emph "Kind: ")  "procedure"]
+             [(emph "Value: ")  ,(~v in)])]
+
           [_ (or (handler in browse-term*)
                  `([(emph "Kind: ") "other"]
                    [(emph "Value: ") ,(~v in)]))]))
