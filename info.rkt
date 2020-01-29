@@ -2,7 +2,8 @@
 
 (define collection 'multi)
 
-(define deps '("r6rs-lib"
+(define deps '(("racket" #:version "7.0")
+               "r6rs-lib"
                "rfc6455"
                "net-lib"
                "web-server-lib"
