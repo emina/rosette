@@ -9,11 +9,13 @@
                "web-server-lib"
                "rackunit-lib"
                "slideshow-lib"
+               "gui-lib"
                "base"))
 
 (define build-deps '("pict-doc"
                      "scribble-lib"
                      "racket-doc"
+                     "gui-doc"
                      "errortrace-doc"))
 
 (define test-omit-paths (if (getenv "PLT_PKG_BUILD_SERVICE") 'all '()))
