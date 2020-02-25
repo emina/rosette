@@ -83,7 +83,7 @@
 (`(define (nnf=> x y) (,|| (! x) y))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -160,7 +160,7 @@
 (sol
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -242,7 +242,7 @@
 ((static)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -257,7 +257,7 @@
 ((static)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -272,7 +272,7 @@
 ((dynamic)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -284,7 +284,7 @@
 ((dynamic)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -297,7 +297,7 @@
 ((equal? (dynamic) (dynamic))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0

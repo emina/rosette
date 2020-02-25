@@ -27,7 +27,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate n sol) ((3) 0 () 0 () () (q values 2)) #"" #"")
-((evaluate (list x y z) sol) ((3) 0 () 0 () () (q values (0 4 0))) #"" #"")
-((evaluate vs sol) ((3) 0 () 0 () () (c values c (v! 0 4))) #"" #"")
-((evaluate xs sol) ((3) 0 () 0 () () (q values (0 4))) #"" #"")
+((evaluate n sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
+((evaluate (list x y z) sol) ((3) 0 () 0 () () (q values (4 0 0))) #"" #"")
+((evaluate vs sol) ((3) 0 () 0 () () (c values c (v! 4))) #"" #"")
+((evaluate xs sol) ((3) 0 () 0 () () (q values (4))) #"" #"")

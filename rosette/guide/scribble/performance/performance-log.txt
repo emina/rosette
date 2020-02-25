@@ -4,7 +4,7 @@
 ((solve (assert (> x 15)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -31,13 +31,13 @@
 ((list-set lst idx 'd)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
   ()
   ()
-  (c values c (0 (u . "{2846099531607739527:6}"))))
+  (c values c (0 (u . "{3340589848165897971:6}"))))
  #""
  #"")
 ((define (list-set* lst idx val)
@@ -54,13 +54,13 @@
 ((list-set* lst idx 'd)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
   ()
   ()
-  (c values c (0 (u . "{-4322348582163789884:4}"))))
+  (c values c (0 (u . "{1844165362669051823:4}"))))
  #""
  #"")
 ((define-values (width height) (values 5 5))
@@ -98,7 +98,7 @@
 ((maybe-ref '(5 6 7) idx)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -121,7 +121,7 @@
 ((maybe-ref* '(5 6 7) idx)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -184,7 +184,7 @@
 ((verify-xform sub->add 5)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -202,7 +202,7 @@
 ((list-set '(1 2 3) idx 4)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -233,7 +233,7 @@
 ((list-set* '(1 2 3) idx 4)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0

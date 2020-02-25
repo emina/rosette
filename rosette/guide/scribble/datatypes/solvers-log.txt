@@ -2,7 +2,7 @@
 ((current-solver)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -26,7 +26,7 @@
 ((evaluate (and a b) sol)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -44,7 +44,7 @@
 (sol
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -56,7 +56,7 @@
 ((complete-solution sol (list a x))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -68,7 +68,7 @@
 ((complete-solution (solve (assert #f)) (list a x))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0

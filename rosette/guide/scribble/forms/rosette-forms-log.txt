@@ -6,7 +6,7 @@
 ((always-same)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -18,7 +18,7 @@
 ((always-same)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -35,7 +35,7 @@
 ((always-different)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -47,7 +47,7 @@
 ((always-different)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -59,7 +59,7 @@
 ((eq? (always-different) (always-different))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -76,7 +76,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -92,7 +92,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -108,7 +108,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -124,7 +124,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -138,7 +138,7 @@
 ((solve (assert (not x)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -153,7 +153,7 @@
 ((inc (< x y))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -165,7 +165,7 @@
 ((inc (> x 5))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -177,7 +177,7 @@
 ((inc (< y 4))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -189,7 +189,7 @@
 ((inc 1)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -201,7 +201,7 @@
 ((inc (< y 9))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -229,7 +229,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -245,7 +245,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -259,7 +259,7 @@
 ((verify #:assume (assert y) #:guarantee (assert (and x y)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -274,7 +274,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -290,7 +290,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -302,7 +302,7 @@
 ((evaluate x sol)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -319,7 +319,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -336,7 +336,7 @@
 ((asserts)
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -358,7 +358,7 @@
 ((solve (assert (= x 3.5)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -370,7 +370,7 @@
 ((solve (assert (= x 64)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -382,7 +382,7 @@
 ((solve (assert (and (= x 64) (= x 0))))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -419,7 +419,7 @@
 ((solve (assert (= x 3.5)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -431,7 +431,7 @@
 ((solve (assert (= x 64)))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -443,7 +443,7 @@
 ((solve (assert (and (= x 64) (= x 0))))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -455,7 +455,7 @@
 ((solve (assert (forall (list x) (= x (+ x y)))))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -467,7 +467,7 @@
 ((solve (assert (= x (f x))))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -484,7 +484,7 @@
     (assert (or (= (/ i j) 2) (= (/ j i) 2)))))
  ((3)
   1
-  (((lib "rosette/doc/guide/scribble/util/lifted.rkt")
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
