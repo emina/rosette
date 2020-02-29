@@ -1,23 +1,26 @@
 #lang racket
 
-(require (for-syntax racket/syntax) racket/stxparam 
+(require syntax/parse/define
+         (for-syntax racket/syntax) racket/stxparam
          (only-in "core.rkt" current-solver ∃-debug eval/asserts)
          "../lib/util/syntax-properties.rkt"
          (only-in "../base/form/app.rkt" app)
          "../base/core/bool.rkt"  "../base/form/state.rkt"
          "../base/core/union.rkt"
-         "../base/core/equality.rkt" "../base/core/term.rkt")
+         "../base/core/equality.rkt" "../base/core/term.rkt"
+         "../base/tracer/tracer.rkt")
 
 (provide relax? relate debug-origin debug define/debug protect assert)
 
-(define-syntax debug
-  (syntax-rules ()
-    [(debug form) 
-     (parameterize ([current-oracle (oracle)])
-       (∃-debug (eval/asserts (thunk form))))]
-    [(debug [pred other ...] form)
-     (parameterize ([relax? (list pred other ...)])
-       (debug form))]))
+(define-syntax-parser debug
+  [(debug form) #`(debug/derived #,this-syntax form)]
+  [(debug [pred other ...] form)
+   #`(parameterize ([relax? (list pred other ...)])
+       (debug/derived #,this-syntax form))])
+
+(define-simple-macro (debug/derived orig form)
+  (parameterize ([current-oracle (oracle)])
+    (∃-debug (with-trace* orig (eval/asserts (thunk form))))))
 
 (define-syntax-rule (define/debug head body ...) 
   (define head
