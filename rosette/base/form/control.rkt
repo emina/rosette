@@ -1,8 +1,10 @@
 #lang racket
 
-(require "../core/effects.rkt"  
+(require syntax/parse/define
+         "../core/effects.rkt"
          "../core/term.rkt" "../core/equality.rkt" 
-         "../core/merge.rkt" "../core/bool.rkt")
+         "../core/merge.rkt" "../core/bool.rkt"
+         "../tracer/tracer.rkt")
 
 (provide @if @and @or @not @nand @nor @xor @implies
          @unless @when @cond @case else)
@@ -22,21 +24,25 @@
 ; indicating that the branch is infeasible, an error is thrown, and the branch is 
 ; not executed.  The error is captured by the speculate form and later handled by 
 ; the merge function.
-(define-syntax (@if stx)
-  (syntax-case stx ()
-    [(_ test-expr then-expr else-expr)
-     (quasisyntax/loc stx
+(define-simple-macro (@if test-expr then-expr else-expr)
+  #:with the-syntax this-syntax
+  (@if/derived the-syntax test-expr then-expr else-expr))
+
+(define-syntax-parser @if/derived
+  [(_ orig test-expr then-expr else-expr)
+   (quasisyntax/loc #'orig
+     (with-trace orig
        (branch-and-merge test-expr
-                         (thunk then-expr) 
-                         (thunk else-expr)))]))
+                         (thunk then-expr)
+                         (thunk else-expr))))])
 
 (define (branch-and-merge test-expr then-branch else-branch)
   (define test (! (@false? test-expr)))
-  (cond [(eq? test #t) (then-branch)]
-        [(eq? test #f) (else-branch)]
+  (cond [(eq? test #t) (with-subtrace 'then (then-branch))]
+        [(eq? test #f) (with-subtrace 'else (else-branch))]
         [else 
-         (let-values ([(then-val then-state) (speculate (parameterize ([pc test]) (then-branch)))]
-                      [(else-val else-state) (speculate (parameterize ([pc (! test)]) (else-branch)))])
+         (let-values ([(then-val then-state) (with-subtrace 'then (speculate (parameterize ([pc test]) (then-branch))))]
+                      [(else-val else-state) (with-subtrace 'else (speculate (parameterize ([pc (! test)]) (else-branch))))])
            (cond [(and then-state else-state) ; both branches feasible
                   (then-state (lambda (pre post-then) (merge test post-then pre)))
                   (else-state (lambda (post-then post-else) (merge test post-then post-else)))
@@ -52,13 +58,17 @@
                  [else                        ; neither branch feasible
                   (@assert #f "both branches infeasible")]))]))
 
-(define (select-post pre post) post) 
+(define (select-post pre post) post)
 
-(define-syntax (@and stx)
-  (syntax-case stx ()
-    [(_) (syntax/loc stx #t)]
-    [(_ arg) (syntax/loc stx arg)]
-    [(_ arg0 arg ...) (syntax/loc stx (@if arg0 (@and arg ...) #f))]))
+(define-simple-macro (@and . args)
+  #:with the-syntax this-syntax
+  (@and/derived the-syntax . args))
+
+(define-syntax-parser @and/derived
+  [(_ orig) (syntax/loc #'orig #t)]
+  [(_ orig arg) (syntax/loc #'orig arg)]
+  [(_ orig arg0 arg ...)
+   (syntax/loc #'orig (@if/derived orig arg0 (@and/derived orig arg ...) #f))])
 
 (define-syntax (@or stx)
   (syntax-case stx ()

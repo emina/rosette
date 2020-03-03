@@ -1,7 +1,9 @@
 #lang racket
 
-(require 
- (for-syntax racket) "../util/ord-dict.rkt")
+(require
+ (for-syntax racket)
+ "../util/ord-dict.rkt"
+ "../tracer/tracer.rkt")
 
 (provide speculate speculate* apply! location=? (rename-out [state-val location-final-value]))
 
@@ -146,6 +148,7 @@
 ; Returns (values #f #f).  The error argument is ignored.
 (define (rollback/suppress err)
   ;(printf "\n\nERROR: ~a\n\n" err)
+  (push-error! err)
   (unless (zero? (dict-count (env)))
     (for* ([states (in-dict-values (env))]
            [s (if (list? states) (in-list states) (in-dict-values states))])

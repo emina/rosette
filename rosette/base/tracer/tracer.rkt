@@ -3,14 +3,15 @@
 (provide with-trace with-trace* with-subtrace query-root)
 (require syntax/parse/define)
 
-;; macros dealing with current-enable-tracer?
+;; helper macros
 
 (define-for-syntax current-enable-tracer? (make-parameter #t))
 
 (define-syntax-parser with-trace
   [(_ orig body ...+)
    (cond
-     [(current-enable-tracer?) #'(call-with-trace #'orig (thunk body ...))]
+     [(current-enable-tracer?)
+      #`(call-with-trace (quote-syntax orig) (thunk body ...))]
      [else #'(begin body ...)])])
 
 (define-simple-macro (with-trace* orig body ...+)
@@ -32,6 +33,15 @@
      [else #'(begin
                (provide name)
                (define-simple-macro (name . args) (begin)))])])
+
+(define-simple-macro (with-restore body ...+ #:restore restore-body ...+)
+  (let ([restorer (thunk restore-body ...)])
+    (call-with-exception-handler
+     (λ (e)
+       (restorer)
+       e)
+     (thunk (begin0 (let () body ...)
+              (restorer))))))
 
 ;; actual functionality
 
@@ -56,7 +66,10 @@
   (set-subnode-children! current-subnode
                          (cons new-node (subnode-children current-subnode)))
   (set! current-node new-node)
-  (begin0 (the-thunk)
+  (set! in-subnode? #f)
+  (with-restore (the-thunk)
+    #:restore
+    (set! in-subnode? #t)
     (set-node-children! new-node (reverse (node-children new-node)))
     (set! current-node the-node)))
 
@@ -67,7 +80,8 @@
                       (cons new-subnode (node-children current-node)))
   (set! current-subnode new-subnode)
   (set! in-subnode? #t)
-  (begin0 (the-thunk)
+  (with-restore (the-thunk)
+    #:restore
     (set! in-subnode? #f)
     (set-subnode-children! new-subnode (reverse (subnode-children new-subnode)))
     (set-subnode-errors! new-subnode (reverse (subnode-errors new-subnode)))
