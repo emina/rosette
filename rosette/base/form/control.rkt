@@ -103,22 +103,16 @@
 
 (define-syntax (@case stx)
   (syntax-case stx (else)
-    [(_ expr) (syntax/loc stx (@case expr [else (void)]))]
-    [(_ expr [else else-expr ...]) (syntax/loc stx (begin expr else-expr ...))]
     [(_ expr 
-        [(then-val0 ...) then-expr0 ...] 
         [(then-val ...) then-expr ...] ... 
         [else else-expr ...]) 
      (syntax/loc stx 
        (let ([tmp expr])
-         (@cond [(@or (@equal? tmp (quote then-val0)) ...) then-expr0 ...]
-                   [(@or (@equal? tmp (quote then-val)) ...) then-expr ...] ...
-                   [else else-expr ...])))]
-    [(_ expr 
-        [(then-val0 ...) then-expr0 ...] 
+         (@cond [(@or (@equal? tmp (quote then-val)) ...) then-expr ...] ...
+                [else else-expr ...])))]
+    [(_ expr
         [(then-val ...) then-expr ...] ...)
      (syntax/loc stx 
        (@case expr 
-                 [(then-val0 ...) then-expr0 ...] 
-                 [(then-val ...) then-expr ...] ...
-                 [else (void)]))]))
+              [(then-val ...) then-expr ...] ...
+              [else (void)]))]))
