@@ -8,7 +8,7 @@
          (for-syntax racket/base racket/struct-info racket/syntax
                      racket/private/procedure-alias "struct-type.rkt"))
 
-(provide struct struct-field-index define/generic define-struct)
+(provide struct define/generic (rename-out [define-struct* define-struct]))
 
 (define-syntax (struct stx)
   (define (config-has-name? config)
@@ -132,6 +132,19 @@
 (define-syntax-parameter struct-field-index
   (lambda (stx)
     (raise-syntax-error #f "allowed only within a structure type definition" stx)))
+
+(define-for-syntax (make-struct-field-index fields)
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ id)
+       (identifier? #'id)
+       (let loop ([pos 0] [fields (syntax->list fields)])
+         (cond
+           [(null? fields)
+            (raise-syntax-error #f "no such field" stx #'name)]
+           [(free-identifier=? #'id (car fields))
+            (datum->syntax #'here pos stx)]
+           [else (loop (add1 pos) (cdr fields))]))])))
 
 (define (check-struct-type name what)
   (when what
@@ -609,14 +622,7 @@
                             (define-values (#,struct: #,make- #,? #,@sels #,@sets)
                               (let-values ([(struct: make- ? -ref -set!)
                                             (syntax-parameterize ([struct-field-index
-                                                                   (lambda (stx)
-                                                                     (syntax-case stx #,(map field-id fields)
-                                                                       #,@(let loop ([fields fields][pos 0])
-                                                                            (cond
-                                                                              [(null? fields) null]
-                                                                              [else (cons #`[(_ #,(field-id (car fields))) #'#,pos]
-                                                                                          (loop (cdr fields) (add1 pos)))]))
-                                                                       [(_ name) (raise-syntax-error #f "no such field" stx #'name)]))])
+                                                                   (make-struct-field-index (quote-syntax #,(map field-id fields)))])
                                                                  (@make-struct-type #,reflect-name-expr
                                                                                    #,super-struct:
                                                                                    #,(- (length fields) auto-count)
