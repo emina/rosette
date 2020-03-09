@@ -3,7 +3,7 @@
 (require "term.rkt" "union.rkt")
 
 (provide @boolean? @false? 
-         ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
+         ! && || ^^ => <=> @! @&& @|| @^^ @=> @<=> @exists @forall
          and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only 
          (rename-out [export-asserts asserts]) clear-asserts!
@@ -85,6 +85,14 @@
 (define && (logical-connective @&& @|| #t #f))
 (define || (logical-connective @|| @&& #f #t))
 
+(define (^^ x y) ;(|| (&& x (! y)) (&& (! x) y))
+  (cond [(equal? x y) #f]
+        [(boolean? x) (if x (! y) y)]
+        [(boolean? y) (if y (! x) x)]
+        [(cancel? x y) #t]
+        [(term<? x y) (expression @^^ x y)]
+        [else         (expression @^^ y x)]))
+
 (define (=> x y) (|| (! x) y))
 
 (define (<=> x y) ;(|| (&& x y) (&& (! x) (! y))))))
@@ -98,6 +106,7 @@
 (define-lifted-operator @! !)
 (define-lifted-operator @&& &&)
 (define-lifted-operator @|| ||)
+(define-lifted-operator @^^ ^^)
 (define-lifted-operator @=> =>)
 (define-lifted-operator @<=> <=>)
 
