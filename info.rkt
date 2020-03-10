@@ -2,7 +2,9 @@
 
 (define collection 'multi)
 
-(define deps '(("racket" #:version "7.0")
+(define deps '("sandbox-lib"
+               "scribble-lib"
+               ("racket" #:version "7.0")
                "r6rs-lib"
                "rfc6455"
                "net-lib"
@@ -12,7 +14,10 @@
                "gui-lib"
                "base"))
 
-(define build-deps '("pict-doc"
+(define build-deps '("draw-lib"
+                     "errortrace-lib"
+                     "pict-lib"
+                     "pict-doc"
                      "scribble-lib"
                      "racket-doc"
                      "gui-doc"
