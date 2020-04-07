@@ -1,7 +1,8 @@
 #lang racket
 
 (require syntax/stx syntax/kerncase racket/keyword-transform
-         (only-in "record.rkt" record-apply! record-source!))
+         (only-in "record.rkt" record-apply! record-source!)
+         "../util/syntax.rkt")
 (provide symbolic-profile-compile-handler symbolic-profile-rosette-only?)
 
 
@@ -30,59 +31,15 @@
   (syntax-rearm new orig))
 (define (disarm stx)
   (syntax-disarm stx code-insp))
-(define (location stx)
-  (let ([src (syntax-source stx)])
-    (define srcfile (path->string* src))
-    (list srcfile (syntax-line stx) (syntax-column stx))))
 (define (id=? id name)
   (and (identifier? id) (equal? (syntax-e id) name)))
-(define (keep-lambda-properties orig new)
-  (let ([p (syntax-property orig 'method-arity-error)]
-        [p2 (syntax-property orig 'inferred-name)])
-    (let ([new (if p
-                   (syntax-property new 'method-arity-error p)
-                   new)])
-      (if p2
-          (syntax-property new 'inferred-name p2)
-          new))))
-(define (rebuild expr replacements)
-  (let loop ([expr expr] [same-k (lambda () expr)] [diff-k (lambda (x) x)])
-    (let ([a (assq expr replacements)])
-      (cond
-        [a (diff-k (cdr a))]
-        [(pair? expr)
-         (loop (car expr)
-               (lambda ()
-                 (loop (cdr expr) same-k
-                       (lambda (y) (diff-k (cons (car expr) y)))))
-               (lambda (x)
-                 (loop (cdr expr)
-                       (lambda () (diff-k (cons x (cdr expr))))
-                       (lambda (y) (diff-k (cons x y))))))]
-        [(vector? expr)
-         (loop (vector->list expr) same-k
-               (lambda (x) (diff-k (list->vector x))))]
-        [(box? expr)
-         (loop (unbox expr) same-k (lambda (x) (diff-k (box x))))]
-        [(syntax? expr)
-         (if (identifier? expr)
-             (same-k)
-             (loop (syntax-e expr) same-k
-                   (lambda (x) (diff-k (datum->syntax expr x expr expr)))))]
-        [else (same-k)]))))
-
-
 
 ;; Path management -------------------------------------------------------------
-
-;; Convert a path to a string
-(define (path->string* path)
-  (if (path? path) (path->string path) path))
 
 ;; We shouldn't instrument procedure calls to Rosette functions
 ;; that aren't actually exported by Rosette
 (define (should-instrument-path? path)
-  (define the-path (path->string* path))
+  (define the-path (path-string->string path))
   (or (not the-path)
       (not (or (string-contains? the-path "rosette/base/form/module.rkt")
                (string-contains? the-path "rosette/base/form/control.rkt")
@@ -116,7 +73,7 @@
      (define src (syntax-source (if (pair? source-property) (car source-property) source-property)))
      (should-instrument-path? src)]
     [(and (syntax-source expr)
-          (string-contains? (path->string* (syntax-source expr))
+          (string-contains? (path-string->string (syntax-source expr))
                             "racket/private/kw.rkt"))
      (if (syntax-source head)
          (set-member? original-files (syntax-source head))
@@ -140,7 +97,7 @@
                 [app (syntax-shift-phase-level #'#%plain-app (- phase base-phase))]
                 [qt (syntax-shift-phase-level #'quote (- phase base-phase))]
                 [lst (syntax-shift-phase-level #'list (- phase base-phase))])
-    (quasisyntax (app (qt record-apply!) (app lst #,@(quote-list (location stx) phase)) #,@rest))))
+    (quasisyntax (app (qt record-apply!) (app lst #,@(quote-list (syntax->readable-location stx) phase)) #,@rest))))
 
 
   
@@ -162,7 +119,7 @@
                                  [values (syntax-shift-phase-level #'values (- phase base-phase))])
                      (quasisyntax
                       (lv ([#,names #,rhs*])
-                          (app (qt record-source!) (app lst #,@(syntax->list names)) (app lst #,@(quote-list (location rhs*) phase)))
+                          (app (qt record-source!) (app lst #,@(syntax->list names)) (app lst #,@(quote-list (syntax->readable-location rhs*) phase)))
                           #,(if (one-name names)  ; optimization for single return value
                                 (car (syntax-e names))
                                 #`(app values #,@(syntax->list names))))))]

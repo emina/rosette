@@ -1,0 +1,252 @@
+;; This file was created by make-log-based-eval
+((define-symbolic xs integer? (4))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic k integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (sum xs) (foldl + 0 xs))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (= k (sum xs)))
+  #:guarantee
+  (assert (= k (sum (filter (compose not zero?) xs)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define (sum-buggy xs) (foldl + xs))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (= k (sum-buggy xs)))
+  #:guarantee
+  (assert (= k (sum-buggy (filter (compose not zero?) xs)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((verify
+  (assert (= (sum-buggy xs) (sum-buggy (filter (compose not zero?) xs)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model)"))))
+ #""
+ #"")
+((define (len xs) (cond ((empty? xs) 0) (else (add1 (len (rest xs))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic n integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define ys (take xs n)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((verify
+  #:assume
+  (assert (= k (len ys)))
+  #:guarantee
+  (assert (= k (len (map add1 ys)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define (len-buggy ys)
+   (cond ((empty? ys) 0) (else (add1 (len-buggy (first ys))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (= k (len-buggy ys)))
+  #:guarantee
+  (assert (= k (len-buggy (map add1 ys)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((verify #:assume (assert (= k (sum xs))) #:guarantee (assert (= k 0)))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(model\n [xs@0 0]\n [xs@1 0]\n [xs@2 0]\n [xs@3 1]\n [k 1]\n [n 0])"))))
+ #""
+ #"")
+((verify #:assume (assert (= k (sum-buggy xs))) #:guarantee (assert (= k 0)))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define mod (solve (assert (= k (len ys)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(mod
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [k 0]\n [n 0])"))))
+ #""
+ #"")
+((solve (assert (and (= k (len ys)) (not (= k (evaluate k mod))))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [k 1]\n [n 1])"))))
+ #""
+ #"")
+((define mod (solve (assert (= k (len-buggy ys)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(mod
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [k 0]\n [n 0])"))))
+ #""
+ #"")
+((solve (assert (and (= k (len-buggy ys)) (not (= k (evaluate k mod))))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define (select xs n)
+   (cond
+    ((empty? xs) (assert #f "unexpected empty list"))
+    (else
+     (define pivot (first xs))
+     (define non-pivot (rest xs))
+     (define <pivot (filter (λ (x) (< x pivot)) non-pivot))
+     (define >=pivot (filter (λ (x) (>= x pivot)) non-pivot))
+     (define len< (length <pivot))
+     (cond
+      ((= n len<) pivot)
+      ((< n len<) (select <pivot n))
+      (else (select >=pivot (- n len< 1)))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (and (<= 0 n (sub1 (length xs))) (= k (select xs n))))
+  #:guarantee
+  (assert (= k (list-ref (sort xs <) n))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define (select-buggy xs n)
+   (cond
+    ((empty? xs) (assert #f "unexpected empty list"))
+    (else
+     (define pivot (first xs))
+     (define non-pivot (rest xs))
+     (define <pivot (filter (λ (x) (< x pivot)) non-pivot))
+     (define >=pivot (filter (λ (x) (>= x pivot)) non-pivot))
+     (define len< (length <pivot))
+     (cond
+      ((= n len<) pivot)
+      ((< n len<) (select-buggy <pivot))
+      (else (select-buggy >=pivot (- n len< 1)))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (and (<= 0 n (sub1 (length xs))) (= k (select-buggy xs n))))
+  #:guarantee
+  (assert (= k (list-ref (sort xs <) n))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")

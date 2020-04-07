@@ -1,0 +1,15 @@
+((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
+ (#:trace
+  (("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+    (#%app "if.rkt" 4 6)
+    ((1 "if.rkt" 4 6))
+    b)
+   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+    (#%app "if.rkt" 5 12)
+    ((1 "if.rkt" 5 12))
+    (&& a b))
+   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 2\n  arguments...: [none]\n"
+    (#%app "if.rkt" 5 16)
+    ((2 "if.rkt" 5 16))
+    (&& a (! b)))
+   ("assert: both branches infeasible\n" (#%app "if.rkt" 5 6) () a))))

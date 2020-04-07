@@ -42,7 +42,8 @@
  "query/synthax.rkt"
  "query/debug.rkt"
  "query/optimize.rkt"
- "profile/test.rkt")
+ "profile/test.rkt"
+ "trace/test.rkt")
 
 
 (define (run-tests-with-solver solver%)

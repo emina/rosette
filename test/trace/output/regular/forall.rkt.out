@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
+ (#:trace
+  (("rest: contract violation\n  expected: (and/c (listof any/c) (not/c (quote ())))\n  given: '()\n"
+    (#%app "forall.rkt" 6 2)
+    ((@rest "forall.rkt" 6 2))
+    b))))

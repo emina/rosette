@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
+ (#:trace
+  (("error: bad\n"
+    (#%app "list.rkt" 4 13)
+    ((error "list.rkt" 4 13) (@map "list.rkt" 4 0))
+    (! b)))))

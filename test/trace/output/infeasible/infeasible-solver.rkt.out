@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
+ (#:trace
+  (("@add1: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 1\n  given: 0\n"
+    (#%app "infeasible-solver.rkt" 7 2)
+    ((@apply "infeasible-solver.rkt" 7 2))
+    (&& (! (= 0 n)) (= 1 (+ 1 n)))))))
