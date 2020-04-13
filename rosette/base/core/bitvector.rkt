@@ -6,13 +6,15 @@
          "merge.rkt" "safe.rkt" "lift.rkt" "forall.rkt")
 (require (only-in "real.rkt" @>= @> @= @integer? T*->integer?))
 
-(provide 
+(provide
+ (rename-out [lift-op bvlift-op]) bvcoerce
  (rename-out [@bv bv]) @bv? bv? bv-value bv-type
  (rename-out [@bitvector bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
- @concat @extract @sign-extend @zero-extend @integer->bitvector @bitvector->integer @bitvector->natural)
+ @concat @extract @sign-extend @zero-extend
+ @integer->bitvector @bitvector->integer @bitvector->natural)
 
 ;; ----------------- Bitvector Types ----------------- ;; 
 
@@ -194,7 +196,6 @@
              [_ (loop rest)])]
           [(list _ rest ...)
            (loop rest)]))
-      #:unless (max (length xs) (length ys))
       #:error (bitvector-type-error (object-name op) x y))]
     [(_ _) (assert #f (bitvector-type-error (object-name op) x y))]))
 
@@ -218,7 +219,6 @@
              [_ (loop rest)])]
           [(list _ rest ...)
            (loop rest)]))
-      #:unless (apply max (length vs) (map length ws))
       #:error (apply bitvector-type-error (object-name op) xs))]
     [_ (assert #f (apply bitvector-type-error (object-name op) xs))]))
 

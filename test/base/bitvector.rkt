@@ -14,6 +14,8 @@
          (only-in rosette/base/core/real @= @< @<= @integer?)
          "exprs.rkt" "solver.rkt")
 
+(provide check-state check-bv-exn)
+
 (define BV (bitvector 4))
 (define-symbolic x y z BV)
 (define-symbolic a b c d e f g @boolean?)
@@ -440,7 +442,7 @@
                         (phi (cons c y) (cons d (bv 2 8))))
                (phi (cons (&& b c) (@bvsdiv x y))
                     (cons (&& a d) (bv 3 8))) 
-               (list ))
+               (list  (|| (&& b c) (&& a d))))
   (check-state (@bvsdiv (phi (cons a (bv 6 8)) (cons b x)) 
                         (phi (cons c y) (cons d (bv 2 8)) (cons e 'e)))
                (phi (cons (&& b c) (@bvsdiv x y))
@@ -482,7 +484,7 @@
                        (phi (cons e z) (cons f (bv 3 8))))
                (phi (cons (&& a c e) (@bvadd x y z))
                     (cons (&& b d f) (bv 6 8)))
-               (list))
+               (list (|| (&& a c e) (&& b d f))))
   (check-state (@bvadd (phi (cons a 1) (cons b (bv 1 8))) 
                        (phi (cons c y) (cons d (bv 2 8)))
                        (phi (cons e z) (cons f (bv 3 8))))

@@ -6,7 +6,8 @@
 
 (provide @number? @positive? @negative? @zero? @even? @odd?
          @add1 @sub1 @sgn @truncate @floor @ceiling @min @max
-         @exact->inexact @inexact->exact @expt 
+         @exact->inexact @inexact->exact @expt
+         extreme
          ;@sqrt @bitwise-not @bitwise-and @bitwise-ior @bitwise-xor
          ;@<< @>> @>>> @bitwise-bit-set? @bitwise-bit-field
          )

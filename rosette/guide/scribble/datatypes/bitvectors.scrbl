@@ -9,7 +9,11 @@
                     bvnot bvor bvand bvxor bvshl bvlshr bvashr
                     bvneg bvadd bvsub bvmul bvudiv bvsdiv bvurem bvsrem bvsmod
                     concat extract sign-extend zero-extend 
-                    integer->bitvector bitvector->integer bitvector->natural)
+                    integer->bitvector bitvector->integer bitvector->natural
+                    bit lsb msb bvzero? bvadd1 bvsub1
+                    bvsmin bvsmax bvumin bvumax
+                    rotate-left rotate-right bvrol bvror
+                    bool->bitvector bitvector->bool bitvector->bits)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts))
           (for-label racket)
@@ -269,6 +273,161 @@ Note that both @racket[i] and @racket[t] may be symbolic.
  (define-symbolic b c boolean?)
  (integer->bitvector (if b pi 3) (if c (bitvector 5) (bitvector 6)))
  (asserts)]
+}
+
+@section{Additional Operators}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc[(bit [i integer?] [x (bitvector n)]) (bitvector 1)]{
+ Extracts the @racket[i]th bit from the bitvector @racket[x] of size @racket[n], yielding a
+ bitvector of size 1.  This procedure assumes that @racket[n] > @racket[i] >= 0.
+ @examples[#:eval rosette-eval
+ (bit 1 (bv 3 4))
+ (bit 2 (bv 1 4))
+ (define-symbolic i integer?)
+ (define-symbolic x (bitvector 4))
+ (eval:alts (bit i x)
+            (begin (bit i x)
+"(ite* (⊢ (= 0 i) (extract 0 0 x))
+      (⊢ (= 1 i) (extract 1 1 x))
+      (⊢ (= 2 i) (extract 2 2 x))
+      (⊢ (= 3 i) (extract 3 3 x))))"))
+ (asserts)]
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc*[([(lsb [x (bitvector n)]) (bitvector 1)]
+           [(msb [x (bitvector n)]) (bitvector 1)])]{
+ Returns the least or most significant bit of @racket[x].
+ @examples[#:eval rosette-eval
+  (lsb (bv 3 4))
+  (msb (bv 3 4))
+  (define-symbolic x (bitvector 4))
+  (define-symbolic y (bitvector 8))
+  (lsb (if b x y))
+  (msb (if b x y))
+  ]
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc[(bvzero? [x (bitvector n)]) boolean?]{
+Returns @racket[(bveq x (bv 0 n))].
+ @examples[#:eval rosette-eval
+  (define-symbolic x (bitvector 4))
+  (bvzero? x)
+  (define-symbolic y (bitvector 8))
+  (bvzero? y)
+  (define-symbolic b boolean?)
+  (bvzero? (if b x y))
+ ]
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc*[([(bvadd1 [x (bitvector n)]) (bitvector n)]
+           [(bvsub1 [x (bitvector n)]) (bitvector n)])]{
+ Returns @racket[(bvadd x (bv 1 n))] or @racket[(bvsub x (bv 1 n))]. 
+ @examples[#:eval rosette-eval
+  (define-symbolic x (bitvector 4))
+  (bvadd1 x)
+  (define-symbolic y (bitvector 8))
+  (bvsub1 y)
+  (define-symbolic b boolean?)
+  (bvadd1 (if b x y))
+  (bvsub1 (if b x y))
+  ]
+}
+
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc*[([(bvsmin [x (bitvector n)] ...+) (bitvector n)]
+           [(bvumin [x (bitvector n)] ...+) (bitvector n)]
+           [(bvsmax [x (bitvector n)] ...+) (bitvector n)]
+           [(bvumax [x (bitvector n)] ...+) (bitvector n)])]{
+Returns the (un)signed minimum or maximum of one or more bitvector values of the same type.
+ @examples[#:eval rosette-eval
+ (bvsmin (bv -1 4) (bv 2 4))
+ (bvumin (bv -1 4) (bv 2 4))
+ (bvsmax (bv -1 4) (bv 2 4))
+ (bvumax (bv -1 4) (bv 2 4))
+ (define-symbolic b boolean?)
+ (bvsmin (bv -1 4) (bv 2 4) (if b (bv 1 4) (bv 3 8)))
+ (asserts)]
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc*[([(bvrol [x (bitvector n)] [y (bitvector n)]) (bitvector n)]
+           [(bvror [x (bitvector n)] [y (bitvector n)]) (bitvector n)])]{
+Returns the left or right rotation of @racket[x] by @racket[(bvurem y n)] bits, where
+@racket[x] and @racket[y] are bitvector values of the same type. 
+ @examples[#:eval rosette-eval
+ (bvrol (bv 3 4) (bv 2 4))
+ (bvrol (bv 3 4) (bv -2 4))
+ (define-symbolic b boolean?)
+ (code:line (bvror (bv 3 4)
+                   (if b 0 (bv 2 4))) (code:comment "this typechecks only when b is false"))
+ (code:line (asserts)                 (code:comment "so Rosette emits a corresponding assertion"))]
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc*[([(rotate-left  [i integer?] [x (bitvector n)]) (bitvector n)]
+           [(rotate-right [i integer?] [x (bitvector n)]) (bitvector n)])]{
+Returns the left or right rotation of @racket[x] by @racket[i] bits.
+These procedures assume that @racket[n] > @racket[i] >= 0. See @racket[bvrol]
+and @racket[bvror] for an alternative way to perform rotations that usually
+leads to faster solving times.
+ @examples[#:eval rosette-eval
+ (rotate-left 3 (bv 3 4))
+ (rotate-right 1 (bv 3 4))
+ (define-symbolic i integer?)
+ (define-symbolic b boolean?)
+ (eval:alts (rotate-left i (if b (bv 3 4) (bv 7 8)))
+           (begin
+             (rotate-left i (if b (bv 3 4) (bv 7 8)))
+"{[b (ite* (⊢ (= 0 i) (bv #x3 4)) (⊢ (= 1 i) (bv #x6 4)) (⊢ (= 2 ...) ...) ...)]
+ [(! b) (ite* (⊢ (= 0 i) (bv #x07 8)) (⊢ (= 1 i) (bv #x0e 8)) (⊢ (= ...) ...) ...)]}"))
+ (asserts)
+ ]
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc[(bitvector->bits [x (bitvector n)]) (listof (bitvector n))]{
+Returns the bits of @racket[x] as a list, i.e., @racket[(list (bit 0 x) ... (bit (- n 1) x))].
+ @examples[#:eval rosette-eval
+  (bitvector->bits (bv 3 4))
+  (define-symbolic y (bitvector 2))
+  (bitvector->bits y)
+  (define-symbolic b boolean?)
+  (eval:alts (bitvector->bits (if b (bv 3 4) y))
+"{[b ((bv #b1 1) (bv #b1 1) (bv #b0 1) (bv #b0 1))]
+ [(! b) ((extract 0 0 y) (extract 1 1 y))]}")
+
+ ]
+}
+
+@defproc[(bitvector->bool [x (bitvector n)]) boolean?]{
+Returns @racket[(not (bvzero? x))].
+}
+
+@(rosette-eval '(clear-asserts!))
+
+@defproc[(bool->bitvector [b any/c] [t (or/c positive-integer? (bitvector n)) (bitvector 1)]) bv?]{
+Returns @racket[(bv 0 t)] if @racket[(false? b)] and otherwise returns @racket[(bv 1 t)], where
+@racket[t] is @racket[(bitvector 1)] by default. If provided, @racket[t] must be a concrete positive
+integer or a concrete bitvector type value.
+ @examples[#:eval rosette-eval
+  (bool->bitvector #f 3)
+  (bool->bitvector "non-false-value")
+  (define-symbolic b boolean?)
+  (bool->bitvector b)
+ ]
 }
 
 @(kill-evaluator rosette-eval)
