@@ -113,23 +113,25 @@
 ;; The syntax rule generates the instrumentation for the two different
 ;; cases (keyword arguments or not), which helps expose some fusion
 ;; optimization opportunities to the compiler.
-(define (runner proc*)
-  (lambda (loc proc in)
-    (record-enter! loc proc in)
-    (call-with-exception-handler
-     (lambda (e)
-       (record-exit! '())
-       e)
-     (thunk
-      (define ret (call-with-values proc* list))
-      (record-exit! ret)
-      (apply values ret)))))
+(define-syntax-rule (runner app-proc-to-in-expr)
+  (let* ([handler  (lambda (exn) (values exn null))]
+         [returner (lambda e (values #f e))])
+    (lambda (loc proc in)
+      (record-enter! loc proc in)
+      (call-with-exception-handler
+       (lambda (e)
+         (record-exit! '())
+         e)
+       (thunk
+        (define ret (call-with-values (lambda () app-proc-to-in-expr) list))
+        (record-exit! ret)
+        (apply values ret))))))
 (define record-apply!
   (make-keyword-procedure
    (lambda (kws kw-args loc proc . rest) 
-     ((runner (thunk (keyword-apply proc kws kw-args rest))) loc proc (append rest kw-args)))
+     ((runner (keyword-apply proc kws kw-args rest)) loc proc (append rest kw-args)))
    (lambda (loc proc . rest)
-     ((runner (thunk (apply proc rest))) loc proc rest))))
+     ((runner (apply proc rest)) loc proc rest))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
