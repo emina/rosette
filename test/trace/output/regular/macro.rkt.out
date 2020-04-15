@@ -1,14 +1,14 @@
 ((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
  (#:trace
-  (("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+  (("application: not a procedure;\n expected ...."
     (#%app "macro.rkt" 5 5)
     ((1 "macro.rkt" 5 5))
     a)
-   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 3\n  arguments...: [none]\n"
+   ("application: not a procedure;\n expected ...."
     (#%app "macro.rkt" 7 8)
     ((3 "macro.rkt" 7 8))
     (&& (! ...) ...))
-   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+   ("application: not a procedure;\n expected ...."
     (#%app "macro.rkt" 12 6)
     ((1 "macro.rkt" 12 6))
     b))))

@@ -1,16 +1,16 @@
 ((#:stats #hash((assertion . 5) (infeasible . 0) (infeasible/solver . 1)))
  (#:trace
-  (("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n"
+  (("select-buggy: arity mismatch;\n the expec...."
     (#%app "ex-3.rkt" 16 24)
     ((select-buggy "ex-3.rkt" 16 24) (select-buggy "ex-3.rkt" 21 28))
     (&& (&& ...) ...))
-   ("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n"
+   ("select-buggy: arity mismatch;\n the expec...."
     (#%app "ex-3.rkt" 16 24)
     ((select-buggy "ex-3.rkt" 16 24)
      (select-buggy "ex-3.rkt" 17 18)
      (select-buggy "ex-3.rkt" 21 28))
     (&& (&& ...) ...))
-   ("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n"
+   ("select-buggy: arity mismatch;\n the expec...."
     (#%app "ex-3.rkt" 16 24)
     ((select-buggy "ex-3.rkt" 16 24)
      (select-buggy "ex-3.rkt" 17 18)

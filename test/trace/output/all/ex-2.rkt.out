@@ -1,12 +1,12 @@
 ((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
  (#:trace
-  (("first: contract violation\n  expected: #<procedure:list?>\n  given: xs@0\n"
+  (("first: contract violation\n  expected: #<...."
     (#%app "ex-2.rkt" 6 27)
     ((@first "ex-2.rkt" 6 27)
      (len-buggy "ex-2.rkt" 6 16)
      (len-buggy "ex-2.rkt" 14 23))
     (! (= ...)))
-   ("first: contract violation\n  expected: #<procedure:list?>\n  given: (...\n"
+   ("first: contract violation\n  expected: #<...."
     (#%app "ex-2.rkt" 6 27)
     ((@first "ex-2.rkt" 6 27)
      (len-buggy "ex-2.rkt" 6 16)

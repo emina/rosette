@@ -34,7 +34,8 @@
     (match-define (list ex activated-syntax activated-stack pc) elem)
     ;; get rid of path information
     (define ex-out
-      (parameterize ([error-print-context-length 0]) (exn->string ex)))
+      (parameterize ([error-print-context-length 0])
+        (substring-top (exn->string ex) 40)))
     (define activated-syntax-out (format-activated-syntax activated-syntax))
     (define activated-stack-out (map format-activated-stack-elem activated-stack))
     (list ex-out activated-syntax-out activated-stack-out pc))
@@ -45,6 +46,10 @@
 (define (take-top xs n)
   (for/list ([x (in-list xs)] [_ (in-range n)]) x))
 
+(define (substring-top s n)
+  (cond
+    [(<= (string-length s) n) s]
+    [else (string-append (substring s 0 n) "....")]))
 
 (define (run-trace-test fname mode)
   (define (perform-test output)

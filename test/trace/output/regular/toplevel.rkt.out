@@ -1,22 +1,22 @@
 ((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
  (#:trace
-  (("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+  (("application: not a procedure;\n expected ...."
     (#%app "toplevel.rkt" 5 17)
     ((1 "toplevel.rkt" 5 17))
     #t)
-   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 2\n  arguments...: [none]\n"
+   ("application: not a procedure;\n expected ...."
     (#%app "toplevel.rkt" 6 20)
     ((2 "toplevel.rkt" 6 20))
     #t)
-   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+   ("application: not a procedure;\n expected ...."
     (#%app "toplevel.rkt" 9 21)
     ((1 "toplevel.rkt" 9 21))
     #t)
-   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 2\n  arguments...: [none]\n"
+   ("application: not a procedure;\n expected ...."
     (#%app "toplevel.rkt" 10 24)
     ((2 "toplevel.rkt" 10 24))
     #t)
-   ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
+   ("application: not a procedure;\n expected ...."
     (#%app "toplevel.rkt" 12 7)
     ((1 "toplevel.rkt" 12 7))
     #t))))

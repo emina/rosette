@@ -1,10 +1,10 @@
 ((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
  (#:trace
-  (("@foldl: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: at least 3\n  given: 2\n"
+  (("@foldl: arity mismatch;\n the expected nu...."
     (#%app "ex-1.rkt" 5 23)
     ((@foldl "ex-1.rkt" 5 23) (sum-buggy "ex-1.rkt" 7 23))
     #t)
-   ("@foldl: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: at least 3\n  given: 2\n"
+   ("@foldl: arity mismatch;\n the expected nu...."
     (#%app "ex-1.rkt" 5 23)
     ((@foldl "ex-1.rkt" 5 23) (sum-buggy "ex-1.rkt" 8 26))
     #t))))
