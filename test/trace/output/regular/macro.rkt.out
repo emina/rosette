@@ -7,7 +7,7 @@
    ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 3\n  arguments...: [none]\n"
     (#%app "macro.rkt" 7 8)
     ((3 "macro.rkt" 7 8))
-    (&& (! a) (! b)))
+    (&& (! ...) ...))
    ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
     (#%app "macro.rkt" 12 6)
     ((1 "macro.rkt" 12 6))

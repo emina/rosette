@@ -7,7 +7,8 @@
          rosette/lib/trace/tool
          rosette/lib/util/syntax
          (only-in rosette clear-state!)
-         racket/runtime-path)
+         racket/runtime-path
+         "../config.rkt")
 
 (define overwriting? (match (current-command-line-arguments)
                        [(vector "overwrite") #t]
@@ -22,7 +23,7 @@
 (define (serialize e)
   (call-with-input-string (with-output-to-string (thunk (write e))) read))
 
-(define (format-output stats trace original-map)
+(define (format-output stats trace _original-map)
   (define (format-activated-syntax activated-syntax)
     (match-define (list stx path line col) activated-syntax)
     (list stx (path->name path) line col))
@@ -60,7 +61,8 @@
     (perform-test
      `((#:error ,(parameterize ([error-print-context-length 0]) (exn->string e))))))
 
-  (parameterize ([current-compile symbolic-trace-compile-handler])
+  (parameterize ([current-compile symbolic-trace-compile-handler]
+                 [error-print-width default-error-print-width])
     (clear-state!)
     (with-handlers ([exn:fail? exn-handler])
       (do-trace
@@ -75,28 +77,33 @@
 
 (define-runtime-path here-dir ".")
 
+(define (run-mode mode params)
+  (for/list ([test-file (directory-list (build-path here-dir "code" mode))])
+    (test-suite+
+     (~a (path-string->string test-file) " (" mode ")")
+     (let loop ([params params])
+       (match params
+         ['() (run-trace-test test-file mode)]
+         [(cons (list p v) params) (parameterize ([p v]) (loop params))])))))
+
+(define regular-suites
+  (run-mode "regular" `()))
+(define solver-suites
+  (run-mode "solver" `([,symbolic-trace-skip-infeasible-solver? #t])))
+(define assertion-suites
+  (run-mode "assertion" `([,symbolic-trace-skip-assertion? #t])))
+(define infeasible-suites
+  (run-mode "infeasible" `([,symbolic-trace-skip-infeasible? #t])))
+(define all-suites
+  (run-mode "all" `([,symbolic-trace-skip-infeasible-solver? #t]
+                    [,symbolic-trace-skip-assertion? #t]
+                    [,symbolic-trace-skip-infeasible? #t])))
+
 (module+ test
   (require rackunit/text-ui)
 
-  (define (run-mode mode)
-    (for ([test-file (directory-list (build-path here-dir "code" mode))])
-      (run-tests
-       (test-suite+
-        (~a (path-string->string test-file) " (" mode ")")
-        (run-trace-test test-file mode)))))
-
-  (run-mode "regular")
-
-  (parameterize ([symbolic-trace-skip-infeasible-solver? #t])
-    (run-mode "solver"))
-
-  (parameterize ([symbolic-trace-skip-assertion? #t])
-    (run-mode "assertion"))
-
-  (parameterize ([symbolic-trace-skip-infeasible? #t])
-    (run-mode "infeasible"))
-
-  (parameterize ([symbolic-trace-skip-infeasible-solver? #t]
-                 [symbolic-trace-skip-assertion? #t]
-                 [symbolic-trace-skip-infeasible? #t])
-    (run-mode "all")))
+  (for-each run-tests regular-suites)
+  (for-each run-tests solver-suites)
+  (for-each run-tests assertion-suites)
+  (for-each run-tests infeasible-suites)
+  (for-each run-tests all-suites))

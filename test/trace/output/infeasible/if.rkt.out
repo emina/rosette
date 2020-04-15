@@ -7,9 +7,9 @@
    ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 1\n  arguments...: [none]\n"
     (#%app "if.rkt" 5 12)
     ((1 "if.rkt" 5 12))
-    (&& a b))
+    (&& a ...))
    ("application: not a procedure;\n expected a procedure that can be applied to arguments\n  given: 2\n  arguments...: [none]\n"
     (#%app "if.rkt" 5 16)
     ((2 "if.rkt" 5 16))
-    (&& a (! b)))
+    (&& a ...))
    ("assert: both branches infeasible\n" (#%app "if.rkt" 5 6) () a))))

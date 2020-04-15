@@ -3,9 +3,10 @@
 (require (only-in rosette solver-features current-solver) "base/solver.rkt"
          rosette/lib/roseunit
          rosette/solver/smt/z3 rosette/solver/smt/cvc4 
-         rosette/solver/smt/boolector rosette/solver/smt/yices)
+         rosette/solver/smt/boolector rosette/solver/smt/yices
+         "config.rkt")
 
-(error-print-width 4)
+(error-print-width default-error-print-width)
 
 
 ; Require all the modules with tests. No tests will actually run,

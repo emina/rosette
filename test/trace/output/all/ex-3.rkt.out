@@ -1,94 +1,19 @@
 ((#:stats #hash((assertion . 5) (infeasible . 0) (infeasible/solver . 1)))
  (#:trace
-  (("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n  arguments...:\n   {[(&& (< xs@1 xs@0) (< xs@2 xs@0) (< ...)) (xs@1 xs@2 xs@3)] [(&& (! (< xs@1 xs@0)) (! (< xs@2 xs@0)) ...) ()] [(|| (&& (|| (&& (! (< xs@1 xs@0)) (< ...)) ...) ...) ...) ((ite* (⊢ (&& (|| (&& (! (< xs@1 xs@0)) ...) ...) ...) ...) ...) (ite* (⊢ (...\n"
+  (("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n"
     (#%app "ex-3.rkt" 16 24)
     ((select-buggy "ex-3.rkt" 16 24) (select-buggy "ex-3.rkt" 21 28))
-    (&&
-     (&&
-      (&& (<= 0 n) (<= n 3))
-      (!
-       (=
-        n
-        (ite*
-         (⊢ (&& (< xs@1 xs@0) (< xs@2 xs@0) (< xs@3 xs@0)) 3)
-         (⊢ (&& (! (< xs@1 xs@0)) (! (< xs@2 xs@0)) (! (< xs@3 xs@0))) 0)
-         (⊢
-          (||
-           (&&
-            (||
-             (&& (! (< xs@1 xs@0)) (< xs@2 xs@0))
-             (&& (< xs@1 xs@0) (! (< xs@2 xs@0))))
-            (< xs@3 xs@0))
-           ...)
-          ...)
-         ...))))
-     ...))
-   ("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n  arguments...:\n   {[(&& (&& (<= xs@0 xs@1) (<= xs@0 xs@2) (<= xs@0 ...)) ...) (xs@2 xs@3)] [(|| (|| (&& (! (<= xs@0 xs@1)) (! (<= xs@0 xs@2)) ...) ...) ...) ()] [(|| (&& (|| (&& (|| (&& (! (<= xs@0 xs@1)) (<= xs@0 ...)) ...) ...) ...) ...) ...) ((ite* (⊢ (&& (|| (&...\n"
+    (&& (&& ...) ...))
+   ("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n"
     (#%app "ex-3.rkt" 16 24)
     ((select-buggy "ex-3.rkt" 16 24)
      (select-buggy "ex-3.rkt" 17 18)
      (select-buggy "ex-3.rkt" 21 28))
-    (&&
-     (&&
-      (&&
-       (&&
-        (&&
-         (&& (<= 0 n) (<= n 3))
-         (!
-          (=
-           n
-           (ite*
-            (⊢ (&& (< xs@1 xs@0) (< xs@2 xs@0) (< xs@3 xs@0)) 3)
-            (⊢ (&& (! (< xs@1 xs@0)) (! (< xs@2 xs@0)) (! (< xs@3 xs@0))) 0)
-            (⊢
-             (||
-              (&&
-               (||
-                (&& (! (< xs@1 xs@0)) (< xs@2 xs@0))
-                (&& (< xs@1 xs@0) (! (< xs@2 xs@0))))
-               ...)
-              ...)
-             ...)
-            ...))))
-        ...)
-       ...)
-      ...)
-     ...))
-   ("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n  arguments...:\n   {[(&& (&& (&& (<= xs@0 xs@1) (<= xs@0 xs@2) (<= xs@0 xs@3)) (<= (ite* ...) ...) ...) ...) (xs@3)] [(|| (|| (&& (|| (&& (|| (&& (! (<= xs@0 xs@1)) (<= xs@0 xs@2)) (&& (<= xs@0 xs@1) ...)) ...) ...) ...) ...) ...) ()]}\n"
+    (&& (&& ...) ...))
+   ("select-buggy: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 1\n"
     (#%app "ex-3.rkt" 16 24)
     ((select-buggy "ex-3.rkt" 16 24)
      (select-buggy "ex-3.rkt" 17 18)
      (select-buggy "ex-3.rkt" 17 18)
      (select-buggy "ex-3.rkt" 21 28))
-    (&&
-     (&&
-      (&&
-       (&&
-        (&&
-         (&&
-          (&&
-           (&&
-            (&& (<= 0 n) (<= n 3))
-            (!
-             (=
-              n
-              (ite*
-               (⊢ (&& (< xs@1 xs@0) (< xs@2 xs@0) (< xs@3 xs@0)) 3)
-               (⊢ (&& (! (< xs@1 xs@0)) (! (< xs@2 xs@0)) (! (< xs@3 xs@0))) 0)
-               (⊢
-                (||
-                 (&&
-                  (||
-                   (&& (! (< xs@1 xs@0)) (< xs@2 xs@0))
-                   (&& (< xs@1 xs@0) (! (< xs@2 xs@0))))
-                  ...)
-                 ...)
-                ...)
-               ...))))
-           ...)
-          ...)
-         ...)
-        ...)
-       ...)
-      ...)
-     ...)))))
+    (&& (&& ...) ...)))))

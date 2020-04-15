@@ -1,7 +1,6 @@
 #lang racket/base
 
 (require racket/cmdline
-         racket/format
          racket/match
          racket/string
          racket/list
