@@ -6,13 +6,20 @@
     "unsat": true,
     "url": "https://courses.cs.washington.edu/courses/cse507/19au/index.html",
     "terms": [ "19au", "19wi", "18sp", "17wi", "16sp", "14au" ]},
-  
-  { "course": "CS292C",
-    "title": "Computer-Aided Reasoning for Software",
-    "level": "graduate",
-    "institution": "UC Santa Barbara", 
-    "url": "https://github.com/fredfeng/CS292C",
-    "terms": [ "19au" ]},
+
+  { "course": "CS162",
+      "title": "Programming Languages",
+      "level": "undergraduate",
+      "institution": "UC Santa Barbara", 
+      "url": "https://github.com/fredfeng/CS162",
+      "terms": [ "20wi" ]},
+
+ { "course": "CS292C",
+      "title": "Computer-Aided Reasoning for Software",
+      "level": "graduate",
+      "institution": "UC Santa Barbara", 
+      "url": "https://github.com/fredfeng/CS292C",
+      "terms": [ "19au" ]},
 
   { "course": "CSE290Q",
     "title": "SMT Solving and Solver-Aided Systems",
