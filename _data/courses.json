@@ -35,6 +35,13 @@
     "url": "https://www.cs.princeton.edu/courses/archive/fall18/cosIW09/index.html",
     "terms": [ "18au" ]},
 
+   { "course": "CSCI1950-Y",
+      "title": "Logic for Systems",
+      "level": "undergraduate",
+      "institution": "Brown", 
+      "url": "http://cs.brown.edu/courses/cs195y/2017/",
+      "terms": [ "17sp" ]},
+
   { "course": "CS294",
     "title": "Program Synthesis for Everyone",
     "level": "graduate",
