@@ -329,6 +329,8 @@
   (check-valid? (@extract 0 0 (@concat x (bv 1 1))) (bv 1 1))
   (check-valid? (@extract 3 0 (@concat x y)) y)
   (check-valid? (@extract 7 4 (@concat x y)) x)
+  (check-valid? (@extract 3 0 (@sign-extend x (bitvector 8))) x)
+  (check-valid? (@extract 3 0 (@zero-extend x (bitvector 8))) x)
   (define-symbolic* n @integer?)
   (check-equal? (type-of (@extract n n x)) (bitvector 1))
   )

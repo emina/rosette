@@ -587,6 +587,8 @@
     [(_ _ (expression (== @concat) 
                       (and (? typed? (app get-type (bitvector (== len)))) a) 
                       (? typed? (app get-type (bitvector (== j)))))) a]
+    [(_ 0 (expression (or (== @sign-extend) (== @zero-extend))
+                      (and (? typed? (app get-type (bitvector (== len)))) a) _)) a]
     [(_ _ _) (expression @extract i j x)]))
         
 (define-operator @extract
