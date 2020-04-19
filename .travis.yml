@@ -16,6 +16,7 @@ env:
 matrix:
   allow_failures:
     - env: RACKET_VERSION=HEAD
+    - env: RACKET_VERSION=RELEASECS
   fast_finish: true
 
 before_install:
