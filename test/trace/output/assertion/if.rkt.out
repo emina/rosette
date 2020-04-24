@@ -1,4 +1,4 @@
-((#:stats #hash((assertion . 1) (infeasible . 0) (infeasible/solver . 0)))
+((#:stats #hash((assertion . 1) (solver . 0)))
  (#:trace
   (("application: not a procedure;\n expected ...."
     (#%app "if.rkt" 4 6)

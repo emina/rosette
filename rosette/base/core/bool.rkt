@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "union.rkt")
+(require "term.rkt" "union.rkt" "exn.rkt")
 
 (provide @boolean? @false? 
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
@@ -281,7 +281,7 @@
          (and (term? new-pc) (equal? @boolean? (term-type new-pc)))
          (error 'pc "expected a boolean path condition, given a ~s" (type-of new-pc)))
      (or (&& (pc) new-pc)
-         (error 'pc "infeasible path condition")))))
+         (raise-exn:fail:rosette:infeasible)))))
 
 (define-syntax (@assert stx)
   (syntax-case stx ()
@@ -299,7 +299,7 @@
 (define (raise-assertion-error msg)
   (if (procedure? msg)
       (msg)
-      (error 'assert (if msg (format "~a" msg) "failed"))))
+      (raise-exn:fail:rosette:assertion (if msg (format "~a" msg) "failed"))))
 
 (define (evaluate-with-asserts closure)
   (parameterize ([asserts '()])

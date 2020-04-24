@@ -97,12 +97,9 @@
   (run-mode "solver" `([,symbolic-trace-skip-infeasible-solver? #t])))
 (define assertion-suites
   (run-mode "assertion" `([,symbolic-trace-skip-assertion? #t])))
-(define infeasible-suites
-  (run-mode "infeasible" `([,symbolic-trace-skip-infeasible? #t])))
 (define all-suites
   (run-mode "all" `([,symbolic-trace-skip-infeasible-solver? #t]
-                    [,symbolic-trace-skip-assertion? #t]
-                    [,symbolic-trace-skip-infeasible? #t])))
+                    [,symbolic-trace-skip-assertion? #t])))
 
 (module+ test
   (require rackunit/text-ui)
@@ -110,5 +107,4 @@
   (for-each run-tests regular-suites)
   (for-each run-tests solver-suites)
   (for-each run-tests assertion-suites)
-  (for-each run-tests infeasible-suites)
   (for-each run-tests all-suites))

@@ -35,9 +35,6 @@
    [("--stream")
     "Stream report instead of reporting the result at the end"
     (symbolic-trace-streaming? #t)]
-   [("--infeasible")
-    "Skip apparently infeasible errors"
-    (symbolic-trace-skip-infeasible? #t)]
    [("--assert")
     "Skip assertion errors (not reliable)"
     (symbolic-trace-skip-assertion? #t)]

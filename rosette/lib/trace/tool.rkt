@@ -3,11 +3,11 @@
 (provide do-trace record-apply! add-current-syntax! restore-current-syntax!
          add-original-form!
          symbolic-trace-skip-assertion?
-         symbolic-trace-skip-infeasible?
          symbolic-trace-skip-infeasible-solver?)
 
 (require rosette/base/core/reporter
          rosette/base/core/bool
+         rosette/base/core/exn
          racket/exn
          syntax/parse/define
          (only-in "../util/syntax.rkt" syntax->readable-location)
@@ -26,14 +26,11 @@
      (thunk (begin0 (let () body ...) (restorer))))))
 
 (define symbolic-trace-skip-assertion? (make-parameter #f))
-(define symbolic-trace-skip-infeasible? (make-parameter #f))
 (define symbolic-trace-skip-infeasible-solver? (make-parameter #f))
 
 (define current-entry-handler #f)
 
-(define stats-template '([infeasible . 0]
-                         [assertion . 0]
-                         [infeasible/solver . 0]))
+(define stats-template '([assertion . 0] [solver . 0]))
 
 (define (do-trace proc #:entry-handler entry-handler #:post-proc post-proc)
   (set+restore
@@ -86,12 +83,13 @@
      (define the-pc (&& (pc) guard))
      (define msg (exn->string e))
      (define skip?
-       (or (and (and (symbolic-trace-skip-infeasible?) (string-contains? msg "pc: infeasible path condition"))
-                (collect-stats 'infeasible))
-           (and (and (symbolic-trace-skip-assertion?) (string-contains? msg "assert:"))
+       (or (exn:fail:rosette:infeasible? e)
+           (and (and (symbolic-trace-skip-assertion?)
+                     (exn:fail:rosette:assertion? e))
                 (collect-stats 'assertion))
-           (and (and (symbolic-trace-skip-infeasible-solver?) (unsat? (query:solve (list the-pc))))
-                (collect-stats 'infeasible/solver))))
+           (and (and (symbolic-trace-skip-infeasible-solver?)
+                     (unsat? (query:solve (list the-pc))))
+                (collect-stats 'solver))))
      (unless skip?
        (define entry (list e
                            (or current-activated-syntax (first current-syntax-list))

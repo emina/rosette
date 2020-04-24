@@ -1,15 +1,14 @@
 #lang rosette
 
-(define (len-buggy ys)
-  (cond
-    [(empty? ys) 0]
-    [else (add1 (len-buggy (first ys)))]))
-
 (define-symbolic xs integer? [4])
-(define-symbolic k integer?)
-(define-symbolic n integer?)
-(define ys (take xs n))
+(define (sum xs)
+  (cond
+    [(null? xs) 0]
+    [(null? (cdr xs)) (car xs)]
+    [(andmap (curry = (car xs)) (cdr xs))
+     (* (length xs) (cdr xs))] ; bug: cdr should be car
+    [else (apply + xs)]))
 
 (verify
- #:assume (assert (= k (len-buggy ys)))
- #:guarantee (assert (= k (len-buggy (map add1 ys)))))
+ #:assume (assert (positive? (sum xs)))
+ #:guarantee (assert (ormap positive? xs)))

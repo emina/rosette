@@ -1,14 +1,6 @@
-((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
+((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("first: contract violation\n  expected: #<...."
-    (#%app "ex-2.rkt" 6 27)
-    ((@first "ex-2.rkt" 6 27)
-     (len-buggy "ex-2.rkt" 6 16)
-     (len-buggy "ex-2.rkt" 14 23))
-    (! (= ...)))
-   ("first: contract violation\n  expected: #<...."
-    (#%app "ex-2.rkt" 6 27)
-    ((@first "ex-2.rkt" 6 27)
-     (len-buggy "ex-2.rkt" 6 16)
-     (len-buggy "ex-2.rkt" 15 26))
-    (! (= ...))))))
+  (("$*: expected real? arguments\n  arguments...."
+    (#%app "ex-2.rkt" 9 5)
+    ((* "ex-2.rkt" 9 5) (sum "ex-2.rkt" 13 29))
+    (&& (= ...) ...)))))

@@ -8,11 +8,12 @@
                      rosette/query/form
                      (only-in rosette/query/debug debug)
                      rosette/base/core/union
-                     (only-in rosette unsat model evaluate sat? unsat?)
+                     (only-in rosette unsat model evaluate sat? unsat? clear-asserts!)
                      (only-in rosette/query/finitize current-bitwidth)
                      (only-in rosette/base/base bitvector)
                      (only-in rosette/base/core/safe assert)
-                     (only-in rosette/base/core/forall for/all))
+                     (only-in rosette/base/core/forall for/all)
+                     rackunit)
           racket/runtime-path
           "../util/lifted.rkt")
 
@@ -275,17 +276,15 @@ exn: $*: expected real? arguments
   context...:
    ~/rosette/base/core/real.rkt:140:0: safe-apply-2
    ~/rosette/lib/trace/tool.rkt:122:5
-   /Racket v7.4/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
+   /Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
    ...
 
-at: ~/ex.rkt line 10 column 5
+at: ex.rkt line 10 column 5
 (* (length xs) (cdr xs))
 
 call stack: 
 ex.rkt:10:5 *
 ex.rkt:15:31 sum
-
-
 }|
 
 The output shows a list of exceptions that Rosette
@@ -327,10 +326,6 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
 
  @item{@DFlag{racket} --- instrument code in any module, not
   just those derived from Rosette.}
-
- @item{@DFlag{infeasible} --- do not show exceptions raised
-  on infeasible paths, using partial evaluation to
-  conservatively decide if paths are feasible.}
 
  @item{@DFlag{solver} --- do not show exceptions raised on
   infeasible paths, using the solver to decide if paths are
@@ -383,32 +378,32 @@ exn: select: arity mismatch;
   arguments...:
    {[(&& (< xs@1 xs@0) (< xs@2 xs@0) (< ...)) (xs@1 xs@2 xs@3)] ...
   context...:
-   ~/rosette/rosette/lib/trace/tool.rkt:121:5
-   /Applications/Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
-   ~/rosette/rosette/lib/trace/compile.rkt:267:11
+   ~/rosette/lib/trace/tool.rkt:121:5
+   /Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
+   ~/rosette/lib/trace/compile.rkt:267:11
    ...
 
-at: ~/rosette/test/trace/code/all/ex-3.rkt line 16 column 24
+at: ex.rkt line 16 column 24
 (select <pivot)
 
 call stack:
-~/rosette/test/trace/code/all/ex-3.rkt:16:24 select
-~/rosette/test/trace/code/all/ex-3.rkt:21:28 select
+ex.rkt:16:24 select
+ex.rkt:21:28 select
 
 --------------------------------------------------------------------------------
 exn: assert: unexpected empty list
   context...:
-   ~/rosette/rosette/lib/trace/compile.rkt:267:11
-   /Applications/Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
+   ~/rosette/lib/trace/compile.rkt:267:11
+   /Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
    .../more-scheme.rkt:261:28
    ...
 
-at: ~/rosette/test/trace/code/all/ex-3.rkt line 8 column 18
+at: ex.rkt line 8 column 18
 (assert #f "unexpected empty list")
 
 call stack:
-~/rosette/test/trace/code/all/ex-3.rkt:17:18 select
-~/rosette/test/trace/code/all/ex-3.rkt:21:28 select
+ex.rkt:17:18 select
+ex.rkt:21:28 select
 
 --------------------------------------------------------------------------------
 
@@ -418,21 +413,21 @@ call stack:
 exn: assert: both branches infeasible
   context...:
    .../more-scheme.rkt:261:28
-   ~/rosette/rosette/base/form/control.rkt:33:0: branch-and-merge
-   ~/rosette/rosette/lib/trace/compile.rkt:267:11
+   ~/rosette/base/form/control.rkt:33:0: branch-and-merge
+   ~/rosette/lib/trace/compile.rkt:267:11
    ...
 
-at: ~/rosette/test/trace/code/all/ex-3.rkt line 14 column 10
+at: ex.rkt line 14 column 10
 (cond
   [(= n len<) pivot]
   [(< n len<) (select <pivot)]
   [else (select-buggy >=pivot (- n len< 1))])
 
 call stack:
-~/rosette/test/trace/code/all/ex-3.rkt:17:18 select
-~/rosette/test/trace/code/all/ex-3.rkt:17:18 select
-~/rosette/test/trace/code/all/ex-3.rkt:17:18 select
-~/rosette/test/trace/code/all/ex-3.rkt:21:28 select
+ex.rkt:17:18 select
+ex.rkt:17:18 select
+ex.rkt:17:18 select
+ex.rkt:21:28 select
 }|
 
 The output from the error tracer includes 9 exceptions. Four
@@ -451,9 +446,9 @@ four arity mismatch exceptions.
 Some assertion failures are bugs, however, so aggressive
 filtering with @DFlag{assert} can end up hiding true
 positives. For this reason, the error tracer also includes
-two more conservative filtering options, @DFlag{infeasible}
-and @DFlag{solver}, that will never miss true positives, at
-the cost of showing more false alarms. Both options suppress
+a more conservative filtering option, @DFlag{solver},
+that will never miss true positives, at
+the cost of showing more false alarms. The option suppress
 exceptions that are raised on paths with
 @seclink["sec:state-reflection"]{ infeasible path
  conditions}.@pc-note{Exceptions with infeasible path
@@ -461,13 +456,19 @@ exceptions that are raised on paths with
  positive are missed. But exceptions with feasible path
  conditions may still be unreachable due to the way that
  Rosette represents symbolic state, so some false positives
- may be included in the output.} The @DFlag{infeasible} flag
-uses partial evaluation to decide if a path is infeasible,
-and the @DFlag{solver} uses the solver. The former is
-therefore fast but inaccurate, and the latter is accurate
-but slow. In our example, the @DFlag{infeasible} flag has no
-effect, but the @DFlag{solver} flag suppresses all the
+ may be included in the output.} by using the solver.
+Note that due to the use of the solver,
+the error tracing could be significantly slower.
+In our example, the @DFlag{solver} flag suppresses all the
 assertion failures as well as one of the arity mismatch
 errors.
+
+Lastly, it is possible to combine
+both @DFlag{solver} and @DFlag{assert} together.
+For our example, the output from the these flags
+would not be different from the output from @DFlag{solver} alone.
+However, doing so could speed up error tracing
+(relative to the one with @DFlag{solver}), since the error tracer
+can prune calls to the solver.
 
 @make-pc-note[]

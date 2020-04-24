@@ -1,2 +1,0 @@
-((#:stats #hash((assertion . 0) (infeasible . 1) (infeasible/solver . 0)))
- (#:trace ()))

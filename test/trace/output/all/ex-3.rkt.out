@@ -1,19 +1,19 @@
-((#:stats #hash((assertion . 5) (infeasible . 0) (infeasible/solver . 1)))
+((#:stats #hash((assertion . 5) (solver . 1)))
  (#:trace
-  (("select-buggy: arity mismatch;\n the expec...."
+  (("select: arity mismatch;\n the expected nu...."
     (#%app "ex-3.rkt" 16 24)
-    ((select-buggy "ex-3.rkt" 16 24) (select-buggy "ex-3.rkt" 21 28))
+    ((select "ex-3.rkt" 16 24) (select "ex-3.rkt" 21 28))
     (&& (&& ...) ...))
-   ("select-buggy: arity mismatch;\n the expec...."
+   ("select: arity mismatch;\n the expected nu...."
     (#%app "ex-3.rkt" 16 24)
-    ((select-buggy "ex-3.rkt" 16 24)
-     (select-buggy "ex-3.rkt" 17 18)
-     (select-buggy "ex-3.rkt" 21 28))
+    ((select "ex-3.rkt" 16 24)
+     (select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 21 28))
     (&& (&& ...) ...))
-   ("select-buggy: arity mismatch;\n the expec...."
+   ("select: arity mismatch;\n the expected nu...."
     (#%app "ex-3.rkt" 16 24)
-    ((select-buggy "ex-3.rkt" 16 24)
-     (select-buggy "ex-3.rkt" 17 18)
-     (select-buggy "ex-3.rkt" 17 18)
-     (select-buggy "ex-3.rkt" 21 28))
+    ((select "ex-3.rkt" 16 24)
+     (select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 21 28))
     (&& (&& ...) ...)))))

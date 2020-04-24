@@ -1,3 +1,1 @@
-((#:stats #hash((assertion . 0) (infeasible . 0) (infeasible/solver . 0)))
- (#:trace
-  (("pc: infeasible path condition\n" (#%app "infeasible.rkt" 5 6) () #f))))
+((#:stats #hash((assertion . 0) (solver . 0))) (#:trace ()))
