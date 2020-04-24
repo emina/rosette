@@ -329,7 +329,7 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
 
  @item{@DFlag{solver} --- do not show exceptions raised on
   infeasible paths, using the solver to decide if paths are
-  feasible. This option can lead to significant slow downs.}
+  feasible. This option can cause significant performance degradation.}
 
  @item{@DFlag{assert} --- do not show exceptions due to
   assertion errors, which are usually expected exceptions.}
@@ -445,30 +445,32 @@ four arity mismatch exceptions.
 
 Some assertion failures are bugs, however, so aggressive
 filtering with @DFlag{assert} can end up hiding true
-positives. For this reason, the error tracer also includes
-a more conservative filtering option, @DFlag{solver},
-that will never miss true positives, at
-the cost of showing more false alarms. The option suppress
+positives. For this reason, the error tracer also includes a
+more conservative filtering option, @DFlag{solver}, that
+will never miss true positives, at the cost of showing more
+false alarms. The @DFlag{solver} option suppresses
 exceptions that are raised on paths with
-@seclink["sec:state-reflection"]{ infeasible path
- conditions}.@pc-note{Exceptions with infeasible path
+@seclink["sec:state-reflection"]{infeasible path
+ conditions}, which involves calling the solver to check the
+feasibility of the path condition for each
+exception.@pc-note{Exceptions with infeasible path
  conditions are guaranteed to be unreachable, so no true
  positive are missed. But exceptions with feasible path
  conditions may still be unreachable due to the way that
  Rosette represents symbolic state, so some false positives
- may be included in the output.} by using the solver.
-Note that due to the use of the solver,
-the error tracing could be significantly slower.
-In our example, the @DFlag{solver} flag suppresses all the
-assertion failures as well as one of the arity mismatch
-errors.
+ may be included in the output.} Solver calls are expensive,
+however, so enabling this flag can cause significant
+performance degradation. In our example, using the @DFlag{solver}
+flag is both fast and effective at pruning false
+positives: it suppresses all the assertion failures as well
+as one of the arity mismatch errors.
 
-Lastly, it is possible to combine
-both @DFlag{solver} and @DFlag{assert} together.
-For our example, the output from the these flags
-would not be different from the output from @DFlag{solver} alone.
-However, doing so could speed up error tracing
-(relative to the one with @DFlag{solver}), since the error tracer
-can prune calls to the solver.
+Lastly, it is possible to use both of these filtering flags,
+@DFlag{solver} and @DFlag{assert}, together. In our case,
+the result is the same as using the @DFlag{solver} flag
+alone. But in general, using both flags can lead to better
+performance compared to using @DFlag{solver} alone, with the
+caveat that the inclusion of @DFlag{assert} may filter out
+true positives.
 
 @make-pc-note[]
