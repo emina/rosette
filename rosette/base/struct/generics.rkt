@@ -5,8 +5,6 @@
                               current-syntax-context)
                      (only-in syntax/stx stx-pair? stx-car stx-cdr))
          (only-in racket/generic define-generics)
-         (only-in "../form/control.rkt" @if)
-         (only-in "../core/bool.rkt" @assert)
          (only-in "../core/forall.rkt" for/all)
          "../core/union.rkt")
 

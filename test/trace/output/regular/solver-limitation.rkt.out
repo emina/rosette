@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (solver . 0)))
+ (#:trace
+  (("error: bad\n"
+    (#%app "solver-limitation.rkt" 5 8)
+    ((error "solver-limitation.rkt" 5 8))
+    (! b)))))

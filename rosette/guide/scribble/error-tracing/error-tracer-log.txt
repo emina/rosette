@@ -1,0 +1,166 @@
+;; This file was created by make-log-based-eval
+((define-symbolic xs integer? (4))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (sum xs) (foldl + xs)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((verify (assert (= (sum xs) (sum (filter-not zero? xs)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model)"))))
+ #""
+ #"")
+((define-symbolic opt boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((synthesize
+  #:forall
+  xs
+  #:guarantee
+  (assert (= (sum xs) (apply (if opt + -) xs))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (positive? (sum xs)))
+  #:guarantee
+  (assert (ormap positive? xs)))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((require rackunit) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (assumed xs) (assert (positive? (sum xs))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (guaranteed xs) (assert (ormap positive? xs)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (query xs) (verify #:assume (assumed xs) #:guarantee (guaranteed xs)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define example-tests
+   (test-suite
+    "An example suite for a sum query."
+    #:before
+    clear-asserts!
+    #:after
+    clear-asserts!
+    (test-case
+     "Test sum with concrete values."
+     (check = (sum '()) 0)
+     (check = (sum '(-1)) -1)
+     (check = (sum '(-2 2)) 0)
+     (check = (sum '(-1 0 3)) 2))
+    (test-case
+     "Test query parts for exceptions."
+     (check-not-exn (thunk (assumed xs)))
+     (check-not-exn (thunk (guaranteed xs))))
+    (test-case "Test query outcome." (check-pred unsat? (query xs)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+('(|#<test-error>| |#<test-failure>| |#<test-success>|)
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q values (|#<test-error>| |#<test-failure>| |#<test-success>|)))
+ #""
+ #"")
+((define (sum xs)
+   (cond
+    ((null? xs) 0)
+    ((null? (cdr xs)) (car xs))
+    ((andmap (curry = (car xs)) (cdr xs)) (* (length xs) (cdr xs)))
+    (else (apply + xs))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+('(|#<test-success>| |#<test-success>| |#<test-success>|)
+ ((3)
+  0
+  ()
+  0
+  ()
+  ()
+  (q values (|#<test-success>| |#<test-success>| |#<test-success>|)))
+ #""
+ #"")
+((test-case "Test sum for any failures." (check-pred unsat? (verify (sum xs))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (positive? (sum xs)))
+  #:guarantee
+  (assert (ormap positive? xs)))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define (select xs n)
+   (cond
+    ((empty? xs) (assert #f "unexpected empty list"))
+    (else
+     (define pivot (first xs))
+     (define non-pivot (rest xs))
+     (define <pivot (filter (λ (x) (< x pivot)) non-pivot))
+     (define >=pivot (filter (λ (x) (>= x pivot)) non-pivot))
+     (define len< (length <pivot))
+     (cond
+      ((= n len<) pivot)
+      ((< n len<) (select <pivot))
+      (else (select >=pivot (- n len< 1)))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((verify
+  #:assume
+  (assert (and (<= 0 n (sub1 (length xs))) (= k (select xs n))))
+  #:guarantee
+  (assert (= k (list-ref (sort xs <) n))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")

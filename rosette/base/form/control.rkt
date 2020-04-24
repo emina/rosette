@@ -35,8 +35,8 @@
   (cond [(eq? test #t) (then-branch)]
         [(eq? test #f) (else-branch)]
         [else 
-         (let-values ([(then-val then-state) (speculate (parameterize ([pc test]) (then-branch)))]
-                      [(else-val else-state) (speculate (parameterize ([pc (! test)]) (else-branch)))])
+         (let-values ([(then-val then-state) (speculate test (then-branch))]
+                      [(else-val else-state) (speculate (! test) (else-branch))])
            (cond [(and then-state else-state) ; both branches feasible
                   (then-state (lambda (pre post-then) (merge test post-then pre)))
                   (else-state (lambda (post-then post-else) (merge test post-then post-else)))

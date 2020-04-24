@@ -1,13 +1,27 @@
 #lang racket
 
 (require 
- (for-syntax racket) "../util/ord-dict.rkt")
+ (for-syntax racket)
+ "../util/ord-dict.rkt" "bool.rkt" "reporter.rkt")
 
 (provide speculate speculate* apply! location=? (rename-out [state-val location-final-value]))
 
 ; The env parameter stores an eq? based hash-map which we use to keep
 ; track of boxes, vectors and structs that are mutated.  
 (define env (make-parameter #f))
+
+(define-syntax-rule (speculate-core guard body rollback-proc)
+  ; using an eq? rather than equal? hash map to manage the environment bindings
+  ; is critical for mutable objects whose hash code may change upon mutation.  note
+  ; that variables are keyed by the symbol representing their name, so eq? comparisons
+  ; for them are equivalent to equal? comparisons.
+  (parameterize ([env (odict null eq?)])
+    ; roll-back state updates, encapsulate
+    ; updates to set! variables as specified above,
+    ; and return the value of the body together with the
+    ; encapsulation of the state changes according to rollback-proc
+    (with-handlers ([exn:fail? (rollback/suppress guard)])
+      (values body (rollback-proc)))))
 
 ; The speculate expression takes the form (speculate body), where body is
 ; an expression.  A speculate call produces two values:  the value that the
@@ -19,18 +33,11 @@
 ;
 ; Any exceptions thrown by body are caught, all updates are rolled-back without 
 ; encapsulating the final states, and the result of speculate is (values #f #f).
-(define-syntax-rule (speculate body) 
-  ; using an eq? rather than equal? hash map to manage the environment bindings
-  ; is critical for mutable objects whose hash code may change upon mutation.  note 
-  ; that variables are keyed by the symbol representing their name, so eq? comparisons
-  ; for them are equivalent to equal? comparisons.
-  (parameterize ([env (odict null eq?)]) 
-    ; roll-back state updates, encapsulate
-    ; updates to set! variables as specified above, 
-    ; and return the value of the body together with the 
-    ; encapsulation of the state changes
-    (with-handlers ([exn:fail? rollback/suppress])
-      (values body (rollback/encapsulate)))))
+(define-syntax-rule (speculate guard body)
+  (let ([guard-v guard])
+    (speculate-core guard-v
+                    (parameterize ([pc guard-v]) body)
+                    rollback/encapsulate)))
 
 ; The speculate* expression takes the form (speculate* body), where body is
 ; an expression.  A speculate* call produces two values:  the value that the
@@ -48,18 +55,11 @@
 ;
 ; Any exceptions thrown by body are caught, all updates are rolled-back without 
 ; encapsulating the final states, and the result of speculate is (values #f #f).
-(define-syntax-rule (speculate* body) 
-  ; using an eq? rather than equal? hash map to manage the environment bindings
-  ; is critical for mutable objects whose hash code may change upon mutation.  note 
-  ; that variables are keyed by the symbol representing their name, so eq? comparisons
-  ; for them are equivalent to equal? comparisons.
-  (parameterize ([env (odict null eq?)]) 
-    ; roll-back state updates, encapsulate
-    ; updates to set! variables as specified above, 
-    ; and return the value of the body together with the 
-    ; encapsulation of the state changes
-    (with-handlers ([exn:fail? rollback/suppress])
-      (values body (rollback/collect)))))
+(define-syntax-rule (speculate* guard body)
+  (let ([guard-v guard])
+    (speculate-core guard-v
+                    (parameterize ([pc guard-v]) body)
+                    rollback/collect)))
 
 ; A function that handles calls to structure mutators.  
 (define apply! 
@@ -144,8 +144,9 @@
 ; Reverts the state of set! variables and struct fields to
 ; their initial values, without encapsulating the final state updates.
 ; Returns (values #f #f).  The error argument is ignored.
-(define (rollback/suppress err)
+(define ((rollback/suppress guard) err)
   ;(printf "\n\nERROR: ~a\n\n" err)
+  ((current-reporter) 'exception guard err)
   (unless (zero? (dict-count (env)))
     (for* ([states (in-dict-values (env))]
            [s (if (list? states) (in-list states) (in-dict-values states))])

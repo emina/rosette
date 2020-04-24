@@ -2,6 +2,7 @@
 
 (require racket/cmdline
          raco/command-name
+         "../util/module.rkt"
          "compile.rkt"
          "tool.rkt"
          (only-in "record.rkt" filtering-threshold)
@@ -81,17 +82,9 @@
 (current-compile symbolic-profile-compile-handler)
 
 
-; check if there's a module of the given name, and if not,
-; import the entire file instead
-(define (module-to-profile file mod)
-  (define file-path `(file ,file))
-  (define mod-path `(submod ,file-path ,mod))
-  (if (module-declared? mod-path #t)
-      (values mod-path mod-path)
-      (values file-path file)))
 
 (define-values (mod mod-pretty)
-  (module-to-profile file (module-name)))
+  (module->module-path file (module-name)))
 
 (define (run)
   (dynamic-require mod #f))

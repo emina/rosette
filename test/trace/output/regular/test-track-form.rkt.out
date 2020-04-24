@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (solver . 0)))
+ (#:trace
+  (("error: bad\n"
+    (#%app "test-track-form.rkt" 4 14)
+    ((error "test-track-form.rkt" 4 14))
+    b))))

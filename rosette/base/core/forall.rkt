@@ -130,10 +130,7 @@
   (for/fold ([guards '()] [outputs '()] [states '()]) ([gv guarded-values])
     (define guard (guard-of gv))
     (define val (value-of gv))
-    (define-values (output state) 
-      (speculate* 
-       (parameterize ([pc guard]) 
-         (proc val))))
+    (define-values (output state) (speculate* guard (proc val)))
     (cond [state (values (cons guard guards) (cons output outputs) (cons state states))]
           [else  (assert (! guard) all-paths-infeasible)
                  (values guards outputs states)])))

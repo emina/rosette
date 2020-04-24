@@ -1,6 +1,5 @@
 #lang racket
 
-(require racket/generic (for-syntax racket/syntax))
 (provide (all-defined-out))
 
 ; The reporter is called when "interesting"

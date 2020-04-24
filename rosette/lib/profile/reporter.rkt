@@ -58,7 +58,7 @@
       [(list 'encode-finish)
        (let* ([new (profile-event-encode-finish (get-current-metrics/event))])
          (profile-state-append! (profiler-reporter-profile self) new))]
-      [_ void])))
+      [_ (void)])))
 
 
 (define (assoc-inc xs x v)
