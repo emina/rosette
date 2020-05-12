@@ -2,19 +2,20 @@
 
 (require racket/cmdline
          racket/match
-         racket/string
+         racket/function
          racket/list
-         racket/exn
+         racket/pretty
+         racket/format
          syntax/to-string
          raco/command-name
          "../util/module.rkt"
+         "../util/syntax.rkt"
+         "../util/server.rkt"
+         "client-launcher.rkt"
          "compile.rkt"
          "tool.rkt")
 
-(define symbolic-trace-streaming? (make-parameter #f))
-(define symbolic-trace-show-stats? (make-parameter #f))
-(define symbolic-trace-context-length (make-parameter 3))
-
+(define symbolic-trace-dev? #f)
 (define module-name (make-parameter 'main))
 (define file
   (command-line
@@ -32,21 +33,16 @@
     (symbolic-trace-rosette-only? #f)]
 
    ;; SymTrace options
-   [("--stream")
-    "Stream report instead of reporting the result at the end"
-    (symbolic-trace-streaming? #t)]
    [("--assert")
     "Skip assertion errors (not reliable)"
     (symbolic-trace-skip-assertion? #t)]
    [("--solver")
     "Skip infeasible errors with help from the solver"
     (symbolic-trace-skip-infeasible-solver? #t)]
-   [("--context") context-length
-    "Set the length of the exception context"
-    (symbolic-trace-context-length (string->number context-length))]
-   [("--stats")
-    "Show statistics"
-    (symbolic-trace-show-stats? #t)]
+
+   [("--dev-verbose")
+    "Also log the trace in the JSON format to stdin."
+    (set! symbolic-trace-dev? #t)]
 
 
    #:help-labels ""
@@ -73,58 +69,110 @@
 ;; module->module-path is relative cheap
 (current-compile symbolic-trace-compile-handler)
 
-(define (print-element e original-map)
-  (define msg (parameterize ([error-print-context-length (symbolic-trace-context-length)])
-                (exn->string (first e))))
-  (define at
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-syntax-rule (when/null [x v] body ...)
+  (let ([x v])
     (cond
-      [(second e)
-       (define blaming-stx (hash-ref original-map (rest (second e)) #f))
-       (format "~a line ~a column ~a\n~a\n"
-               (second (second e))
-               (third (second e))
-               (fourth (second e))
-               (if blaming-stx
-                   (syntax->string #`(#,blaming-stx))
-                   (first (second e))))]
-      [else #f]))
-  (define call-stack (if (third e) (map frame->string (third e)) '()))
-  (displayln (make-string 80 #\-) (current-error-port))
-  (print-table "exn" msg
-               "at" at
-               "call stack" (if (empty? call-stack)
-                                ""
-                                (string-join call-stack "\n" #:before-first "\n")))
-  (newline (current-error-port)))
+      [x body ...]
+      [else 'null])))
 
-(define (frame->string frame)
-  (format "~a:~a:~a ~a"
-          (second frame)
-          (third frame)
-          (fourth frame)
-          (or (object-name (first frame)) (first frame))))
+(define (frame->json frame)
+  (hash 'name (~a (or (object-name (first frame)) (first frame)))
+        'srcloc (hash 'source (second frame)
+                      'line (third frame)
+                      'column (fourth frame))))
 
-(define print-table
-  (match-lambda*
-    [(list) (void)]
-    [(list k v xs ...)
-     (eprintf "~a: ~a\n" k v)
-     (apply print-table xs)]))
+(define (exn-context->json xs)
+  (for/list ([x (in-list xs)] [_limit (in-range 32)])
+    (hash 'name (when/null [name (car x)] (symbol->string name))
+          'srcloc (when/null [loc (cdr x)]
+                    (hash 'source (path-string->string (srcloc-source loc))
+                          'line (srcloc-line loc)
+                          'column (srcloc-column loc))))))
+
+(define (entry->json entry original-map)
+  (define exn-info (first entry))
+  (hash 'timestamp (current-seconds)
+        'exn_msg (exn-message exn-info)
+        'exn_trace (exn-context->json
+                    (continuation-mark-set->context
+                     (exn-continuation-marks exn-info)))
+        'stx_info (when/null [stx-info (second entry)]
+                    (define blaming-stx (hash-ref original-map (rest stx-info) #f))
+                    (hash 'stx (if blaming-stx
+                                   (syntax->string #`(#,blaming-stx))
+                                   (first stx-info))
+                          'srcloc (hash 'source (second stx-info)
+                                        'line (third stx-info)
+                                        'column (fourth stx-info))))
+        'call_stack (map frame->json (third entry))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Running server
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Here's the plan.
+;; - Zeroth, spin up the worker which will handle communication between threads.
+;; - First, run the socket server.
+;; - Second, run the client server. This will spin up the client which
+;;   will connect to the socket server.
+;; - Third, now that the client is connected to the socket server, we can safely terminate
+;;   the client server.
+;; - Fourth, run the tracer
+
+;; A message type is either trace, stats, or shutdown. shutdown is specially handled
+(define worker
+  (thread
+   (thunk
+    (define *queue* '())
+    (let loop ()
+      (match (thread-receive)
+        [`(append ,e)
+         (set! *queue* (cons (hash 'type "trace" 'data e) *queue*))
+         (loop)]
+        [`(query ,thd)
+         (thread-send thd (reverse *queue*))
+         (set! *queue* '())
+         (loop)]
+        [`(stats ,stats)
+         (set! *queue* (cons (hash 'type "stats" 'data stats) *queue*))
+         (loop)])))))
+
+(define-values (port shutdown! connected-channel)
+  (start-streaming-server
+   (thunk
+    (thread-send worker `(query ,(current-thread)))
+    (define out (thread-receive))
+    (when symbolic-trace-dev?
+      (pretty-write out))
+    out)
+   2.0
+   (thunk (hash 'type "shutdown" 'data 'null))))
+
+(define browser-launcher (launch (hash 'port port 'title file)))
+
+(match (channel-get connected-channel)
+  ['connected (void)]
+  [x (error "unexpected response from client" x)])
+
+
+#;(break-thread browser-launcher)
 
 (do-trace (λ () (dynamic-require mod #f))
           #:entry-handler
-          (λ (entry add-trace! original-map)
-            (cond
-              [(symbolic-trace-streaming?)
-               (print-element entry original-map)]
-              [else (add-trace! entry)]))
+          (λ (entry _add-trace! original-map)
+            (thread-send worker `(append ,(entry->json entry original-map))))
           #:post-proc
-          (λ (current-stats trace original-map)
-            (cond
-              [(symbolic-trace-streaming?) (void)]
-              [else (for-each (λ (e) (print-element e original-map)) trace)])
+          (λ (current-stats _trace _original-map)
+            (thread-send worker `(stats ,current-stats))))
 
-            (when (symbolic-trace-show-stats?)
-              (eprintf "--- Stats ---------------------------\n")
-              (for ([(k v) (in-hash current-stats)])
-                (eprintf "~a: ~a\n" k v)))))
+(channel-put connected-channel 'finish)
+(match (channel-get connected-channel)
+  ['finish (void)]
+  [x (raise x)])
+
+(shutdown!)
+(break-thread worker)
+
+(thread-wait browser-launcher)

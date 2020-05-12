@@ -3,8 +3,9 @@
 (require racket/date racket/runtime-path racket/async-channel net/sendurl json
          "../data.rkt" "../reporter.rkt" (only-in "../record.rkt" filtering-threshold)
          "renderer.rkt" "syntax.rkt"
-         "report/generic.rkt" "report/ws-server.rkt"
-         "report/callgraph.rkt" "report/solver.rkt" "report/terms.rkt")
+         "report/generic.rkt"
+         "report/callgraph.rkt" "report/solver.rkt" "report/terms.rkt"
+         "../../util/server.rkt")
 (provide make-report-renderer make-report-stream-renderer)
 
 ; The report renderer produces HTML output by sending
@@ -67,8 +68,22 @@
      (for ([c (report-renderer-components self)])
        (init-component c))
      ; launch the server
+
+
+     (define events-box (profile-state-events profile))
+
      (define-values (port shutdown! connected-channel)
-       (start-streaming-server self profile reporter))
+       (start-streaming-server
+        (thunk
+         (define events
+           (reverse
+            (cons (profile-event-sample (get-current-metrics/call reporter))
+                  (unbox/replace! events-box '()))))
+         (define filtered-events (if (null? events) events (prune-short-events events)))
+         ; get the messages from each component
+         (apply append (for/list ([c components]) (receive-data c filtered-events))))
+        (report-options-interval options)
+        stream-finish-message))
      (set-report-renderer/stream-shutdown!! self shutdown!)
      (set-report-renderer/stream-channel! self connected-channel)
      ; open the browser with the initial messages
@@ -80,7 +95,7 @@
      (open-report-in-browser path)
      ; wait for the browser to open the connection
      (match (channel-get connected-channel)
-       ['connected void]
+       ['connected (void)]
        [x (error "unexpected response from client" x)]))
    (define (finish-renderer self profile)
      (match-define (report-renderer/stream _ _ _ _ shutdown! channel) self)
@@ -88,69 +103,10 @@
      (channel-put channel 'finish)
      ; wait for it to acknowledge, to give it time to pump its last messages
      (match (channel-get channel)
-       ['finish void]
+       ['finish (void)]
        [x (raise x)])
      ; now safe to shutdown the websocker server
      (shutdown!))])
-
-
-; Launch the WebSocket server
-(define (start-streaming-server renderer profile reporter)
-  (match-define (report-renderer/stream _ _ components options _ _) renderer)
-  (define channel (make-channel))  ; channel for communicating with main thread
-  (define connected? (box #f))  ; only one client may connect
-  (define events-box (profile-state-events profile))
-  (define interval (report-options-interval options))
-  
-  ; the procedure for handling connections
-  (define (ws-connection conn state)
-    ; only one client may connect
-    (cond
-      [(box-cas! connected? #f #t)  ; we won the race to connect
-       ; tell the main thread we're connected
-       (channel-put channel 'connected)
-       ; loop until we're done
-       (let loop ()
-         (define sync-result (sync/timeout/enable-break interval channel))
-         ; get the events from the profile and empty its buffer
-         (define events
-           (reverse
-            (cons (profile-event-sample (get-current-metrics/call reporter))
-                  (unbox/replace! events-box '()))))
-         (define filtered-events (if (null? events) events (prune-short-events events)))
-         ; get the messages from each component
-         (define messages
-           (apply append (for/list ([c components]) (receive-data c filtered-events))))
-         ; send the messages; bail out if it fails
-         (define continue? (not (eq? sync-result 'finish)))
-         (with-handlers ([exn:fail? (lambda (e) (set! continue? #f))])
-           (ws-send! conn (jsexpr->bytes messages)))
-         (if continue?
-             (loop)
-             (begin
-               (with-handlers ([exn:fail? void])  ; the connection might be dead, but we don't care
-                 (ws-send! conn (jsexpr->bytes (list (stream-finish-message))))
-                 (ws-close! conn))
-               ; if we weren't told to shut down, we need to wait until we are.
-               (unless (eq? sync-result 'finish)
-                 (channel-get channel))
-               (channel-put channel 'finish))))]
-      [else
-       (channel-put channel "another client is already connected")
-       (ws-close! conn)]))
-
-  ; start the server
-  (define conf-channel (make-async-channel))
-  (define server-shutdown!
-    (ws-serve #:confirmation-channel conf-channel
-              #:port 8048
-              ws-connection))
-  ; wait until it's started
-  (define the-port (async-channel-get conf-channel))
-  (unless (number? the-port)
-    (raise the-port))
-
-  (values the-port server-shutdown! channel))
 
 
 ;; Remove enter/exit events corresponding to calls that are too short to render.

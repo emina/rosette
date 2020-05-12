@@ -81,7 +81,6 @@
   (match-lambda*
     [(list 'exception guard e)
      (define the-pc (&& (pc) guard))
-     (define msg (exn->string e))
      (define skip?
        (or (exn:fail:rosette:infeasible? e)
            (and (and (symbolic-trace-skip-assertion?)
