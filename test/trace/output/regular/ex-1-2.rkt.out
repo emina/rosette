@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (solver . 0)))
+ (#:trace
+  (("@foldl: arity mismatch;\n the expected nu...."
+    (#%app "ex-1-2.rkt" 4 17)
+    ((@foldl "ex-1-2.rkt" 4 17) (sum "ex-1-2.rkt" 8 24))
+    #t))))

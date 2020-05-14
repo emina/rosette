@@ -51,6 +51,8 @@
     [(<= (string-length s) n) s]
     [else (string-append (substring s 0 n) "....")]))
 
+(define ns (current-namespace))
+
 (define (run-trace-test fname mode)
   (define (perform-test output)
     (define outpath (build-path here-dir "output" mode (~a fname ".out")))
@@ -66,13 +68,16 @@
     (perform-test
      `((#:error ,(parameterize ([error-print-context-length 0]) (exn->string e))))))
 
+  (clear-state!)
+
   (parameterize ([current-compile symbolic-trace-compile-handler]
+                 [current-namespace (make-base-namespace)]
                  [error-print-width default-error-print-width])
-    (clear-state!)
+    (namespace-attach-module ns 'rosette)
     (with-handlers ([exn:fail? exn-handler])
       (do-trace
        (thunk
-        (dynamic-require `(file ,(path->string (build-path here-dir "code" mode fname))) #f))
+        (dynamic-require `(file ,(path->string (build-path here-dir "code" fname))) #f))
        #:entry-handler
        (λ (entry add-trace! _current-original-map)
          (add-trace! entry))
@@ -82,8 +87,9 @@
 
 (define-runtime-path here-dir ".")
 
-(define (run-mode mode params)
-  (for/list ([test-file (directory-list (build-path here-dir "code" mode))])
+(define (run-mode tests mode params)
+  (for/list ([filename (in-list tests)])
+    (define test-file (string->path filename))
     (test-suite+
      (~a (path-string->string test-file) " (" mode ")")
      (let loop ([params params])
@@ -91,15 +97,49 @@
          ['() (run-trace-test test-file mode)]
          [(cons (list p v) params) (parameterize ([p v]) (loop params))])))))
 
+(define regular-tests '("ex-1-1.rkt"
+                        "ex-1-2.rkt"
+                        "ex-1-3.rkt"
+                        "ex-2.rkt"
+                        "ex-3.rkt"
+                        "assertion.rkt"
+                        "if.rkt"
+                        "infeasible.rkt"
+                        "macro.rkt"
+                        "solver-limitation.rkt"
+                        "test-track-form.rkt"
+                        "error.rkt"
+                        "forall.rkt"
+                        "infeasible-solver.rkt"
+                        "list.rkt"
+                        "no-error.rkt"
+                        "test-stack.rkt"
+                        "toplevel.rkt"))
+
+(define solver-tests '("assertion.rkt"
+                       "if.rkt"
+                       "infeasible-solver.rkt"
+                       "infeasible.rkt"
+                       "solver-limitation.rkt"))
+
+(define assertion-tests '("assertion.rkt"
+                          "if.rkt"))
+
+(define all-tests '("ex-1-1.rkt"
+                    "ex-1-2.rkt"
+                    "ex-1-3.rkt"
+                    "ex-2.rkt"
+                    "ex-3.rkt"))
+
 (define regular-suites
-  (run-mode "regular" `()))
+  (run-mode regular-tests "regular" `()))
 (define solver-suites
-  (run-mode "solver" `([,symbolic-trace-skip-infeasible-solver? #t])))
+  (run-mode solver-tests "solver" `([,symbolic-trace-skip-infeasible-solver? #t])))
 (define assertion-suites
-  (run-mode "assertion" `([,symbolic-trace-skip-assertion? #t])))
+  (run-mode assertion-tests "assertion" `([,symbolic-trace-skip-assertion? #t])))
 (define all-suites
-  (run-mode "all" `([,symbolic-trace-skip-infeasible-solver? #t]
-                    [,symbolic-trace-skip-assertion? #t])))
+  (run-mode all-tests "all" `([,symbolic-trace-skip-infeasible-solver? #t]
+                               [,symbolic-trace-skip-assertion? #t])))
 
 (module+ test
   (require rackunit/text-ui)
