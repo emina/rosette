@@ -1,50 +1,41 @@
 import * as React from 'react';
 import { render } from 'react-dom';
+
 import { makeStyles } from '@material-ui/core/styles';
+
 import Grid from '@material-ui/core/Grid';
-import Radio from '@material-ui/core/Radio';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Toolbar from '@material-ui/core/Toolbar';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import Paper from '@material-ui/core/Paper';
-import Fab from '@material-ui/core/Fab';
-
+import Switch from '@material-ui/core/Switch';
+import TextField from '@material-ui/core/TextField';
+import InputAdornment from '@material-ui/core/InputAdornment';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import IconButton from '@material-ui/core/IconButton';
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 
-import lightBlue from '@material-ui/core/colors/lightBlue';
+import ClearIcon from '@material-ui/icons/Clear';
+import SearchIcon from '@material-ui/icons/Search';
 
-import KeyValue from './KeyValue';
+import { debounce } from 'debounce';
+
 import EnhancedTable from './EnhancedTable';
+import DetailPanel from './DetailPanel';
 
-import { getFirstLine } from './utils';
+import { getFirstLine } from './util';
+import { ShowRacketContext } from './context';
+
+const DEBOUNCE = 200;
 
 const useStyles = makeStyles((theme) => ({
-  pre: {
-    fontFamily: 'monospace',
-    whiteSpace: 'pre-wrap',
-  },
-  full_width: {
-    width: '100%',
-  },
-  details: {
-    backgroundColor: lightBlue[50],
-  },
-  margin: {
-    display: 'block',
-    marginTop: '20px',
-    margin: 'auto',
-  },
   spacer: {
     flex: '1 1 10%'
   },
+  progress: {
+    marginLeft: 20,
+  },
+  tool: {
+    marginLeft: 0,
+    marginRight: theme.spacing(2),
+  }
 }));
 
 let ws: WebSocket | null = null;
@@ -52,166 +43,61 @@ let cnt: number = 0;
 
 const makeGroup = (trace: ITraceEntrySingle[]) => {
   // Map in JS couldn't deal with structural equality of keys, so 
-  // stringify them first :(
+  // stringify them first
 
   const mapper = new Map<string, ITraceEntryGroup>();
 
-  for (const { exn_msg, stx_info, timestamp, exn_trace, call_stack, key } of trace) {
-    const trimmedExnMsg = getFirstLine(exn_msg)
+  for (const { exnMsg, stxInfo, timestamp, exnTrace, callStack, key } of trace) {
+    const trimmedExnMsg = getFirstLine(exnMsg)
     const groupKey = JSON.stringify({
       exnMsg: trimmedExnMsg,
-      stx_info
+      stxInfo
     });
     const group: ITraceEntryGroup = mapper.get(groupKey) || {
       kind: 'group',
       key: groupKey,
-      stx_info,
-      exn_msg: trimmedExnMsg,
+      stxInfo,
+      exnMsg: trimmedExnMsg,
       group: [],
     };
     group.group.push({
       key,
       timestamp,
-      exn_trace,
-      call_stack,
-      full_exn_msg: exn_msg
+      exnTrace,
+      callStack,
+      fullExnMsg: exnMsg
     });
     mapper.set(groupKey, group);
   }
 
   const arr = Array.from(mapper.values());
   arr.sort((x: ITraceEntryGroup, y: ITraceEntryGroup) =>
-    x.exn_msg.localeCompare(y.exn_msg)
+    x.exnMsg.localeCompare(y.exnMsg)
   );
   return arr;
 }
 
-interface IStackProps {
-  data: (ICallStack | IExnTrace)[],
-  name: string,
-}
-
-const Stacktrace: React.FC<IStackProps> = ({ data, name }) => {
-  const classes = useStyles();
-  const [showAll, setShowAll] = React.useState(false);
-  const rows = data.length <= 5 || showAll ? data : data.slice(0, 5);
-  const title = <>
-    {name}
-    {
-      (data.length > 5)
-        ? <Fab
-          size="medium"
-          className={classes.margin}
-          onClick={() => setShowAll(!showAll)}>
-          <IconButton size="small">
-            {showAll ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
-        </Fab>
-        : null
-    }
-  </>;
-  return <KeyValue title={title}>
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell style={{ width: '50%', fontWeight: 'bold' }}>Name</TableCell>
-            <TableCell style={{ width: '50%', fontWeight: 'bold' }}>Source</TableCell>
-            <TableCell style={{ width: 0, fontWeight: 'bold' }}>Line</TableCell>
-            <TableCell style={{ width: 0, fontWeight: 'bold' }}>Column</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row, i) => {
-            return <TableRow key={i}>
-              <TableCell><code>{row.name}</code></TableCell>
-              <TableCell><code>{row.srcloc?.source}</code></TableCell>
-              <TableCell>{row.srcloc?.line}</TableCell>
-              <TableCell>{row.srcloc?.column}</TableCell>
-            </TableRow>;
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  </KeyValue>;
-}
-
-const handleSubDetailPanel = (row: IGroupDetail) => {
-  const classes = useStyles();
-  return <TableContainer component={Paper}>
-    <Table>
-      <colgroup>
-        <col />
-        <col className={classes.full_width} />
-      </colgroup>
-      <TableBody>
-        <KeyValue title="Error">
-          <div className={classes.pre}>{row.full_exn_msg}</div>
-        </KeyValue>
-        <Stacktrace name="Rosette stacktrace" data={row.call_stack} />
-        <Stacktrace name="Racket stacktrace" data={row.exn_trace} />
-      </TableBody>
-    </Table>
-  </TableContainer>;
-}
-
-const handleDetailPanel = (row: ITraceEntry) => {
-  const classes = useStyles();
-
-  const renderRest = () => {
-    switch (row.kind) {
-      case 'no-group': return <>
-        <KeyValue title="Created at">
-          {new Date(row.timestamp * 1000).toUTCString()}
-        </KeyValue>
-        <KeyValue title="Error">
-          <div className={classes.pre}>{row.exn_msg}</div>
-        </KeyValue>
-        <Stacktrace name="Rosette stacktrace" data={row.call_stack} />
-        <Stacktrace name="Racket stacktrace" data={row.exn_trace} />
-      </>;
-      case 'group': return <TableRow>
-        <TableCell colSpan={2}>
-          <EnhancedTable<IGroupDetail>
-            data={row.group}
-            initialNumRows={5}
-            onDetailPanel={handleSubDetailPanel}
-            columns={[
-              {
-                title: 'Created at',
-                render: (row: IGroupDetail) =>
-                  <>{new Date(row.timestamp * 1000).toUTCString()}</>,
-                align: 'left',
-                width: '100%',
-              },
-            ]}
-          />
-        </TableCell>
-      </TableRow>;
-    }
-  };
-  return <TableContainer component={Paper}>
-    <Table className={classes.details}>
-      <colgroup>
-        <col />
-        <col className={classes.full_width} />
-      </colgroup>
-      <TableBody>
-        <KeyValue title="Blame">
-          <div className={classes.pre}>{row.stx_info?.stx}</div>
-        </KeyValue>
-        {renderRest()}
-      </TableBody>
-    </Table>
-  </TableContainer>;
-};
+const filter = (trace: ITraceEntrySingle[], query: string) =>
+  query === '' ? trace : trace.filter(e => e.exnMsg.includes(query));
 
 const App: React.FC = () => {
   const classes = useStyles();
+
   const [trace, setTrace] = React.useState<ITraceEntrySingle[]>([]);
   const [title, setTitle] = React.useState('');
-  const [mode, setMode] = React.useState<'group' | 'no-group'>('group');
+  const [isGrouped, setIsGrouped] = React.useState(true);
+  const [showRacket, setShowRacket] = React.useState(false);
   const [isLoading, setLoading] = React.useState(true);
+
+  // NOTE: query and searchText are technically the same, but 
+  // one will be updated immediately and displayed in the textbox
+  // while the other's update will be debounced for search performance
+  const [searchText, setSearchText] = React.useState('');
+  const [query, setQuery] = React.useState('');
+  // useMemo here so that debounce doesn't create a new decounceSetQuery
+  // every time it's rendered.
+  const debounceSetQuery = React.useMemo(() => debounce(setQuery, DEBOUNCE), []);
+
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     setTitle(urlParams.get('title') || 'Untitled');
@@ -242,46 +128,83 @@ const App: React.FC = () => {
             default: throw new Error("infeasible");
           }
         }
-        setTrace(trace => trace.concat(newTrace));
+        // Here's an optimization to preserve object identitiy
+        setTrace(trace => newTrace.length === 0
+          ? trace
+          : trace.concat(newTrace));
       };
     }
   });
 
-  const handleModeChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    setMode(evt.target.value as any);
-  };
+  const handleIsGroupedChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setIsGrouped(evt.target.checked);
+  }
 
-  const data = mode === 'no-group' ? trace : makeGroup(trace);
+  const handleShowRacketChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setShowRacket(evt.target.checked);
+  }
+
+  const handleSearchChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(evt.target.value);
+    debounceSetQuery(evt.target.value);
+  }
+
+  const handleClearSearch = () => {
+    setSearchText('');
+    debounceSetQuery('');
+  }
+
+  // useMemo here so that given the same trace and query, 
+  // no computation is needed and object identitiy is preserved.
+  const filteredTrace =
+    React.useMemo(() => filter(trace, query), [trace, query]);
+
+  // useMemo here so that given the same isGrouped and filteredTrace,
+  // no computation is needed and object identitiy is preserved.
+  const data = React.useMemo(() => isGrouped
+    ? makeGroup(filteredTrace)
+    : filteredTrace,
+    [filteredTrace, isGrouped]);
 
   const topBar = (
-    <Grid container spacing={6} alignItems="center">
-      <Grid item>
-        <h1><code>{title}</code></h1>
+    <Grid container alignItems="center">
+      <Grid item xs={12} md={3}>
+        <h1>
+          <code>{title}</code>
+          {isLoading
+            ? <CircularProgress
+              size={20}
+              disableShrink
+              className={classes.progress} />
+            : null}
+        </h1>
       </Grid>
-      <Grid item>
+      <Grid item xs={12} md={3}>
         <FormControlLabel
+          value="top"
           control={
-            <Radio
-              checked={mode === 'group'}
-              onChange={handleModeChange}
-              value="group"
-              size="small"
+            <Switch
+              checked={isGrouped}
+              onChange={handleIsGroupedChange}
             />
           }
-          label="Group"
-          labelPlacement="end"
+          className={classes.tool}
+          label="Group similar rows"
+          labelPlacement="start"
         />
+      </Grid>
+      <Grid item xs={12} md={3}>
         <FormControlLabel
+          value="top"
           control={
-            <Radio
-              checked={mode === 'no-group'}
-              onChange={handleModeChange}
-              value="no-group"
-              size="small"
+            <Switch
+              checked={showRacket}
+              onChange={handleShowRacketChange}
             />
           }
-          label="No group"
-          labelPlacement="end"
+          className={classes.tool}
+          label="Show Racket stacktrace"
+          labelPlacement="start"
         />
       </Grid>
     </Grid>
@@ -290,40 +213,57 @@ const App: React.FC = () => {
   return <>
     <Toolbar>
       {topBar}
-      <div className={classes.spacer} />
-      {isLoading ? <CircularProgress /> : null}
+      <TextField
+        value={searchText}
+        onChange={handleSearchChange}
+        placeholder="Search"
+        InputProps={{
+          startAdornment: <InputAdornment position="start">
+            <SearchIcon fontSize="small" />
+          </InputAdornment>,
+          endAdornment: <InputAdornment position="end">
+            <IconButton onClick={handleClearSearch}>
+              <ClearIcon color="inherit" fontSize="small" />
+            </IconButton>
+          </InputAdornment>,
+        }}
+      />
     </Toolbar>
-    <EnhancedTable<ITraceEntry>
-      data={data}
-      onDetailPanel={handleDetailPanel}
-      initialNumRows={10}
-      columns={[
-        {
-          title: 'Error',
-          width: '50%',
-          render: (row: ITraceEntry) => <code>{getFirstLine(row.exn_msg)}</code>,
-          align: 'left',
-        },
-        {
-          title: 'Source',
-          width: '50%',
-          render: (row: ITraceEntry) => <code>{row.stx_info?.srcloc.source}</code>,
-          align: 'left',
-        },
-        {
-          title: 'Line',
-          width: 0,
-          render: (row: ITraceEntry) => <>{row.stx_info?.srcloc.line}</>,
-          align: 'right',
-        },
-        {
-          title: 'Column',
-          width: 0,
-          render: (row: ITraceEntry) => <>{row.stx_info?.srcloc.column}</>,
-          align: 'right',
-        },
-      ]}
-    />
+    <ShowRacketContext.Provider value={showRacket}>
+      <EnhancedTable<ITraceEntry>
+        data={data}
+        detailPanel={DetailPanel}
+        initialNumRows={10}
+        columns={[
+          {
+            title: 'Error',
+            width: '70%',
+            render: (row: ITraceEntry) =>
+              <code>{getFirstLine(row.exnMsg)}</code>,
+            align: 'left',
+          },
+          {
+            title: 'Source',
+            width: '30%',
+            render: (row: ITraceEntry) =>
+              <code>{row.stxInfo?.srcloc.source}</code>,
+            align: 'left',
+          },
+          {
+            title: 'Line',
+            width: 0,
+            render: (row: ITraceEntry) => <>{row.stxInfo?.srcloc.line}</>,
+            align: 'right',
+          },
+          {
+            title: 'Column',
+            width: 0,
+            render: (row: ITraceEntry) => <>{row.stxInfo?.srcloc.column}</>,
+            align: 'right',
+          },
+        ]}
+      />
+    </ShowRacketContext.Provider>
   </>;
 }
 

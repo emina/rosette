@@ -22,7 +22,6 @@
        (let loop ()
          (define sync-result (sync/timeout/enable-break interval channel))
          (define messages (get-message))
-         ; get the events from the profile and empty its buffer
 
          ; send the messages; bail out if it fails
          (define continue? (not (eq? sync-result 'finish)))

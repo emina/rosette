@@ -5,7 +5,7 @@
          "renderer.rkt" "syntax.rkt"
          "report/generic.rkt"
          "report/callgraph.rkt" "report/solver.rkt" "report/terms.rkt"
-         "../../util/server.rkt")
+         "../../util/streaming-server.rkt")
 (provide make-report-renderer make-report-stream-renderer)
 
 ; The report renderer produces HTML output by sending

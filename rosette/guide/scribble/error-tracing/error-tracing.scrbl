@@ -20,6 +20,9 @@
 @(define-runtime-path root ".")
 @(define rosette-eval (rosette-log-evaluator (logfile root "error-tracer-log") #f 'rosette))
 
+@(define-runtime-path interface.png "interface.png")
+@(define-runtime-path quickselect.png "quickselect.png")
+
 @title[#:tag "ch:error-tracing"]{Debugging}
 
 Bugs in Rosette programs often manifest as runtime
@@ -256,12 +259,13 @@ using @exec{raco}:
 
 @commandline{raco symtrace @nonterm{prog}}
 
-After executing @nonterm{prog}, the error tracer will output
-all the exceptions that Rosette intercepted. For instance,
+The error tracer will open a web browser and stream
+all exceptions that Rosette intercepted. For instance,
 here is the output from the error tracer when running our
 last query on the buggy @racket[sum] example from the
 @seclink["sec:errors-under-symbolic-eval"]{previous
  section}:
+
 
 @examples[#:label #f #:eval rosette-eval
 (verify
@@ -269,33 +273,15 @@ last query on the buggy @racket[sum] example from the
  #:guarantee (assert (ormap positive? xs)))
 ]
 
-@verbatim|{
---------------------------------------------------------------------------------
-exn: $*: expected real? arguments
-  arguments: (list (list xs@1 xs@2 xs@3))
-  context...:
-   ~/rosette/base/core/real.rkt:140:0: safe-apply-2
-   ~/rosette/lib/trace/tool.rkt:122:5
-   /Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
-   ...
+@(image interface.png #:scale 0.5)
 
-at: ex.rkt line 10 column 5
-(* (length xs) (cdr xs))
-
-call stack: 
-ex.rkt:10:5 *
-ex.rkt:15:31 sum
-}|
-
-The output shows a list of exceptions that Rosette
-intercepted; here, there is one exception caused by our bug.
-For each exception, there are three parts:
-
-@itemlist[
-  @item{The exception message,}
-  @item{The expression that causes the exception, and}
-  @item{The call stack when the exception occurs.}
-]
+The output shows a table of exceptions that Rosette
+intercepted; here, there is one only exception, which is caused by our bug,
+so there is only one row.
+Each row consists of a shorten error message and an error location
+(source file, line, and column). All rows can be expanded to show
+more details: the full error message, the stack trace,
+and the erroring (blamed) expression.
 
 @subsection[#:tag "sec:symtrace:opts"]{Options and Caveats}
 
@@ -310,16 +296,7 @@ will not include non-instrumented files. To instrument
 below.
 
 The @exec{raco symtrace @nonterm{prog}} command accepts the following command-line flags:
-
 @itemlist[
- @item{@DFlag{stream} --- stream the intercepted exception
-  while executing the program, rather than producing output
-  only once the program completes. This option is useful for
-  programs that do not terminate, or take a very long time to
-  run. Note however that the output can interleave with
-  regular output from program execution, which might not be
-  desirable.}
-
  @item{@DFlag{module} @nonterm{module-name} --- run the
   specified @nonterm{module-name} submodule of @nonterm{prog}
   (defaults to the @tt{main} submodule).}
@@ -333,10 +310,23 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
 
  @item{@DFlag{assert} --- do not show exceptions due to
   assertion errors, which are usually expected exceptions.}
-
- @item{@DFlag{context} @nonterm{context-length} --- set the
-  length of the exception context (defaults to 3).}
   ]
+
+
+Inside the web browser, the output can be customized further.
+@itemlist[
+  @item{@bold{Group similar rows} switch will @emph{heuristically}
+        group similar rows together, allowing an easier navigation
+        when a lot of exceptions are originated from the same place and same cause.}
+  @item{@bold{Show Racket stacktrace} switch will display the top 32 entries of
+        Racket stack trace in addition to Rosette stack trace.
+        This switch is off by default because Racket stack trace doesn't take
+        symbolic evaluation into account, so the stack trace is likely
+        not going to be useful much. However, it could provide some information
+        if the Rosette stack trace doesn't suffice.}
+  @item{Search box can be used to filter for rows whose error message contains the
+        search string.}
+]
 
 @section{Walkthrough: Tracing Errors in Rosette}
 
@@ -369,66 +359,7 @@ As before, the verification query succeeds despite the bug.
 But unlike before, the bug is much harder to detect. So we
 run the error tracer on it and obtain the following output:
 
-@verbatim|{
---------------------------------------------------------------------------------
-exn: select: arity mismatch;
- the expected number of arguments does not match the given number
-  expected: 2
-  given: 1
-  arguments...:
-   {[(&& (< xs@1 xs@0) (< xs@2 xs@0) (< ...)) (xs@1 xs@2 xs@3)] ...
-  context...:
-   ~/rosette/lib/trace/tool.rkt:121:5
-   /Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
-   ~/rosette/lib/trace/compile.rkt:267:11
-   ...
-
-at: ex.rkt line 16 column 24
-(select <pivot)
-
-call stack:
-ex.rkt:16:24 select
-ex.rkt:21:28 select
-
---------------------------------------------------------------------------------
-exn: assert: unexpected empty list
-  context...:
-   ~/rosette/lib/trace/compile.rkt:267:11
-   /Racket v7.6/collects/racket/private/more-scheme.rkt:265:2: call-with-exception-handler
-   .../more-scheme.rkt:261:28
-   ...
-
-at: ex.rkt line 8 column 18
-(assert #f "unexpected empty list")
-
-call stack:
-ex.rkt:17:18 select
-ex.rkt:21:28 select
-
---------------------------------------------------------------------------------
-
-[6 exceptions similar to above exceptions skipped]
-
---------------------------------------------------------------------------------
-exn: assert: both branches infeasible
-  context...:
-   .../more-scheme.rkt:261:28
-   ~/rosette/base/form/control.rkt:33:0: branch-and-merge
-   ~/rosette/lib/trace/compile.rkt:267:11
-   ...
-
-at: ex.rkt line 14 column 10
-(cond
-  [(= n len<) pivot]
-  [(< n len<) (select <pivot)]
-  [else (select-buggy >=pivot (- n len< 1))])
-
-call stack:
-ex.rkt:17:18 select
-ex.rkt:17:18 select
-ex.rkt:17:18 select
-ex.rkt:21:28 select
-}|
+@(image quickselect.png #:scale 0.5)
 
 The output from the error tracer includes 9 exceptions. Four
 are arity mismatch exceptions that are due to the bug, and

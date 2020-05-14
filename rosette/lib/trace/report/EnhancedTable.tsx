@@ -46,19 +46,19 @@ const PaginationActions: React.FC<IPaginationActionsProps> = (
 ) => {
   const classes = useStylesPagination();
 
-  const handleFirstPageButtonClick = (evt) => {
+  const handleFirstPageButtonClick = (evt: React.MouseEvent<HTMLButtonElement>) => {
     onChangePage(evt, 0);
   };
 
-  const handleBackButtonClick = (evt) => {
+  const handleBackButtonClick = (evt: React.MouseEvent<HTMLButtonElement>) => {
     onChangePage(evt, page - 1);
   };
 
-  const handleNextButtonClick = (evt) => {
+  const handleNextButtonClick = (evt: React.MouseEvent<HTMLButtonElement>) => {
     onChangePage(evt, page + 1);
   };
 
-  const handleLastPageButtonClick = (evt) => {
+  const handleLastPageButtonClick = (evt: React.MouseEvent<HTMLButtonElement>) => {
     onChangePage(evt, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
 
@@ -94,11 +94,11 @@ const PaginationActions: React.FC<IPaginationActionsProps> = (
 
 interface IRowProps<T> {
   row: T,
-  onDetailPanel?: (row: T) => React.ReactNode,
+  detailPanel?: React.FC<Row<T>>,
   colDefinitions: Column<T>[],
 }
 
-const Row = <T,>({ row, onDetailPanel, colDefinitions }: IRowProps<T>) => {
+const Row = <T,>({ row, detailPanel: DetailPanel, colDefinitions }: IRowProps<T>) => {
   const [open, setOpen] = React.useState(false);
 
   const rowElement: React.ReactNode[] = colDefinitions.map((col, i) => {
@@ -107,7 +107,7 @@ const Row = <T,>({ row, onDetailPanel, colDefinitions }: IRowProps<T>) => {
     </TableCell>;
   });
 
-  if (onDetailPanel) {
+  if (DetailPanel) {
     rowElement.unshift(
       <TableCell key="switch" style={{ width: 0 }} >
         <IconButton size="small" onClick={() => setOpen(!open)}>
@@ -119,10 +119,10 @@ const Row = <T,>({ row, onDetailPanel, colDefinitions }: IRowProps<T>) => {
 
   return <>
     <TableRow>{...rowElement}</TableRow>
-    {onDetailPanel && <TableRow>
+    {DetailPanel && <TableRow>
       <TableCell style={{ padding: 0 }} colSpan={6}>
         <Collapse in={open} timeout="auto" unmountOnExit>
-          {onDetailPanel(row)}
+          {<DetailPanel row={row} />}
         </Collapse>
       </TableCell>
     </TableRow>}
@@ -138,7 +138,7 @@ const useStylesMain = makeStyles({
 
 interface IEnhancedTableProps<RowData> {
   data: RowData[],
-  onDetailPanel?: (rowData: RowData) => React.ReactNode,
+  detailPanel?: React.FC<Row<RowData>>,
   columns: Column<RowData>[],
   initialNumRows?: number,
 }
@@ -154,7 +154,9 @@ interface IHasKeyProps {
   key: string,
 }
 
-const EnhancedTable = <T extends IHasKeyProps>({ data, columns, onDetailPanel, initialNumRows }: IEnhancedTableProps<T>) => {
+const EnhancedTable = <T extends IHasKeyProps>(
+  { data, columns, detailPanel, initialNumRows }: IEnhancedTableProps<T>
+) => {
   const classes = useStylesMain();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(initialNumRows || 10);
@@ -177,7 +179,7 @@ const EnhancedTable = <T extends IHasKeyProps>({ data, columns, onDetailPanel, i
     {col.title}
   </TableCell>);
 
-  if (onDetailPanel) {
+  if (detailPanel) {
     headers.unshift(<TableCell key="switch" style={{ width: 0 }} />);
   }
 
@@ -192,7 +194,11 @@ const EnhancedTable = <T extends IHasKeyProps>({ data, columns, onDetailPanel, i
             {
               data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row: T) => (
-                  <Row key={row.key} row={row} colDefinitions={columns} onDetailPanel={onDetailPanel} />
+                  <Row
+                    key={row.key}
+                    row={row}
+                    colDefinitions={columns}
+                    detailPanel={detailPanel} />
                 ))
             }
             {emptyRows > 0 && (
@@ -217,7 +223,8 @@ const EnhancedTable = <T extends IHasKeyProps>({ data, columns, onDetailPanel, i
               rowsPerPage={rowsPerPage}
               page={page}
               SelectProps={{
-                renderValue: value => <div style={{ padding: '0px 5px' }}>{value + ' rows '}</div>
+                renderValue: value =>
+                  <div style={{ padding: '0px 5px' }}>{value + ' rows '}</div>
               }}
               onChangePage={handleChangePage}
               onChangeRowsPerPage={handleChangeRowsPerPage}

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../util/server.rkt"
+(require "../util/streaming-server.rkt"
          "sample-data.rkt")
 
 (define the-thread (current-thread))

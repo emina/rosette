@@ -2,6 +2,8 @@
 
 (require racket/cmdline
          racket/match
+         racket/string
+         racket/path
          racket/function
          racket/list
          racket/pretty
@@ -10,12 +12,12 @@
          raco/command-name
          "../util/module.rkt"
          "../util/syntax.rkt"
-         "../util/server.rkt"
+         "../util/streaming-server.rkt"
          "client-launcher.rkt"
          "compile.rkt"
          "tool.rkt")
 
-(define symbolic-trace-dev? #f)
+(define symbolic-trace-verbose? #f)
 (define module-name (make-parameter 'main))
 (define file
   (command-line
@@ -40,9 +42,9 @@
     "Skip infeasible errors with help from the solver"
     (symbolic-trace-skip-infeasible-solver? #t)]
 
-   [("--dev-verbose")
-    "Also log the trace in the JSON format to stdin."
-    (set! symbolic-trace-dev? #t)]
+   [("--verbose")
+    "Verbose output (log the output in the JSON format to stdout)"
+    (set! symbolic-trace-verbose? #t)]
 
 
    #:help-labels ""
@@ -77,9 +79,17 @@
       [x body ...]
       [else 'null])))
 
+(define cwd (path-string->string (current-directory)))
+
+(define (normalize-path-for-rosette p)
+  (define path (path-string->string p))
+  (if (string-prefix? path cwd)
+      (string-append "<cwd>/" (path-string->string (find-relative-path cwd path)))
+      path))
+
 (define (frame->json frame)
   (hash 'name (~a (or (object-name (first frame)) (first frame)))
-        'srcloc (hash 'source (second frame)
+        'srcloc (hash 'source (normalize-path-for-rosette (second frame))
                       'line (third frame)
                       'column (fourth frame))))
 
@@ -87,26 +97,26 @@
   (for/list ([x (in-list xs)] [_limit (in-range 32)])
     (hash 'name (when/null [name (car x)] (symbol->string name))
           'srcloc (when/null [loc (cdr x)]
-                    (hash 'source (path-string->string (srcloc-source loc))
+                    (hash 'source (normalize-path-for-rosette (srcloc-source loc))
                           'line (srcloc-line loc)
                           'column (srcloc-column loc))))))
 
 (define (entry->json entry original-map)
   (define exn-info (first entry))
   (hash 'timestamp (current-seconds)
-        'exn_msg (exn-message exn-info)
-        'exn_trace (exn-context->json
+        'exnMsg (exn-message exn-info)
+        'exnTrace (exn-context->json
                     (continuation-mark-set->context
                      (exn-continuation-marks exn-info)))
-        'stx_info (when/null [stx-info (second entry)]
+        'stxInfo (when/null [stx-info (second entry)]
                     (define blaming-stx (hash-ref original-map (rest stx-info) #f))
                     (hash 'stx (if blaming-stx
                                    (syntax->string #`(#,blaming-stx))
                                    (first stx-info))
-                          'srcloc (hash 'source (second stx-info)
+                          'srcloc (hash 'source (normalize-path-for-rosette (second stx-info))
                                         'line (third stx-info)
                                         'column (fourth stx-info))))
-        'call_stack (map frame->json (third entry))))
+        'callStack (map frame->json (third entry))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Running server
@@ -144,20 +154,21 @@
    (thunk
     (thread-send worker `(query ,(current-thread)))
     (define out (thread-receive))
-    (when symbolic-trace-dev?
+    (when symbolic-trace-verbose?
       (pretty-write out))
     out)
    2.0
    (thunk (hash 'type "shutdown" 'data 'null))))
 
-(define browser-launcher (launch (hash 'port port 'title file)))
+(define browser-launcher
+  (launch (hash 'port port
+                'title (path-string->string (file-name-from-path file)))))
 
 (match (channel-get connected-channel)
   ['connected (void)]
   [x (error "unexpected response from client" x)])
 
-
-#;(break-thread browser-launcher)
+(break-thread browser-launcher)
 
 (do-trace (λ () (dynamic-require mod #f))
           #:entry-handler
@@ -174,5 +185,3 @@
 
 (shutdown!)
 (break-thread worker)
-
-(thread-wait browser-launcher)

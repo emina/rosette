@@ -1,7 +1,7 @@
 import * as React from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import { makeStyles } from '@material-ui/core/styles';
 
 interface IKeyValueProps {
   title: string | React.ReactElement

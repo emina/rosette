@@ -27,29 +27,33 @@ interface ICallStack {
 interface ITraceEntrySingle {
   kind: 'no-group',
   key: string,
-  exn_msg: string,
-  stx_info?: IStxInfo,
+  exnMsg: string,
+  stxInfo?: IStxInfo,
 
   timestamp: number,
-  exn_trace: IExnTrace[],
-  call_stack: ICallStack[],
+  exnTrace: IExnTrace[],
+  callStack: ICallStack[],
 }
 
 interface IGroupDetail {
   key: string,
   timestamp: number,
-  exn_trace: IExnTrace[],
-  call_stack: ICallStack[],
-  full_exn_msg: string,
+  exnTrace: IExnTrace[],
+  callStack: ICallStack[],
+  fullExnMsg: string,
 }
 
 interface ITraceEntryGroup {
   kind: 'group',
   key: string,
-  exn_msg: string,
-  stx_info?: IStxInfo,
+  exnMsg: string,
+  stxInfo?: IStxInfo,
 
   group: IGroupDetail[],
 }
 
 type ITraceEntry = ITraceEntrySingle | ITraceEntryGroup;
+
+interface Row<RowData> {
+  row: RowData,
+}
