@@ -65,31 +65,29 @@ const PaginationActions: React.FC<IPaginationActionsProps> = (
   const from = page * rowsPerPage + 1;
   const to = Math.min((page + 1) * rowsPerPage, count);
 
-  return (
-    <div className={classes.root}>
-      <IconButton
-        onClick={handleFirstPageButtonClick}
-        disabled={page === 0}>
-        <FirstPageIcon />
-      </IconButton>
-      <IconButton onClick={handleBackButtonClick} disabled={page === 0}>
-        <KeyboardArrowLeft />
-      </IconButton>
-      <Typography variant="caption" className={classes.label}>
-        {`${from}-${to} of ${count}`}
-      </Typography>
-      <IconButton
-        onClick={handleNextButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}>
-        <KeyboardArrowRight />
-      </IconButton>
-      <IconButton
-        onClick={handleLastPageButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}>
-        <LastPageIcon />
-      </IconButton>
-    </div>
-  );
+  return <div className={classes.root}>
+    <IconButton
+      onClick={handleFirstPageButtonClick}
+      disabled={page === 0}>
+      <FirstPageIcon />
+    </IconButton>
+    <IconButton onClick={handleBackButtonClick} disabled={page === 0}>
+      <KeyboardArrowLeft />
+    </IconButton>
+    <Typography variant="caption" className={classes.label}>
+      {`${from}-${to} of ${count}`}
+    </Typography>
+    <IconButton
+      onClick={handleNextButtonClick}
+      disabled={page >= Math.ceil(count / rowsPerPage) - 1}>
+      <KeyboardArrowRight />
+    </IconButton>
+    <IconButton
+      onClick={handleLastPageButtonClick}
+      disabled={page >= Math.ceil(count / rowsPerPage) - 1}>
+      <LastPageIcon />
+    </IconButton>
+  </div>;
 };
 
 interface IRowProps<T> {
@@ -101,15 +99,15 @@ interface IRowProps<T> {
 const Row = <T,>({ row, detailPanel: DetailPanel, colDefinitions }: IRowProps<T>) => {
   const [open, setOpen] = React.useState(false);
 
-  const rowElement: React.ReactNode[] = colDefinitions.map((col, i) => {
-    return <TableCell key={i} style={{ width: col.width }} align={col.align}>
+  const rowElement: React.ReactNode[] = colDefinitions.map((col, i) =>
+    <TableCell key={i} style={{ width: col.width }} align={col.align}>
       {col.render(row)}
-    </TableCell>;
-  });
+    </TableCell>
+  );
 
   if (DetailPanel) {
     rowElement.unshift(
-      <TableCell key="switch" style={{ width: 0 }} >
+      <TableCell key="switch" style={{ width: 0 }}>
         <IconButton size="small" onClick={() => setOpen(!open)}>
           {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
         </IconButton>
@@ -161,81 +159,78 @@ const EnhancedTable = <T extends IHasKeyProps>(
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(initialNumRows || 10);
 
-  const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
+  const emptyRows =
+    rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
 
-  const handleChangePage = (evt, newPage) => {
-    setPage(newPage);
-  };
+  const handleChangePage = (evt, newPage) => setPage(newPage);
 
   const handleChangeRowsPerPage = (evt) => {
     setRowsPerPage(parseInt(evt.target.value, 10));
     setPage(0);
   };
 
-  const headers: React.ReactNode[] = columns.map((col, i) => <TableCell
-    key={i}
-    style={{ width: col.width, fontWeight: 'bold' }}
-    align={col.align}>
-    {col.title}
-  </TableCell>);
+  const headers: React.ReactNode[] = columns.map((col, i) =>
+    <TableCell
+      key={i}
+      style={{ width: col.width, fontWeight: 'bold' }}
+      align={col.align}>
+      {col.title}
+    </TableCell>
+  );
 
   if (detailPanel) {
     headers.unshift(<TableCell key="switch" style={{ width: 0 }} />);
   }
 
-  return (
-    <>
-      <div style={{ overflowX: 'auto', position: 'relative' }}>
-        <Table className={classes.table}>
-          <TableHead>
-            <TableRow>{...headers}</TableRow>
-          </TableHead>
-          <TableBody>
-            {
-              data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row: T) => (
-                  <Row
-                    key={row.key}
-                    row={row}
-                    colDefinitions={columns}
-                    detailPanel={detailPanel} />
-                ))
-            }
-            {emptyRows > 0 && (
-              <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={6} />
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <Table>
-        <TableFooter>
-          <TableRow>
-            <TablePagination
-              classes={{
-                caption: classes.paginationCaption,
-                selectRoot: classes.paginationSelectRoot,
-              }}
-              rowsPerPageOptions={[5, 10, 25]}
-              colSpan={3}
-              count={data.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              SelectProps={{
-                renderValue: value =>
-                  <div style={{ padding: '0px 5px' }}>{value + ' rows '}</div>
-              }}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
-              ActionsComponent={PaginationActions}
-              labelRowsPerPage=""
-              labelDisplayedRows={() => ""}
-            />
-          </TableRow>
-        </TableFooter>
+  return <>
+    <div style={{ overflowX: 'auto', position: 'relative' }}>
+      <Table className={classes.table}>
+        <TableHead>
+          <TableRow>{...headers}</TableRow>
+        </TableHead>
+        <TableBody>
+          {
+            data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row: T) => (
+                <Row
+                  key={row.key}
+                  row={row}
+                  colDefinitions={columns}
+                  detailPanel={detailPanel} />
+              ))
+          }
+          {emptyRows > 0 && (
+            <TableRow style={{ height: 53 * emptyRows }}>
+              <TableCell colSpan={6} />
+            </TableRow>
+          )}
+        </TableBody>
       </Table>
-    </>
-  );
+    </div>
+    <Table>
+      <TableFooter>
+        <TableRow>
+          <TablePagination
+            classes={{
+              caption: classes.paginationCaption,
+              selectRoot: classes.paginationSelectRoot,
+            }}
+            rowsPerPageOptions={[5, 10, 25]}
+            colSpan={3}
+            count={data.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            SelectProps={{
+              renderValue: value =>
+                <div style={{ padding: '0px 5px' }}>{value + ' rows '}</div>
+            }}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            ActionsComponent={PaginationActions}
+          />
+        </TableRow>
+      </TableFooter>
+    </Table>
+  </>;
 }
 export default EnhancedTable;

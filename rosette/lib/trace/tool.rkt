@@ -8,7 +8,6 @@
 (require rosette/base/core/reporter
          rosette/base/core/bool
          rosette/base/core/exn
-         racket/exn
          syntax/parse/define
          (only-in "../util/syntax.rkt" syntax->readable-location)
          (only-in rosette/query/core [∃-solve query:solve])

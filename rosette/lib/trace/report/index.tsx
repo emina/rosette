@@ -20,7 +20,6 @@ import { debounce } from 'debounce';
 import EnhancedTable from './EnhancedTable';
 import DetailPanel from './DetailPanel';
 
-import { getFirstLine } from './util';
 import { ShowRacketContext } from './context';
 
 const DEBOUNCE = 200;
@@ -80,6 +79,8 @@ const makeGroup = (trace: ITraceEntrySingle[]) => {
 const filter = (trace: ITraceEntrySingle[], query: string) =>
   query === '' ? trace : trace.filter(e => e.exnMsg.includes(query));
 
+const getFirstLine = (exnMsg: string) => exnMsg.split('\n')[0];
+
 const App: React.FC = () => {
   const classes = useStyles();
 
@@ -125,7 +126,7 @@ const App: React.FC = () => {
               break;
             case 'stats': setLoading(false); break;
             case 'shutdown': break;
-            default: throw new Error("infeasible");
+            default: throw new Error('infeasible');
           }
         }
         // Here's an optimization to preserve object identitiy
@@ -267,7 +268,7 @@ const App: React.FC = () => {
   </>;
 }
 
-render(<App />, document.getElementById("root"));
+render(<App />, document.getElementById('root'));
 
 if (module.hot) {
   module.hot.accept();
