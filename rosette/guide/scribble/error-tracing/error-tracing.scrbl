@@ -278,10 +278,10 @@ last query on the buggy @racket[sum] example from the
 The output shows a table of exceptions that Rosette
 intercepted; here, there is one only exception, which is caused by our bug,
 so there is only one row.
-Each row consists of a shorten error message and an error location
+Each row consists of a shorter error message and an error location
 (source file, line, and column). All rows can be expanded to show
 more details: the full error message, the stack trace,
-and the erroring (blamed) expression.
+and the erroring (blamed) expression.  
 
 @subsection[#:tag "sec:symtrace:opts"]{Options and Caveats}
 
@@ -315,17 +315,15 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
 
 Inside the web browser, the output can be customized further.
 @itemlist[
-  @item{@bold{Group similar rows} switch will @emph{heuristically}
-        group similar rows together, allowing an easier navigation
-        when a lot of exceptions are originated from the same place and same cause.}
-  @item{@bold{Show Racket stacktrace} switch will display the top 32 entries of
-        Racket stack trace in addition to Rosette stack trace.
-        This switch is off by default because Racket stack trace doesn't take
-        symbolic evaluation into account, so the stack trace is likely
-        not going to be useful much. However, it could provide some information
-        if the Rosette stack trace doesn't suffice.}
-  @item{Search box can be used to filter for rows whose error message contains the
-        search string.}
+  @item{The @bold{Group similar rows} switch will @emph{heuristically}
+        group similar rows together, enabling easier navigation
+        when many exceptions originate from the same place and due to the same cause.}
+  @item{The @bold{Show Racket stacktrace} switch will display the top 32 entries of
+        the Racket stack trace in addition to the Rosette stack trace.
+        The Racket stack trace includes the details of evaluating Rosette's internal procedures,
+        which the Rosette trace omits. These details are usually not necessary for 
+        understanding errors in Rosette code, so the switch is off by default.}
+  @item{The search box can be used to find rows that include the search string in their error message.}
 ]
 
 @section{Walkthrough: Tracing Errors in Rosette}
