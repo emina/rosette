@@ -50,7 +50,10 @@
        (init-component c)))
    (define (finish-renderer self profile)
      (match-define (report-renderer source name components options) self)
-     (define events (prune-short-events (reverse (unbox (profile-state-events profile)))))
+     (define unpruned-events (reverse (unbox (profile-state-events profile))))
+     (define events (if (null? unpruned-events)
+                        unpruned-events
+                        (prune-short-events unpruned-events)))
      (define messages 
        (cons (metadata-message source name)
              (apply append (for/list ([c components]) (receive-data c events)))))
@@ -156,6 +159,7 @@
 ;; Remove enter/exit events corresponding to calls that are too short to render.
 ;; This only removes enter/exit events that contain no intervening events, to
 ;; avoid pruning "interesting" calls.
+;; events must not be '()
 (define (prune-short-events events [min% 0.001])
   ; determine the minimum time for an event to be included
   (define (event->time evt)
