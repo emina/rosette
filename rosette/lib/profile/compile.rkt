@@ -358,41 +358,6 @@
 
 ;; Mark original syntax
 (define annotate-key 'sympro:original)
-(define (add-annotate-property s)
-  (cond
-   [(syntax? s)
-    (define new-s (syntax-rearm 
-                   (let ([s (disarm s)])
-                     (datum->syntax s
-                                    (add-annotate-property (syntax-e s))
-                                    s
-                                    s))
-                   s))
-    (syntax-property new-s annotate-key #t #t)]
-   [(pair? s)
-    (cons (add-annotate-property (car s))
-          (add-annotate-property (cdr s)))]
-   [(vector? s)
-    (for/vector #:length (vector-length s) ([e (in-vector s)])
-                (add-annotate-property e))]
-   [(box? s) (box (add-annotate-property (unbox s)))]
-   [(prefab-struct-key s)
-    => (lambda (k)
-         (apply make-prefab-struct
-                k
-                (add-annotate-property (cdr (vector->list (struct->vector s))))))]
-   [(and (hash? s) (immutable? s))
-    (cond
-     [(hash-eq? s)
-      (for/hasheq ([(k v) (in-hash s)])
-        (values k (add-annotate-property v)))]
-     [(hash-eqv? s)
-      (for/hasheqv ([(k v) (in-hash s)])
-        (values k (add-annotate-property v)))]
-     [else
-      (for/hash ([(k v) (in-hash s)])
-        (values k (add-annotate-property v)))])]
-   [else s]))
 
 ;; Is this syntax original?
 (define (is-original? stx)
@@ -419,7 +384,8 @@
       (let ()
         (printf "INSTRUMENTING ~v\n" (syntax-source stx))
         (set-add! original-files (syntax-source stx))
-        (define expanded-e (expand-syntax (add-annotate-property stx)))
+        (define expanded-e
+          (expand-syntax ((make-add-annotate-property disarm annotate-key) stx)))
         (annotate-top expanded-e (namespace-base-phase)))
       stx))
 

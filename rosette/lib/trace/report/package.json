@@ -1,0 +1,29 @@
+{
+  "name": "report",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel index.html",
+    "prebuild": "rm -rf dist",
+    "build": "parcel build index.html --no-source-maps",
+    "postbuild": "racket fix-path.rkt"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/parcel-env": "^0.0.0",
+    "@types/react": "^16.9.34",
+    "parcel-bundler": "^1.12.4",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.9.13",
+    "@material-ui/icons": "^4.9.1",
+    "debounce": "^1.2.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  }
+}

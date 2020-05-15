@@ -8,7 +8,6 @@
 (require rosette/base/core/reporter
          rosette/base/core/bool
          rosette/base/core/exn
-         racket/exn
          syntax/parse/define
          (only-in "../util/syntax.rkt" syntax->readable-location)
          (only-in rosette/query/core [∃-solve query:solve])
@@ -81,7 +80,6 @@
   (match-lambda*
     [(list 'exception guard e)
      (define the-pc (&& (pc) guard))
-     (define msg (exn->string e))
      (define skip?
        (or (exn:fail:rosette:infeasible? e)
            (and (and (symbolic-trace-skip-assertion?)
