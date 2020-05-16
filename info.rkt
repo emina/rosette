@@ -14,7 +14,8 @@
                "gui-lib"
                "base"))
 
-(define build-deps '("draw-lib"
+(define build-deps '("rackunit-doc"
+                     "draw-lib"
                      "errortrace-lib"
                      "pict-lib"
                      "pict-doc"
