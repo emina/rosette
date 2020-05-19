@@ -2,7 +2,8 @@
 
 (define collection 'multi)
 
-(define deps '("sandbox-lib"
+(define deps '("custom-load"
+               "sandbox-lib"
                "scribble-lib"
                ("racket" #:version "7.0")
                "r6rs-lib"

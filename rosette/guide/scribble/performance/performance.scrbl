@@ -212,11 +212,8 @@ the program that are difficult to evaluate symbolically.
 More details about symbolic profiling are available
 in the related technical paper @~cite[sympro:oopsla18].
 
-@bold{Running the symbolic profiler} has the same limitations as @racketmodname[errortrace]:
-before running it, throw away any @filepath{.zo} versions of your program
-(i.e., delete any @filepath{compiled} folders in your code's folder hierarchy).
-
-Then invoke the symbolic profiler on a program file @nonterm{prog} using @exec{raco}:
+To run the symbolic profiler on a program file @nonterm{prog},
+use the @exec{raco} command:
 
 @commandline{raco symprofile @nonterm{prog}}
 
@@ -257,6 +254,10 @@ a module whose initial module path is either @tt{rosette} or @tt{rosette/safe}.
 In other words, only files beginning with @tt{#lang rosette} or @tt{#lang rosette/safe} will be instrumented.
 To instrument @emph{all} code, use the @DFlag{racket} flag described below.
 
+Similarly, by default, the symbolic profiler instruments only code that
+does not belong to installed packages. To instrument
+given installed packages, use the @DFlag{pkg} flag described below.
+
 The @exec{raco symprofile @nonterm{prog}} command accepts the following command-line flags:
 
 @itemlist[
@@ -277,6 +278,7 @@ The @exec{raco symprofile @nonterm{prog}} command accepts the following command-
  @item{@DFlag{racket} --- instrument code in any module, not just those
    derived from Rosette.}
 
+ @item{@DFlag{pkg} @nonterm{pkg-name} --- instrument code in @nonterm{pkg-name}.}
   ]
 
 

@@ -18,6 +18,7 @@
 (define run-profiler? (make-parameter #t))
 (define module-name (make-parameter 'main))
 (define renderer-options (make-parameter (hash)))
+(define pkgs-to-instrument (make-parameter '()))
 (define file
   (command-line #:program (short-program+command-name)
                 #:help-labels "" "Profiler modes"
@@ -44,6 +45,10 @@
                 [("-r" "--racket")
                  "Instrument code in any module, not just `#lang rosette`"
                  (symbolic-profile-rosette-only? #f)]
+                #:multi
+                [("-p" "--pkg") pkg
+                 "Instrument code in the given package"
+                 (pkgs-to-instrument (cons pkg (pkgs-to-instrument)))]
                 #:help-labels "" "Profiling settings"
                 #:once-each
                 [("-t" "--threshold") t
@@ -80,8 +85,8 @@
 (collect-garbage)
 
 (current-compile symbolic-profile-compile-handler)
-
-
+(current-load/use-compiled (make-rosette-load/use-compiled
+                            (pkgs-to-instrument)))
 
 (define-values (mod mod-pretty)
   (module->module-path file (module-name)))

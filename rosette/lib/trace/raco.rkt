@@ -18,6 +18,7 @@
          "tool.rkt")
 
 (define symbolic-trace-verbose? #f)
+(define symbolic-trace-pkgs-to-instrument '())
 (define module-name (make-parameter 'main))
 (define file
   (command-line
@@ -46,6 +47,11 @@
     "Verbose output (log the output in the JSON format to stdout)"
     (set! symbolic-trace-verbose? #t)]
 
+   #:multi
+   [("--pkg") pkg
+    "Instrument code in the given package"
+    (set! symbolic-trace-pkgs-to-instrument
+          (cons pkg symbolic-trace-pkgs-to-instrument))]
 
    #:help-labels ""
    #:args (filename . args)
@@ -70,6 +76,8 @@
 ;; setup the new current-compile here so that the loading that occurs due to
 ;; module->module-path is relative cheap
 (current-compile symbolic-trace-compile-handler)
+(current-load/use-compiled (make-rosette-load/use-compiled
+                            symbolic-trace-pkgs-to-instrument))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
