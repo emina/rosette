@@ -275,7 +275,7 @@ The @exec{raco symprofile @nonterm{prog}} command accepts the following command-
  @item{@Flag{t} @nonterm{threshold} --- prune function calls whose execution time is less
    than @nonterm{threshold} milliseconds (defaults to 1 ms).}
 
- @item{@DFlag{racket} --- instrument code in any module, not just those
+ @item{@DFlag{racket} --- instrument code in any language, not just those
    derived from Rosette.}
 
  @item{@DFlag{pkg} @nonterm{pkg-name} --- instrument code in @nonterm{pkg-name}.}

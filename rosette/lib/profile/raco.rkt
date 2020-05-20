@@ -43,7 +43,7 @@
                  "Run submodule <name> (defaults to 'main)"
                  (module-name (string->symbol name))]
                 [("-r" "--racket")
-                 "Instrument code in any module, not just `#lang rosette`"
+                 "Instrument code in any language, not just `#lang rosette`"
                  (symbolic-profile-rosette-only? #f)]
                 #:multi
                 [("-p" "--pkg") pkg

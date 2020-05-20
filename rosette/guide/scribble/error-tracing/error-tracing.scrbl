@@ -298,7 +298,7 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
   specified @nonterm{module-name} submodule of @nonterm{prog}
   (defaults to the @tt{main} submodule).}
 
- @item{@DFlag{racket} --- instrument code in any module, not
+ @item{@DFlag{racket} --- instrument code in any language, not
   just those derived from Rosette.}
 
  @item{@DFlag{solver} --- do not show exceptions raised on

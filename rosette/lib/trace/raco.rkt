@@ -32,10 +32,16 @@
                       "Run submodule <name> (defaults to 'main)"
                       (module-name (string->symbol name))]
    [("-r" "--racket")
-    "Instrument code in any module, not just `#lang rosette`"
+    "Instrument code in any language, not just `#lang rosette`"
     (symbolic-trace-rosette-only? #f)]
+   #:multi
+   [("-p" "--pkg") pkg
+    "Instrument code in the given package"
+    (set! symbolic-trace-pkgs-to-instrument
+          (cons pkg symbolic-trace-pkgs-to-instrument))]
 
    ;; SymTrace options
+   #:once-each
    [("--assert")
     "Skip assertion errors (not reliable)"
     (symbolic-trace-skip-assertion? #t)]
@@ -46,12 +52,6 @@
    [("--verbose")
     "Verbose output (log the output in the JSON format to stdout)"
     (set! symbolic-trace-verbose? #t)]
-
-   #:multi
-   [("--pkg") pkg
-    "Instrument code in the given package"
-    (set! symbolic-trace-pkgs-to-instrument
-          (cons pkg symbolic-trace-pkgs-to-instrument))]
 
    #:help-labels ""
    #:args (filename . args)

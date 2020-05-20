@@ -18,7 +18,8 @@
       (values file-path file)))
 
 (define (path-prefix? a b)
-  (string-prefix? (path->string a) (path->string b)))
+  (string-prefix? (path->string (resolve-path a))
+                  (path->string (resolve-path b))))
 
 (define (make-rosette-load/use-compiled pkgs-to-instrument)
   (make-custom-load/use-compiled
