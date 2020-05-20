@@ -247,15 +247,8 @@ It is not possible to automatically distinguish between
 these two, so the error tracer leaves that task to the
 programmer.
 
-
-@bold{Running the error tracer} has the same limitations as
-@racketmodname[errortrace] and the @seclink["sec:sympro"]{
- symbolic profiler}: before running it, throw away any
-@filepath{.zo} versions of your program (i.e., delete any
-@filepath{compiled} folders in your code's folder hierarchy).
-
-Then invoke the error tracer on a program file @nonterm{prog}
-using @exec{raco}:
+To run the error tracer on a program file @nonterm{prog},
+use the @exec{raco} command:
 
 @commandline{raco symtrace @nonterm{prog}}
 
@@ -295,13 +288,17 @@ will not include non-instrumented files. To instrument
 @emph{all} code, use the @DFlag{racket} flag described
 below.
 
+Similarly, by default, the error tracer instruments only code that
+does not belong to installed packages. To instrument
+given installed packages, use the @DFlag{pkg} flag described below.
+
 The @exec{raco symtrace @nonterm{prog}} command accepts the following command-line flags:
 @itemlist[
  @item{@DFlag{module} @nonterm{module-name} --- run the
   specified @nonterm{module-name} submodule of @nonterm{prog}
   (defaults to the @tt{main} submodule).}
 
- @item{@DFlag{racket} --- instrument code in any module, not
+ @item{@DFlag{racket} --- instrument code in any language, not
   just those derived from Rosette.}
 
  @item{@DFlag{solver} --- do not show exceptions raised on
@@ -310,6 +307,8 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
 
  @item{@DFlag{assert} --- do not show exceptions due to
   assertion errors, which are usually expected exceptions.}
+
+ @item{@DFlag{pkg} @nonterm{pkg-name} --- instrument code in @nonterm{pkg-name}.}
   ]
 
 
