@@ -16,7 +16,8 @@
 
 ;; Runs the code in `private/install.rkt` before installing this collection.
 (define pre-install-collection "private/install.rkt")
-(define compile-omit-files '("private/install.rkt"))
+(define compile-omit-files '("private/install.rkt"
+                             "lib/trace/report/node_modules"))
 
 (define raco-commands
   '(("symprofile"
