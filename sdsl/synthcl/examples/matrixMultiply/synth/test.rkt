@@ -2,8 +2,12 @@
 
 (require (only-in "host.rkt" synth_vector)
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
-         (only-in rosette sat? unsat?)
+         (only-in rosette sat? unsat? current-solver)
+         rosette/solver/smt/boolector
          rackunit rackunit/text-ui rosette/lib/roseunit)
+
+(when (boolector-available?)
+  (current-solver (boolector)))
 
 (define fast-tests
   (test-suite+ 

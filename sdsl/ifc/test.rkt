@@ -3,7 +3,10 @@
 (require "machine.rkt" "indistinguishable.rkt" "verify.rkt"
          "basic.rkt" "jump.rkt" "call.rkt")
 
-(require rackunit rackunit/text-ui rosette/lib/roseunit)
+(require rackunit rackunit/text-ui rosette/lib/roseunit rosette/solver/smt/boolector)
+
+(when (boolector-available?)
+  (current-solver (boolector)))
 
 ; See verify-EENI-demo.rkt for details on the results expected by the tests.
 

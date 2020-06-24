@@ -6,13 +6,13 @@ env:
   global:
     - RACKET_DIR=~/racket
     - CVC4_URL="http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.5-x86_64-linux-opt"
-    - BOOLECTOR_URL="https://github.com/Boolector/boolector/archive/3.1.0.tar.gz"
+    - BOOLECTOR_URL="https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
   matrix:
     - RACKET_VERSION=7.0  # Our minimum supported version
     - RACKET_VERSION=RELEASE
     - RACKET_VERSION=RELEASECS
     - RACKET_VERSION=HEAD
-    - RACKET_VERSION=RELEASE ALL_SOLVERS=1
+    - RACKET_VERSION=RELEASE
 
 matrix:
   allow_failures:
@@ -24,7 +24,7 @@ before_install:
   - git clone https://github.com/greghendershott/travis-racket.git
   - cat travis-racket/install-racket.sh | bash # pipe to bash not sh!
   - export PATH="${RACKET_DIR}/bin:${PATH}"
-  - if [ "$ALL_SOLVERS" == "1" ]; then
+  - if [ true ]; then
       mkdir bin &&
       wget $CVC4_URL -nv -O bin/cvc4 &&
       chmod +x bin/cvc4 &&

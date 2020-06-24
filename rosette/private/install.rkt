@@ -23,37 +23,39 @@
   (define bin-path (simplify-path (build-path racl-path ".." "bin")))
   (define z3-path (build-path bin-path "z3"))
   (with-handlers ([exn:fail? (lambda (e) (print-failure z3-path (exn-message e)))])
-    (unless (file-exists? z3-path)
-      (define-values (z3-url z3-extracted-subdir) (get-z3-url))
+    (unless (custom-z3-symlink? z3-path)
+      (define-values (z3-url z3-path-in-zip) (get-z3-url))
       (define z3-port (get-pure-port (string->url z3-url) #:redirections 10))  
       (make-directory* bin-path) ;; Ensure that `bin-path` exists
+      (delete-directory/files z3-path #:must-exist? #f) ;; Delete old version of Z3, if any
       (parameterize ([current-directory bin-path])    
         (call-with-unzip z3-port
                          (λ (dir)
-                           (copy-directory/files (build-path dir "z3") z3-path)))
+                           (copy-directory/files (build-path dir z3-path-in-zip) z3-path)))
         ;; Unzipping loses file permissions, so we reset the z3 binary here
         (file-or-directory-permissions 
           z3-path 
           (if (equal? (system-type) 'windows) #o777 #o755))))))
 
+(define (custom-z3-symlink? z3-path)
+  (and (file-exists? z3-path)
+       (let ([p (simplify-path z3-path)])
+         (not (equal? (resolve-path p) p)))))
 
-;; Currently unused, but will be useful if Rosette is using a stable z3 release
 (define (get-z3-url)
-  (match (list (system-type) (system-type 'word))
-    ['(unix 64)
-     (values
-      "https://github.com/emina/rosette/releases/download/v2.0/z3-d89c39cb-x64-ubuntu-14.04.zip"
-      "z3-d89c39cb-x64-ubuntu-14.04")]
-    [`(macosx ,_)
-     (values
-      "https://github.com/emina/rosette/releases/download/v2.0/z3-d89c39cb-x64-osx-10.11.zip"
-      "z3-d89c39cb-x64-osx-10.11")]
-    ['(windows 64)
-     (values
-      "https://github.com/emina/rosette/releases/download/v2.0/z3-d89c39cb-x64-win.zip"
-      "z3-d89c39cb-x64-win")]
-    [any
-     (raise-user-error 'get-z3-url "Unknown system type '~a'" any)]))
+  (define site "https://github.com/Z3Prover/z3/releases/download")
+  (define version "z3-4.8.8")
+  (define os
+    (match (list (system-type) (system-type 'word))
+      ['(unix 64)    "x64-ubuntu-16.04"]
+      [`(macosx ,_)  "x64-osx-10.14.6"]
+      ['(windows 64) "x64-win"]
+      [any           (raise-user-error 'get-z3-url "Unknown system type '~a'" any)]))
+  (define name (format "~a-~a" version os))
+  (values
+   (format "~a/~a/~a.zip" site version name)
+   (format "~a/bin/z3" name)))
+
 
 ;; A copy of net/url's get-pure-port/headers, except with the Location header
 ;; for redirects made case-insensitive, fixing https://github.com/racket/racket/pull/3057

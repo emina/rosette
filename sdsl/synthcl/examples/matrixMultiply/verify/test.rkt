@@ -3,8 +3,12 @@
 (require (only-in "host.rkt" verify_scalar verify_vector verify_vector_opt)
          (prefix-in buggy_ (only-in "host-buggy.rkt" verify_scalar verify_vector verify_vector_opt))
          (only-in "../../../lang/queries.rkt" expected? query-output-port)
-         (only-in rosette sat? unsat?)
+         (only-in rosette sat? unsat? current-solver)
+         rosette/solver/smt/boolector
          rackunit rackunit/text-ui rosette/lib/roseunit)
+
+(when (boolector-available?)
+  (current-solver (boolector)))
 
 (define fast-tests
   (test-suite+ 
