@@ -324,7 +324,7 @@
           [else (let ([a (car l)]) (@if (f a) a (loop (cdr l))))])))]
   (define/lift/applicator memf f list)
   (define/lift/applicator findf f list)
-  (define (@member x xs) (@memf (curry @equal? x) xs))
+  (define (@member x xs [is-equal? @equal?]) (@memf (curry is-equal? x) xs))
   (define (@memq x xs) (@memf (curry @eq? x) xs))
   (define @assoc (case-lambda [(x xs) (@findf (compose (curry @equal? x) @car) xs)]
                               [(x xs eq?) (assert-arity-includes eq? 2 'assoc)
