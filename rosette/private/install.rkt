@@ -45,16 +45,16 @@
 (define (get-z3-url)
   (define site "https://github.com/Z3Prover/z3/releases/download")
   (define version "z3-4.8.8")
-  (define os
+  (define-values (os exe)
     (match (list (system-type) (system-type 'word))
-      ['(unix 64)    "x64-ubuntu-16.04"]
-      [`(macosx ,_)  "x64-osx-10.14.6"]
-      ['(windows 64) "x64-win"]
+      ['(unix 64)    (values "x64-ubuntu-16.04" "z3")]
+      [`(macosx ,_)  (values "x64-osx-10.14.6" "z3")]
+      ['(windows 64) (values "x64-win" "z3.exe")]
       [any           (raise-user-error 'get-z3-url "Unknown system type '~a'" any)]))
   (define name (format "~a-~a" version os))
   (values
    (format "~a/~a/~a.zip" site version name)
-   (format "~a/bin/z3" name)))
+   (format "~a/bin/~a" name exe)))
 
 
 ;; A copy of net/url's get-pure-port/headers, except with the Location header
