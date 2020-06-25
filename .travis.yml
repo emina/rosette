@@ -12,7 +12,6 @@ env:
     - RACKET_VERSION=RELEASE
     - RACKET_VERSION=RELEASECS
     - RACKET_VERSION=HEAD
-    - RACKET_VERSION=RELEASE
 
 matrix:
   allow_failures:
