@@ -1,5 +1,19 @@
 # Release Notes
 
+## Version 3.1
+
+This release includes bug fixes and updates Rosette to use the latest version of Z3 as its default SMT solver. 
+
+This release also includes the following new functionality contributed by [Sorawee Porncharoenwase][]:
+
+- An interactive [value browser][] to help programmers navigate and read complex symbolic values. 
+- An *error tracer* for finding bugs in Rosette programs that manifest as exceptions intercepted during symbolic evaluation. To use the error tracer, run the command `raco symtrace <prog>`. The [debugging][] chapter in the Rosette guide describes some common issues due to intercepted exceptions, how to test for them, and how to find them with the error tracer.
+
+
+[Sorawee Porncharoenwase]: https://github.com/sorawee
+[debugging]: https://docs.racket-lang.org/rosette-guide/ch_error-tracing.html
+[value browser]: https://docs.racket-lang.org/rosette-guide/sec_utility-libs.html#%28part._.Value_.Browser_.Library%29
+
 ## Version 3.0
 
 This is a major release with significant changes to the language and the runtime.  Rosette 3.0 is *not backward compatible* with Rosette 2.x. But porting Rosette 2.x code to Rosette 3.0 should be straightforward for most applications.
