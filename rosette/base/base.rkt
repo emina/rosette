@@ -164,7 +164,7 @@
  expand-syntax-to-top-form
  ; input and output
  read read-syntax
- write display print displayln fprintf printf eprintf format newline
+ write display print writeln displayln println fprintf printf eprintf format newline
  pretty-print pretty-write pretty-display pretty-format 
  call-with-input-file
  current-input-port current-output-port current-error-port eof
