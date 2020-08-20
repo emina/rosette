@@ -88,6 +88,7 @@
   #:transparent
   #:methods gen:typed
   [(define (get-type self) (bv-type self))]
+  #:property prop:custom-print-quotable 'never
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (match self
