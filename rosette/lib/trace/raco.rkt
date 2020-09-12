@@ -103,7 +103,7 @@
 
 (define (exn-context->json xs)
   (for/list ([x (in-list xs)] [_limit (in-range 32)])
-    (hash 'name (when/null [name (car x)] (symbol->string name))
+    (hash 'name (when/null [name (car x)] (~a name))
           'srcloc (when/null [loc (cdr x)]
                     (hash 'source (normalize-path-for-rosette (srcloc-source loc))
                           'line (srcloc-line loc)
