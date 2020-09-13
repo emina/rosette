@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (solver . 0)))
+ (#:trace
+  (("application: not a procedure;\n expected ...."
+    (#%app "macro-define.rkt" 9 28)
+    ((1 "macro-define.rkt" 9 28))
+    #t))))

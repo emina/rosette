@@ -16,34 +16,15 @@
 ;; The instrumentation is primarily for finding an expression to blame that leads to
 ;; an error. Because we operate on fully-expanded Racket core forms, we use
 ;; the origin property to find an original expression to blame. The principle is to
-;; instrument any core form `e` which is a (top-level) result of an expansion from
-;; a macro invocation `mac`, and evaluating `e` will result in an error.
+;; instrument any core form `e` whose evaluation could result in an error.
 ;;
 ;; What this means, for instance, is that there's no need to instrument the
-;; `#%plain-lambda` form, because suppose `mac` expands to `#%plain-lambda`, then
-;; an error will not occur while evaluating `#%plain-lambda`, so `mac` will never
-;; be blamed due to `#%plain-lambda`. Note that it's not true that `mac` will never
-;; be blamed in general. Consider:
-;;
-;; ;; lib.rkt
-;; #lang racket
-;; (require rosette)
-;; (provide mac)
-;; (define-syntax-rule (mac) (begin (define (foo) (verify (1))) (foo)))
-;;
-;; ;; client.rkt
-;; #lang rosette
-;; (require "lib.rkt")
-;; (mac)
-;;
-;; In this case, `mac` has two top-level forms that it expands to: `define-value`
-;; and `#%plain-app`. While `mac` will not be blamed due to `define-value`, it is
-;; blamed due to `#%app`.
+;; `#%plain-lambda` form.
 ;;
 ;; In a nutshell, we only need to instrument:
 ;; if, begin (expression context), begin0, let-values, letrec-values, set!,
-;; with-continuation-mark, and #%plain-app.
-;; Top-level forms like `module` or `define-values` won't evaluate to an error
+;; with-continuation-mark, #%plain-app, and `define-values`.
+;; Top-level forms like `module` and `#%require` won't evaluate to an error
 ;; as described above. Expressions like identifier, #%plain-lambda, and quote
 ;; won't evaluate to an error either.
 
@@ -171,7 +152,7 @@
 
       [(define-values names rhs)
        #:when top?
-       (transform (list #'rhs))]
+       (instrument-track (transform (list #'rhs)))]
       [(begin exprs ...)
        #:when top?
        (transform (attribute exprs) #:annotate annotate-top)]
@@ -258,15 +239,28 @@
 (define ((make-instrument-track expr phase) result-stx)
   (define (instrument id)
     (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
-      #`(begin
-          ((qt #,add-current-syntax!)
-           (cons (qt #,(syntax->datum id))
-                 (qt #,(syntax->readable-location id))))
-          (call-with-exception-handler
-           (qt #,restore-current-syntax!)
-           (λ ()
-             (begin0 #,result-stx
-               ((qt #,restore-current-syntax!))))))))
+      (define (get-template v)
+        #`(begin
+            ((qt #,add-current-syntax!)
+             (cons (qt #,(syntax->datum id))
+                   (qt #,(syntax->readable-location id))))
+            (call-with-exception-handler
+             (qt #,restore-current-syntax!)
+             (λ ()
+               (begin0 #,v
+                 ((qt #,restore-current-syntax!)))))))
+      (syntax-parse result-stx
+        #:literal-sets ([kernel-literals #:phase phase])
+        [(define-values (id) e)
+         #`(define-values (id)
+             #,(get-template
+                (syntax-property #'e
+                                 'inferred-name
+                                 (or (syntax-property #'e 'inferred-name)
+                                     (syntax-e #'id)))))]
+        [(define-values ids e)
+         #`(define-values ids #,(get-template #'e))]
+        [_ (get-template result-stx)])))
 
   (define origin (syntax-property expr 'origin))
   (or (and origin

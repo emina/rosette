@@ -106,6 +106,7 @@
                         "if.rkt"
                         "infeasible.rkt"
                         "macro.rkt"
+                        "macro-define.rkt"
                         "solver-limitation.rkt"
                         "test-track-form.rkt"
                         "error.rkt"
