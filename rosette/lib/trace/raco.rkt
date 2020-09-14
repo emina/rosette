@@ -105,6 +105,7 @@
   (match stack
     ['() '()]
     [(cons #f stack) (first-frame->json/tail stack)]
+    [(cons (list 'certified a b) _) #:when (equal? a b) '()]
     [(cons (list _ _ elem) _)
      (list (apply frame->json/tail elem))]))
 
