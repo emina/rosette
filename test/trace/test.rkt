@@ -40,7 +40,7 @@
     (match xs
       ['() '()]
       [(cons #f xs) (format-first-stack-elem/tail xs)]
-      [(cons (list 'certified a b) _) #:when (equal? a b) '()]
+      [(cons (list 'certified a b) _) #:when (eq? a b) '()]
       [(cons (list _ _ elem) _) (list (apply format-stack-elem/tail elem))]))
 
 
