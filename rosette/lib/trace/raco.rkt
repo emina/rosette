@@ -106,11 +106,13 @@
 (define (first-frame->json/tail stack)
   (match stack
     ['() '()]
+    [(cons #f stack) (first-frame->json/tail stack)]
     [(cons (list _ _ elem) _)
      (list (apply frame->json/tail elem))]))
 
 (define (each-frame->json/tail frame)
   (match frame
+    [#f #f]
     [(list 'uncertified _ _) #f]
     [(list _ elem _) (apply frame->json/tail elem)]))
 
@@ -140,7 +142,7 @@
         'callStack
         (cond
           [(symbolic-trace-tail?) (append (first-frame->json/tail stack)
-                                          (map each-frame->json/tail stack))]
+                                          (filter-map each-frame->json/tail stack))]
           [else
            ;; TODO
            (append (first-frame->json/tail stack)

@@ -228,57 +228,72 @@
                                   (append (list #'p-a #'the-function)
                                           (attribute tail2))
                                   #'stx
-                                  #'stx)))))))
-     ]
+                                  #'stx)))))))]
+
     [(#%plain-app head tail ...)
-     (instrument-track (transform (cons #'head (attribute tail))))]
+     #:when (find-origin this-syntax)
+     #:with stx (transform (cons #'head (attribute tail)))
+     (instrument-track
+      #`(call-with-immediate-continuation-mark
+         'symbolic-trace:stack-key
+         (λ (k)
+           (with-continuation-mark
+             'symbolic-trace:stack-key
+             (and k (list 'certified (second k) (third k)))
+             stx))))]
+
+    [(#%plain-app head tail ...)
+     (transform (cons #'head (attribute tail)))]
+
     [_ (error 'errortrace "unrecognized expression form~a~a: ~.s"
               (if top? " at top-level" "")
               (if (zero? phase) "" (format " at phase ~a" phase))
               (syntax->datum expr))]))
 
+(define (find-origin expr)
+  (define origin (syntax-property expr 'origin))
+  (and origin
+       (let find-origin ([origin origin])
+         (for/or ([id-or-origin (in-list origin)])
+           (cond
+             [(identifier? id-or-origin)
+              (and (set-member? original-files (syntax-source id-or-origin))
+                   id-or-origin)]
+             [else (find-origin id-or-origin)])))))
 
 (define ((make-instrument-track expr phase) result-stx)
-  (define (instrument id)
-    (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
-      (define (get-template v)
-        #`(with-continuation-mark
-            'symbolic-trace:stx-key
-            (cons (qt #,(syntax->datum id))
-                  (qt #,(syntax->readable-location id)))
-            #,v))
-      (syntax-parse (disarm result-stx)
-        #:literal-sets ([kernel-literals #:phase phase])
-        [({~and d-v define-values} {~and ids (id)} e)
-         (datum->syntax this-syntax
-                        (list #'d-v
-                              #'ids
-                              (get-template
-                               (syntax-property #'e
-                                                'inferred-name
-                                                (or (syntax-property #'e 'inferred-name)
-                                                    (syntax-e #'id)))))
-                        this-syntax
-                        this-syntax)]
-        [({~and d-v define-values} ids e)
-         (datum->syntax this-syntax
-                        (list #'d-v
-                              #'ids
-                              (get-template #'e))
-                        this-syntax
-                        this-syntax)]
-        [_ (get-template result-stx)])))
-
-  (define origin (syntax-property expr 'origin))
-  (or (and origin
-           (let find-origin ([origin origin])
-             (for/or ([id-or-origin (in-list origin)])
-               (cond
-                 [(identifier? id-or-origin)
-                  (and (set-member? original-files (syntax-source id-or-origin))
-                       (instrument id-or-origin))]
-                 [else (find-origin id-or-origin)]))))
-      result-stx))
+  (define id (find-origin expr))
+  (cond
+    [id
+     (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
+       (define (get-template v)
+         #`(with-continuation-mark
+             'symbolic-trace:stx-key
+             (cons (qt #,(syntax->datum id))
+                   (qt #,(syntax->readable-location id)))
+             #,v))
+       (syntax-parse (disarm result-stx)
+         #:literal-sets ([kernel-literals #:phase phase])
+         [({~and d-v define-values} {~and ids (id)} e)
+          (datum->syntax this-syntax
+                         (list #'d-v
+                               #'ids
+                               (get-template
+                                (syntax-property #'e
+                                                 'inferred-name
+                                                 (or (syntax-property #'e 'inferred-name)
+                                                     (syntax-e #'id)))))
+                         this-syntax
+                         this-syntax)]
+         [({~and d-v define-values} ids e)
+          (datum->syntax this-syntax
+                         (list #'d-v
+                               #'ids
+                               (get-template #'e))
+                         this-syntax
+                         this-syntax)]
+         [_ (get-template result-stx)]))]
+    [else result-stx]))
 
 ;; Create two annotation procedures: one for top-level forms and one for everything else
 (define annotate (make-annotate #f))
@@ -366,22 +381,17 @@
      (annotate-top expanded-e (namespace-base-phase))]
     [_ this-syntax]))
 
-(define (p+r stx)
-  #;(pretty-print (syntax->datum stx))
-  stx)
-
-
 ;; Create a compile handler that invokes trace-annotate on
 ;; a piece of syntax that needs compilation, and then runs the
 ;; existing (current-compile)
 (define (make-symbolic-trace-compile-handler)
   (define orig (current-compile))
   (lambda (e immediate-eval?)
-    (orig (p+r (trace-annotate
-                (if (syntax? e)
-                    e
-                    (namespace-syntax-introduce
-                     (datum->syntax #f e)))))
+    (orig (trace-annotate
+           (if (syntax? e)
+               e
+               (namespace-syntax-introduce
+                (datum->syntax #f e))))
           immediate-eval?)))
 
 

@@ -6,7 +6,9 @@
     (&& (&& ...) ...))
    ("assert: unexpected empty list\n"
     (assert "ex-3.rkt" 8 18)
-    ((select "ex-3.rkt" 17 18) (select "ex-3.rkt" 21 28))
+    ((select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 21 28))
     (&& (&& ...) ...))
    ("select: arity mismatch;\n the expected nu...."
     (#%app "ex-3.rkt" 16 24)
@@ -17,6 +19,7 @@
    ("assert: unexpected empty list\n"
     (assert "ex-3.rkt" 8 18)
     ((select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 21 28))
     (&& (|| ...) ...))
@@ -32,6 +35,7 @@
     ((select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 21 28))
     (&& (|| ...) ...))
    ("select: arity mismatch;\n the expected nu...."
@@ -45,6 +49,7 @@
    ("assert: unexpected empty list\n"
     (assert "ex-3.rkt" 8 18)
     ((select "ex-3.rkt" 17 18)
+     (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 17 18)
      (select "ex-3.rkt" 17 18)
