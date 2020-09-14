@@ -59,8 +59,6 @@
    (current-command-line-arguments (list->vector args))
    filename))
 
-(symbolic-trace-tail? #t)
-
 (collect-garbage)
 (collect-garbage)
 (collect-garbage)
@@ -140,13 +138,8 @@
                                         'line (third stx-info)
                                         'column (fourth stx-info))))
         'callStack
-        (cond
-          [(symbolic-trace-tail?) (append (first-frame->json/tail stack)
-                                          (filter-map each-frame->json/tail stack))]
-          [else
-           ;; TODO
-           (append (first-frame->json/tail stack)
-                   (map each-frame->json/tail stack))])))
+        (append (first-frame->json/tail stack)
+                (filter-map each-frame->json/tail stack))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Running server

@@ -1,7 +1,6 @@
 #lang racket
 
 (provide do-trace add-original-form!
-         symbolic-trace-tail?
          symbolic-trace-skip-assertion?
          symbolic-trace-skip-infeasible-solver?)
 
@@ -24,7 +23,6 @@
        ex)
      (thunk (begin0 (let () body ...) (restorer))))))
 
-(define symbolic-trace-tail? (make-parameter #f))
 (define symbolic-trace-skip-assertion? (make-parameter #f))
 (define symbolic-trace-skip-infeasible-solver? (make-parameter #f))
 

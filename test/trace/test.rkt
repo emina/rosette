@@ -51,13 +51,8 @@
         (substring-top (exn->string ex) 40)))
     (define activated-syntax-out (format-activated-syntax activated-syntax))
     (define activated-stack-out
-      (cond
-        [(symbolic-trace-tail?)
-         (append (format-first-stack-elem/tail activated-stack)
-                 (filter-map format-each-stack-elem/tail activated-stack))]
-        [else
-         (append (format-first-stack-elem/tail activated-stack)
-                 (filter-map format-each-stack-elem/tail activated-stack))]))
+      (append (format-first-stack-elem/tail activated-stack)
+              (filter-map format-each-stack-elem/tail activated-stack)))
     (list ex-out activated-syntax-out activated-stack-out pc))
   (serialize
    `((#:stats ,stats)
