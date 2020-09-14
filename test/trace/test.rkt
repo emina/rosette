@@ -27,9 +27,20 @@
   (define (format-activated-syntax activated-syntax)
     (match-define (list stx path line col) activated-syntax)
     (list stx (path->name path) line col))
-  (define (format-activated-stack-elem elem)
-    (match-define (list proc path line col) elem)
+
+
+  (define (format-stack-elem/tail proc path line col)
     (list (or (object-name proc) proc) (path->name path) line col))
+  (define (format-each-stack-elem/tail elem)
+    (match elem
+      [(list 'uncertified _ _) #f]
+      [(list _ elem _) (apply format-stack-elem/tail elem)]))
+  (define (format-first-stack-elem/tail xs)
+    (match xs
+      ['() '()]
+      [(cons (list _ _ elem) _) (list (apply format-stack-elem/tail elem))]))
+
+
   (define (format-trace-elem elem)
     (match-define (list ex activated-syntax activated-stack pc) elem)
     ;; get rid of path information
@@ -37,7 +48,15 @@
       (parameterize ([error-print-context-length 0])
         (substring-top (exn->string ex) 40)))
     (define activated-syntax-out (format-activated-syntax activated-syntax))
-    (define activated-stack-out (map format-activated-stack-elem activated-stack))
+    (define activated-stack-out
+      (cond
+        [(symbolic-trace-tail?)
+         (append (format-first-stack-elem/tail activated-stack)
+                 (filter-map format-each-stack-elem/tail activated-stack))]
+        [else
+         ;; TODO
+         (append (format-first-stack-elem/tail activated-stack)
+                 (filter-map format-each-stack-elem/tail activated-stack))]))
     (list ex-out activated-syntax-out activated-stack-out pc))
   (serialize
    `((#:stats ,stats)
@@ -102,6 +121,8 @@
                         "ex-1-3.rkt"
                         "ex-2.rkt"
                         "ex-3.rkt"
+                        "tail.rkt"
+                        "non-tail.rkt"
                         "assertion.rkt"
                         "if.rkt"
                         "infeasible.rkt"
@@ -116,6 +137,9 @@
                         "no-error.rkt"
                         "test-stack.rkt"
                         "toplevel.rkt"))
+
+(define tail-tests '("tail.rkt"
+                     "non-tail.rkt"))
 
 (define solver-tests '("assertion.rkt"
                        "if.rkt"
@@ -138,14 +162,17 @@
   (run-mode solver-tests "solver" `([,symbolic-trace-skip-infeasible-solver? #t])))
 (define assertion-suites
   (run-mode assertion-tests "assertion" `([,symbolic-trace-skip-assertion? #t])))
+(define tail-suites
+  (run-mode tail-tests "tail" `([,symbolic-trace-tail? #t])))
 (define all-suites
   (run-mode all-tests "all" `([,symbolic-trace-skip-infeasible-solver? #t]
-                               [,symbolic-trace-skip-assertion? #t])))
+                              [,symbolic-trace-skip-assertion? #t])))
 
 (module+ test
   (require rackunit/text-ui)
 
   (for-each run-tests regular-suites)
+  (for-each run-tests tail-suites)
   (for-each run-tests solver-suites)
   (for-each run-tests assertion-suites)
   (for-each run-tests all-suites))

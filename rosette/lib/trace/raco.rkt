@@ -59,6 +59,8 @@
    (current-command-line-arguments (list->vector args))
    filename))
 
+(symbolic-trace-tail? #t)
+
 (collect-garbage)
 (collect-garbage)
 (collect-garbage)
@@ -95,11 +97,22 @@
       (string-append "<cwd>/" (path-string->string (find-relative-path cwd path)))
       path))
 
-(define (frame->json frame)
-  (hash 'name (~a (or (object-name (first frame)) (first frame)))
-        'srcloc (hash 'source (normalize-path-for-rosette (second frame))
-                      'line (third frame)
-                      'column (fourth frame))))
+(define (frame->json/tail proc path line col)
+  (hash 'name (~a (or (object-name proc) proc))
+        'srcloc (hash 'source (normalize-path-for-rosette path)
+                      'line line
+                      'column col)))
+
+(define (first-frame->json/tail stack)
+  (match stack
+    ['() '()]
+    [(cons (list _ _ elem) _)
+     (list (apply frame->json/tail elem))]))
+
+(define (each-frame->json/tail frame)
+  (match frame
+    [(list 'uncertified _ _) #f]
+    [(list _ elem _) (apply frame->json/tail elem)]))
 
 (define (exn-context->json xs)
   (for/list ([x (in-list xs)] [_limit (in-range 32)])
@@ -110,13 +123,13 @@
                           'column (srcloc-column loc))))))
 
 (define (entry->json entry original-map)
-  (define exn-info (first entry))
+  (match-define (list exn-info stx-info stack _pc) entry)
   (hash 'timestamp (current-seconds)
         'exnMsg (exn-message exn-info)
         'exnTrace (exn-context->json
                     (continuation-mark-set->context
                      (exn-continuation-marks exn-info)))
-        'stxInfo (when/null [stx-info (second entry)]
+        'stxInfo (when/null [stx-info stx-info]
                     (define blaming-stx (hash-ref original-map (rest stx-info) #f))
                     (hash 'stx (if blaming-stx
                                    (syntax->string #`(#,blaming-stx))
@@ -124,7 +137,14 @@
                           'srcloc (hash 'source (normalize-path-for-rosette (second stx-info))
                                         'line (third stx-info)
                                         'column (fourth stx-info))))
-        'callStack (map frame->json (third entry))))
+        'callStack
+        (cond
+          [(symbolic-trace-tail?) (append (first-frame->json/tail stack)
+                                          (map each-frame->json/tail stack))]
+          [else
+           ;; TODO
+           (append (first-frame->json/tail stack)
+                   (map each-frame->json/tail stack))])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Running server
