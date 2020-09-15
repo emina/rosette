@@ -125,6 +125,7 @@
                         "ex-3.rkt"
                         "tail.rkt"
                         "non-tail.rkt"
+                        "core-form.rkt"
                         "assertion.rkt"
                         "if.rkt"
                         "infeasible.rkt"

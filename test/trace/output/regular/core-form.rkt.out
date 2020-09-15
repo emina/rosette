@@ -1,0 +1,6 @@
+((#:stats #hash((assertion . 0) (solver . 0)))
+ (#:trace
+  (("result arity mismatch;\n expected number ...."
+    (let-values "core-form.rkt" 7 9)
+    ((f "core-form.rkt" 11 8))
+    b))))
