@@ -1,6 +1,6 @@
 #lang racket
 
-(require syntax/parse syntax/stx racket/keyword-transform
+(require syntax/parse racket/keyword-transform
          (only-in "tool.rkt" add-original-form!)
          "../util/syntax.rkt")
 
@@ -362,8 +362,11 @@
 ;; Annotate a top-level expr
 (define trace-annotate
   (syntax-parser
-    [(_module _mod-id lang _module-begin)
-     #:when (ok-lang? (syntax-e #'lang))
+    [(mod:id _mod-id lang _module-begin)
+     #:when (and (free-identifier=? #'mod
+                                    (namespace-module-identifier)
+                                    (namespace-base-phase))
+                 (ok-lang? (syntax-e #'lang)))
      (printf "INSTRUMENTING ~v\n" (syntax-source this-syntax))
      (set-add! original-files (syntax-source this-syntax))
      (define expanded-e (expand-syntax
