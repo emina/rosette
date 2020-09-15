@@ -30,8 +30,6 @@
 
 ;; Misc syntax munging stuff ---------------------------------------------------
 
-(define base-phase
-  (variable-reference->module-base-phase (#%variable-reference)))
 (define code-insp (variable-reference->module-declaration-inspector
                    (#%variable-reference)))
 
@@ -93,12 +91,6 @@
 
 
 ;; Core instrumentation procedure ----------------------------------------------
-
-;; Recursively annotate a lambda expression
-(define (annotate-lambda expr clause bodys-stx phase)
-  (let* ([bodys (stx->list bodys-stx)]
-         [bodyl (map (curryr annotate phase) bodys)])
-    (rebuild clause (map cons bodys bodyl))))
 
 ;; Recursively annotate a submodule
 (define (annotate-module expr disarmed-expr phase)
