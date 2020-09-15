@@ -81,6 +81,11 @@
        (printf "Wrote new output for `~a`: ~v\n" fname output)]))
 
   (define (exn-handler e)
+    ((error-display-handler)
+     (if (exn? e)
+         (exn-message e)
+         (~a e))
+     e)
     (perform-test
      `((#:error ,(parameterize ([error-print-context-length 0]) (exn->string e))))))
 

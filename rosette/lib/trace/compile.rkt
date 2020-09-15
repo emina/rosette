@@ -37,15 +37,11 @@
 
 (define-disarm ~disarm code-insp)
 
-(define-syntax-class lambda-clause
-  (pattern (arg . body)))
-
 (define (rearm orig new)
   (syntax-rearm new orig))
 
 (define (disarm stx)
   (syntax-disarm stx code-insp))
-
 
 ;; Path management -------------------------------------------------------------
 
@@ -120,6 +116,15 @@
                 (list (cons #'mb (rearm #'mb (rebuild #'mb (map cons bodys bodyl))))))
        phase))]))
 
+(define (make-certification body)
+  #`(call-with-immediate-continuation-mark
+     'symbolic-trace:stack-key
+     (λ (k)
+       (with-continuation-mark
+         'symbolic-trace:stack-key
+         (and k (list 'certified (#,second k) (#,third k)))
+         (let () #,@body)))))
+
 ;; Create a top-level annotation procedure that recurses down the syntax of a
 ;; fully expanded module.
 ;; This form is copied from errortrace, with the features we don't use removed,
@@ -165,22 +170,28 @@
     [(quote _) expr]
     [(quote-syntax . _) expr]
     ;; Wrap body, also a profile point
-    [(#%plain-lambda . clause:lambda-clause)
-     (rearm expr
-            (keep-lambda-properties
-             expr
-             (annotate-lambda expr disarmed-expr #'clause.body phase)))]
-    [(case-lambda clause:lambda-clause ...)
-     (define clauses (attribute clause))
-     (define clausel (map (λ (body clause)
-                            (annotate-lambda expr clause body phase))
-                          (attribute clause.body)
-                          clauses))
+    [(#%plain-lambda _ids body ...)
+     #:with {~and stx (p-a ids-2 body-2 ...)} (disarm (transform (attribute body)))
      (rearm
       expr
       (keep-lambda-properties
        expr
-       (rebuild disarmed-expr (map cons clauses clausel))))]
+       (datum->syntax #'stx
+                      (list #'p-a #'ids-2 (make-certification (attribute body-2)))
+                      #'stx
+                      #'stx)))]
+    [(case-lambda [_ids body ...] ...)
+     #:with {~and stx (c-l [ids-2 body-2 ...] ...)} (disarm (transform (append* (attribute body))))
+     (rearm
+      expr
+      (keep-lambda-properties
+       expr
+       (datum->syntax #'stx
+                      (cons #'c-l
+                            (for/list ([clause-ids (in-list (attribute ids-2))]
+                                       [clause-body (in-list (attribute body-2))])
+                              (list clause-ids
+                                    (make-certification clause-body)))))))]
 
     ;; Wrap RHSs and body
     [(let-values ([_vars rhs] ...) body ...)
@@ -209,41 +220,28 @@
      #:when (or (and (or (is-original? expr) (is-original? #'head))
                      (should-instrument-path? (syntax-source #'head)))
                 (is-keyword-procedure-application? expr #'head))
-     #:with {~and stx ({~and p-a #%plain-app} head2 tail2 ...)}
+     #:with {~and stx (p-a head-2 tail-2 ...)}
      (disarm (transform (cons #'head (attribute tail))))
 
-     (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
-       (instrument-track
-        #`(let ([the-function head2])
-            (call-with-immediate-continuation-mark
-             'symbolic-trace:stack-key
-             (λ (k)
-               (with-continuation-mark
-                 'symbolic-trace:stack-key
-                 (let ([entry (cons the-function (qt #,(syntax->readable-location #'stx)))])
-                   (if k
-                       (list 'certified (second k) entry)
-                       (list 'uncertified entry entry)))
-                 #,(datum->syntax #'stx
-                                  (append (list #'p-a #'the-function)
-                                          (attribute tail2))
-                                  #'stx
-                                  #'stx)))))))]
-
-    [(#%plain-app head tail ...)
-     #:when (find-origin this-syntax)
-     #:with stx (transform (cons #'head (attribute tail)))
      (instrument-track
-      #`(call-with-immediate-continuation-mark
-         'symbolic-trace:stack-key
-         (λ (k)
-           (with-continuation-mark
-             'symbolic-trace:stack-key
-             (and k (list 'certified (second k) (third k)))
-             stx))))]
+      #`(let ([the-function head-2])
+          (call-with-immediate-continuation-mark
+           'symbolic-trace:stack-key
+           (λ (k)
+             (with-continuation-mark
+               'symbolic-trace:stack-key
+               (let ([entry (cons the-function '#,(syntax->readable-location #'stx))])
+                 (if k
+                     (list 'certified (#,second k) entry)
+                     (list 'uncertified entry entry)))
+               #,(datum->syntax #'stx
+                                (append (list #'p-a #'the-function)
+                                        (attribute tail-2))
+                                #'stx
+                                #'stx))))))]
 
     [(#%plain-app head tail ...)
-     (transform (cons #'head (attribute tail)))]
+     (instrument-track (transform (cons #'head (attribute tail))))]
 
     [_ (error 'errortrace "unrecognized expression form~a~a: ~.s"
               (if top? " at top-level" "")
@@ -251,48 +249,49 @@
               (syntax->datum expr))]))
 
 (define (find-origin expr)
-  (define origin (syntax-property expr 'origin))
-  (and origin
-       (let find-origin ([origin origin])
-         (for/or ([id-or-origin (in-list origin)])
-           (cond
-             [(identifier? id-or-origin)
-              (and (set-member? original-files (syntax-source id-or-origin))
-                   id-or-origin)]
-             [else (find-origin id-or-origin)])))))
+  (define (loop origin)
+    (cond
+      [(identifier? origin)
+       (and (set-member? original-files (syntax-source origin)) origin)]
+      [(pair? origin)
+       (or (loop (car origin)) (loop (cdr origin)))]
+      [else #f]))
+  (or (syntax-parse expr
+        [(x:id . _) (loop #'x)]
+        [_ #f])
+      (loop (syntax-property expr 'origin))))
 
 (define ((make-instrument-track expr phase) result-stx)
   (define id (find-origin expr))
   (cond
     [id
-     (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
-       (define (get-template v)
-         #`(with-continuation-mark
-             'symbolic-trace:stx-key
-             (cons (qt #,(syntax->datum id))
-                   (qt #,(syntax->readable-location id)))
-             #,v))
-       (syntax-parse (disarm result-stx)
-         #:literal-sets ([kernel-literals #:phase phase])
-         [({~and d-v define-values} {~and ids (id)} e)
-          (datum->syntax this-syntax
-                         (list #'d-v
-                               #'ids
-                               (get-template
-                                (syntax-property #'e
-                                                 'inferred-name
-                                                 (or (syntax-property #'e 'inferred-name)
-                                                     (syntax-e #'id)))))
-                         this-syntax
-                         this-syntax)]
-         [({~and d-v define-values} ids e)
-          (datum->syntax this-syntax
-                         (list #'d-v
-                               #'ids
-                               (get-template #'e))
-                         this-syntax
-                         this-syntax)]
-         [_ (get-template result-stx)]))]
+     (define (get-template v)
+       #`(with-continuation-mark
+           'symbolic-trace:stx-key
+           (cons '#,(syntax->datum id)
+                 '#,(syntax->readable-location id))
+           #,v))
+     (syntax-parse (disarm result-stx)
+       #:literal-sets ([kernel-literals #:phase phase])
+       [({~and d-v define-values} {~and ids (id)} e)
+        (datum->syntax this-syntax
+                       (list #'d-v
+                             #'ids
+                             (get-template
+                              (syntax-property #'e
+                                               'inferred-name
+                                               (or (syntax-property #'e 'inferred-name)
+                                                   (syntax-e #'id)))))
+                       this-syntax
+                       this-syntax)]
+       [({~and d-v define-values} ids e)
+        (datum->syntax this-syntax
+                       (list #'d-v
+                             #'ids
+                             (get-template #'e))
+                       this-syntax
+                       this-syntax)]
+       [_ (get-template result-stx)])]
     [else result-stx]))
 
 ;; Create two annotation procedures: one for top-level forms and one for everything else
