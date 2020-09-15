@@ -1,7 +1,6 @@
 #lang racket
 
-(provide do-trace record-apply! add-current-syntax! restore-current-syntax!
-         add-original-form!
+(provide do-trace add-original-form!
          symbolic-trace-skip-assertion?
          symbolic-trace-skip-infeasible-solver?)
 
@@ -33,13 +32,9 @@
 
 (define (do-trace proc #:entry-handler entry-handler #:post-proc post-proc)
   (set+restore
-   [current-syntax-list '()]
-   [current-activated-syntax #f]
    [current-original-map (make-hash)]
    [current-trace '()]
    [current-stats (make-hash stats-template)]
-   [current-stack '()]
-   [current-activated-stack #f]
    [current-entry-handler entry-handler #f]
    #:body
    (parameterize ([current-reporter reporter])
@@ -47,18 +42,6 @@
        (post-proc current-stats (reverse current-trace) current-original-map)))))
 
 ;; current-syntax --------------------------------------------------------------
-
-(define current-syntax-list '())
-(define current-activated-syntax #f)
-
-(define (add-current-syntax! stx)
-  (set! current-syntax-list (cons stx current-syntax-list)))
-
-(define (restore-current-syntax! [e #f])
-  (when (and e (not current-activated-syntax))
-    (set! current-activated-syntax (first current-syntax-list)))
-  (set! current-syntax-list (rest current-syntax-list))
-  e)
 
 (define current-original-map (make-hash))
 
@@ -89,38 +72,17 @@
                      (unsat? (query:solve (list the-pc))))
                 (collect-stats 'solver))))
      (unless skip?
-       (define entry (list e
-                           (or current-activated-syntax (first current-syntax-list))
-                           (or current-activated-stack current-stack)
-                           the-pc))
-       (current-entry-handler entry
-                              (λ (e) (set! current-trace (cons e current-trace)))
-                              current-original-map))
-     (set! current-activated-syntax #f)
-     (set! current-activated-stack #f)]
+       (define entry
+         (list e
+               (continuation-mark-set-first
+                (exn-continuation-marks e)
+                'symbolic-trace:stx-key)
+               (continuation-mark-set->list
+                (exn-continuation-marks e)
+                'symbolic-trace:stack-key)
+               the-pc))
+       (current-entry-handler
+        entry
+        (λ (e) (set! current-trace (cons e current-trace)))
+        current-original-map))]
     [_ (void)]))
-
-
-;; stack -----------------------------------------------------------------------
-
-(define current-stack '())
-(define current-activated-stack #f)
-
-(define (runner proc*)
-  (lambda (loc proc _in)
-    (set! current-stack (cons (cons proc loc) current-stack))
-    (call-with-exception-handler
-     (lambda (e)
-       (unless current-activated-stack
-         (set! current-activated-stack current-stack))
-       (set! current-stack (rest current-stack))
-       e)
-     (thunk (begin0 (proc*) (set! current-stack (rest current-stack)))))))
-
-(define record-apply!
-  (make-keyword-procedure
-   (lambda (kws kw-args loc proc . rest)
-     ((runner (thunk (keyword-apply proc kws kw-args rest)))
-      loc proc (append rest kw-args)))
-   (lambda (loc proc . rest)
-     ((runner (thunk (apply proc rest))) loc proc rest))))

@@ -1,11 +1,7 @@
 #lang racket
 
-(require syntax/parse syntax/stx racket/keyword-transform
-         (only-in "tool.rkt"
-                  add-original-form!
-                  record-apply!
-                  restore-current-syntax!
-                  add-current-syntax!)
+(require syntax/parse racket/keyword-transform
+         (only-in "tool.rkt" add-original-form!)
          "../util/syntax.rkt")
 
 (provide symbolic-trace-compile-handler
@@ -34,22 +30,16 @@
 
 ;; Misc syntax munging stuff ---------------------------------------------------
 
-(define base-phase
-  (variable-reference->module-base-phase (#%variable-reference)))
 (define code-insp (variable-reference->module-declaration-inspector
                    (#%variable-reference)))
 
 (define-disarm ~disarm code-insp)
-
-(define-syntax-class lambda-clause
-  (pattern (arg . body)))
 
 (define (rearm orig new)
   (syntax-rearm new orig))
 
 (define (disarm stx)
   (syntax-disarm stx code-insp))
-
 
 ;; Path management -------------------------------------------------------------
 
@@ -100,25 +90,7 @@
     [else #f]))
 
 
-;; Produce a list of syntax objects that quote each item in the input list
-(define (quote-list lst phase)
-  (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
-    (for/list ([x lst]) (quasisyntax (qt #,x)))))
-
-
-(define (instrument-application stx rest phase)
-  (with-syntax ([app (syntax-shift-phase-level #'#%plain-app (- phase base-phase))]
-                [qt (syntax-shift-phase-level #'quote (- phase base-phase))]
-                [lst (syntax-shift-phase-level #'list (- phase base-phase))])
-    #`(app (qt #,record-apply!) (app lst #,@(quote-list (syntax->readable-location stx) phase)) #,@rest)))
-
 ;; Core instrumentation procedure ----------------------------------------------
-
-;; Recursively annotate a lambda expression
-(define (annotate-lambda expr clause bodys-stx phase)
-  (let* ([bodys (stx->list bodys-stx)]
-         [bodyl (map (curryr annotate phase) bodys)])
-    (rebuild clause (map cons bodys bodyl))))
 
 ;; Recursively annotate a submodule
 (define (annotate-module expr disarmed-expr phase)
@@ -136,6 +108,15 @@
                 (list (cons #'mb (rearm #'mb (rebuild #'mb (map cons bodys bodyl))))))
        phase))]))
 
+(define (make-certification body)
+  #`(call-with-immediate-continuation-mark
+     'symbolic-trace:stack-key
+     (λ (k)
+       (with-continuation-mark
+         'symbolic-trace:stack-key
+         (and k (list 'certified (#,second k) (#,third k)))
+         (let () #,@body)))))
+
 ;; Create a top-level annotation procedure that recurses down the syntax of a
 ;; fully expanded module.
 ;; This form is copied from errortrace, with the features we don't use removed,
@@ -145,133 +126,165 @@
   (define instrument-track (make-instrument-track expr phase))
   (define transform (make-transform expr disarmed-expr annotate phase rearm))
   (syntax-parse disarmed-expr
-      #:literal-sets ([kernel-literals #:phase phase])
-      [_:identifier expr]
-      [(#%top . id) expr]
-      [(#%variable-reference . _) expr]
+    #:literal-sets ([kernel-literals #:phase phase])
+    [_:identifier expr]
+    [(#%top . _id) expr]
+    [(#%variable-reference . _) expr]
 
-      [(define-values names rhs)
-       #:when top?
-       (instrument-track (transform (list #'rhs)))]
-      [(begin exprs ...)
-       #:when top?
-       (transform (attribute exprs) #:annotate annotate-top)]
-      [(define-syntaxes (name ...) rhs)
-       #:when top?
-       (transform (list #'rhs) #:phase (add1 phase))]
-      [(begin-for-syntax exprs ...)
-       #:when top?
-       (transform (attribute exprs) #:annotate annotate-top #:phase (add1 phase))]
-      [(module _name _init-import _mb)
-       (annotate-module expr disarmed-expr 0)]
-      [(module* _name init-import _mb)
-       (annotate-module expr disarmed-expr (if (syntax-e #'init-import) 0 phase))]
-      [(#%expression e)
-       (rearm expr #`(#%expression #,(annotate #'e phase)))]
-      ;; No way to wrap
-      [(#%require . _) expr]
-      ;; No error possible (and no way to wrap)
-      [(#%provide . _) expr]
-      [(#%declare . _) expr]
+    [(define-values _names rhs)
+     #:when top?
+     (instrument-track (transform (list #'rhs)))]
+    [(begin exprs ...)
+     #:when top?
+     (transform (attribute exprs) #:annotate annotate-top)]
+    [(define-syntaxes (_name ...) rhs)
+     #:when top?
+     (transform (list #'rhs) #:phase (add1 phase))]
+    [(begin-for-syntax exprs ...)
+     #:when top?
+     (transform (attribute exprs) #:annotate annotate-top #:phase (add1 phase))]
+    [(module _name _init-import _mb)
+     (annotate-module expr disarmed-expr 0)]
+    [(module* _name init-import _mb)
+     (annotate-module expr disarmed-expr (if (syntax-e #'init-import) 0 phase))]
+    [(#%expression e)
+     (rearm expr #`(#%expression #,(annotate #'e phase)))]
+    ;; No way to wrap
+    [(#%require . _) expr]
+    ;; No error possible (and no way to wrap)
+    [(#%provide . _) expr]
+    [(#%declare . _) expr]
 
 
-      ;; Expressions --------------------------------------------------------------
+    ;; Expressions --------------------------------------------------------------
 
-      ;; No error possible
-      [(quote _) expr]
-      [(quote-syntax . _) expr]
-      ;; Wrap body, also a profile point
-      [(#%plain-lambda . clause:lambda-clause)
-       (rearm expr
-              (keep-lambda-properties
-               expr
-               (annotate-lambda expr disarmed-expr #'clause.body phase)))]
-      [(case-lambda clause:lambda-clause ...)
-       (define clauses (attribute clause))
-       (define clausel (map (λ (body clause)
-                              (annotate-lambda expr clause body phase))
-                            (attribute clause.body)
-                            clauses))
-       (rearm
-        expr
-        (keep-lambda-properties
-         expr
-         (rebuild disarmed-expr (map cons clauses clausel))))]
+    ;; No error possible
+    [(quote _) expr]
+    [(quote-syntax . _) expr]
+    ;; Wrap body, also a profile point
+    [(#%plain-lambda _ids body ...)
+     #:with {~and stx (p-a ids-2 body-2 ...)} (disarm (transform (attribute body)))
+     (rearm
+      expr
+      (keep-lambda-properties
+       expr
+       (datum->syntax #'stx
+                      (list #'p-a #'ids-2 (make-certification (attribute body-2)))
+                      #'stx
+                      #'stx)))]
+    [(case-lambda [_ids body ...] ...)
+     #:with {~and stx (c-l [ids-2 body-2 ...] ...)} (disarm (transform (append* (attribute body))))
+     (rearm
+      expr
+      (keep-lambda-properties
+       expr
+       (datum->syntax #'stx
+                      (cons #'c-l
+                            (for/list ([clause-ids (in-list (attribute ids-2))]
+                                       [clause-body (in-list (attribute body-2))])
+                              (list clause-ids
+                                    (make-certification clause-body)))))))]
 
-      ;; Wrap RHSs and body
-      [(let-values ([_vars rhs] ...) body ...)
-       (instrument-track (transform (append (attribute rhs) (attribute body))))]
+    ;; Wrap RHSs and body
+    [(let-values ([_vars rhs] ...) body ...)
+     (instrument-track (transform (append (attribute rhs) (attribute body))))]
 
-      [(letrec-values ([_vars rhs] ...) body ...)
-       (instrument-track (transform (append (attribute rhs) (attribute body))))]
+    [(letrec-values ([_vars rhs] ...) body ...)
+     (instrument-track (transform (append (attribute rhs) (attribute body))))]
 
-      ;; Wrap RHS
-      [(set! _var rhs)
-       (instrument-track (transform (list #'rhs)))]
+    ;; Wrap RHS
+    [(set! _var rhs)
+     (instrument-track (transform (list #'rhs)))]
 
-      ;; Wrap subexpressions only; single expression: no mark
-      [(begin e) (instrument-track (rearm expr #`(begin #,(annotate #'e phase))))]
-      [(begin body ...)
-       (instrument-track (transform (attribute body)))]
-      [(begin0 body ...)
-       (instrument-track (transform (attribute body)))]
-      [(if tst thn els) (instrument-track (transform (list #'tst #'thn #'els)))]
-      [(with-continuation-mark body ...)
-       (instrument-track (transform (attribute body)))]
+    ;; Wrap subexpressions only; single expression: no mark
+    [(begin e) (instrument-track (rearm expr #`(begin #,(annotate #'e phase))))]
+    [(begin body ...)
+     (instrument-track (transform (attribute body)))]
+    [(begin0 body ...)
+     (instrument-track (transform (attribute body)))]
+    [(if tst thn els) (instrument-track (transform (list #'tst #'thn #'els)))]
+    [(with-continuation-mark body ...)
+     (instrument-track (transform (attribute body)))]
 
-      ;; Wrap whole application, plus subexpressions
-      [(#%plain-app) expr]
-      [(#%plain-app head tail ...)
-       (instrument-track
-        (transform
-         (cons #'head (attribute tail))
-         #:expr
-         (if (or (and (or (is-original? expr) (is-original? #'head))
-                      (should-instrument-path? (syntax-source #'head)))
-                 (is-keyword-procedure-application? expr #'head))
-             (instrument-application expr #'(head tail ...) phase)
-             disarmed-expr)))]
-      [_ (error 'errortrace "unrecognized expression form~a~a: ~.s"
-                (if top? " at top-level" "")
-                (if (zero? phase) "" (format " at phase ~a" phase))
-                (syntax->datum expr))]))
+    ;; Wrap whole application, plus subexpressions
+    [(#%plain-app) expr]
+    [(#%plain-app head tail ...)
+     #:when (or (and (or (is-original? expr) (is-original? #'head))
+                     (should-instrument-path? (syntax-source #'head)))
+                (is-keyword-procedure-application? expr #'head))
+     #:with {~and stx (p-a head-2 tail-2 ...)}
+     (disarm (transform (cons #'head (attribute tail))))
+
+     (instrument-track
+      #`(let ([the-function head-2])
+          (call-with-immediate-continuation-mark
+           'symbolic-trace:stack-key
+           (λ (k)
+             (with-continuation-mark
+               'symbolic-trace:stack-key
+               (let ([entry (cons the-function '#,(syntax->readable-location #'stx))])
+                 (if k
+                     (list 'certified (#,second k) entry)
+                     (list 'uncertified entry entry)))
+               #,(datum->syntax #'stx
+                                (append (list #'p-a #'the-function)
+                                        (attribute tail-2))
+                                #'stx
+                                #'stx))))))]
+
+    [(#%plain-app head tail ...)
+     (instrument-track (transform (cons #'head (attribute tail))))]
+
+    [_ (error 'errortrace "unrecognized expression form~a~a: ~.s"
+              (if top? " at top-level" "")
+              (if (zero? phase) "" (format " at phase ~a" phase))
+              (syntax->datum expr))]))
+
+(define (find-origin expr)
+  (define (loop origin)
+    (cond
+      [(identifier? origin)
+       (and (set-member? original-files (syntax-source origin)) origin)]
+      [(pair? origin)
+       (or (loop (car origin)) (loop (cdr origin)))]
+      [else #f]))
+  (or (syntax-parse expr
+        [(x:id . _) (loop #'x)]
+        [_ #f])
+      (loop (syntax-property expr 'origin))))
 
 (define ((make-instrument-track expr phase) result-stx)
-  (define (instrument id)
-    (with-syntax ([qt (syntax-shift-phase-level #'quote (- phase base-phase))])
-      (define (get-template v)
-        #`(begin
-            ((qt #,add-current-syntax!)
-             (cons (qt #,(syntax->datum id))
-                   (qt #,(syntax->readable-location id))))
-            (call-with-exception-handler
-             (qt #,restore-current-syntax!)
-             (λ ()
-               (begin0 #,v
-                 ((qt #,restore-current-syntax!)))))))
-      (syntax-parse result-stx
-        #:literal-sets ([kernel-literals #:phase phase])
-        [(define-values (id) e)
-         #`(define-values (id)
-             #,(get-template
-                (syntax-property #'e
-                                 'inferred-name
-                                 (or (syntax-property #'e 'inferred-name)
-                                     (syntax-e #'id)))))]
-        [(define-values ids e)
-         #`(define-values ids #,(get-template #'e))]
-        [_ (get-template result-stx)])))
-
-  (define origin (syntax-property expr 'origin))
-  (or (and origin
-           (let find-origin ([origin origin])
-             (for/or ([id-or-origin (in-list origin)])
-               (cond
-                 [(identifier? id-or-origin)
-                  (and (set-member? original-files (syntax-source id-or-origin))
-                       (instrument id-or-origin))]
-                 [else (find-origin id-or-origin)]))))
-      result-stx))
+  (define id (find-origin expr))
+  (cond
+    [id
+     (define (get-template v)
+       #`(with-continuation-mark
+           'symbolic-trace:stx-key
+           (cons '#,(syntax->datum id)
+                 '#,(syntax->readable-location id))
+           #,v))
+     (syntax-parse (disarm result-stx)
+       #:literal-sets ([kernel-literals #:phase phase])
+       [({~and d-v define-values} {~and ids (id)} e)
+        (datum->syntax this-syntax
+                       (list #'d-v
+                             #'ids
+                             (get-template
+                              (syntax-property #'e
+                                               'inferred-name
+                                               (or (syntax-property #'e 'inferred-name)
+                                                   (syntax-e #'id)))))
+                       this-syntax
+                       this-syntax)]
+       [({~and d-v define-values} ids e)
+        (datum->syntax this-syntax
+                       (list #'d-v
+                             #'ids
+                             (get-template #'e))
+                       this-syntax
+                       this-syntax)]
+       [_ (get-template result-stx)])]
+    [else result-stx]))
 
 ;; Create two annotation procedures: one for top-level forms and one for everything else
 (define annotate (make-annotate #f))
@@ -349,8 +362,11 @@
 ;; Annotate a top-level expr
 (define trace-annotate
   (syntax-parser
-    [(_module _mod-id lang _module-begin)
-     #:when (ok-lang? (syntax-e #'lang))
+    [(mod:id _mod-id lang _module-begin)
+     #:when (and (free-identifier=? #'mod
+                                    (namespace-module-identifier)
+                                    (namespace-base-phase))
+                 (ok-lang? (syntax-e #'lang)))
      (printf "INSTRUMENTING ~v\n" (syntax-source this-syntax))
      (set-add! original-files (syntax-source this-syntax))
      (define expanded-e (expand-syntax
@@ -358,7 +374,6 @@
                           (add-annotate-property this-syntax))))
      (annotate-top expanded-e (namespace-base-phase))]
     [_ this-syntax]))
-
 
 ;; Create a compile handler that invokes trace-annotate on
 ;; a piece of syntax that needs compilation, and then runs the
