@@ -23,18 +23,19 @@
 
 (define-syntax (match*-symbolic stx)
   (syntax-case stx ()
-    [(_ (val ...) [pat expr] ...)
-     (with-syntax ([(parsed ...) (map parse-pattern (syntax->list #'(pat ...)))]
+    [(_ (val ...) [(pat ...) expr] ...)
+     (with-syntax ([((parsed ...) ...) (map (λ (pats) (map parse-pattern (syntax->list pats)))
+                                            (syntax->list #'((pat ...) ...)))]
                    [(var ...) (for/list ([expr (syntax->list #'(val ...))]
                                          [tmp (generate-temporaries #'(val ...))])
                                 (if (identifier? expr) expr tmp))])
        (syntax/loc stx 
          (for*/all ([var val] ...); (guarded-values val)] ...)
            (match* (var ...) 
-             [parsed expr] ...))))]
-    [(_ val [pat expr ...] ...)
-     (syntax/loc stx (match*-symbolic val [pat (begin expr ...)] ...))]))
-  
+             [(parsed ...) expr] ...))))]
+    [(_ val [(pat ...) expr ...] ...)
+     (syntax/loc stx (match*-symbolic val [(pat ...) (begin expr ...)] ...))]))
+
 ;(define (guarded-values v)
 ;  (if (union? v) (union-contents v) (list (cons #t v))))
 
@@ -42,8 +43,8 @@
   
   (define ops 
     (syntax->list #'(! && || => <=> = < <= > >= + - * / quotient remainder expt abs sgn 
-                       << >> >>> bitwise-not bitwise-and bitwise-ior bitwise-xor)))
-  
+                       bitwise-not bitwise-and bitwise-ior bitwise-xor)))
+
   (define (parse-pattern pat)
     (syntax-case pat ()
       [(id expr ...)
