@@ -1,21 +1,84 @@
 #lang scribble/manual
 
 @(require scribble/bnf
+          scribble/example
+          scribblings/reference/match-parse
           (only-in racket/draw read-bitmap)
           (for-label
            rosette/lib/value-browser
+           rosette/lib/destruct
            (only-in racket/gui snip%)
            rosette/base/form/define
            rosette/base/core/term
            (only-in rosette/base/base bv bitvector ~>)
+           (only-in rosette/base/core/safe assert)
            racket)
           scribble/core scribble/html-properties racket/runtime-path)
 
 @(define-runtime-path root ".")
+@(define the-eval (make-base-eval))
+@(the-eval '(require rosette rosette/lib/destruct))
 
 @title[#:tag "sec:utility-libs"]{Utility Libraries}
 
 The following utility libraries facilitate the development of solver-aided programs.
+
+@section{Value Destructuring Library}
+
+@defmodule[rosette/lib/destruct]
+
+@defform[(destruct val-expr [pat body ...+] ...)]{
+  Destructs a symbolic value into cases according to the outermost shape of the value.
+  In other words, it provides a @tech[#:key "lifted constructs"]{lifted} pattern matching similar to @racket[match] with limited capabilities:
+
+  @itemlist[
+    @item{A sub-pattern is restricted to either an identifier, a wildcard (@litchar{_}), or
+  an ellipsis (@litchar{...}).}
+    @item{The construct only supports a few patterns that Rosette understands its lifted semantics.}
+    @item{The construct does not support side-conditioning via @racket[#:when] and does not support the failure procedure (the @litchar{(=> ...)} clause).}
+  ]
+
+  @examples[
+  #:eval the-eval
+  (struct add (x y))
+  (struct mul (x y))
+  (define (interp v)
+    (destruct v
+      [(add x y) (+ x y)]
+      [(mul x y) (* x y)]
+      [_ (assert #f "infeasible")]))
+
+  (interp (add 3 4))
+  (interp (mul 5 6))
+
+  (define-symbolic b boolean?)
+  (interp (if b (add 3 4) (mul 5 6)))]
+
+  The grammar of @racket[pat] is as follows, where non-italicized identifiers are recognized symbolically (i.e., not by binding).
+
+  @(parse-match-grammar
+    "
+pat     ::= qp                                @match anything; see details below
+         |  (LIST lvp ...)                    @match sequence of lvps
+         |  (LIST-REST lvp ... qp)            @match lvps consed onto a pat
+         |  (LIST* lvp ... qp)                @match lvps consed onto a pat
+         |  (VECTOR lvp ...)                  @match vector of pats
+         |  (CONS qp qp)                      @match pair of pats
+         |  (BOX qp)                          @match boxed pat
+         |  (struct-id qp ...)                @match struct-id instance
+qp      ::= id                                @match anything, bind identifier
+         |  _                                 @match anything
+lvp     ::= (code:line qp ooo)                @greedily match pat instances
+         |  qp                                @match pat
+ooo     ::= ***                               @zero or more; *** is literal
+         |  ___                               @zero or more
+         |  ..K                               @K or more
+         |  __K                               @K or more
+")
+
+  See @racket[match] for the semantics of each patterns.
+}
+
 
 @section{Value Browser Library}
 
