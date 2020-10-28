@@ -108,6 +108,10 @@
               (λ () (convert-syntax-error
                      (destruct (list 1 1) [(list a a) a]))))
 
+   (check-exn #px"a: duplicate binding identifier"
+              (λ () (convert-syntax-error
+                     (destruct* (1 1) [(a a) a]))))
+
    ;; test _ and ...
    (check-equal? '(2 3) (destruct '(1 2 3 4) [(list _ x ... _) x]))
 

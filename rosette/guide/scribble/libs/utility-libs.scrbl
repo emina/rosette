@@ -44,8 +44,8 @@ The following utility libraries facilitate the development of solver-aided progr
 
   @examples[
   #:eval the-eval
-  (struct add (x y) #:transparent)
-  (struct mul (x y) #:transparent)
+  (struct add (x y))
+  (struct mul (x y))
   (define (interp v)
     (destruct v
       [(add x y) (+ x y)]
@@ -60,8 +60,7 @@ The following utility libraries facilitate the development of solver-aided progr
 
   The grammar of @racket[pat] is as follows, where non-italicized identifiers are recognized symbolically (i.e., not by binding).
 
-  @(parse-match-grammar
-    "
+  @(parse-match-grammar "
 pat     ::= _sp                               @match anything; see details below
          |  (LIST lvp ...)                    @match a list
          |  (LIST-REST lvp ... _sp)           @match a list with tail
@@ -83,6 +82,28 @@ ooo     ::= ***                               @zero or more; *** is literal
   See @racket[match] for the semantics of each patterns.
 }
 
+@defform[(destruct* (val-expr ...) [(pat ...) body ...+] ...)]{
+  Similar to @racket[match*] but with the restrictions of @racket[destruct].
+
+  @examples[
+  #:eval the-eval
+  (define x (if b (list 1) (list 1 2)))
+  (define y (if b (list 10) (list 10 20)))
+  (destruct* (x y)
+    [((list p) (list q)) (+ p q)]
+    [((list p p*) (list q q*)) (+ p p* q q*)])]
+}
+
+@defform[(destruct-lambda [(pat ...) body ...+] ...)]{
+  Similar to @racket[match-lambda] but with the restrictions of @racket[destruct].
+
+  @examples[
+  #:eval the-eval
+  (map (destruct-lambda [(add x y) (+ x y)])
+       (list (if b (add 1 2) (add 3 4))
+             (add 5 6)
+             (if (not b) (add 7 8) (add 9 10))))]
+}
 
 @section{Value Browser Library}
 
