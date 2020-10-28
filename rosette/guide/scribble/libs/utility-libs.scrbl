@@ -70,7 +70,7 @@ pat     ::= _sp                               @match anything; see details below
          |  (BOX _sp)                         @match a box
          |  (struct-id _sp ...)               @match a struct-id instance
 sp      ::= id                                @match anything, bind identifier
-         |  _                                 @match anything
+         |  _                                 @match anything, ignore the result
 lvp     ::= (code:line _sp ooo)               @greedily match anything
          |  _sp                               @match anything
 ooo     ::= ***                               @zero or more; *** is literal
