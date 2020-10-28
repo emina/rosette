@@ -28,20 +28,24 @@ The following utility libraries facilitate the development of solver-aided progr
 @defmodule[rosette/lib/destruct]
 
 @defform[(destruct val-expr [pat body ...+] ...)]{
-  Destructs a symbolic value into cases according to the outermost shape of the value.
+  Finds the first @racket[pat] that matches the result of @racket[val-expr], and evaluates the
+  corresponding @racket[body]s with bindings introduced by @racket[pat] (if any).
   In other words, it provides a @tech[#:key "lifted constructs"]{lifted} pattern matching similar to @racket[match] with limited capabilities:
 
   @itemlist[
-    @item{A sub-pattern is restricted to either an identifier, a wildcard (@litchar{_}), or
-  an ellipsis (@litchar{...}).}
-    @item{The construct only supports a few patterns that Rosette understands its lifted semantics.}
-    @item{The construct does not support side-conditioning via @racket[#:when] and does not support the failure procedure (the @litchar{(=> ...)} clause).}
+    @item{A sub-pattern is restricted to either an identifier, a wildcard (@litchar{_}),
+    or an ellipsis (@litchar{...}). That is, it only allows value destructuring at
+    the outermost level (nested destructuring is disallowed).}
+    @item{All binding identifiers in a clause must be unique (no duplicate binding identifiers).}
+    @item{Only a few patterns that Rosette understands its lifted semantics are supported.
+    See the grammar below for full details.}
+    @item{Side-conditioning via @racket[#:when] and the failure procedure are not supported.}
   ]
 
   @examples[
   #:eval the-eval
-  (struct add (x y))
-  (struct mul (x y))
+  (struct add (x y) #:transparent)
+  (struct mul (x y) #:transparent)
   (define (interp v)
     (destruct v
       [(add x y) (+ x y)]
@@ -58,18 +62,18 @@ The following utility libraries facilitate the development of solver-aided progr
 
   @(parse-match-grammar
     "
-pat     ::= qp                                @match anything; see details below
-         |  (LIST lvp ...)                    @match sequence of lvps
-         |  (LIST-REST lvp ... qp)            @match lvps consed onto a pat
-         |  (LIST* lvp ... qp)                @match lvps consed onto a pat
-         |  (VECTOR lvp ...)                  @match vector of pats
-         |  (CONS qp qp)                      @match pair of pats
-         |  (BOX qp)                          @match boxed pat
-         |  (struct-id qp ...)                @match struct-id instance
-qp      ::= id                                @match anything, bind identifier
+pat     ::= _sp                               @match anything; see details below
+         |  (LIST lvp ...)                    @match a list
+         |  (LIST-REST lvp ... _sp)           @match a list with tail
+         |  (LIST* lvp ... _sp)               @match a list with tail
+         |  (VECTOR lvp ...)                  @match a vector
+         |  (CONS _sp _sp)                    @match a pair
+         |  (BOX _sp)                         @match a box
+         |  (struct-id _sp ...)               @match a struct-id instance
+sp      ::= id                                @match anything, bind identifier
          |  _                                 @match anything
-lvp     ::= (code:line qp ooo)                @greedily match pat instances
-         |  qp                                @match pat
+lvp     ::= (code:line _sp ooo)               @greedily match anything
+         |  _sp                               @match anything
 ooo     ::= ***                               @zero or more; *** is literal
          |  ___                               @zero or more
          |  ..K                               @K or more

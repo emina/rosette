@@ -104,18 +104,40 @@
               (λ () (convert-syntax-error
                      (destruct 1 [(and _ _) 1]))))
 
+   (check-exn #px"a: duplicate binding identifier"
+              (λ () (convert-syntax-error
+                     (destruct (list 1 1) [(list a a) a]))))
+
    ;; test _ and ...
    (check-equal? '(2 3) (destruct '(1 2 3 4) [(list _ x ... _) x]))
+
+   ;; test ..0
+   (check-equal? '() (destruct '() [(list x ..0 y ..0) (append x y)]))
+
+   (define-symbolic b boolean?)
 
    ;; test struct
    (struct f (x))
    (struct g (x))
-   (define-symbolic b boolean?)
 
    (check-match (destruct (if b (f 10) (g 100))
                   [(f x) (add1 x)]
                   [(g x) (sub1 x)])
                 (expression (== ite) b 11 99))
+
+   (check-match (destruct (if b (f 10) (f 100)) [(f x) (add1 x)])
+                (expression (== ite) b 11 101))
+
+   (struct f2 (x) #:transparent)
+   (struct g2 (x) #:transparent)
+
+   (check-match (destruct (if b (f2 10) (g2 100))
+                  [(f2 x) (add1 x)]
+                  [(g2 x) (sub1 x)])
+                (expression (== ite) b 11 99))
+
+   (check-match (destruct (if b (f2 10) (f2 100)) [(f2 x) (add1 x)])
+                (expression (== ite) b 11 101))
 
    ;; test list
    (check-match (destruct (if b (list 1) (list 2)) [(list x) x])
