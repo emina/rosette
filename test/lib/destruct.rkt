@@ -113,10 +113,12 @@
                      (destruct* (1 1) [(a a) a]))))
 
    ;; test _ and ...
-   (check-equal? '(2 3) (destruct '(1 2 3 4) [(list _ x ... _) x]))
+   (check-equal? (destruct '(1 2 3 4) [(list _ x ... _) x])
+                 '(2 3))
 
    ;; test ..0
-   (check-equal? '() (destruct '() [(list x ..0 y ..0) (append x y)]))
+   (check-equal? (destruct '() [(list x ..0 y ..0) (append x y)])
+                 '())
 
    (define-symbolic b boolean?)
 
@@ -156,10 +158,11 @@
                 (expression (== ite) b 1 2))
 
    ;; test internal definition context
-   (check-equal? 43 (destruct 1
-                      [_ (define x 42)
-                         (set! x (add1 x))
-                         x]))))
+   (check-equal? (destruct 1
+                   [_ (define x 42)
+                       (set! x (add1 x))
+                       x])
+                 43)))
 
 (module+ test
   (time (run-tests building-synthesizer-tests))

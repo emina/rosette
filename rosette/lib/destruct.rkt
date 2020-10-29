@@ -19,13 +19,13 @@
 
   (define-syntax-class head-pattern
     #:description "a head pattern"
-    (pattern {~datum list})
-    (pattern {~datum list-rest})
-    (pattern {~datum list*})
-    ;; list-no-order is generally buggy, so let's not include it.
-    (pattern {~datum vector})
-    (pattern {~datum cons})
-    (pattern {~datum box})
+    (pattern {~or* {~datum list}
+                   {~datum list-rest}
+                   {~datum list*}
+                   ;; list-no-order is generally buggy, so let's not include it.
+                   {~datum vector}
+                   {~datum cons}
+                   {~datum box}})
     ;; structs
     (pattern x:id #:when (struct-info? (syntax-local-value #'x (λ () #f)))))
 
