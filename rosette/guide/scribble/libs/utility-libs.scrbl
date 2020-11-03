@@ -33,14 +33,13 @@ The following utility libraries facilitate the development of solver-aided progr
   In other words, it provides a @tech[#:key "lifted constructs"]{lifted} pattern matching similar to @racket[match] with limited capabilities:
 
   @itemlist[
-    @item{A sub-pattern is restricted to either an identifier, a wildcard (@litchar{_}),
-    or an ellipsis (@litchar{...}). That is, it only allows value destructuring at
+    @item{A sub-pattern is restricted to an identifier, a wildcard (@litchar{_}),
+    or an ellipsis (@litchar{...}). That is, @racket[destruct] allows value destructuring only at
     the outermost level (nested destructuring is disallowed).}
     @item{All binding identifiers in a clause must be unique (no duplicate binding identifiers).}
-    @item{Only a few patterns that Rosette understands its lifted semantics are supported.
-    See the grammar below for full details.}
+    @item{Only patterns with lifted semantics are supported. See the grammar below for full details.}
     @item{Side-conditioning via @racket[#:when] and the failure procedure are not supported.}
-  ]
+ ]
 
   @examples[
   #:eval the-eval
@@ -58,7 +57,8 @@ The following utility libraries facilitate the development of solver-aided progr
   (define-symbolic b boolean?)
   (interp (if b (add 3 4) (mul 5 6)))]
 
-  The grammar of @racket[pat] is as follows, where non-italicized identifiers are recognized symbolically (i.e., not by binding).
+  The grammar of @racket[pat] is as follows, where non-italicized identifiers are
+  recognized literally (i.e., not by binding).
 
   @(parse-match-grammar "
 pat     ::= _sp                               @match anything; see details below
@@ -79,7 +79,7 @@ ooo     ::= ***                               @zero or more; *** is literal
          |  __K                               @K or more
 ")
 
-  See @racket[match] for the semantics of each patterns.
+  See @racket[match] for the semantics of each pattern.
 }
 
 @defform[(destruct* (val-expr ...) [(pat ...) body ...+] ...)]{
