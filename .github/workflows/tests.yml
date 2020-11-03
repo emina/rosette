@@ -1,0 +1,57 @@
+name: Tests
+
+on: [push, pull_request]
+
+env:
+  CVC4_URL: "http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.5-x86_64-linux-opt"
+  BOOLECTOR_URL: "https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        racket-version: ['7.0', 'current']
+        racket-variant: ['regular']
+        allow-failure: [false]
+        include:
+          - racket-version: 'current'
+            racket-variant: 'CS'
+            allow-failure: true
+    name: Racket ${{ matrix.racket-version }} (${{ matrix.racket-variant }})
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.allow-failure }}
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup Racket
+        uses: Bogdanp/setup-racket@v0.10
+        with:
+          architecture: x64
+          version: ${{ matrix.racket-version }}
+          variant: ${{ matrix.racket-variant }}
+      - name: Install solvers
+        run: |
+          mkdir bin &&
+          wget $CVC4_URL -nv -O bin/cvc4 &&
+          chmod +x bin/cvc4 &&
+          wget $BOOLECTOR_URL -nv -O boolector.tar.gz &&
+          mkdir boolector &&
+          tar xzf boolector.tar.gz -C boolector --strip-components=1 &&
+          pushd boolector &&
+          ./contrib/setup-cadical.sh &&
+          ./contrib/setup-btor2tools.sh &&
+          ./configure.sh &&
+          cd build &&
+          make &&
+          popd &&
+          cp boolector/build/bin/boolector bin/ &&
+          rm -rf boolector*
+      - name: Install Rosette
+        run: raco pkg install --auto
+      - name: Compile Rosette tests
+        run: raco make test/all-rosette-tests.rkt
+      - name: Run Rosette tests
+        run: raco test test/all-rosette-tests.rkt
+      - name: Compile SDSL tests
+        run: raco make test/all-sdsl-tests.rkt
+      - name: Run SDSL tests
+        run: raco test test/all-sdsl-tests.rkt
