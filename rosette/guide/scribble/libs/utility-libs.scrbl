@@ -1,21 +1,109 @@
 #lang scribble/manual
 
 @(require scribble/bnf
+          scribble/example
+          scribblings/reference/match-parse
           (only-in racket/draw read-bitmap)
           (for-label
            rosette/lib/value-browser
+           rosette/lib/destruct
            (only-in racket/gui snip%)
            rosette/base/form/define
            rosette/base/core/term
            (only-in rosette/base/base bv bitvector ~>)
+           (only-in rosette/base/core/safe assert)
            racket)
           scribble/core scribble/html-properties racket/runtime-path)
 
 @(define-runtime-path root ".")
+@(define the-eval (make-base-eval))
+@(the-eval '(require rosette rosette/lib/destruct))
 
 @title[#:tag "sec:utility-libs"]{Utility Libraries}
 
 The following utility libraries facilitate the development of solver-aided programs.
+
+@section{Value Destructuring Library}
+
+@defmodule[rosette/lib/destruct]
+
+@defform[(destruct val-expr [pat body ...+] ...)]{
+  Finds the first @racket[pat] that matches the result of @racket[val-expr], and evaluates the
+  corresponding @racket[body]s with bindings introduced by @racket[pat] (if any).
+  In other words, it provides a @tech[#:key "lifted constructs"]{lifted} pattern matching similar to @racket[match] with limited capabilities:
+
+  @itemlist[
+    @item{A sub-pattern is restricted to an identifier, a wildcard (@litchar{_}),
+    or an ellipsis (e.g., @litchar{...}). That is, @racket[destruct] allows value destructuring only at
+    the outermost level (nested destructuring is disallowed).}
+    @item{All binding identifiers in a clause must be unique (no duplicate binding identifiers).}
+    @item{Only patterns with lifted semantics are supported. See the grammar below for full details.}
+    @item{Side-conditioning via @racket[#:when] and the failure procedure are not supported.}
+ ]
+
+  @examples[
+  #:eval the-eval
+  (struct add (x y))
+  (struct mul (x y))
+  (define (interp v)
+    (destruct v
+      [(add x y) (+ x y)]
+      [(mul x y) (* x y)]
+      [_ (assert #f "infeasible")]))
+
+  (interp (add 3 4))
+  (interp (mul 5 6))
+
+  (define-symbolic b boolean?)
+  (interp (if b (add 3 4) (mul 5 6)))]
+
+  The grammar of @racket[pat] is as follows, where non-italicized identifiers are
+  recognized literally (i.e., not by binding).
+
+  @(parse-match-grammar "
+pat     ::= _sp                               @match anything; see details below
+         |  (LIST lvp ...)                    @match a list
+         |  (LIST-REST lvp ... _sp)           @match a list with tail
+         |  (LIST* lvp ... _sp)               @match a list with tail
+         |  (VECTOR lvp ...)                  @match a vector
+         |  (CONS _sp _sp)                    @match a pair
+         |  (BOX _sp)                         @match a box
+         |  (struct-id _sp ...)               @match a struct-id instance
+sp      ::= id                                @match anything, bind identifier
+         |  _                                 @match anything, ignore the result
+lvp     ::= (code:line _sp ooo)               @greedily match anything
+         |  _sp                               @match anything
+ooo     ::= ***                               @zero or more; *** is literal
+         |  ___                               @zero or more
+         |  ..K                               @K or more
+         |  __K                               @K or more
+")
+
+  See @racket[match] for the semantics of each pattern.
+}
+
+@defform[(destruct* (val-expr ...) [(pat ...) body ...+] ...)]{
+  Similar to @racket[match*] but with the restrictions of @racket[destruct].
+
+  @examples[
+  #:eval the-eval
+  (define x (if b (list 1) (list 1 2)))
+  (define y (if b (list 10) (list 10 20)))
+  (destruct* (x y)
+    [((list p) (list q)) (+ p q)]
+    [((list p p*) (list q q*)) (+ p p* q q*)])]
+}
+
+@defform[(destruct-lambda [(pat ...) body ...+] ...)]{
+  Similar to @racket[match-lambda] but with the restrictions of @racket[destruct].
+
+  @examples[
+  #:eval the-eval
+  (map (destruct-lambda [(add x y) (+ x y)])
+       (list (if b (add 1 2) (add 3 4))
+             (add 5 6)
+             (if (not b) (add 7 8) (add 9 10))))]
+}
 
 @section{Value Browser Library}
 
