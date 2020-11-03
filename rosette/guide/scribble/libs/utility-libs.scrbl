@@ -34,7 +34,7 @@ The following utility libraries facilitate the development of solver-aided progr
 
   @itemlist[
     @item{A sub-pattern is restricted to an identifier, a wildcard (@litchar{_}),
-    or an ellipsis (@litchar{...}). That is, @racket[destruct] allows value destructuring only at
+    or an ellipsis (e.g., @litchar{...}). That is, @racket[destruct] allows value destructuring only at
     the outermost level (nested destructuring is disallowed).}
     @item{All binding identifiers in a clause must be unique (no duplicate binding identifiers).}
     @item{Only patterns with lifted semantics are supported. See the grammar below for full details.}
