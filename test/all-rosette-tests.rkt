@@ -46,7 +46,7 @@
  "query/optimize.rkt"
  "lib/destruct.rkt"
  "profile/test.rkt"
- "trace/test.rkt")
+ #;"trace/test.rkt")
 
 
 (define (run-tests-with-solver solver%)
