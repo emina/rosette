@@ -9,8 +9,7 @@
          (only-in "term.rkt" expression)
          (only-in "polymorphic.rkt" guarded guarded-test guarded-value ite ite*)
          (only-in "equality.rkt" @equal?)
-         (only-in "effects.rkt" speculate* location=? location-final-value)
-         "safe.rkt")
+         "safe.rkt"  "../core/eval.rkt" "../core/store.rkt" "../core/result.rkt")
 
 (provide for/all for*/all guard-apply)
 
@@ -109,47 +108,26 @@
      (define-values (guards outputs states)
        (guard-speculate* proc guarded-values guard-of value-of))
      (when (null? guards) (assert #f all-paths-infeasible))
-     (when (ormap pair? states)
-       (merge-states guards states))
+     (merge-stores! guards states)
      (apply merge* (map cons guards outputs))]))
   
 ; Speculatively executes the given procedure on the provided 
-; guarded values and returns three lists---guards, outputs, 
+; guarded values and returns two lists---guards, outputs, 
 ; and states---of equal length.  For each g/v input value  
 ; in guarded-values for which (proc v) terminates without an 
 ; error, there is an index i such that the ith element of the 
 ; guards list is g, the ith element of the outputs list is 
-; (proc v), and the ith element of the states list is the list 
-; of all states updates that were performed when executing (proc v).
-; Note that all state update objects for the ith execution are  
-; are unique according to location=?, but two state updates in 
-; different executions may be location=?.  (That is, proc would 
-; update the same location if it were called with two different 
-; values.)
+; (proc v), and the ith element of the list 
+; of all store updates that were performed when executing (proc v).
+; Note that all store update locations for the ith execution are  
+; are unique according to equal?, but two locations in 
+; different stores may be equal?. 
 (define (guard-speculate* proc guarded-values [guard-of car] [value-of cdr])
   (for/fold ([guards '()] [outputs '()] [states '()]) ([gv guarded-values])
     (define guard (guard-of gv))
     (define val (value-of gv))
-    (define-values (output state) (speculate* guard (proc val)))
-    (cond [state (values (cons guard guards) (cons output outputs) (cons state states))]
+    (define ret (speculate guard (proc val)))
+    (cond [ret   (values (cons guard guards) (cons (result-value ret) outputs) (cons (result-state ret) states))]
           [else  (assert (! guard) all-paths-infeasible)
                  (values guards outputs states)])))
-
-
-; Given a list of n guards and their corresponding lists of 
-; state-update objects, performs an n-way merge of all updates 
-; to memory locations that are encapsulated in those states.
-(define (merge-states guards states)
-  (define locations (remove-duplicates (apply append states) location=?))
-  (define guarded-states (append-map (lambda (g sts) (map (curry cons g) sts)) guards states))
-  (define max-guards-per-location (length guards))
-  (define (merge-procedure gss)
-    (if (= (length gss) max-guards-per-location)
-        (lambda (pre post) (apply merge* gss))
-        (lambda (pre post) (apply merge* (cons (! (apply || (map car gss))) pre) gss))))
-  (for ([loc locations]) 
-    (loc (merge-procedure 
-          (for/list ([gs guarded-states] 
-                     #:when (location=? loc (cdr gs))) 
-            (cons (car gs) (location-final-value (cdr gs))))))))
            

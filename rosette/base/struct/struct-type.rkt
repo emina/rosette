@@ -3,7 +3,7 @@
 
 (require (for-syntax "../core/lift.rkt" racket/syntax)
          (only-in racket/private/generic-methods generic-property)
-         (only-in "../core/effects.rkt" apply!)
+         (only-in "../core/store.rkt" store!)
          "../core/term.rkt"  "../core/lift.rkt" "../core/safe.rkt"
          (only-in "../core/bool.rkt" || && and-&&)
          (only-in "../core/type.rkt" @any/c type-cast gen:typed get-type)
@@ -80,33 +80,43 @@
   
   (values struct:t make-t @struct:t t-ref t-set!))
 
+(define (struct-field-accessor-name @struct:t i field-id)
+  (if field-id
+      (format "~a-~a" (object-name (struct-type-make @struct:t)) field-id)
+      (format "~a-field~a" (object-name (struct-type-make @struct:t)) i)))
+
+(define (struct-field-mutator-name @struct:t i field-id)
+  (format "set-~a!" (struct-field-accessor-name @struct:t i field-id)))
+  
 (define (@make-struct-field-mutator struct:t i field-id)
   (let* ([@struct:t (get-type struct:t)]
          [native? (struct-type-native? @struct:t)]
-         [setter (make-struct-field-mutator (struct-type-set! @struct:t) i field-id)]
-         [getter (make-struct-field-accessor (struct-type-ref @struct:t) i field-id)])
+         [name (string->symbol (struct-field-mutator-name @struct:t i field-id))]
+         [setter (struct-type-set! @struct:t)]
+         [getter (struct-type-ref @struct:t)])
     (procedure-rename 
      (lambda (receiver value)  
        (if (native? receiver)
-           (apply! setter getter receiver value) 
-           (match (type-cast @struct:t receiver (object-name setter))
-             [(? native? r) (apply! setter getter r value)]
-             [(union rs) (for ([r rs]) 
-                           (apply! setter getter (cdr r) (merge (car r) value (getter (cdr r)))))])))
-     (object-name setter))))
+           (store! receiver i value getter setter) 
+           (match (type-cast @struct:t receiver name)
+             [(? native? r) (store! r i value getter setter)]
+             [(union rs) (for ([r rs])
+                           (store! (cdr r) i (merge (car r) value (getter (cdr r) i)) getter setter))])))
+     name)))
 
 (define (@make-struct-field-accessor struct:t i field-id)
   (let* ([@struct:t (get-type struct:t)]
          [native? (struct-type-native? @struct:t)]
-         [getter (make-struct-field-accessor (struct-type-ref @struct:t) i field-id)])
+         [name (string->symbol (struct-field-accessor-name @struct:t i field-id))]
+         [getter (struct-type-ref @struct:t)])
     (procedure-rename 
      (lambda (receiver) 
        (if (native? receiver)
-           (getter receiver)
-           (match (type-cast @struct:t receiver (object-name getter))
-             [(? native? r) (getter r)]
-             [(union r) (merge** r getter)])))
-     (object-name getter))))
+           (getter receiver i)
+           (match (type-cast @struct:t receiver name)
+             [(? native? r) (getter r i)]
+             [(union r) (merge** r (getter _ i))])))
+     name)))
 
 (struct struct-type (pred super native? make ref set! fields immutable? transparent? procedure? equal+hash)
   #:property prop:procedure

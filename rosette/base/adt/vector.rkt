@@ -6,7 +6,7 @@
          "../core/safe.rkt" "../core/lift.rkt" "seq.rkt" "../core/forall.rkt" "generic.rkt"
          (only-in "list.rkt" @list?)
          (only-in "../form/control.rkt" @when)
-         (only-in "../core/effects.rkt" apply!) 
+         (only-in "../core/store.rkt" store!)
          (only-in "../core/term.rkt" define-lifted-type @any/c type-cast)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? && ||)
@@ -58,16 +58,15 @@
 
 (define (merge-set! vec idx val guard)
   (for ([i (in-range (vector-length vec))])
-    (apply! vector-set! vector-ref 
-            vec i (merge (&& guard (@= i idx)) val (vector-ref vec i)))))
+    (store! vec i (merge (&& guard (@= i idx)) val (vector-ref vec i)) vector-ref vector-set!)))
 
 (define (@vector-set! vec idx val)
   ;(printf "vector-set! ~a ~a ~a\n" (eq-hash-code vec) idx val)
   (if (and (vector? vec) (number? idx))
-      (apply! vector-set! vector-ref vec idx val)
+      (store! vec idx val vector-ref vector-set!)
       (match* ((type-cast @vector? vec 'vector-set!) (type-cast @integer? idx 'vector-set!))
-        [((? vector? vs) (? number? idx)) 
-         (apply! vector-set! vector-ref vs idx val)]
+        [((? vector? vs) (? number? idx))
+         (store! vs idx val vector-ref vector-set!)]
         [((? vector? vs) idx)
          (assert-bound [0 @<= idx @< (vector-length vs)] 'vector-set!)
          (merge-set! vs idx val #t)]
@@ -76,8 +75,7 @@
          (assert-|| (for/list ([v vs] #:when (< idx (vector-length (cdr v))))
                       (let ([guard (car v)]
                             [vec (cdr v)])
-                        (apply! vector-set! vector-ref 
-                                vec idx (merge guard val (vector-ref vec idx)))
+                        (store! vec idx (merge guard val (vector-ref vec idx)) vector-ref vector-set!)
                         guard))
                     #:unless (length vs)
                     (index-too-large-error 'vector-set! vec idx))]
@@ -90,14 +88,13 @@
   (match (type-cast @vector? vec 'vector-fill!)
     [(? vector? vs)
      (for ([i (in-range (vector-length vs))])
-       (apply! vector-set! vector-ref vs i val))]
+       (store! vs i val vector-ref vector-set!))]
     [(union vs)
      (for ([v vs])
        (let ([guard (car v)]
              [vec (cdr v)])
          (for ([i (in-range (vector-length vec))])
-           (apply! vector-set! vector-ref 
-                   vec i (merge guard val (vector-ref vec i))))))]))
+           (store! vec i (merge guard val (vector-ref vec i)) vector-ref vector-set!))))]))
 
 ; Vector copy helper procedure.  Requires dest and src to be 
 ; vectors (rather than unions of vectors), and dest-start, src-start

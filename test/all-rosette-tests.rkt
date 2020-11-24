@@ -17,7 +17,7 @@
 
 
 (require-all-tests
- "base/effects.rkt"
+ "base/store.rkt"
  "base/type.rkt"
  "base/term.rkt"
  "base/bool.rkt"

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../core/effects.rkt"  
+(require "../core/eval.rkt" "../core/store.rkt" "../core/result.rkt"
          "../core/term.rkt" "../core/equality.rkt" 
          "../core/merge.rkt" "../core/bool.rkt")
 
@@ -10,18 +10,14 @@
 ; Symbolic conditions are handled by speculatively executing both branches,
 ; and then merging their results and updates to state (if any). When a branch is 
 ; executed speculatively, its state mutations are captured and then undone. 
-; The result of the capture is a closure that can be used with a merging 
-; procedure to selectively re-apply the updates.  If an error is thrown 
-; during speculation, all updates are undone, but they are not captured 
-; (since the branch is infeasible).  After both branches have been speculatively 
-; executed, their results and updates to state are merged using the merge function.
+; After both branches have been speculatively 
+; executed, their results and updates to state are merged.
 ;
 ; Speculative execution of either branch is guarded by the path condition, stored 
 ; in the pc parameter.  Parameterizing pc with a new value coinjoins that 
 ; value with the current path condition. If the result of the conjunction is false, 
 ; indicating that the branch is infeasible, an error is thrown, and the branch is 
-; not executed.  The error is captured by the speculate form and later handled by 
-; the merge function.
+; not executed.   
 (define-syntax (@if stx)
   (syntax-case stx ()
     [(_ test-expr then-expr else-expr)
@@ -34,25 +30,23 @@
   (define test (! (@false? test-expr)))
   (cond [(eq? test #t) (then-branch)]
         [(eq? test #f) (else-branch)]
-        [else 
-         (let-values ([(then-val then-state) (speculate test (then-branch))]
-                      [(else-val else-state) (speculate (! test) (else-branch))])
-           (cond [(and then-state else-state) ; both branches feasible
-                  (then-state (lambda (pre post-then) (merge test post-then pre)))
-                  (else-state (lambda (post-then post-else) (merge test post-then post-else)))
-                  (merge test then-val else-val)]
-                 [then-state                  ; only then branch feasible
+        [else
+         (let* ([not-test (! test)]
+                [then-result (speculate test (then-branch))]
+                [else-result (speculate not-test (else-branch))])
+           (cond [(and then-result else-result) ; both branches feasible
+                  (merge-stores! (list test not-test) (list (result-state then-result) (result-state else-result)))
+                  (merge test (result-value then-result) (result-value else-result))]
+                 [then-result                 ; only then branch feasible
                   (@assert test "both branches infeasible")
-                  (then-state select-post)
-                  then-val]
-                 [else-state                  ; only else branch feasible
-                  (@assert (! test) "both branches infeasible")
-                  (else-state select-post)
-                  else-val]
+                  (merge-stores! (list test) (list (result-state then-result)))
+                  (result-value then-result)]
+                 [else-result                 ; only else branch feasible
+                  (@assert not-test "both branches infeasible")
+                  (merge-stores! (list not-test) (list (result-state else-result)))
+                  (result-value else-result)]
                  [else                        ; neither branch feasible
                   (@assert #f "both branches infeasible")]))]))
-
-(define (select-post pre post) post) 
 
 (define-syntax (@and stx)
   (syntax-case stx ()

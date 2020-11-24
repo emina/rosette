@@ -2,7 +2,7 @@
 
 (require (for-syntax racket/syntax "../core/lift.rkt") racket/provide 
          "../core/safe.rkt" "generic.rkt"
-         (only-in "../core/effects.rkt" apply!) 
+         (only-in "../core/store.rkt" store!)
          (only-in "../core/type.rkt" define-lifted-type type-cast)
          (only-in "../core/equality.rkt" @eq? @equal?)
          (only-in "../core/bool.rkt" instance-of? && ||)
@@ -40,12 +40,15 @@
     [(box v) v]
     [(union vs) (apply merge* (for/list ([gv vs]) (cons (car gv) (unbox (cdr gv)))))]))
 
+(define (box-ref x idx) (unbox x))          ; For the purpose of tracking mutations to the store, 
+(define (box-set! x idx v) (set-box! x v))  ; boxes are treated as 1-element vectors that ignore the index argument.
+
 (define (@set-box! b v)
   (match (type-cast @box? b 'set-box!)
-    [(? box? x)
-     (apply! set-box! unbox x v)]
+    [(? box? x)                        
+     (store! x 0 v box-ref box-set!)]
     [(union vs)
      (for ([gv vs])
        (let ([x (cdr gv)])
-         (apply! set-box! unbox x (merge (car gv) v (unbox x)))))]))
+         (store! x 0 (merge (car gv) v (unbox x)) box-ref box-set!)))]))
      
