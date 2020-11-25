@@ -1,6 +1,6 @@
 #lang racket
 
-(require (for-syntax racket/dict syntax/parse syntax/id-table (only-in racket pretty-print) 
+(require (for-syntax racket/dict syntax/parse syntax/parse/define syntax/id-table (only-in racket pretty-print)
                      (only-in "../core/lift.rkt" drop@))
          racket/require racket/undefined
          (filtered-in drop@ "../adt/box.rkt")
@@ -98,7 +98,13 @@
    [var:id (list stx)]
    [(var:id ...) (syntax->list stx)]
    [(var:id ... . rest:id) (syntax->list #'(var ... rest))]))
-                
+
+(begin-for-syntax
+  (define-simple-macro (quasisyntax* orig-stx new-stx)
+    (let ([orig-stx* orig-stx]
+          [new-stx* (quasisyntax new-stx)])
+      (datum->syntax new-stx* (syntax-e new-stx*) orig-stx* orig-stx*))))
+
 (define-for-syntax (box-mutated-vars form tbl)
   (define (mutated? id) (free-id-table-ref tbl id #f))
   (define (any-mutated? ids) (for/or ([id ids]) (mutated? id)))
@@ -109,7 +115,7 @@
   
   (define (bmv/rest stx lit lstx)
     (let-values ([(pure? forms) (bmv/list lstx)])
-      (if pure? stx (quasisyntax/loc stx (#,lit #,@forms))))) 
+      (if pure? stx (quasisyntax* stx (#,lit #,@forms)))))
   
   (define (bmv/proc-body formals rest)
     (let-values ([(pure? fs) (bmv/list rest)]
@@ -126,18 +132,18 @@
      (syntax-disarm stx orig-insp) 
      #:literal-sets (kernel-literals)
      [var:id
-      (cond [(and (mutated? #'var) (lexical? #'var)) (syntax/loc stx (unbox var))]
+      (cond [(and (mutated? #'var) (lexical? #'var)) (quasisyntax* stx (unbox var))]
             [else #'var])]
      [(set! var expr) 
       (let ([e (bmv #'expr)])
-        (cond [(lexical? #'var) (quasisyntax/loc stx (set-box! var #,e))]
+        (cond [(lexical? #'var) (quasisyntax* stx (set-box! var #,e))]
               [(eq? e #'expr) stx]
-              [else (quasisyntax/loc stx (set! var #,e))]))]
+              [else (quasisyntax* stx (set! var #,e))]))]
      [(define-values (var) expr)
       (let ([e (bmv #'expr)])
         (cond [(mutated? #'var) 
                (with-syntax ([(loc) (generate-temporaries #'(var))])
-                 (quasisyntax/loc stx 
+                 (quasisyntax* stx
                    (splicing-let ([loc (box #,e)])
                      (define-syntax var
                        (syntax-id-rules (set!)
@@ -145,13 +151,13 @@
                          [(var . arg) ((unbox loc) . arg)]
                          [var (unbox loc)])))))]
               [(eq? e #'expr) stx]
-              [else (quasisyntax/loc stx (define-values (var) #,e))]))]
+              [else (quasisyntax* stx (define-values (var) #,e))]))]
      [(define-values (var ...) expr)
       (let ([e (bmv #'expr)]
             [vs (syntax->list #'(var ...))])
         (cond [(any-mutated? vs)
                (let ([locs (generate-temporaries vs)])
-                 (quasisyntax/loc stx 
+                 (quasisyntax* stx
                    (splicing-let-values ([#,locs #,e])
                      #,@(for/list ([v vs][loc locs] #:when (mutated? v))
                           #`(set! #,loc (box #,loc)))
@@ -164,14 +170,14 @@
                                     [#,v (unbox #,loc)]))
                               #`(define-values (#,v) #,loc))))))]
               [(eq? e #'expr) stx]
-              [else (quasisyntax/loc stx (define-values (var ...) #,e))]))]
+              [else (quasisyntax* stx (define-values (var ...) #,e))]))]
      [(let-values ([(var ...) expr] ...) body ...)
       (let-values ([(pure-es? es) (bmv/list #'(expr ...))]
                    [(pure-fs? fs) (bmv/list #'(body ...))]
                    [(vs) (syntax->list #'(var ... ...))])
         (cond [(any-mutated? vs)
                (with-syntax ([(e ...) es])
-                 (quasisyntax/loc stx
+                 (quasisyntax* stx
                    (let-values ([(var ...) e] ...)
                      #,@(for/list ([v vs] #:when (mutated? v))
                           #`(set! #,v (box #,v))) 
@@ -179,7 +185,7 @@
               [(and pure-es? pure-fs?) stx]
               [else 
                (with-syntax ([(e ...) es])
-                 (quasisyntax/loc stx
+                 (quasisyntax* stx
                    (let-values ([(var ...) e] ...)
                      #,@fs)))]))]
      [(letrec-values ([(var ...) expr] ...) body ...) 
@@ -188,7 +194,7 @@
                    [(vs) (syntax->list #'(var ... ...))])
         (cond [(any-mutated? vs)
                (let ([ves (syntax->list #'((var ...) ...))])
-                 (quasisyntax/loc stx
+                 (quasisyntax* stx
                    (letrec-values ([#,vs (apply values (make-list #,(length vs) undefined))])
                      #,@(for/list ([v vs] #:when (mutated? v))
                           #`(set! #,v (box #,v)))
@@ -201,7 +207,7 @@
               [(and pure-es? pure-fs?) stx]
               [else 
                (with-syntax ([(e ...) es])
-                 (quasisyntax/loc stx
+                 (quasisyntax* stx
                    (letrec-values ([(var ...) e] ...)
                      #,@fs)))]))]
      [(letrec-syntaxes+values stx-decls ([(var ...) expr] ...) body ...) 
@@ -210,7 +216,7 @@
                     [(vs) (syntax->list #'(var ... ...))])
         (cond [(any-mutated? vs)
                (let ([ves (syntax->list #'((var ...) ...))])
-                 (quasisyntax/loc stx  
+                 (quasisyntax* stx
                    (letrec-syntaxes+values stx-decls ([#,vs (apply values (make-list #,(length vs) undefined))])
                      #,@(for/list ([v vs] #:when (mutated? v))
                           #`(set! #,v (box #,v)))
@@ -223,13 +229,13 @@
               [(and pure-es? pure-fs?) stx]
               [else 
                (with-syntax ([(e ...) es])
-                 (quasisyntax/loc stx
+                 (quasisyntax* stx
                    (letrec-syntaxes+values stx-decls ([(var ...) e] ...)
                      #,@fs)))]))]
      [(#%plain-lambda formals . rest)
       (let ([body (bmv/proc-body #'formals #'rest)])
         (cond [(eq? body #'rest) stx]
-              [else (quasisyntax/loc stx (#%plain-lambda formals #,@body))]))]
+              [else (quasisyntax* stx (#%plain-lambda formals #,@body))]))]
      [(case-lambda . rest)
       (let* ([r (syntax->list #'rest)]
              [fs (for/list ([fb r])
@@ -237,16 +243,16 @@
                     (let ([body (bmv/proc-body #'f #'b)])
                       (if (eq? body #'b)
                           fb 
-                          (quasisyntax/loc fb (f #,@body))))))])
+                          (quasisyntax* fb (f #,@body))))))])
         (cond [(equal? r fs) stx]
-              [else (quasisyntax/loc stx (case-lambda #,@fs))]))]      
+              [else (quasisyntax* stx (case-lambda #,@fs))]))]
      [(if . rest) (bmv/rest stx #'if #'rest)]
      [(#%expression . rest) (bmv/rest stx #'#%expression #'rest)]
      [(#%plain-app . rest)  (bmv/rest stx #'#%plain-app #'rest)]
      [(begin . rest)  (bmv/rest stx #'begin #'rest)]
      [(begin0 . rest) (bmv/rest stx #'begin0 #'rest)]
      [(with-continuation-mark . rest) (bmv/rest stx #'with-continuation-mark #'rest)]
-     [(#%plain-module-begin . rest) (quasisyntax/loc stx (#%module-begin #,@(map bmv (syntax->list #'rest))))]
+     [(#%plain-module-begin . rest) (quasisyntax* stx (#%module-begin #,@(map bmv (syntax->list #'rest))))]
      [_ stx]))
   
     (bmv form))
