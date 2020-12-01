@@ -2,7 +2,7 @@
 
 (require "term.rkt" "union.rkt" "exn.rkt")
 
-(provide @boolean? @false? 
+(provide @boolean? @false? @true?
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
          and-&& or-|| instance-of?
          @assert pc with-asserts with-asserts-only 
@@ -113,6 +113,9 @@
           (&& g (! u))]
          [_ (loop (cdr xs))]))]
     [_ #f]))
+
+(define (@true? v)
+  (or (eq? #t v) (! (@false? v))))
 
 (define-quantifier exists @exists)
 (define-quantifier forall @forall)
