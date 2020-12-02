@@ -68,53 +68,57 @@
     (define specm (apply spec-and (vc) (map spec-guard specs guards)))
     (vc specm)
     (when (false? (spec-assumes specm))
-      (raise-assume-exn 'eval "contradiction"))
+      (raise-exn:fail:svm:assume:core "contradiction"))
     (when (false? (spec-asserts specm))
-      (raise-assert-exn 'eval "contradiction"))))
+      (raise-exn:fail:svm:assert:core "contradiction"))))
 
-(define (vc-set! kind val msg spec-proc spec-field raise-proc)
+(define (vc-set! val msg spec-proc spec-field raise-exn)
   (let* ([guard (@true? val)]
          [specg (spec-proc (vc) guard)])
     (vc specg)
     (when (false? guard)
-      (raise-proc kind (msg)))
+      (raise-exn (msg)))
     (when (false? (spec-field specg))
-      (raise-proc 'eval "contradiction"))))
+      (raise-exn "contradiction"))))
 
 ; Sets the current vc to (asserting (vc) g) where g is (@true? val).
-; If g is #f, throws an exn:fail:svm:assert exception of the given
+; If g is #f, throws an exn:fail:svm:assert exception of the given 
 ; kind. If the resulting vc's asserts field is #f, throws an
 ; exn:fail:svm:assert exception of kind 'eval.
-(define (vc-assert! kind val msg)
-  (vc-set! kind val msg asserting spec-asserts raise-assert-exn))
+(define (vc-assert! val msg raise-kind)
+  (vc-set! val msg asserting spec-asserts raise-kind))
 
 ; Sets the current vc to (assuming (vc) g) where g is (@true? val).
 ; If g is #f, throws an exn:fail:svm:assume exception of the given
 ; kind. If the resulting vc's assumes field is #f, throws an
 ; exn:fail:svm:assume exception of kind 'eval.
-(define (vc-assume! kind val msg)
-  (vc-set! kind val msg assuming spec-assumes raise-assume-exn))
+(define (vc-assume! val msg raise-kind)
+  (vc-set! val msg assuming spec-assumes raise-kind))
 
 ; The $assert form has three variants: ($assert val), ($assert val msg),
-; and ($assert val msg kind). If the msg is not provided, it's treated as
-; #f, and if the kind is not provided, it's treated as `core. The first two
-; variants of this form are used for issuing assertions from within the Rosette
-; core. The third variant is used to implement the @assert form that is
-; exposed to user code. After a call to $assert, the current vc is modified to
-; reflect the issued assertion.
+; and ($assert val msg kind), where val is the value being asserted, msg
+; is the failure message, and kind is a procedure that returns a subtype of
+; exn:fail:svm:assert. Default values for msg and kind are #f and
+; raise-exn:fail:svm:assert:core, respectively.
+; The first two variants of this form are used for issuing assertions from
+; within the Rosette core. The third variant is used to implement the @assert
+; form that is exposed to user code. An $assert call modifies the current vc to
+; reflect the issued assertion. If the issued assertion or the spec-assert of the
+; current vc reduce to #f, the call throws an exception of the given kind after
+; updating the vc.
 (define-syntax ($assert stx)
   (syntax-case stx ()
-    [(_ val)          (syntax/loc stx ($assert val #f  'core))]
-    [(_ val msg)      (syntax/loc stx ($assert val msg 'core))]
-    [(_ val msg kind) (syntax/loc stx (vc-assert! kind val (thunk msg)))]))
+    [(_ val)          (syntax/loc stx ($assert val #f  raise-exn:fail:svm:assert:core))]
+    [(_ val msg)      (syntax/loc stx ($assert val msg raise-exn:fail:svm:assert:core))]
+    [(_ val msg kind) (syntax/loc stx (vc-assert! val (thunk msg) kind))]))
 
 ; Analogous to the $assert form, except that it modifies the current vc to
 ; reflect the issued assumption.
 (define-syntax ($assume stx)
   (syntax-case stx ()
-    [(_ val)          (syntax/loc stx ($assume val #f  'core))]
-    [(_ val msg)      (syntax/loc stx ($assume val msg 'core))]
-    [(_ val msg kind) (syntax/loc stx (vc-assume! kind val (thunk msg)))]))
+    [(_ val)          (syntax/loc stx ($assume val #f   raise-exn:fail:svm:assume:core))]
+    [(_ val msg)      (syntax/loc stx ($assume val msg  raise-exn:fail:svm:assume:core))]
+    [(_ val msg kind) (syntax/loc stx (vc-assume! val (thunk msg) kind))]))
 
 ; The @assert form modifies the current vc to reflect the issued assertion.
 ; The form has two variants (@assert val) and (@assert val msg), where val
@@ -122,8 +126,8 @@
 ; val is #f. This form is exposed to user code.
 (define-syntax (@assert stx)
   (syntax-case stx ()
-    [(_ val)     (syntax/loc stx ($assert val #f  'user))]
-    [(_ val msg) (syntax/loc stx ($assert val msg 'user))]))
+    [(_ val)     (syntax/loc stx ($assert val #f  raise-exn:fail:svm:assert:user))]
+    [(_ val msg) (syntax/loc stx ($assert val msg raise-exn:fail:svm:assert:user))]))
 
 ; The @assume form modifies the current vc to reflect the issued assumption.
 ; The form has two variants (@assume val) and (@assume val msg), where val
@@ -131,14 +135,14 @@
 ; val is #f. This form is exposed to user code.
 (define-syntax (@assume stx)
   (syntax-case stx ()
-    [(_ val)     (syntax/loc stx ($assume val #f  'user))]
-    [(_ val msg) (syntax/loc stx ($assume val msg 'user))]))
+    [(_ val)     (syntax/loc stx ($assume val #f  raise-exn:fail:svm:assume:user))]
+    [(_ val msg) (syntax/loc stx ($assume val msg raise-exn:fail:svm:assume:user))]))
 
 (define (halt-svm ex)
   (halt ex (vc)))
 
 (define (halt-err ex) ; Treat an exn:fail? error as an assertion failure.
-  (halt (make-assert-exn 'err (exn-message ex) (exn-continuation-marks ex))
+  (halt (make-exn:fail:svm:assert:err (exn-message ex) (exn-continuation-marks ex))
         (asserting (vc) #f)))
 
 ; The with-vc form has two variants, (with-vc body) and (with-vc vc0 body).

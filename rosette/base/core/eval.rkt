@@ -44,7 +44,7 @@
     (for/lists (gs rs) ([g guards][r results] #:when (ans? r))
       (values g (result-value r))))
   (if (null? rs)
-      (raise-merge-exn)
+      (raise-exn:fail:svm:merge)
       (begin
         (merge-stores! gs (map result-state rs))
         (apply merge* (for/list ([g gs][r rs])
