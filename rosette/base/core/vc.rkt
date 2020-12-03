@@ -6,8 +6,8 @@
   "exn.rkt" "result.rkt")
 
 (provide @assert @assume $assert $assume
-         (rename-out [vc-ref vc]) vc-clear! merge-specs! with-vc
-         spec-assumes spec-asserts
+         (rename-out [get-vc vc]) clear-vc! with-vc merge-vc!
+         spec? spec-assumes spec-asserts
          spec-tt spec-tt?)
 
 ; A spec consists of two (symbolic or concrete) @boolean?
@@ -53,17 +53,20 @@
             (lambda (v) (unless (spec? v) (raise-argument-error 'vc "spec?" v)) v)))
 
 ; Returns the current vc, without exposing the parameter outside the module. 
-(define (vc-ref) (vc))
+(define (get-vc) (vc))
 
-; Clears the current vc by setting to the true spec.
-(define (vc-clear!) (vc spec-tt))
+; Clears the current vc by setting it to the true spec.
+(define (clear-vc!) (vc spec-tt))
 
 ; Takes as input a list of n guards and n specs and sets the current vc
 ; to (vc) && (spec-guard guard1 specs1) && ... && (spec-guard guardn specn).
 ; Then, it checks if either the assumes or the asserts of the resulting spec
 ; are false? and if so, throws either an exn:fail:svm:assume? or
-; exn:fail:svm:assert? exception.
-(define (merge-specs! guards specs)
+; exn:fail:svm:assert? exception. This procedure assumes that at most one
+; of the given guards is true in any model, and if vc asserts or assumes
+; evaluate to #f under some model, then each of the specs is equivalent to
+; vc under that model.  
+(define (merge-vc! guards specs)
   (unless (null? specs)
     (define specm (apply spec-and (vc) (map spec-guard specs guards)))
     (vc specm)
@@ -72,6 +75,9 @@
     (when (false? (spec-asserts specm))
       (raise-exn:fail:svm:assert:core "contradiction"))))
 
+; Sets the current vc to (spec-proc (vc) g) where g is (@true? val).
+; If g is #f or the resulting vc's spec-field value is #f,
+; uses raise-exn throws an exn:fail:svm exception. 
 (define (vc-set! val msg spec-proc spec-field raise-exn)
   (let* ([guard (@true? val)]
          [specg (spec-proc (vc) guard)])
@@ -82,16 +88,14 @@
       (raise-exn "contradiction"))))
 
 ; Sets the current vc to (asserting (vc) g) where g is (@true? val).
-; If g is #f, throws an exn:fail:svm:assert exception of the given 
-; kind. If the resulting vc's asserts field is #f, throws an
-; exn:fail:svm:assert exception of kind 'eval.
+; If g is #f or the resulting vc's asserts field is #f, throws an
+; exn:fail:svm:assert exception of the given kind.  
 (define (vc-assert! val msg raise-kind)
   (vc-set! val msg asserting spec-asserts raise-kind))
 
 ; Sets the current vc to (assuming (vc) g) where g is (@true? val).
-; If g is #f, throws an exn:fail:svm:assume exception of the given
-; kind. If the resulting vc's assumes field is #f, throws an
-; exn:fail:svm:assume exception of kind 'eval.
+; If g is #f or the resulting vc's assumes field is #f, throws an
+; exn:fail:svm:assume exception of the given kind. 
 (define (vc-assume! val msg raise-kind)
   (vc-set! val msg assuming spec-assumes raise-kind))
 

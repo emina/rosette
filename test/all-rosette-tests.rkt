@@ -17,11 +17,12 @@
 
 
 (require-all-tests
- "base/store.rkt"
  "base/type.rkt"
  "base/term.rkt"
  "base/bool.rkt"
  "base/merge.rkt"
+ "base/store.rkt"
+ "base/vc.rkt"
  "base/list.rkt"
  "base/vector.rkt"
  "base/forall.rkt"

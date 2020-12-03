@@ -24,6 +24,7 @@
   (current-bitwidth #f)
   (current-oracle (oracle))
   (clear-asserts!)
+  (clear-vc!)
   (clear-terms!)
   (current-solver (z3)))
 

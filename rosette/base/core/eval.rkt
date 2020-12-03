@@ -39,7 +39,7 @@
 ; the current vc.
 (define (eval-guarded guards thunks)
   (define results (map eval-assuming guards thunks))
-  (merge-specs! guards (map result-state results))
+  (merge-vc! guards (map result-state results))
   (define-values (gs rs)
     (for/lists (gs rs) ([g guards][r results] #:when (ans? r))
       (values g (result-value r))))
