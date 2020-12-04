@@ -4,7 +4,7 @@
          syntax/parse/define
          (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          (only-in "merge.rkt" merge merge* merge-same)
-         (only-in "bool.rkt" ! || && pc)
+         (only-in "bool.rkt" ! || &&)
          (only-in "union.rkt" union union?)
          (only-in "term.rkt" expression)
          (only-in "polymorphic.rkt" guarded guarded-test guarded-value ite ite*)

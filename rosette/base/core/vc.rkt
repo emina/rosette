@@ -1,8 +1,7 @@
 #lang racket
 
 (require
-  (only-in "term.rkt" term? term-type)
-  (only-in "bool.rkt" @boolean? @true? ! && =>)
+  (only-in "bool.rkt" @true? && =>)
   "exn.rkt" "result.rkt")
 
 (provide @assert @assume $assert $assume

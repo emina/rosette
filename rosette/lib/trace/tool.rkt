@@ -62,7 +62,7 @@
 (define reporter
   (match-lambda*
     [(list 'exception guard e)
-     (define the-pc (&& (pc) guard))
+     (define the-pc (&&  guard)) ; <-- remove reference to the PC ... this code will need updating
      (define skip?
        (or (exn:fail:rosette:infeasible? e)
            (and (and (symbolic-trace-skip-assertion?)
