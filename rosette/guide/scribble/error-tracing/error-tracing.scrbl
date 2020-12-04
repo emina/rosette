@@ -6,7 +6,6 @@
                      rosette/base/core/term
                      rosette/base/form/define
                      rosette/query/form
-                     (only-in rosette/query/debug debug)
                      rosette/base/core/union
                      (only-in rosette unsat model evaluate sat? unsat? clear-asserts!)
                      (only-in rosette/query/finitize current-bitwidth)

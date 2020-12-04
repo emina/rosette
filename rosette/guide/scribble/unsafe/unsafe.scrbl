@@ -2,7 +2,7 @@
 
 @(require (for-label racket) scribble/core scribble/eval)
 @(require (for-label rosette/base/form/define rosette/query/query rosette/solver/solution
-                     rosette/base/core/term (only-in rosette/query/debug define/debug debug)
+                     rosette/base/core/term 
                      (only-in rosette/base/core/safe assert) )
           racket/runtime-path)
 @(require (only-in "../refs.scrbl" ~cite rosette:pldi14))

@@ -2,11 +2,9 @@
 
 (require 
  "automaton.rkt" "lib.rkt"
- rosette/query/debug rosette/lib/render 
  rosette/lib/synthax)
 
-(provide define/debug debug-automaton 
-         verify-automaton solve-automaton 
+(provide verify-automaton solve-automaton 
          synthesize-automaton matches?)
         
 ; Returns a symbolic word of length k, drawn from the given alphabet.
@@ -36,9 +34,6 @@
 (define (solve-automaton m [k 4])
   (define w (word* k (alphabet m)))
   (evaluate w (solve (assert (m w)))))
-
-(define (debug-automaton m regex w)
-  (render (debug [boolean?] (assert (correct? m regex w)))))
 
 (define (synthesize-automaton m regex [k 4])
   (define w (word* k (alphabet m)))

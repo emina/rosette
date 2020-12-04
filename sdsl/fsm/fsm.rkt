@@ -4,9 +4,7 @@
 
 (provide automaton ? reject viz 
          verify-automaton
-         debug-automaton 
          solve-automaton 
-         synthesize-automaton matches?
-         (rename-out [define/debug define])
+         synthesize-automaton matches? 
          #%app #%top #%top-interaction #%module-begin #%datum
          quote)

@@ -2,7 +2,6 @@
 
 @(require (for-label 
            rosette/solver/solver rosette/solver/solution 
-           (only-in rosette/query/debug debug)
            rosette/solver/smt/z3 rosette/solver/smt/cvc4 rosette/solver/smt/boolector rosette/solver/smt/yices rosette/solver/mip/cplex
            rosette/base/form/define rosette/query/query rosette/query/core
            rosette/base/core/term (only-in rosette/base/base bv?)
@@ -40,7 +39,7 @@ A @deftech{solver} is an automatic reasoning engine, used to answer
 @seclink["sec:queries"]{queries} about Rosette programs.  The result of
 a solver invocation is a @deftech{solution}, containing either 
 a @tech{binding} of symbolic constants to concrete values, or 
-an @tech[#:key "MUC"]{unsatisfiable core}. 
+an @link["https://en.wikipedia.org/wiki/Unsatisfiable_core"]{unsatisfiable core}. 
 Solvers and solutions may not be symbolic.  Two solvers (resp. solutions) are @racket[eq?]/@racket[equal?] 
 if they refer to the same object.
 

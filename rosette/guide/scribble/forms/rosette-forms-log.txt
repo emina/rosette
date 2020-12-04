@@ -311,7 +311,7 @@
   (c values c (0 (u . "x"))))
  #""
  #"")
-((evaluate c sol) ((3) 0 () 0 () () (q values 77)) #"" #"")
+((evaluate c sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")

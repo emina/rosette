@@ -115,29 +115,12 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate i cex) ((3) 0 () 0 () () (q values -6)) #"" #"")
-((poly -6) ((3) 0 () 0 () () (q values 360)) #"" #"")
-((factored -6) ((3) 0 () 0 () () (q values 480)) #"" #"")
-((same poly factored -6) ((3) 0 () 0 () () (q exn "assert: failed")) #"" #"")
+((evaluate i cex) ((3) 0 () 0 () () (q values 14)) #"" #"")
+((poly 14) ((3) 0 () 0 () () (q values 57120)) #"" #"")
+((factored 14) ((3) 0 () 0 () () (q values 53760)) #"" #"")
+((same poly factored 14) ((3) 0 () 0 () () (q exn "assert: failed")) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((require (only-in racket/draw read-bitmap))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((require rosette/query/debug) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define (poly x) (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((define/debug (factored x) (* x (+ x 1) (+ x 2) (+ x 2)))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((define (same p f x) (assert (= (p x) (f x))))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((define ucore (debug (integer?) (same poly factored -6)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -146,7 +129,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define (factored x) (* (+ x (??)) (+ x 1) (+ x (??)) (+ x (??))))
+((define (factored x) (* (+ x (??)) (+ x (??)) (+ x (??)) (+ x (??))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -160,14 +143,14 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-('(define (factored x) (* (+ x 0) (+ x 1) (+ x 2) (+ x 3)))
+('(define (factored x) (* (+ x 1) (+ x 3) (+ x 2) (+ x 0)))
  ((3)
   0
   ()
   0
   ()
   ()
-  (q values (define (factored x) (* (+ x 0) (+ x 1) (+ x 2) (+ x 3)))))
+  (q values (define (factored x) (* (+ x 1) (+ x 3) (+ x 2) (+ x 0)))))
  #""
  #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -182,10 +165,10 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate x sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
-((evaluate y sol) ((3) 0 () 0 () () (q values -4)) #"" #"")
-((evaluate (poly x) sol) ((3) 0 () 0 () () (q values 24)) #"" #"")
-((evaluate (poly y) sol) ((3) 0 () 0 () () (q values 24)) #"" #"")
+((evaluate x sol) ((3) 0 () 0 () () (q values 4)) #"" #"")
+((evaluate y sol) ((3) 0 () 0 () () (q values -7)) #"" #"")
+((evaluate (poly x) sol) ((3) 0 () 0 () () (q values 840)) #"" #"")
+((evaluate (poly y) sol) ((3) 0 () 0 () () (q values 840)) #"" #"")
 ((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")

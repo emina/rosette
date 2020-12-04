@@ -3,12 +3,10 @@
 @(require (for-label 
            rosette/base/form/define rosette/solver/solution rosette/query/query rosette/query/eval 
            rosette/base/core/term rosette/lib/angelic
-           (except-in rosette/query/debug assert )
            (only-in rosette/lib/synthax ?? choose define-synthax generate-forms print-forms)
            (only-in rosette/base/core/safe assert)
            (only-in rosette/base/base function? bitvector bvshl bvashr bvlshr bvadd bvsub bvmul)
-           rosette/lib/render
-           racket (only-in pict pict?))
+           racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox  racket/runtime-path
           "../util/lifted.rkt")
 
@@ -18,7 +16,14 @@
 
 @title[#:tag "sec:rosette-libs"]{Solver-Aided Libraries}
 
-In principle, solver-aided programming requires only symbolic values and the basic constructs described in Chapter @seclink["ch:syntactic-forms:rosette"]{3}.  In practice, however, it is often convenient to work with richer constructs, which are built on top of these primitives.  Rosette ships with three libraries that provide such constructs, as well as utility procedures for turning the results of synthesis and debugging queries into code.
+In principle, solver-aided programming requires only
+symbolic values and the basic constructs described in
+Chapter @seclink["ch:syntactic-forms:rosette"]{3}. In
+practice, however, it is often convenient to work with
+richer constructs, which are built on top of these
+primitives. Rosette ships with three libraries that provide
+such constructs, as well as utility procedures for turning
+the results of synthesis queries into code.
 
 
 @section{Synthesis Library}
@@ -181,19 +186,6 @@ is dynamic and the latter is static.
 (equal? (static) (static))
 (equal? (dynamic) (dynamic))]
 }
-
-@section{Debugging Library}
-@defmodule[rosette/lib/render #:use-sources (rosette/lib/render)]
-
-@defproc[(render [solution solution?] [font-size natural/c 16]) pict?]{
-Given an unsatisfiable @racket[solution?] to a @racket[debug]  query, returns a 
-@racket[pict?] visualization of that solution.  The visualization displays the 
-debugged code, highlighting the faulty expressions (i.e., those in the @racket[solution]'s core) in red. 
-The optional @racket[font-size] parameter controls the size of the font used to typeset the code. 
-Visualizations can only be constructed for programs that have been saved to disk.  
-See Chapter @seclink["sec:debug"]{2.3.2} for an example of using @racket[render].
-}
-
 
 
 @(kill-evaluator rosette-eval)

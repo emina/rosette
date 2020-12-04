@@ -5,8 +5,8 @@
            rosette/base/form/define (only-in rosette/base/core/safe assert)
            rosette/query/query (only-in rosette asserts clear-asserts!)
            (only-in rosette/base/base bv?)
-           (except-in rosette/query/debug assert) rosette/query/eval
-           (only-in rosette/lib/synthax ?? print-forms) rosette/lib/render))
+           rosette/query/eval
+           (only-in rosette/lib/synthax ?? print-forms)))
 
 @(require racket/sandbox  racket/runtime-path  scribble/core
           scribble/eval scribble/html-properties ;scriblib/footnote 
@@ -164,59 +164,21 @@ The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{bindi
 Bindings are first-class values in Rosette, and they can be freely manipulated by programs.  We can also interpret any Rosette value with respect to a binding using the built-in @racket[evaluate] procedure:
 @interaction[#:eval rosette-eval
 (evaluate i cex)
-(poly -6)
-(factored -6)
-(same poly factored -6)]
+(poly 14)
+(factored 14)
+(same poly factored 14)]
 In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input -6 thus causing the assertion in the @racket[same] procedure to fail.
 
 @(rosette-eval '(clear-asserts!))
 @(rosette-eval '(require (only-in racket/draw read-bitmap)))
 
-@subsection[#:tag "sec:debug"]{Debugging}
-
-Now that we have an input on which @racket[factored] differs from @racket[poly], the next step is to debug it, by figuring out which of its subexpressions are responsible for the fault.  Rosette provides a query for this as well.  To access it, we import the debugging facilities, mark @racket[factored] as a candidate for debugging, and issue a @racket[debug] query. 
-
-First, save these definitions to a file:
-@racketblock[
-#, @elem{#}lang rosette
- 
-(require rosette/query/debug rosette/lib/render)
- 
-(define (poly x)
-  (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
-
-(define/debug (factored x)       (code:comment "define/debug marks a procedure as part of")
-  (* x (+ x 1) (+ x 2) (+ x 2))) (code:comment "the code to be debugged")
- 
-(define (same p f x)
-  (assert (= (p x) (f x))))]
-
-Then call the debugger after loading the above definitions:
-@racketblock[
-#, @elem{>} (define ucore (debug [integer?] (same poly factored -6)))
-#, @elem{>} (render ucore) 
-#,(call-with-input-file (build-path root "pict.png") (lambda (in) (read-bitmap in 'png)))]
-
-@(rosette-eval '(require rosette/query/debug))
-@(rosette-eval '(define (poly x)
-       (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x))))
-@(rosette-eval '(define/debug (factored x)        
-       (* x (+ x 1) (+ x 2) (+ x 2))))
-@(rosette-eval '(define (same p f x)
-       (assert (= (p x) (f x)))))
-@(rosette-eval '(define ucore (debug [integer?] (same poly factored -6))))
-
-The @racket[(debug [#, @var[predicate]] #, @var[expr])] query takes as input an expression whose execution leads to an assertion failure, and one or more dynamic type predicates specifying which executed expressions should be treated as potentially faulty by the solver. That is, the predicates express the hypothesis that the failure is caused by an expression with one of the given types. Expressions that produce values of a different type are assumed to be correct.@footnote{For now, only primitive (@racket[boolean?], @racket[integer?], @racket[real?], and @racket[bv?]) types can be used in @racket[debug] forms.}
-
-The output of a @racket[debug] query is a minimal set of program expressions, called a @deftech[#:key "MUC"]{minimal unsatisfiable core}, that form an irreducible cause of the failure. Expressions outside of the core are irrelevant to the failure---there is no way to replace them with constants so that the resulting program satisfies the failing assertion. The failing assertion can only be satisfied if we are allowed to also replace one of the core expressions with a carefully chosen constant.  In general, a failing expression may have many different cores, but since every core highlights a buggy subexpression, examining one or two cores often leads to the root cause of the error.
-
-Like bindings, cores are first-class values. In our example, we simply visualize the core using the utility procedure @racket[render].@footnote{@racket[render] can only visualize cores for code that has been saved to a file.} The visualization reveals that the grayed-out subexpression @racket[(+ x 1)] is irrelevant to the failure of @racket[factored] on the input -6.  To repair this failure, we have to modify at least one of the remaining expressions, which are highlighted in red.  
 
 @subsection[#:tag "sec:synthesize"]{Synthesis}
 
-The solver can not only find failure-inducing inputs and localize faults, it can also synthesize repairs for buggy expressions.  To repair a program, we first replace each buggy expression with a syntactic "@deftech{hole}."  A program with holes is called a @deftech{sketch}.  The solver completes a sketch by filling its holes with expressions, in such a way that all assertions in the resulting program pass on all inputs.  
+The solver can not only find failure-inducing inputs, it can also synthesize repairs for buggy expressions.  To repair a program, we first replace each buggy expression with a syntactic "@deftech{hole}."  A program with holes is called a @deftech{sketch}.  The solver completes a sketch by filling its holes with expressions, in such a way that all assertions in the resulting program pass on all inputs.  
 
-The following code snippet shows the sketch for our buggy @racket[factored] procedure.  We obtained it by replacing the constants in the @seclink["sec:debug"]{minimal core} with @racket[(??)] holes, which are filled with numerical constants.@footnote{This simple replacement strategy is sufficient since we know that a factorization of an @var{n}-degree polynomial takes the form @tt{(* (+ x @var[c]@subscript{0}) ... (+ x @var[c]@subscript{@var{n}}))}, where @var[c]@subscript{@var{i}} is a constant.}
+The following code snippet shows the sketch for our buggy @racket[factored] procedure. The sketch reflects our knowledge that a factorization of an @var{n}-degree polynomial takes the form @tt{(* (+ x @var[c]@subscript{0}) ... (+ x @var[c]@subscript{@var{n}}))}, where @var[c]@subscript{@var{i}} is an integer constant. We ask the solver to find these constants by leaving holes @racket[(??)] in the program.
+
 @defs+int[#:eval rosette-eval
 ((require rosette/lib/synthax) 
  
@@ -224,7 +186,7 @@ The following code snippet shows the sketch for our buggy @racket[factored] proc
   (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
 
  (define (factored x)        
-  (* (+ x (??)) (+ x 1) (+ x (??)) (+ x (??))))  
+  (* (+ x (??)) (+ x (??)) (+ x (??)) (+ x (??))))  
  
  (define (same p f x)
   (assert (= (p x) (f x)))))]
@@ -239,7 +201,7 @@ We query the solver for a correct completion of our sketch as follows:
 (define binding 
   (synthesize #:forall (list i)
               #:guarantee (same poly factored i)))
-(eval:alts (print-forms binding) '(define (factored x) (* (+ x 0) (+ x 1) (+ x 2) (+ x 3))))]
+(eval:alts (print-forms binding) '(define (factored x) (* (+ x 1) (+ x 3) (+ x 2) (+ x 0))))]
 The @racket[(synthesize #:forall #, @var[input] #:guarantee #, @var[expr])] query uses the @var[input] form to specify a set of distinguished symbolic values, which are treated as inputs to the expression @var[expr]. The result, if any, is a binding for the remaining symbolic values, created by evaluating holes.  This binding guarantees successful evaluation of @var[expr] for @emph{all} possible bindings of the @var[input] values. Passing it to the @racket[print-forms] procedure yields a syntactic representation of the completed sketch.@footnote{@racket[print-forms] can only print the completion of a sketch that has been saved to a file.}
 
 @subsection[#:tag "sec:solve"]{Angelic Execution}

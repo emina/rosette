@@ -44,7 +44,6 @@
  "query/synthesize.rkt"
  "query/solve+.rkt"
  "query/synthax.rkt"
- "query/debug.rkt"
  "query/optimize.rkt"
  "lib/destruct.rkt"
  "profile/test.rkt"

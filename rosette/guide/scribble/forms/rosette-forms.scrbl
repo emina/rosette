@@ -3,7 +3,7 @@
 @(require (for-label  
            rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
            (only-in rosette/solver/solver solver?)
-           rosette/base/core/term (only-in rosette/query/debug define/debug debug)
+           rosette/base/core/term 
            (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/safe assert) 
            (only-in rosette/base/core/bool asserts clear-asserts!)
@@ -253,35 +253,6 @@ subsequent calls to the procedure throw an exception.
 
 @(rosette-eval '(clear-asserts!))
 @(rosette-eval '(current-bitwidth 5))
-
-@section{Debugging}
-
-@defmodule[rosette/query/debug #:use-sources (rosette/query/debug)]
-
-@defform[(define/debug head body ...)
-         #:grammar
-         ([head id (id ...)])]{
-  Defines a procedure or an expression, and marks it as a candidate for debugging.  
-  When a @racket[debug] query is applied to a failing execution, 
-  forms that are not marked in this way are considered 
-  correct.  The solver will apply the debugging algorithm only to 
-  expressions and procedures marked as potentially faulty using 
-  @racket[define/debug].
-}
-
-@defform[(debug [type ...+] expr)
-         #:contracts
-         ([type (and/c solvable? type? (not/c function?))])]{
-Searches for a minimal set of @racket[define/debug] expressions of 
-the given @tech["solvable type"](s) that are collectively responsible for the observed failure of @racket[expr]. 
-If no expressions of the specified types are relevent to the failure, an error is thrown.  The 
-returned expressions, if any, are called a minimal unsatisfiable core. The core expressions 
-are relevant to the observed failure in that preventing the failure requries modifying at least one 
-core expression. In particular, if all of the non-core expressions were replaced with 
-fresh constants created using @racket[define-symbolic*], @racket[(solve expr)] would still fail.  It 
-can only execute successfully if at least one of the core expressions is also
-replaced with a fresh constant. See the @seclink["ch:essentials"]{Essentials} chapter for example uses of
-the @racket[debug] form.}
 
 @section[#:tag "sec:reasoning-precision"]{Reasoning Precision}
 
