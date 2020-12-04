@@ -1,13 +1,12 @@
 #lang racket
 
-(require "term.rkt" "union.rkt" "exn.rkt")
+(require "term.rkt" "union.rkt")
 
 (provide @boolean? @false? @true?
          ! && || => <=> @! @&& @|| @=> @<=> @exists @forall
-         and-&& or-|| instance-of?
-         @assert pc with-asserts with-asserts-only 
-         (rename-out [export-asserts asserts]) clear-asserts!
-         T*->boolean?)
+         and-&& or-|| instance-of? T*->boolean?
+         pc @assert with-asserts with-asserts-only 
+         asserts clear-asserts! )
 
 ;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
@@ -265,54 +264,27 @@
     [(_ _) #f]))
 
   
-;; ----------------- Assertions and path condition ----------------- ;; 
-(define (export-asserts) (remove-duplicates (asserts)))
+;; ----------------- Deprecated ----------------- ;;
+(struct exn:deprecated exn ())
 
-(define (clear-asserts!)  (asserts '()))
+(define (deprecated [msg #f])
+  (raise (exn:deprecated (format "deprecated: ~a" (or msg "failed"))
+                         (current-continuation-marks))))
+
+(define (clear-asserts!)  (deprecated 'clear-asserts!))
     
-(define asserts 
-  (make-parameter 
-   '()
-   (match-lambda [(? list? xs) xs]
-                 [x (if (eq? x #t) (asserts) (cons x (asserts)))])))
+(define (asserts) (deprecated 'asserts))
 
-(define pc 
-  (make-parameter 
-   #t
-   (lambda (new-pc) 
-     (or (boolean? new-pc) 
-         (and (term? new-pc) (equal? @boolean? (term-type new-pc)))
-         (error 'pc "expected a boolean path condition, given a ~s" (type-of new-pc)))
-     (or (&& (pc) new-pc)
-         (raise-exn:fail:rosette:infeasible)))))
+(define pc (make-parameter #t (lambda (new-pc) (deprecated 'pc))))
 
 (define-syntax (@assert stx)
   (syntax-case stx ()
-    [(_ val) (syntax/loc stx (@assert val #f))]
-    [(_ val msg) 
-     (syntax/loc stx 
-       (let ([guard (not-false? val)])
-         (asserts (=> (pc) guard)) 
-         (when (false? guard)
-           (raise-assertion-error msg))))]))
+    [(_ val)     (syntax/loc stx (deprecated '@assert))]
+    [(_ val msg) (syntax/loc stx (deprecated '@assert))]))
 
-(define (not-false? v)
-  (or (eq? v #t) (! (@false? v))))
-
-(define (raise-assertion-error msg)
-  (if (procedure? msg)
-      (msg)
-      (raise-exn:fail:rosette:assertion (if msg (format "~a" msg) "failed"))))
-
-(define (evaluate-with-asserts closure)
-  (parameterize ([asserts '()])
-    (let* ([val (closure)]
-           [bools (remove-duplicates (asserts))])
-      (values val bools))))
 
 (define-syntax-rule (with-asserts form)
-  (evaluate-with-asserts (thunk form)))
+  (deprecated 'with-asserts))
 
 (define-syntax-rule (with-asserts-only form)
-  (let-values ([(out asserts) (with-asserts form)])
-    asserts))
+  (deprecated 'with-asserts-only))
