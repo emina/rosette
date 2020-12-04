@@ -8,6 +8,8 @@
          (only-in rosette/base/core/real @integer? @=)
          (only-in rosette/base/core/merge merge merge*))
 
+(provide check-store)
+
 (define (check-store s lvs)
   (check-equal? (length s) (length lvs))
   (for ([slv s][lv lvs])

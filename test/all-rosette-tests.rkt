@@ -23,6 +23,7 @@
  "base/merge.rkt"
  "base/store.rkt"
  "base/vc.rkt"
+ "base/eval-guarded.rkt"
  "base/list.rkt"
  "base/vector.rkt"
  "base/forall.rkt"

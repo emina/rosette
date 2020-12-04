@@ -4,7 +4,7 @@
   (only-in "bool.rkt" pc)
   "vc.rkt" "exn.rkt" "result.rkt" "store.rkt" "merge.rkt")
 
-(provide eval-assuming eval-guarded)
+(provide eval-assuming eval-guarded!)
 
 ; Takes as input a concrete or symbolic boolean and a thunk, 
 ; evaluates thunk under the assumption that the guard holds,
@@ -37,7 +37,15 @@
 ; as output. If all of the thunks fail under their guards, eval-guarded
 ; raises an exn:fail:svm:merge exception after the specs are merged into
 ; the current vc.
-(define (eval-guarded guards thunks)
+; This procedure makes the following assumptions, based on the Lean
+; formalization:
+; (1) At most one guard evaluates to true under any model.
+; (2) For all models m under which (vc) evaluates to spec-tt, there is
+; exactly one guard in guards that evaluates to #t under m.
+; (3) For all models m under which (vc) doesn't evaluate to spec-tt,
+; every spec produced by evaluating the given thunks evaluates to
+; the same spec as (vc) under m.
+(define (eval-guarded! guards thunks)
   (define results (map eval-assuming guards thunks))
   (merge-vc! guards (map result-state results))
   (define-values (gs rs)
