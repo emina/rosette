@@ -3,7 +3,7 @@
 @(require (for-label 
            rosette/query/query rosette/base/form/define
            rosette/base/core/term 
-           (only-in rosette/base/core/bool pc asserts clear-asserts! with-asserts with-asserts-only)
+           (only-in rosette/base/core/bool asserts clear-asserts! with-asserts with-asserts-only)
            (only-in rosette/base/core/safe assert) 
            racket)
           scribble/core scribble/html-properties scribble/eval racket/sandbox
@@ -26,16 +26,6 @@ only be used by expert Rosette programmers to implement low-level solver-aided t
 
 @declare-exporting[rosette/base/base #:use-sources (rosette/base/core/bool rosette/base/core/term)]
 
-@defproc[(pc) boolean?]{
-Returns the current path condition. 
-@examples[#:eval rosette-eval
-(define-symbolic a b boolean?)
-(if a
-    (if b
-        #f
-        (pc))
-    #f)]
-}
 
 @defproc[(asserts) (listof boolean?)]{
 Returns the contents of the @tech["assertion store"] as a list of symbolic

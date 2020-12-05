@@ -16,7 +16,7 @@
   (filtered-out drop@ 
     (combine-out
      ; core/bool.rkt
-     pc with-asserts with-asserts-only asserts clear-asserts! ; <--- deprecated
+     with-asserts with-asserts-only asserts clear-asserts! ; <--- deprecated
      vc with-vc clear-vc! spec? spec-tt? spec-tt
      @assert @assume
      @boolean? @false? @! @&& @=> @<=> @forall @exists

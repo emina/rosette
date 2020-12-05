@@ -1,7 +1,7 @@
 #lang racket
 
 (require
-  (only-in "bool.rkt" pc with-vc $assume merge-vc!)
+  (only-in "bool.rkt" with-vc $assume merge-vc!)
    "exn.rkt" "result.rkt" "store.rkt" "merge.rkt")
 
 (provide eval-assuming eval-guarded!)

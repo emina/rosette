@@ -13,7 +13,7 @@
  spec? spec-assumes spec-asserts
  spec-tt spec-tt?
  ;; ---- deprecated ---- ;;
- pc with-asserts with-asserts-only 
+ with-asserts with-asserts-only 
  asserts clear-asserts! )
 
 ;; ----------------- Boolean type ----------------- ;; 
@@ -449,9 +449,6 @@
 (define (clear-asserts!)  (deprecated 'clear-asserts!))
     
 (define (asserts) (deprecated 'asserts))
-
-(define pc (make-parameter #t (lambda (new-pc) (deprecated 'pc))))
-
 
 (define-syntax-rule (with-asserts form)
   (deprecated 'with-asserts))
