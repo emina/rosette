@@ -3,11 +3,16 @@
 (require rackunit/text-ui rackunit rosette/lib/roseunit "solver.rkt"
          (only-in "vc.rkt" check-vc-eqv)
          (only-in "store.rkt" check-store))
-(require rosette/base/core/eval rosette/base/core/vc rosette/base/core/store rosette/base/core/exn rosette/base/core/result)
+(require rosette/base/core/eval rosette/base/core/store rosette/base/core/exn rosette/base/core/result)
 (require rosette/base/adt/box)
 (require (only-in rosette unsat? term-cache)
          (only-in rosette/base/form/define define-symbolic)
-         (only-in rosette/base/core/bool @boolean? @true? && || ! => <=>)
+         (only-in rosette/base/core/bool
+                  @boolean? @true? && || ! => <=>
+                  vc clear-vc! with-vc merge-vc!
+                  $assume $assert @assume @assert
+                  spec-tt spec-tt?
+                  spec-assumes spec-asserts)
          (only-in rosette/base/core/real @integer? @= @<)
          (only-in rosette/base/core/merge merge merge*))
 

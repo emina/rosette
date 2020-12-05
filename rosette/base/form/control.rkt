@@ -6,18 +6,7 @@
 
 (provide @if @and @or @not @nand @nor @xor @implies
          @unless @when @cond @case else)
-
-; Symbolic conditions are handled by speculatively executing both branches,
-; and then merging their results and updates to state (if any). When a branch is 
-; executed speculatively, its state mutations are captured and then undone. 
-; After both branches have been speculatively 
-; executed, their results and updates to state are merged.
-;
-; Speculative execution of either branch is guarded by the path condition, stored 
-; in the pc parameter.  Parameterizing pc with a new value coinjoins that 
-; value with the current path condition. If the result of the conjunction is false, 
-; indicating that the branch is infeasible, an error is thrown, and the branch is 
-; not executed.   
+  
 (define-syntax (@if stx)
   (syntax-case stx ()
     [(_ test-expr then-expr else-expr)
@@ -27,26 +16,10 @@
                          (thunk else-expr)))]))
 
 (define (branch-and-merge test-expr then-branch else-branch)
-  (define test (! (@false? test-expr)))
+  (define test (@true? test-expr))
   (cond [(eq? test #t) (then-branch)]
         [(eq? test #f) (else-branch)]
-        [else
-         (let* ([not-test (! test)]
-                [then-result (speculate test (then-branch))]
-                [else-result (speculate not-test (else-branch))])
-           (cond [(and then-result else-result) ; both branches feasible
-                  (merge-stores! (list test not-test) (list (result-state then-result) (result-state else-result)))
-                  (merge test (result-value then-result) (result-value else-result))]
-                 [then-result                 ; only then branch feasible
-                  (@assert test "both branches infeasible")
-                  (merge-stores! (list test) (list (result-state then-result)))
-                  (result-value then-result)]
-                 [else-result                 ; only else branch feasible
-                  (@assert not-test "both branches infeasible")
-                  (merge-stores! (list not-test) (list (result-state else-result)))
-                  (result-value else-result)]
-                 [else                        ; neither branch feasible
-                  (@assert #f "both branches infeasible")]))]))
+        [else (eval-guarded! (list test (! test)) (list then-branch else-branch))]))
 
 (define-syntax (@and stx)
   (syntax-case stx ()

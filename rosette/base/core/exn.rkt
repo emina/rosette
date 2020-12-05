@@ -4,6 +4,14 @@
          (for-syntax racket/syntax racket/string)
          racket/provide)
 
+(provide (matching-identifiers-out #px"^exn:fail:svm.*\\?$" (all-defined-out))
+         (matching-identifiers-out #px"^make\\-exn:fail:svm.*$" (all-defined-out))
+         (matching-identifiers-out #px"^raise\\-exn:fail:svm.*$" (all-defined-out))
+         exn:fatal? fatal
+         argument-error arguments-error type-error contract-error index-too-large-error)
+
+;; --------------- Exceptions --------------- ;;
+
 ; Four kinds of failures can happen during symbolic evaluation:
 ; (1) the execution reaches (assert e) where e evaluates to #f, or asserting e reduces vc's asserts to #f; 
 ; (2) the execution reaches (assume e) where e evaluates to #f, or assuming e reduces vc's assumes to #f; 
@@ -63,10 +71,40 @@
   exn:fail:svm:assume:user
   exn:fail:svm:merge)
   
-(provide (matching-identifiers-out #px"^exn:fail:svm.*\\?$" (all-defined-out))
-         (matching-identifiers-out #px"^make\\-exn:fail:svm.*$" (all-defined-out))
-         (matching-identifiers-out #px"^raise\\-exn:fail:svm.*$" (all-defined-out)))
+;; --------------- Messages --------------- ;;
 
+; Fatal errors indicate bugs in the Rosette implementation.
+; Since Rosette only catches and handles errors of subtype exn:fail?,
+; exn:fatal is a subtype of exn and hence will not be caught as part
+; of symbolic evaluation. 
+(struct exn:fatal exn ())  
+(define (fatal msg) (raise (exn:fatal msg (current-continuation-marks))))
+
+(define (argument-error name expected given)
+  (format "~a: contract violation\n  expected: ~a\n  given: ~a"
+          name expected given))
+
+(define (arguments-error name message . field-value)
+  (define o (open-output-string))
+  (fprintf o "~a: ~a" name message)
+  (let loop ([fvs field-value])
+    (match fvs
+      [(list) (get-output-string o)]
+      [(list f) (fatal (format "arguments-error: missing value after field string ~a" f))]
+      [(list f v rest ...)
+       (fprintf o "\n  ~a: ~a" f v)
+       (loop rest)])))
+
+(define (type-error name expected given)
+  (argument-error name (format "~a" expected) given))  
+  
+(define (contract-error name contract given)
+  (argument-error name (format "~a" (contract-name contract)) given)) 
+  
+(define (index-too-large-error who xs idx)
+  (arguments-error who "index is too large" "index" idx "in" xs))
+
+;; -------------------------- Deprecated -------------------------- ;;
 
 (provide raise-exn:fail:rosette:infeasible
          raise-exn:fail:rosette:assertion

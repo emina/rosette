@@ -80,9 +80,6 @@
                        (cdr gv))))]
        [_ (list (cons (apply && guards) val))]))))
 
-(define (all-paths-infeasible)
-  (error 'for/all "all paths infeasible"))
-
 ; Applies the given procedure to each of the guarded values,
 ; given as guard/value structures.  The application of the procedure 
 ; to each value is done under the value's guard, and so are all 
@@ -91,43 +88,17 @@
 ; The guard-apply procedure also merges any state updates resulting 
 ; from successful guarded evaluations of proc on the given values.  
 ;
-; All given guards are required to be pairwise mutually exclusive, 
-; and at least one of the guards must always evaluate to true.
+; At most one of the given guards may be true under any model.
 (define (guard-apply proc guarded-values [guard-of car] [value-of cdr])
+  ; If any of the guarded-values has #t as its guard, it's executed
+  ; directly, since all the guards must be #f under all models.
+  (define gv (findf (lambda (gv) (eq? (guard-of gv) #t)) guarded-values))
   (cond
-    [(andmap (compose1 boolean? guard-of) guarded-values)
-     ;; Either (1) concrete is empty or (2) the value is also concrete.
-     ;; This case doesn't require speculation which is expensive.
-     ;; Simply search for a value in gv pairs whose guard is true
-     ;; and apply proc to it if there's one, error otherwise.
-     (define gv (findf guard-of guarded-values))
-     (cond
-       [gv (proc (value-of gv))]
-       [else (assert #f all-paths-infeasible)])]
-    [else
-     (define-values (guards outputs states)
-       (guard-speculate* proc guarded-values guard-of value-of))
-     (when (null? guards) (assert #f all-paths-infeasible))
-     (merge-stores! guards states)
-     (apply merge* (map cons guards outputs))]))
+    [gv   (proc (value-of gv))]
+    [else (eval-guarded! (map guard-of guarded-values)
+                         (map (lambda (gv) (thunk (proc (value-of gv)))) guarded-values))]))
   
-; Speculatively executes the given procedure on the provided 
-; guarded values and returns two lists---guards, outputs, 
-; and states---of equal length.  For each g/v input value  
-; in guarded-values for which (proc v) terminates without an 
-; error, there is an index i such that the ith element of the 
-; guards list is g, the ith element of the outputs list is 
-; (proc v), and the ith element of the list 
-; of all store updates that were performed when executing (proc v).
-; Note that all store update locations for the ith execution are  
-; are unique according to equal?, but two locations in 
-; different stores may be equal?. 
-(define (guard-speculate* proc guarded-values [guard-of car] [value-of cdr])
-  (for/fold ([guards '()] [outputs '()] [states '()]) ([gv guarded-values])
-    (define guard (guard-of gv))
-    (define val (value-of gv))
-    (define ret (speculate guard (proc val)))
-    (cond [ret   (values (cons guard guards) (cons (result-value ret) outputs) (cons (result-state ret) states))]
-          [else  (assert (! guard) all-paths-infeasible)
-                 (values guards outputs states)])))
+
+  
+
            

@@ -1,58 +1,39 @@
 #lang racket
 
-(require (only-in "type.rkt" type-cast)
-         "bool.rkt"
-         racket/performance-hint)
+(require "bool.rkt" "exn.rkt")
 
 (provide argument-error arguments-error type-error contract-error index-too-large-error
          assert assert-some assert-|| assert-bound assert-arity-includes)
 
-(begin-encourage-inline
   
-  (define (arguments-error name message . field-value)
-    (thunk (apply raise-arguments-error name message field-value)))
-  
-  (define (argument-error name expected given)
-    (thunk (raise-argument-error name expected given)))
-  
-  (define (type-error name expected given)
-    (argument-error name (format "~a" expected) given))  
-  
-  (define (contract-error name contract given)
-    (argument-error name (format "~a" (contract-name contract)) given)) 
-  
-  (define (index-too-large-error who xs idx)
-    (arguments-error who "index is too large" "index" idx "in" xs))
-  )
-
 (define-syntax (assert stx)
-  (syntax-case stx () 
-    [(_ expr err-thunk)        (syntax/loc stx (@assert expr err-thunk))]
-    [(_ expr)                  (syntax/loc stx (@assert expr #f))]))
+  (syntax-case stx ()
+    [(_ expr)      (syntax/loc stx ($assert expr #f))]
+    [(_ expr msg)  (syntax/loc stx ($assert expr msg))]))
 
 (define-syntax assert-some 
   (syntax-rules ()
-    [(_ expr #:unless size err-thunk) 
+    [(_ expr #:unless size msg) 
      (let* ([val expr])
        (unless (= size (length val))
-         (assert (apply || (map car val)) err-thunk))
+         (assert (apply || (map car val)) msg))
        val)]
     [(_ expr #:unless size)
      (assert-some expr #:unless size #f)]
-    [(_ expr err-thunk)
+    [(_ expr msg)
      (let* ([val expr])
-       (assert (apply || (map car val)) err-thunk)
+       (assert (apply || (map car val)) msg)
        val)]
     [(_ expr)
      (assert-some expr #f)]))
 
 (define-syntax assert-|| 
   (syntax-rules ()
-    [(_ expr #:unless size err-thunk) 
+    [(_ expr #:unless size msg) 
      (let ([val expr])
        (unless (= size (length val))
-         (assert (apply || val) err-thunk)))]
-    [(_ expr #:unless size)           (assert-|| expr #:unless size #f)]))
+         (assert (apply || val) msg)))]
+    [(_ expr #:unless size) (assert-|| expr #:unless size #f)]))
 
 
 (define-syntax assert-bound

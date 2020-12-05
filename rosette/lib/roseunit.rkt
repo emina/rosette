@@ -2,9 +2,11 @@
 
 ; Utilities for testing Rosette programs.
 (require rackunit rackunit/text-ui)
-(require (only-in rosette 
+(require rosette/base/core/result
+         (only-in rosette 
                   clear-state!
-                  current-bitwidth term-cache current-oracle oracle with-asserts-only
+                  current-bitwidth term-cache current-oracle oracle
+                  with-vc 
                   solution? sat? unsat?))
 (require (for-syntax syntax/parse))
 
@@ -46,7 +48,12 @@
              (require (only-in rosette/safe clear-state!))
              (clear-state!)) ...
            (require 'id) ...))))))
-     
+
+(define-syntax-rule (with-ans-or-fail expr)
+  (match (with-vc expr)
+    [(ans v _)    v]
+    [(halt ex _)  (raise ex)]))
+    
 
 ; Makes sure that a test suite clears all Rosette state after it terminates.
 (define-syntax (test-suite+ stx)
@@ -63,7 +70,7 @@
                     name
                     #:before (thunk (printf "~a\n" name) (before))
                     #:after after
-                    (with-asserts-only
+                    (with-ans-or-fail
                       (parameterize ([current-bitwidth (current-bitwidth)]
                                      [term-cache (hash-copy (term-cache))]
                                      [current-oracle (oracle (current-oracle))])

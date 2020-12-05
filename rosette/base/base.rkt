@@ -4,7 +4,6 @@
 (require 
   (for-syntax racket/syntax (only-in "core/lift.rkt" drop@)) 
   racket/provide
-  (only-in "core/vc.rkt" vc clear-vc! with-vc spec-tt spec-tt? spec?)
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" "core/bvlib.rkt"
   "core/function.rkt"
   "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt" 
@@ -16,11 +15,11 @@
   (rename-out [@|| ||]) ; The character sequence || does not play nicely with the filtered-out form.
   (filtered-out drop@ 
     (combine-out
-     ; core/vc.rkt
-     vc with-vc clear-vc! spec? spec-tt? spec-tt
      ; core/bool.rkt
-     pc with-asserts with-asserts-only asserts clear-asserts!
-     @assert @boolean? @false? @! @&& @=> @<=> @forall @exists
+     pc with-asserts with-asserts-only asserts clear-asserts! ; <--- deprecated
+     vc with-vc clear-vc! spec? spec-tt? spec-tt
+     @assert @assume
+     @boolean? @false? @! @&& @=> @<=> @forall @exists
      ; core/real.rkt
      @integer? @real? @= @< @<= @>= @> 
      @+ @* @- @/ @quotient @remainder @modulo @abs
