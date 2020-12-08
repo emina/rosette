@@ -12,10 +12,10 @@
     (current-bitwidth #f)
     
     (check-unsat (synthesize #:forall '() #:guarantee (assert #f)))
-    (check-unsat (synthesize #:forall '() #:assume (assert #f) #:guarantee (assert #f)))
+    (check-unsat (synthesize #:forall '() #:guarantee (begin (assume #f) (assert #f))))
 
     (check-equal?
-     (model (check-sat (synthesize #:forall a #:assume (assert a) #:guarantee (assert (&& a b)))))
+     (model (check-sat (synthesize #:forall a #:guarantee (begin (assume a) (assert (&& a b))))))
      (hash b #t))
     
     (check-unsat (synthesize #:forall xb #:guarantee (assert (bvslt xb (bvadd xb yb)))))
@@ -33,7 +33,7 @@
      (evaluate (> yr 0) (synthesize #:forall xi #:guarantee (assert (< xi (+ xi yr))))))
     
     (check-true
-     (evaluate (>= yi 0) (synthesize #:forall xi #:assume (assert (> xi 0)) #:guarantee (assert (>= xi yi)))))
+     (evaluate (>= yi 0) (synthesize #:forall xi #:guarantee (begin  (assume (> xi 0)) (assert (>= xi yi))))))
     
     ))
 

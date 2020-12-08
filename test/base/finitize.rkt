@@ -3,7 +3,7 @@
 (require rackunit rackunit/text-ui 
          rosette/solver/solution 
          rosette/lib/roseunit 
-         rosette/base/core/term rosette/base/core/bool
+         rosette/base/core/term rosette/base/core/bool rosette/base/core/result
          rosette/base/core/real (except-in rosette/base/core/bitvector bv)
          rosette/query/finitize
          rosette/base/core/polymorphic rosette/base/core/merge 
@@ -34,8 +34,8 @@
                                 (finitized-solution v))))))
 
 (define-syntax-rule (finitize/solve bw constraint ...)
-  (let* ([terms (with-asserts-only 
-                 (begin (@assert constraint) ...))]
+  (let* ([terms (result-state (with-vc (begin (@assert constraint) ...)))]
+         [terms (list (spec-assumes terms) (spec-asserts terms))]
          [fmap (finitize terms bw)]
          [fsol (apply solve (map (curry hash-ref fmap) terms))])
     (lift-solution fsol fmap)))

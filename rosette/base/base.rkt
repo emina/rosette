@@ -6,7 +6,7 @@
   racket/provide
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" "core/bvlib.rkt"
   "core/function.rkt"
-  "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt" 
+  "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt" "core/result.rkt"
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
@@ -53,6 +53,8 @@
      term=? term->datum clear-terms! term-cache
      union? union union-contents union-guards union-values
      union-filter in-union in-union* in-union-guards in-union-values
+     ; core/result.rkt
+     result? result-value result-state ans? halt?
      ; adt/box.rkt
      @box @box-immutable @box? @unbox @set-box!
      ; adt/list.rkt : Pair Constructors and Selectors

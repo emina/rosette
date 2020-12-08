@@ -1,44 +1,45 @@
 #lang rosette
 
-(require rackunit rackunit/text-ui rosette/lib/roseunit
-         rosette/base/core/term rosette/base/core/bool)
+(require rackunit rackunit/text-ui (only-in "vc.rkt" check-exn-svm)
+         rosette/lib/roseunit
+         rosette/base/core/term rosette/base/core/bool rosette/base/core/exn rosette/base/core/result)
 
-(define-syntax-rule (check-state actual expected-value expected-asserts)
-  (let-values ([(e ignore) (with-asserts expected-value)]
-               [(v a) (with-asserts actual)])
-    (check-equal? v e)
-    (check-equal? (apply set a) (apply set expected-asserts))))
+
+(define-syntax-rule (check-state actual expected)
+  (let ([re (with-vc expected)]
+        [ra (with-vc actual)])
+    (check-equal? (result-value ra) (result-value re))
+    (check-equal? (result-state ra) (result-state re))))
 
 (define (check-pe op)
   (define-symbolic a boolean?)
   (define-symbolic b integer?)
   (define-symbolic c real?)
   (define-symbolic f (~> integer? real?))
-  (check-exn #px"primitive solvable types" (thunk (op a #t))) ; not a list
-  (check-exn #px"primitive solvable types" (thunk (op (list f) #t))) ; not solvable
-  (check-exn #px"primitive solvable types" (thunk (op (list b 1) #t))) ; not a constant
-  (check-exn #px"boolean\\?" (thunk (op (list) 1))) ; not boolean body
-  (check-exn #px"boolean\\?" (thunk (op (list b c) 1))) ; not boolean body
-  (clear-asserts!)
-  (check-state (op (list a b c) #t) #t (list)) ; constant body
-  (check-state (op (list a b c) #f) #f (list)) ; constant body
-  (check-state (op (list) a) a (list)) ; empty list of quantified variables
-  (check-state (op (list b c) (= 3 (+ b c))) (expression op (list b c) (= 3 (+ b c))) (list))
-  (check-state (op (list b c) (if a #t 1)) #t (list a)) ; simplifies to #t plus type assertion
-  (check-state (op (list) (if a #t 1)) #t (list a)) ; simplifies to #t plus type assertion
+  (check-exn-svm exn:fail:svm:assert:core? #px"primitive solvable types" (thunk (op a #t))) ; not a list
+  (check-exn-svm exn:fail:svm:assert:core? #px"primitive solvable types" (thunk (op (list f) #t))) ; not solvable
+  (check-exn-svm exn:fail:svm:assert:core? #px"primitive solvable types" (thunk (op (list b 1) #t))) ; not a constant
+  (check-exn-svm exn:fail:svm:assert:core? #px"boolean\\?" (thunk (op (list) 1))) ; not boolean body
+  (check-exn-svm exn:fail:svm:assert:core? #px"boolean\\?" (thunk (op (list b c) 1))) ; not boolean body
+  (clear-vc!) 
+  (check-state (op (list a b c) #t) #t) ; constant body
+  (check-state (op (list a b c) #f) #f) ; constant body
+  (check-state (op (list) a) a) ; empty list of quantified variables
+  (check-state (op (list b c) (= 3 (+ b c))) (expression op (list b c) (= 3 (+ b c))))
+  (check-state (op (list b c) (if a #t 1)) (begin (assert a) #t)) ; simplifies to #t plus type assertion
+  (check-state (op (list) (if a #t 1)) (begin (assert a) #t)) ; simplifies to #t plus type assertion
   (check-state (op (list a b c) (= c (+ 1 (if a b 'b))))
-               (expression op (list a b c) (= c (+ 1 b))) (list a)) ; type assertion
+               (begin (assert a) (expression op (list a b c) (= c (+ 1 b))))) ; type assertion
   (check-state (op (list a) (let () (assert a) (= b 1)))
-               (expression op (list a) (= b 1)) (list a)) ; explicit assertion
+               (begin (assert a) (expression op (list a) (= b 1)))) ; explicit assertion
   (check-state (op (list a b c) (when a (assert (= b 1)) (= c 3))) ; explicit and type assertion
-               (expression op (list a b c) (= c 3)) (list a (=> a (= b 1))))
+               (begin (when a (assert (= b 1))) (assert a) (expression op (list a b c) (= c 3))))
   (check-state (&& a (op (list b c) (= 3 (+ b c))))
-               (&& a (expression op (list b c) (= 3 (+ b c)))) (list))
+               (&& a (expression op (list b c) (= 3 (+ b c)))))
   (check-state (op (list b) (op (list c) (= 3 (+ b c))))
                (expression op (list b)
                            (expression op (list c)
-                                       (= 3 (+ b c))))
-               (list)))
+                                       (= 3 (+ b c))))) )
 
 (define (check-finitized op)
   (define-symbolic a boolean?)

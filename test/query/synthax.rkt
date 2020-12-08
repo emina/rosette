@@ -24,7 +24,7 @@
 (define (h9 x) (crec x 2))
 (define (h10 x)(crec (h1 x) 1)) 
   
-(define (check-synth expr expected)
+(define-syntax-rule (check-synth expr expected)
   (let ([sol (synthesize #:forall x #:guarantee (assert expr))])
     (check-sat sol)
     (check-equal? (list->set (map syntax->datum (generate-forms sol)))
@@ -36,8 +36,7 @@
     (check-synth (= (* 2 x) (+ (h1 x) (h1 x))) '((define (h1 x) x)))
     (check-synth (= (+ 2 x) (h3 x)) '((define (h0) 2)
                                       (define (h2 x) (+ x (h0)))
-                                      (define (h3 x) (h2 x))))
-    ))
+                                      (define (h3 x) (h2 x))))))
 
 (define recursive-hole-tests
   (test-suite+ "Tests for recursive holes."

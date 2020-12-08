@@ -10,7 +10,7 @@
          (only-in rosette/base/adt/list @list?)         
          rosette/base/struct/struct
          (only-in rosette/base/form/define define-symbolic)
-         "common.rkt")
+         "common.rkt" (only-in "vc.rkt" check-vc-eqv))
 
 (define-symbolic x y z w @integer?)
 
@@ -75,26 +75,25 @@
   (check-true (subtype? (type-of p) @procedure?))
   (check-false (subtype? (type-of q) @procedure?))
   
-  (clear-asserts!)
-  (check-true (null? (asserts)))
+  (clear-vc!)
   (define s* (merge a s *))
   (check-equal? (s*) 1)
-  (check-true (null? (asserts)))
-  (check-equal? (length (with-asserts-only (check-equal? (s* 3 2) 6))) 1)
+  (check-pred spec-tt? (vc))
+  (check-equal? (s* 3 2) 6)
+  (check-vc-eqv #t (! a))
+  (clear-vc!) 
   
   (define (kw #:kw y) (- y))
   (define f (merge b + 'f))
   (define g (merge c s* f))
-  (check-equal? 
-   (length (with-asserts-only (check-equal? (g) (ite* (cons (&& b (! c)) 0) (cons (|| (&& c (! a)) (&& a c)) 1)))))
-   1)
-  
+  (check-equal? (g) (ite* (cons (&& b (! c)) 0) (cons (|| (&& c (! a)) (&& a c)) 1)))
+  (check-vc-eqv #t (|| c (&& b (! c))))
+  (clear-vc!)
+
   (define h (merge c kw f))
-  (check-equal?
-   (length (with-asserts-only (check-equal? (h #:kw 3) -3)))
-   2)
-  
-  )
+  (check-equal? (h #:kw 3) -3)
+  (check-vc-eqv #t c)
+  (clear-vc!) )
  
   
   

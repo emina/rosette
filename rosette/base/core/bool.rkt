@@ -75,12 +75,9 @@
           [((list (constant _ (? primitive-solvable?)) (... ...)) body)
            ($op @vars body)]
           [(_ _)
-           (@assert
+           ($assert
             #f
-            (thunk
-             (raise-argument-error
-              '$op
-              "expected a list of symbolic constants of primitive solvable types" @vars)))])))))
+            (argument-error '$op "list of symbolic constants of primitive solvable types" @vars))])))))
 
 ;; ----------------- Basic boolean operators ----------------- ;; 
 (define (! x)
