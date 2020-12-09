@@ -1,7 +1,6 @@
 #lang racket
 
-(require (only-in rnrs/base-6 assert)
-         (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
+(require (only-in racket/unsafe/ops [unsafe-car car] [unsafe-cdr cdr])
          "term.rkt" "union.rkt" "bool.rkt" "reporter.rkt")
 
 (provide merge merge* unsafe-merge* merge-same)
@@ -35,7 +34,7 @@
   (let ([simp (simplify ps)])
     ((current-reporter) 'merge (length simp))
     (match (compress force? simp)
-      [(list (cons g v)) (assert (not (false? g))) v]
+      [(list (cons g v)) v]
       [(list _ (... ...) (cons #t v) _ (... ...)) v]
       [vs (apply union vs)])))
 

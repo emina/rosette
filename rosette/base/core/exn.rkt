@@ -54,7 +54,7 @@
                    [prefix (list-ref (string-split (symbol->string (syntax-e #'id)) ":") 3)])
        #'(begin
            (define (make-id [msg #f] [cont-marks #f])
-             (id  (format "~a: ~a" prefix (or msg "failed"))
+             (id  (format "[~a] ~a" prefix (or msg "failed"))
                   (or cont-marks (current-continuation-marks))))
            (define (raise-id [msg #f] [cont-marks #f])
              (raise (make-id msg cont-marks)))))]

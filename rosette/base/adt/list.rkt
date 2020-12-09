@@ -99,7 +99,7 @@
 
 ;; List Iteration
 (define (bad-lengths-error name . args)
-  (thunk (error name "all lists must have same size\n  given: ~a" (map ~.a args))))
+  (argument-error name "lists of equal length" (map ~.a args)))
 
 (define (lengths xs)
   (match xs
@@ -282,20 +282,6 @@
                                 (@+ rank (@if (ranked>? (key-of x) i (key-of y) j) 1 0))))])
                 (for/list ([i len])
                   (for/fold ([v 0]) ([x xs] [r ranks]) (merge (@= i r) x v))))]))
-              #|(define vars (for/list ([i (in-range len)]) (define-symbolic* rank @integer?) rank))
-              (for ([v vars])
-                (assert (@<= 0 v))
-                (assert (@< v len)))
-              (let loop ([vars vars] [xs l])
-                (match* (vars xs)
-                  [((or (list) (list _)) _) (void)]
-                  [((list v v-rest ...) (list x x-rest ...)) 
-                   (let ([key (key-of x)])
-                     (for ([v1 v-rest] [x1 x-rest])
-                       (assert (@if (less? key (key-of x1)) (@< v v1) (@< v1 v)))))
-                   (loop v-rest x-rest)]))
-              (for/list ([i (in-range (length l))])
-                (apply merge* (for/list ([x l] [v vars]) (cons (@= v i) x))))]))|#
      (define (fast-sort less? getkey cache-keys? xs)
        (sort xs less? #:key getkey #:cache-keys? cache-keys?))
      (define/lift/applicator fast-sort less? getkey cache-keys? xs)
@@ -443,8 +429,8 @@
 
 
 (define @apply 
-  (case-lambda [() (error 'apply "arity mismatch;\n  expected: at least 2\n  given: 0")]
-               [(proc) (error 'apply "arity mismatch;\n  expected: at least 2\n  given: 1")]
+  (case-lambda [() (assert #f (argument-error 'apply "at least 2 arguments" 0))]
+               [(proc) (assert #f (argument-error 'apply "at least 2 arguments" 1))]
                [(proc xs) (lift/apply/higher-order apply proc xs : list? -> @list?)]
                [(proc x0 xs) (lift/apply/higher-order apply proc x0 xs : list? -> @list?)]
                [(proc x0 x1 xs) (lift/apply/higher-order apply proc x0 x1 xs : list? -> @list?)]

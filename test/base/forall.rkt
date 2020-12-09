@@ -14,13 +14,15 @@
      #'(let ([actual-values (mutable-set)]
              [proc (λ (v) expr ...)])
          (check-unsat
-          (verify
-           #:assume pre
-           #:guarantee 
-           (assert
-            (equal? (head ([v val mod ...])
-                          (begin (set-add! actual-values v) (proc v)))
-                    (proc val)))))
+          (result-value
+           (with-vc
+               (begin
+                 pre
+                 (verify
+                  (assert
+                   (equal? (head ([v val mod ...])
+                                 (begin (set-add! actual-values v) (proc v)))
+                           (proc val))))))))
          (check set=? actual-values expected-values))]))
 
 (define-symbolic a b c d e boolean?)
