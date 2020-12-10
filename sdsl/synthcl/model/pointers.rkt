@@ -69,7 +69,7 @@
   (pointer-type 
    void 
    (let* ([cast-void* (lambda (b) 
-                        (assert (pointer? b) (thunk (raise-pointer-cast-error b void)))
+                        (assert (pointer? b) (format "pointer-cast: cannot cast ~a to ~a*" b void))
                         b)]
           [void* (thunk cast-void*)])
      void*)))

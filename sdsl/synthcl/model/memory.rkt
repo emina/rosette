@@ -1,7 +1,7 @@
 #lang rosette
 
 (require "errors.rkt" "work.rkt" "type.rkt" "reals.rkt" 
-         (only-in "pointers.rkt" gen:pointer)               
+         (only-in "pointers.rkt" gen:pointer)           
          racket/generic rosette/lib/match)
 
 (provide (rename-out [make-memory memory]) memory? memory-empty?
@@ -11,7 +11,7 @@
 ; or 64 if no capacity is given.
 (define (make-memory [capacity 512])
   (assert (and (integer? capacity) (positive? capacity))
-          (thunk (raise-argument-error 'memory "positive capacity" capacity)))
+          (format "memory: contract violation\n  expected: positive capacity\n  given: ~a" capacity))
   (memory 0 (make-vector capacity)))
 
 ; Represents a memory structure that contains zero or more allocated
@@ -114,8 +114,8 @@
   (when writes 
     (for ([i len] [w (take (drop (vector->list writes) idx) len)])
       (assert (or (false? w) (equal? w (current-global-id)))
-              (thunk (error caller "access conflict detected on memory address #x~x[~a]"  
-                            address (+ idx i)))))))
+              (format "~a: access conflict detected on memory address #x~x[~a]" caller  
+                      address (+ idx i))))))
     
 ; Returns the value stored at the given offset from the 
 ; base address of the given pointer (i.e., ptr[idx]).

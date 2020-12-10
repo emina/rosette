@@ -114,7 +114,7 @@
                        [(union (list _ (... ...) (cons g (or (? primitive p) 
                                                              (and (term _ (== base)) p))) 
                                      _ (... ...)) _)
-                        (assert g (thunk  (raise-argument-error 'id (~a 'id) v)))
+                        (assert g)
                         p]
                        [_ (raise-argument-error 'id (~a 'id) v)])]))
 

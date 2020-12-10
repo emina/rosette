@@ -1,6 +1,7 @@
 #lang rosette
 
-(require rackunit rackunit/text-ui rosette/lib/roseunit
+(require rackunit rackunit/text-ui (rename-in rackunit [check-exn rackunit/check-exn])
+         rosette/lib/roseunit
          "../model/memory.rkt" "../model/work.rkt" 
          "../model/reals.rkt"  "../model/pointers.rkt"
          "../model/context.rkt" "../model/buffer.rkt" "../model/flags.rkt")
@@ -114,35 +115,36 @@
     (parameterize ([current-global-id '(3)])
       (pointer-ref ptr 2))))
 
-(define (fails-with? msg)
-  (lambda (e)
-    (and (exn:fail? e) (for/and ([c0 msg][c1 (exn-message e)]) (equal? c0 c1)))))
-        
+       
+(define-syntax-rule (check-exn e ...)
+  (begin
+    (rackunit/check-exn e ...)
+    (clear-vc!)))
 
 (define memory-tests
   (test-suite+ 
    "Tests for memory functions"
 
-   (check-exn (fails-with? "pointer-ref: cannot read from a write-only memory address #x0[1]")
+   (check-exn #px"pointer-ref: cannot read from a write-only memory address #x0\\[1\\]"
               read-write-only-buffer)
-   (check-exn (fails-with? "pointer-set!: cannot write to a read-only memory address #x0[1]") 
+   (check-exn #px"pointer-set!: cannot write to a read-only memory address #x0\\[1\\]" 
               write-read-only-buffer)
-   (check-exn (fails-with? "pointer-set!: access conflict detected on memory address #x0[1]")
+   (check-exn #px"pointer-set!: access conflict detected on memory address #x0\\[1\\]"
               write-write-conflict)
-   (check-exn (fails-with? "pointer-ref: access conflict detected on memory address #x0[9]") 
+   (check-exn #px"pointer-ref: access conflict detected on memory address #x0\\[9\\]"
               read-write-conflict)
-   (check-exn (fails-with? "implicit-conversion: cannot convert #(4 5) to int3") 
+   (check-exn #px"implicit-conversion: cannot convert #\\(4 5\\) to int3"
               vector-write-type-error)
-   (check-exn (fails-with? "take") 
+   (check-exn #px"take" 
               vector-write-range-error)
    (check-equal? (vector-write-success) '(0 0 0 4 5 6))
-   (check-exn (fails-with? "int: contract violation")
+   (check-exn #px"int: contract violation"
               vector-read-type-error)
-   (check-exn (fails-with? "take") 
+   (check-exn #px"take" 
               vector-read-range-error)
    (check-equal? (vector-read-success) (int3 4 5 6))
    (check-equal? (vector-write-read-success) (int3 0 0 0))
-   (check-exn (fails-with? "pointer-ref: access conflict detected on memory address #x0[0]")
+   (check-exn #px"pointer-ref: access conflict detected on memory address #x0\\[0\\]"
               vector-write-read-conflict-error)
    (check-not-exn successful-synchronize)))
 

@@ -5,7 +5,8 @@
   (only-in "program.rkt" trace* trace-args trace-out well-formed-program well-formed-trace)
   rosette/query/eval "log.rkt"
   (only-in rosette/base/core/term term? constant? get-type term-cache term<?)
-  (only-in rosette/base/core/bool ! || && => with-asserts-only)
+  (only-in rosette/base/core/bool ! || && => with-vc spec-assumes spec-asserts)
+  (only-in rosette/base/core/result result-state)
   (only-in rosette/base/core/real @integer?)
   (only-in rosette/base/core/bitvector bitvector bitvector-size)
   (only-in rosette/solver/solution model sat sat? unsat? unsat)
@@ -62,13 +63,14 @@
   
   (define (init)
     (solver-clear guesser)
-    (solver-assert guesser (φ_wfp impl))
+    (define impl_wfp (normal? (φ_wfp impl)))  
+    (solver-assert guesser impl_wfp)
     (solver-assert guesser (φ_synth t0 spec))
     (log-solver-info [trial] "searching for an initial candidate at ~a" (BV))
     (begin0
       (solution->candidate (solver-check guesser))
       (solver-clear guesser)
-      (solver-assert guesser (φ_wfp impl))))
+      (solver-assert guesser impl_wfp)))
     
   (define (guess sol)
     (set! trial (add1 trial))
@@ -90,21 +92,24 @@
           (cond 
             [(unsat? cex) candidate]
             [else (loop (guess cex))]))])))
-     
+
+(define (normal? sp) (list (spec-assumes sp) (spec-asserts sp)))
+(define (crash? sp)  (list (spec-assumes sp) (! (spec-asserts sp))))
+
 (define (φ_synth trace spec) ;(printf "φ_synth: ~a\n" trace)
-  (append (φ_wft trace) (φ_spec trace spec)))
+  `(,@(normal? (φ_wft trace)) ,@(normal? (φ_spec trace spec))))
 
 (define (φ_verify trace spec) ;(printf "φ_verify: ~a\n" trace)
-  `(,@(φ_wft trace) ,(apply || (map ! (φ_spec trace spec)))))
+  `(,@(normal? (φ_wft trace)) ,@(crash? (φ_spec trace spec))))
 
 (define (φ_wfp impl) ;(printf "φ_wfp: ~a\n" impl)
-  (with-asserts-only (well-formed-program impl)))
+  (result-state (with-vc (well-formed-program impl))))
 
 (define (φ_wft trace) 
-  (with-asserts-only (well-formed-trace trace)))
+  (result-state (with-vc (well-formed-trace trace))))
 
 (define (φ_spec trace spec)
-  (with-asserts-only (trace-out trace (apply spec (trace-args trace)))))
+  (result-state (with-vc (trace-out trace (apply spec (trace-args trace))))))
 
 (define (solution->candidate sol)
   (match sol

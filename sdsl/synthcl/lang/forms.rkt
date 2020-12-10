@@ -32,11 +32,7 @@
   (syntax-case stx ()
     [(assert val) 
      (quasisyntax/loc stx 
-       (rosette/assert ((bool) val) 
-                       (thunk (raise-assertion-error #'assert))))]))
-
-(define (raise-assertion-error stx)
-  (error 'assert "failed at ~a:~a:~a" (syntax-source stx) (syntax-line stx) (syntax-column stx)))
+       (rosette/assert ((bool) val)))]))
 
 ; Variable declaration.  Declared real variables are bound to fresh symbolic constants created
 ; using define-symbolic*. Declared pointer variables with known length are bound to arrays (pointers)
