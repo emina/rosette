@@ -1,6 +1,8 @@
 #lang rosette
 
-(require rackunit rackunit/text-ui rosette/lib/roseunit (only-in rosette/base/core/merge merge*))
+(require rackunit rackunit/text-ui (rename-in rackunit [check-exn rackunit/check-exn])
+         rosette/lib/roseunit (only-in rosette/base/core/merge merge*))
+(require (only-in rosette/base/core/bool spec-assumes spec-asserts) )
 
 (define-symbolic z (bitvector 1))
 (define-symbolic x u (bitvector 4))
@@ -8,21 +10,34 @@
 (define-symbolic i integer?)
 (define-symbolic b c boolean?)
 
+(define-syntax-rule (check-exn e ...)
+  (begin
+    (rackunit/check-exn e ...)
+    (clear-vc!)))
+
 (define-syntax-rule (check≡ actual expected)
-  (let-values ([(act-val act-asrt) (with-asserts actual)]
-               [(exp-val exp-asrt) (with-asserts expected)])
-    (check-equal? (apply set act-asrt) (apply set exp-asrt))
-    ;(check-true (unsat? (verify (assert (equal? (apply && act-asrt) (apply && exp-asrt))))))
-    (check-true
-     (unsat? (verify #:assume (for ([a act-asrt]) (assert a))
-                     #:guarantee (assert (equal? act-val exp-val)))))))
+  (let ([ra (with-vc actual)]
+        [re (with-vc expected)])
+    (check-pred unsat?
+                (verify (assert (equal? (spec-assumes (result-state ra))
+                                        (spec-assumes (result-state re))))))
+    (check-pred unsat?
+                (verify (assert (equal? (spec-asserts (result-state ra))
+                                        (spec-asserts (result-state re))))))
+    (check-pred unsat?
+                (verify (begin (assume (&& (spec-assumes (result-state ra)) (spec-asserts (result-state ra))))
+                               (assert (equal? (result-value ra) (result-value re))))))))
+
 
 (define-syntax check-bv-exn
   (syntax-rules ()
-    [(_ expr)
-     (check-exn #px"expected bitvectors of same length" (thunk (with-asserts-only expr)))]
-    [(_ pred expr)
-     (check-exn pred (thunk (with-asserts-only expr)))]))
+    [(_ expr) (check-bv-exn #px"expected bitvectors of same length" expr)]
+    [(_ rx expr)
+     (match (with-vc expr)
+       [(halt e _)
+        (check-pred exn:fail? e)
+        (check-true (regexp-match? rx (exn-message e)))]
+       [r (check-pred halt? r)])]))
 
 (define (check-unary op1 op c)
   (check≡ (op1 x) (op x (bv c 4)))
@@ -282,4 +297,5 @@
   (time (run-tests tests:bvrol))
   (time (run-tests tests:bvror)) 
   (time (run-tests tests:rotate-left))
-  (time (run-tests tests:rotate-right)))
+  (time (run-tests tests:rotate-right))
+  )

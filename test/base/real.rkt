@@ -1,12 +1,13 @@
 #lang racket
 
-(require rackunit rackunit/text-ui  "common.rkt" "solver.rkt"
+(require rackunit rackunit/text-ui  "common.rkt" "solver.rkt" 
          rosette/solver/smt/z3
          rosette/solver/solution 
          rosette/lib/roseunit 
          rosette/base/core/term rosette/base/core/bool
          rosette/base/core/real
-         rosette/base/core/polymorphic rosette/base/core/merge 
+         rosette/base/core/polymorphic rosette/base/core/merge
+         rosette/base/core/result
          (only-in rosette/base/form/define define-symbolic define-symbolic*)
          (only-in rosette/base/core/equality @equal?)
          (only-in rosette evaluate))
@@ -20,6 +21,13 @@
 (define maxval 4)
 (define maxval+1 5)
 
+(define-syntax-rule (check-cast (type val) (accepted? out))
+    (match (with-vc (type-cast type val))
+      [(and r (or (ans v sp) (halt v sp)))
+       (when (ans? r) (check-equal? v out))
+       (check-equal? (spec-assumes sp) #t)
+       (check-equal? (spec-asserts sp) accepted?)]))
+
 (define-syntax check-valid?
   (syntax-rules ()
     [(_ (op e ...) expected)
@@ -27,32 +35,21 @@
     [(_ (op e ...) expected [pred? ...])
      (let ([actual (op e ...)])
       (check-equal? actual expected) 
-      (define preconditions (asserts))
-      (clear-asserts!)
+      (define preconditions (&& (spec-assumes (vc)) (spec-asserts (vc))))
+      (clear-vc!)
       (define pred (lambda (x) (or (pred? x) ...)))
-      (check-pred pred (apply solve (! (@equal? (expression op e ...) expected)) preconditions)))]))
+      (check-pred pred (solve (! (@equal? (expression op e ...) expected)) preconditions)))]))
 
 (define-syntax-rule (test-valid? ([var sym] ...) (op e ...) expected)
   (let ([actual (op e ...)])
     (check-equal? actual expected)
-    (define preconditions (asserts))
-    ;(printf "ASSERTS: ~a\n" (asserts))
-    (clear-asserts!)
+    (define preconditions (&& (spec-assumes (vc)) (spec-asserts (vc))))
+    (clear-vc!)
     (for* ([var (in-range minval maxval+1)] ...)
       (define sol (sat (make-immutable-hash (list (cons sym var) ...))))
-      (and (for/and ([pre preconditions]) (evaluate pre sol))
+      (and (evaluate preconditions sol)
            ;(printf "sol: ~a\n" sol)
            (check-true (evaluate (@equal? (expression op e ...) expected) sol))))))
-
-
-(define-syntax-rule (check-cast (type val) (accepted? result))
-  (with-handlers ([exn:fail? (lambda (e) (check-equal? accepted? #f))])  
-    (let-values ([(actual-result asserts) (with-asserts (type-cast type val))])
-      (check-equal? actual-result result)
-      (match asserts
-        [(list)   (check-equal? accepted? #t)]
-        [(list v) (check-equal? accepted? v)]
-        [_ (fail "found more than 1 assertion")]))))
 
 (define (check-cmp-semantics op x y)
   (for* ([i (in-range minval maxval+1)]
@@ -87,14 +84,21 @@
 (define-syntax check-num-exn
   (syntax-rules ()
     [(_ expr)
-     (check-exn exn:fail? (thunk (with-asserts-only expr)))]
-    [(_ pred expr)
-     (check-exn pred (thunk (with-asserts-only expr)))]))
+     (match (with-vc expr)
+       [(halt e _) (check-pred exn:fail? e)]
+       [r (check-pred halt? r)])]
+    [(_ rx expr)
+     (match (with-vc expr)
+       [(halt e _)
+        (check-pred exn:fail? e)
+        (check-true (regexp-match? rx (exn-message e)))]
+       [r (check-pred halt? r)])]))
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
-  (let-values ([(v a) (with-asserts actual)])
-    (check-equal? v expected-value)
-    (check-equal? (apply set a) (apply set expected-asserts))))
+  (let ([r (with-vc actual)])
+    (check-equal? (result-value r) expected-value)
+    (check-equal? (spec-assumes (result-state r)) #t)
+    (check-equal? (spec-asserts (result-state r)) (apply && expected-asserts))))
 
 (define (check-real?)
   (check-equal? (@real? 1) #t)
@@ -322,7 +326,7 @@
 (define (check-integer->real-semantics)
   (check-pred unsat? (solve (@= xi 2) (@= 2.3 (@integer->real xi))))
   (check-pred unsat? (solve (@= xr 2) (! (@= 2.0 (@integer->real xr)))))
-  (clear-asserts!)
+  (clear-vc!)
   (check-num-exn #px"expected integer?" (@integer->real 2.3))
   (check-num-exn #px"expected integer?" (@integer->real 'a))
   (check-num-exn #px"expected integer?" (@integer->real (merge a "3" '())))
@@ -355,7 +359,7 @@
                 (merge a xi (@real->integer yr)))
   (check-pred unsat? (solve (@= xr 2.3) (@= xr (@real->integer xr))))
   (check-pred unsat? (solve (@= xr 2.0) (! (@= xr (@real->integer xr)))))
-  (clear-asserts!)
+  (clear-vc!)
   (check-num-exn #px"expected real?" (@real->integer 'a))
   (check-num-exn #px"expected real?" (@real->integer (merge a "3" '())))  
   (check-state (@real->integer 1) 1 (list))
@@ -507,8 +511,7 @@
   (test-suite+
    "Tests for integer? in rosette/base/real.rkt"
    (check-integer?)
-   (check-integer-cast)
-   ))
+   (check-integer-cast)))
 
 (define tests:=
   (test-suite+

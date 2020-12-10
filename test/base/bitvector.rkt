@@ -1,11 +1,12 @@
 #lang racket
 
-(require rackunit rackunit/text-ui racket/generator
+(require rackunit rackunit/text-ui racket/generator (rename-in rackunit [check-exn rackunit/check-exn])
          rosette/solver/solution 
          rosette/lib/roseunit rosette/solver/smt/boolector
          racket/fixnum 
          rosette/base/core/term
          rosette/base/core/bool
+         rosette/base/core/result
          (except-in rosette/base/core/bitvector bv)
          (only-in rosette/base/core/bitvector [bv @bv])
          rosette/base/core/polymorphic rosette/base/core/merge 
@@ -25,6 +26,12 @@
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
 (define maxval (sub1 maxval+1))
 (define (bv v [t BV]) (@bv v t))
+
+(define-syntax-rule (check-exn e ...)
+  (begin
+    (rackunit/check-exn e ...)
+    (clear-vc!)))
+
 
 (define (check-nary op id x y z)
   (check-equal? (op id id) id)
@@ -400,16 +407,25 @@
 (define (phi . xs) (apply merge* xs))
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
-  (let-values ([(v a) (with-asserts actual)])
-    (check-equal? v expected-value)
-    (check-equal? (apply set a) (apply set expected-asserts))))
+  (let* ([r (with-vc actual)]
+         [v expected-value]
+         [a (apply && expected-asserts)])
+    (check-equal? (result-value r) v)
+    (check-equal? (spec-assumes (result-state r)) #t)
+    (or (equal? (spec-asserts (result-state r)) a)
+        (check-pred unsat? (solve (! (<=> (spec-asserts (result-state r)) a)))))))
 
 (define-syntax check-bv-exn
   (syntax-rules ()
-    [(_ expr)
-     (check-exn #px"expected bitvectors of same length" (thunk (with-asserts-only expr)))]
-    [(_ pred expr)
-     (check-exn pred (thunk (with-asserts-only expr)))]))
+    [(_ expr) (check-bv-exn #px"expected bitvectors of same length" expr)]
+    [(_ p expr)
+     (match (with-vc expr)
+       [(halt e _)
+        (define rx p)
+        (cond [(procedure? p) (check-pred p e)]
+              [else (check-pred exn:fail? e)
+                    (check-true (regexp-match? rx (exn-message e)))])]
+       [r (check-pred halt? r)])]))
          
 (define (check-lifted-unary)
   (define-symbolic* n @integer?)

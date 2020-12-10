@@ -3,7 +3,7 @@
 (require 
   racket/provide 
   (for-syntax racket/syntax (only-in "lift.rkt" with@)) 
-  (only-in "type.rkt" define-lifted-type typed? get-type subtype? type-applicable? @any/c)
+  (only-in "type.rkt" define-lifted-type type-cast typed? get-type subtype? type-applicable? @any/c)
   (only-in "bool.rkt" || @false?)
   (only-in "union.rkt" union union? in-union-guards union-filter union-guards)
   (only-in "safe.rkt" assert argument-error)
@@ -75,8 +75,8 @@
     [(union gvs)    (guard-apply (curryr procedure-rename name) gvs)]
     [(? procedure?) (procedure-rename proc name)]))
 
-(define (@negate f)
-  (unless (@procedure? f) (raise-argument-error 'negate "procedure?" f))
+(define (@negate p)
+  (define f (type-cast @procedure? p 'negate))
   (let-values ([(arity) (procedure-arity f)] [(_ kwds) (procedure-keywords f)])
     (case (and (null? kwds) arity) ; optimize some simple cases
       [(0) (lambda () (@false? (f)))]

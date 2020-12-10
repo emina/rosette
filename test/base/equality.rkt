@@ -206,7 +206,7 @@
   (check-equal? (equal-hash-code (h0 1)) (equal-hash-code (h0 1))))
 
 (define (cyclic0)
-  (clear-asserts!)
+  (clear-vc!)
   (define x0 (box 1))
   (define x1 (@if a x0 (box 3)))
   (@set-box! x1 x0)
@@ -219,7 +219,7 @@
   (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
 
 (define (cyclic1)
-  (clear-asserts!)
+  (clear-vc!)
   (define x0 (box 1))
   (define x1 (@if a x0 (box 3)))
   (@set-box! x1 x0)
@@ -232,7 +232,7 @@
   (check-unsat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
 
 (define (cyclic2)
-  (clear-asserts!)
+  (clear-vc!)
   (define x0 (box 1))
   (define v0 (box 2))
   (define x1 (@if a x0 v0))
@@ -247,7 +247,7 @@
   (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
 
 (define (cyclic3)
-  (clear-asserts!)
+  (clear-vc!)
   (define x0 (m0 1))
   (define x1 (@if a x0 (m0 3)))
   (set-m0-m! x1 x0)
@@ -260,7 +260,7 @@
   (check-sat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
 
 (define (cyclic4)
-  (clear-asserts!)
+  (clear-vc!)
   (define x0 (m0 1))
   (define x1 (@if a x0 (m0 3)))
   (set-m0-m! x1 x0)
@@ -273,7 +273,7 @@
   (check-unsat (solve (@assert (&& (! a) (! b) (@equal? x1 y1))))))
 
 (define (cyclic5)
-  (clear-asserts!)
+  (clear-vc!)
   (define x0 (m0 1))
   (define v0 (m0 2))
   (define x1 (@if a x0 v0))

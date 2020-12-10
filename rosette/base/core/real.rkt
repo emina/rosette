@@ -295,7 +295,7 @@
 (define T*->integer? (const @integer?))
 
 (define (undefined-for-zero-error name)
-  (thunk (raise-arguments-error name "undefined for 0")))
+  (arguments-error name "undefined for 0"))
   
 (define-syntax-rule (define-lifted-int-operator @op $op op)
   (define-operator @op

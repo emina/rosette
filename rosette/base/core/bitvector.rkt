@@ -23,8 +23,7 @@
 
 ; Returns the bitvector type of the given size.
 (define (bitvector-type size)
-  (unless (exact-positive-integer? size)
-    (raise-argument-error 'bitvector "exact-positive-integer?" size))
+  (assert (exact-positive-integer? size) (argument-error 'bitvector "exact-positive-integer?" size))
   (or (hash-ref bitvector-types size #f)
       (let ([t (bitvector size)]) 
         (hash-set! bitvector-types size t)
@@ -53,9 +52,9 @@
        [(bv _ (== self)) v]
        [(term _ (== self)) v]
        [(union (list _ ... (cons gt (and (? typed? vt) (app get-type (== self)))) _ ...) _) 
-        (assert gt (thunk (error caller "expected ~a, given ~.a" self v)))
+        (assert gt (type-error caller self v))
         vt]
-       [_ (assert #f (thunk (error caller "expected ~a, given ~.a" self v)))]))
+       [_ (assert #f (type-error caller self v))]))
    (define (type-eq? self u v)        (@bveq u v))
    (define (type-equal? self u v)     (@bveq u v))
    (define (type-compress self f? ps) (generic-merge* ps))
@@ -121,14 +120,14 @@
 ; be either an exact-positive-integer? or a bitvector type. 
 ; The number may be a real, non-infinite, non-NaN concrete value.  
 (define (make-bv val precision)
-  (unless (and (real? val) (not (infinite? val)) (not (nan? val)))
-    (raise-arguments-error 'bv "expected a real, non-infinite, non-NaN number" "value" val))
+  (assert (and (real? val) (not (infinite? val)) (not (nan? val)))
+          (arguments-error 'bv "expected a real, non-infinite, non-NaN number" "value" val))
   (cond [(exact-positive-integer? precision) 
          (bv (sfinitize val precision) (bitvector-type precision))]
         [(bitvector? precision) 
          (bv (sfinitize val (bitvector-size precision)) precision)]
         [else 
-         (raise-arguments-error 'bv "exact-positive-integer? or bitvector? type" "precision" precision)]))
+         (assert #f (arguments-error 'bv "exact-positive-integer? or bitvector? type" "precision" precision))]))
 
 ; Pattern matching for bitvector literals.
 (define-match-expander @bv
