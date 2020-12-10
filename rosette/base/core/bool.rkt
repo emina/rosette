@@ -11,10 +11,7 @@
  @assert @assume $assert $assume
  (rename-out [get-vc vc]) clear-vc! with-vc merge-vc!
  spec? spec-assumes spec-asserts
- spec-tt spec-tt?
- ;; ---- deprecated ---- ;;
- with-asserts with-asserts-only 
- asserts clear-asserts! )
+ spec-tt spec-tt?)
 
 ;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
@@ -434,21 +431,3 @@
          (with-handlers ([exn:fail:svm? halt-svm]
                          [exn:fail?     halt-err])
            (ans body (vc)))))]))
-
-
-;; ----------------- Deprecated ----------------- ;;
-(struct exn:deprecated exn ())
-
-(define (deprecated [msg #f])
-  (raise (exn:deprecated (format "deprecated: ~a" (or msg "failed"))
-                         (current-continuation-marks))))
-
-(define (clear-asserts!)  (deprecated 'clear-asserts!))
-    
-(define (asserts) (deprecated 'asserts))
-
-(define-syntax-rule (with-asserts form)
-  (deprecated 'with-asserts))
-
-(define-syntax-rule (with-asserts-only form)
-  (deprecated 'with-asserts-only))
