@@ -1,7 +1,7 @@
 #lang racket
 
 (require
-  (only-in "bool.rkt" with-vc $assume merge-vc!)
+  (only-in "bool.rkt" with-vc $assume merge-vc! vc spec-tt spec-strengthen)
    "exn.rkt" "result.rkt" "store.rkt" "merge.rkt")
 
 (provide eval-assuming eval-guarded!)
@@ -25,7 +25,13 @@
 ; Neither the current store nor the current vc are modified after
 ; eval-assuming returns.
 (define (eval-assuming guard thunk)
-  (with-vc
+  (define sg (with-vc ($assume guard)))
+  (if (halt? sg)
+      sg    
+      (match (with-vc spec-tt (with-store (begin ($assume guard) (thunk))))
+        [(ans v st)  (ans v (spec-strengthen st (result-state sg)))]
+        [(halt v st) (halt v (spec-strengthen st (result-state sg)))]))
+  #;(with-vc
       (begin 
         ($assume guard)
         (with-store (thunk)))))

@@ -8,7 +8,7 @@
 
 (define-syntax-rule (solve e)
   (begin
-    (current-solver (cvc4))
+    ;(current-solver (cvc4))
     ;(current-solver (boolector))
     ;(current-bitwidth 16)
     (rosette/solve e)))
