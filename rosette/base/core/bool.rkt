@@ -207,6 +207,8 @@
   (match x 
     [(expression (== @!) (== y)) !iden]
     [(expression (== co) _ ... (== y) _ ...) y]
+    [(expression (== co) (expression (== @!) (== y)) b) (op y b)]
+    [(expression (== co) b (expression (== @!) (== y))) (op y b)]
     [(expression (== op) _ ... (== y) _ ...) x]
     [(expression (== op) _ ... (expression (== @!) (== y)) _ ...) !iden]
     [(expression (== @!) (expression (== co) _ ... (== y) _ ...)) !iden]
@@ -215,8 +217,10 @@
     [(expression (== @!) a) 
      (match y 
        [(expression (== op) _ ... (== a) _ ...) !iden]
+       [(expression (== co) (== a) b) (op x b)]
+       [(expression (== co) b (== a)) (op x b)]
        [_ ⊥])]
-    [_ ⊥]))
+    [_  ⊥]))
 
 ; Applies the following simplification rules symmetrically:
 ; (1) (op (op a1 ... an) (op ai ... aj)) ==> (op a1 ... an)
