@@ -10,7 +10,7 @@
  ;; ---- VC generation ---- ;;       
  @assert @assume $assert $assume
  (rename-out [get-vc vc]) clear-vc! with-vc merge-vc!
- spec? spec-assumes spec-asserts spec-strengthen 
+ spec? spec-assumes spec-asserts
  spec-tt spec-tt?)
 
 ;; ----------------- Boolean type ----------------- ;; 
@@ -299,10 +299,6 @@
 ; symbolic boolean, produces the spec (spec (g => s.assumes) (g => s.asserts)).
 (define (spec-guard s g)
   (spec (=> g (spec-assumes s)) (=> g (spec-asserts s))))
-
-(define (spec-strengthen w s)
-  (spec (&& (spec-assumes s) (=> (spec-asserts s) (spec-assumes w)))
-        (&& (spec-asserts s) (=> (spec-assumes s) (spec-asserts w)))))
 
 ; Returns (spec (s.assumes && (s.asserts => g) s.asserts). 
 (define (assuming s g)  ; g must be a symbolic or concrete boolean
