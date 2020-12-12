@@ -1,17 +1,7 @@
 #lang rosette
 
-(require "dom.rkt" (rename-in rosette [solve rosette/solve]))
+(require "dom.rkt")
 (provide (except-out (all-defined-out) tags))
-
-(require rosette/solver/smt/cvc4 rosette/solver/smt/boolector)
-
-
-(define-syntax-rule (solve e)
-  (begin
-    (current-solver (cvc4))
-    ;(current-solver (boolector))
-    ;(current-bitwidth 16)
-    (rosette/solve e)))
 
 (define-syntax-rule (define-tags ts)
   (tags ts))

@@ -86,7 +86,30 @@
 (define && (logical-connective @&& @|| #t #f))
 (define || (logical-connective @|| @&& #f #t))
 
-(define (=> x y) (|| (! x) y))
+(define (=> x y) ; (|| (! x) y))
+  (cond
+    [(equal? x y) #t]
+    [(eq? x #f) #t]
+    [(eq? y #t) #t]
+    [(eq? x #t) y]
+    [(eq? y #f) (! x)]
+    [(cancel? x y) y]
+    [else
+     (define !x (! x))
+     (match y
+       [(expression (== @||) _ ... (== x) _ ...) #t]
+       [(expression (== @||) (== !x) b) (=> x b)]
+       [(expression (== @||) b (== !x)) (=> x b)]
+       [(expression (== @&&) (== x) b) (=> x b)]
+       [(expression (== @&&) b (== x)) (=> x b)]
+       [(expression (== @&&) (expression (== @||) _ ... (== x) _ ...) b) (=> x b)]
+       [(expression (== @&&) b (expression (== @||) _ ... (== x) _ ...)) (=> x b)]
+       [(expression (== @<=>) (== x) b) (=> x b)]
+       [(expression (== @<=>) b (== x)) (=> x b)]
+       [_ (|| !x y)])]))
+       
+       
+        
 
 (define (<=> x y) ;(|| (&& x y) (&& (! x) (! y))))))
   (cond [(equal? x y) #t]
