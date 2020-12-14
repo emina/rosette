@@ -10,6 +10,9 @@ verification of radiotherapy software to synthesis of code for
 ultra-low power hardware. Several of these tools have been developed by
 first-time users of Rosette in just a few days or weeks.
 
+| [Jitterbug][] | A framework for writing and verifying just-in-time compilers. |
+| [SEEC][] | A framework for reasoning about emergent computations. |
+| [SCFTL][] | A framework for verifying a snapshot-consistent flash translation layer. |
 | [Serval][] | A framework for developing automated verifiers for systems software.  |
 | [Notary][] | A verified device for secure transaction approval. |
 | [SwizzleInventor][] | A framework for synthesizing swizzle GPU kernels.  |
@@ -28,6 +31,9 @@ first-time users of Rosette in just a few days or weeks.
 | [More][] |  Demo languages and tools for [secure stack machines][SSM], data-parallel programing, and web-scraping.  |
 
 
+[Jitterbug]: https://unsat.cs.washington.edu/projects/jitterbug/
+[SCFTL]: https://github.com/yunshengtw/scftl
+[SEEC]: https://galois.com/project/seec/
 [Serval]: https://unsat.cs.washington.edu/projects/serval/
 [Notary]: https://github.com/anishathalye/notary
 [SwizzleInventor]: https://github.com/mangpo/swizzle-inventor
