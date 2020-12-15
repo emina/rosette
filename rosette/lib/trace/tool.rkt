@@ -64,9 +64,9 @@
     [(list 'exception guard e)
      (define the-pc (&&  guard)) ; <-- remove reference to the PC ... this code will need updating
      (define skip?
-       (or (exn:fail:rosette:infeasible? e)
+       (or (exn:fail:svm:merge? e) ; <-- replace with new exn types ... this code will need updating
            (and (and (symbolic-trace-skip-assertion?)
-                     (exn:fail:rosette:assertion? e))
+                     (exn:fail:svm:assert? e))  ; <-- replace with new exn types ... this code will need updating
                 (collect-stats 'assertion))
            (and (and (symbolic-trace-skip-infeasible-solver?)
                      (unsat? (query:solve (list the-pc))))
