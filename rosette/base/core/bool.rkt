@@ -363,25 +363,25 @@
 ; Sets the current vc to (spec-proc (vc) g) where g is (@true? val).
 ; If g is #f or the resulting vc's spec-field value is #f,
 ; uses raise-exn throws an exn:fail:svm exception. 
-(define (vc-set! val msg spec-proc spec-field raise-exn)
+(define-syntax-rule (vc-set! val msg spec-proc spec-field raise-exn)
   (let* ([guard (@true? val)]
          [specg (spec-proc (vc) guard)])
     (vc specg)
     (when (false? guard)
-      (raise-exn (msg)))
+      (raise-exn msg))
     (when (false? (spec-field specg))
       (raise-exn "contradiction"))))
 
 ; Sets the current vc to (asserting (vc) g) where g is (@true? val).
 ; If g is #f or the resulting vc's asserts field is #f, throws an
 ; exn:fail:svm:assert exception of the given kind.  
-(define (vc-assert! val msg raise-kind)
+(define-syntax-rule (vc-assert! val msg raise-kind)
   (vc-set! val msg asserting spec-asserts raise-kind))
 
 ; Sets the current vc to (assuming (vc) g) where g is (@true? val).
 ; If g is #f or the resulting vc's assumes field is #f, throws an
 ; exn:fail:svm:assume exception of the given kind. 
-(define (vc-assume! val msg raise-kind)
+(define-syntax-rule (vc-assume! val msg raise-kind)
   (vc-set! val msg assuming spec-assumes raise-kind))
 
 ; The $assert form has three variants: ($assert val), ($assert val msg),
@@ -399,7 +399,7 @@
   (syntax-case stx ()
     [(_ val)          (syntax/loc stx ($assert val #f  raise-exn:fail:svm:assert:core))]
     [(_ val msg)      (syntax/loc stx ($assert val msg raise-exn:fail:svm:assert:core))]
-    [(_ val msg kind) (syntax/loc stx (vc-assert! val (thunk msg) kind))]))
+    [(_ val msg kind) (syntax/loc stx (vc-assert! val msg kind))]))
 
 ; Analogous to the $assert form, except that it modifies the current vc to
 ; reflect the issued assumption.
@@ -407,7 +407,7 @@
   (syntax-case stx ()
     [(_ val)          (syntax/loc stx ($assume val #f   raise-exn:fail:svm:assume:core))]
     [(_ val msg)      (syntax/loc stx ($assume val msg  raise-exn:fail:svm:assume:core))]
-    [(_ val msg kind) (syntax/loc stx (vc-assume! val (thunk msg) kind))]))
+    [(_ val msg kind) (syntax/loc stx (vc-assume! val msg kind))]))
 
 ; The @assert form modifies the current vc to reflect the issued assertion.
 ; The form has two variants (@assert val) and (@assert val msg), where val
