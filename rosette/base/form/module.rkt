@@ -160,7 +160,9 @@
             [vs (syntax->list #'(var ...))])
         (cond [(any-mutated? vs)
                (let ([locs (generate-temporaries vs)])
-                 (for ([v (in-list vs)] [loc (in-list locs)])
+                 (for ([v (in-list vs)]
+                       [loc (in-list locs)]
+                       #:when (mutated? v))
                    (dict-set! varref-tbl v loc))
                  (quasisyntax* stx
                    (begin
