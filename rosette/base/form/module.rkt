@@ -106,6 +106,7 @@
       (datum->syntax new-stx* (syntax-e new-stx*) orig-stx* orig-stx*))))
 
 (define-for-syntax (box-mutated-vars form tbl)
+  (define varref-tbl (make-free-id-table))
   (define (mutated? id) (free-id-table-ref tbl id #f))
   (define (any-mutated? ids) (for/or ([id ids]) (mutated? id)))
   (define (bmv/list lstx)
@@ -143,8 +144,10 @@
       (let ([e (bmv #'expr)])
         (cond [(mutated? #'var) 
                (with-syntax ([(loc) (generate-temporaries #'(var))])
+                 (dict-set! varref-tbl #'var #'loc)
                  (quasisyntax* stx
-                   (splicing-let ([loc (box #,e)])
+                   (begin
+                     (define loc (box #,e))
                      (define-syntax var
                        (syntax-id-rules (set!)
                          [(set! var val) (set-box! loc val)]
@@ -157,8 +160,11 @@
             [vs (syntax->list #'(var ...))])
         (cond [(any-mutated? vs)
                (let ([locs (generate-temporaries vs)])
+                 (for ([v (in-list vs)] [loc (in-list locs)])
+                   (dict-set! varref-tbl v loc))
                  (quasisyntax* stx
-                   (splicing-let-values ([#,locs #,e])
+                   (begin
+                     (define-values #,locs #,e)
                      #,@(for/list ([v vs][loc locs] #:when (mutated? v))
                           #`(set! #,loc (box #,loc)))
                      #,@(for/list ([v vs][loc locs])
@@ -253,6 +259,9 @@
      [(begin0 . rest) (bmv/rest stx #'begin0 #'rest)]
      [(with-continuation-mark . rest) (bmv/rest stx #'with-continuation-mark #'rest)]
      [(#%plain-module-begin . rest) (quasisyntax* stx (#%module-begin #,@(map bmv (syntax->list #'rest))))]
+     [(#%variable-reference x)
+      #`(#%variable-reference
+         #,(free-id-table-ref varref-tbl #'x (λ () #'x)))]
      [_ stx]))
   
     (bmv form))
