@@ -261,6 +261,12 @@
      (cond [(sublist? xs ys) a]
            [(sublist? ys xs) b]
            [else ⊥])]
+    [((expression (== op) xs ...) (expression (== co) ys ...))
+     (cond [(for*/or ([x xs][y ys]) (equal? x y)) a]
+           [else ⊥])]
+    [((expression (== co) xs ...) (expression (== op) ys ...))
+     (cond [(for*/or ([y ys][x xs]) (equal? x y)) b]
+           [else ⊥])]
     [(_ _) ⊥]))
     
 (define (simplify-fp op co !iden xs)
