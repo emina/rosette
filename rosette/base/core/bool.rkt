@@ -338,6 +338,23 @@
                 #:unless (merge-absorbs? xf g yf))
       (=> g yf))))
 
+;; Returns (field x) && (gs[0] => (field ys[0])) ... && (gs[n-1] => (field gs[n-1])).
+;; Assumes that ys[i] => x for all i, and at most one gs evaluates to true in any model.
+;(define (merge-field field x gs ys)
+;  (define xf (field x))
+;  (define gs=>ys
+;    (for*/list ([(g y) (in-parallel gs ys)]
+;                [yf    (in-value (field y))]
+;                #:unless (merge-absorbs? xf g yf))
+;      (=> g yf)))
+;  (match gs=>ys
+;    [(list) xf]
+;    [(list gy) (&& xf gy)]
+;    [(or (list (expression (== @||) _ ... g _ ...) (expression (== @||) _ ... (expression (== @!) g) _ ...))
+;         (list (expression (== @||) _ ... (expression (== @!) g) _ ...) (expression (== @||) _ ... g _ ...)))
+;     (apply && gs=>ys)]
+;    [_ (apply && xf gs=>ys)]))
+
 ; Takes as input a list of n guards and n specs and sets the current vc
 ; to (vc) && (spec-guard guard1 specs1) && ... && (spec-guard guardn specn).
 ; Then, it checks if either the assumes or the asserts of the resulting spec
