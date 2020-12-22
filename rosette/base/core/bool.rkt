@@ -108,9 +108,6 @@
        [(expression (== @<=>) b (== x)) (=> x b)]
        [_ (|| !x y)])]))
        
-       
-        
-
 (define (<=> x y) ;(|| (&& x y) (&& (! x) (! y))))))
   (cond [(equal? x y) #t]
         [(boolean? x) (if x y (! y))]
@@ -146,7 +143,7 @@
 
 
        
-;; ----------------- Additional operators ----------------- ;; 
+;; ----------------- Additional operators and utilities ----------------- ;;
 (define-syntax and-&&
   (syntax-rules ()
     [(_) #t]
@@ -166,10 +163,19 @@
 (define-syntax-rule (instance-of? primitive-type ... symbolic-type)
   (match-lambda [(? primitive-type) #t] ...
                 [(and (? typed? v) (app get-type t)) 
-                 (or (and t (subtype? t symbolic-type)) 
+                 (or (and t (subtype? t symbolic-type))
                      (and (union? v) (apply || (for/list ([g (in-union-guards v symbolic-type)]) g))))]
                 [_ #f]))
 
+(define ⊥ (void))
+
+(define-syntax first-term-or-bool
+  (syntax-rules ()
+    [(_ e) e]
+    [(_ e0 e ...) (let ([v e0])
+                    (if (void? v)
+                        (first-term-or-bool e ...)
+                        v))]))
 
 ;; ----------------- Partial evaluation rules for ∀ and ∃ ----------------- ;;
 
@@ -192,7 +198,7 @@
        [((== !iden) _) !iden]
        [(_ (== !iden)) !iden]
        [(_ _)
-        (first-value 
+        (first-term-or-bool 
          (simplify-connective op co !iden x y)
          (if (term<? x y)  (expression op x y) (expression op y x)))])]
     [xs 
@@ -203,46 +209,30 @@
               [(list x) x]
               [ys (apply expression op (sort ys term<?))])])]))
        
-(define ⊥ (void))
-(define-syntax first-value
-  (syntax-rules ()
-    [(_ e) e]
-    [(_ e0 e ...) (let ([v e0])
-                    (if (void? v)
-                        (first-value e ...)
-                        v))]))
-
 (define (simplify-connective op co !iden x y)
   (match* (x y)
     [(_ (== x)) x]
     [((? expression?) (? expression?))
-     (first-value
-      (simplify-connective:expr/any op co !iden x y)
-      (simplify-connective:expr/any op co !iden y x)
+     (first-term-or-bool
+      (if (term<? y x)
+          (simplify-connective:expr/any op co !iden x y)
+          (simplify-connective:expr/any op co !iden y x))
       (simplify-connective:expr/expr op co !iden x y))]
     [((? expression?) _)
-     (simplify-connective:expr/any op co !iden x y)]
+     (if (term<? y x) (simplify-connective:expr/any op co !iden x y) ⊥)]
     [(_ (? expression?))
-     (simplify-connective:expr/any op co !iden y x)]
+     (if (term<? x y) (simplify-connective:expr/any op co !iden y x) ⊥)]
     [(_ _) ⊥]))
       
 (define (simplify-connective:expr/any op co !iden x y)
   (match x 
     [(expression (== @!) (== y)) !iden]
     [(expression (== co) _ ... (== y) _ ...) y]
-    [(expression (== co) (expression (== @!) (== y)) b) (op y b)]
-    [(expression (== co) b (expression (== @!) (== y))) (op y b)]
     [(expression (== op) _ ... (== y) _ ...) x]
     [(expression (== op) _ ... (expression (== @!) (== y)) _ ...) !iden]
     [(expression (== @!) (expression (== co) _ ... (== y) _ ...)) !iden]
-    [(expression (== @!) (expression (== co) _ ... (expression (== @!) (== y)) _ ...)) x]
-    [(expression (== @!) (expression (== op) _ ... (expression (== @!) (== y)) _ ...)) y]
-    [(expression (== @!) a) 
-     (match y 
-       [(expression (== op) _ ... (== a) _ ...) !iden]
-       [(expression (== co) (== a) b) (op x b)]
-       [(expression (== co) b (== a)) (op x b)]
-       [_ ⊥])]
+    ;[(expression (== @!) (expression (== co) _ ... (expression (== @!) (== y)) _ ...)) x]
+    ;[(expression (== @!) (expression (== op) _ ... (expression (== @!) (== y)) _ ...)) y]
     [_  ⊥]))
 
 ; Applies the following simplification rules symmetrically:
@@ -250,8 +240,10 @@
 ; (2) (op (op a1 ... ai ... an) (op b1 ... (neg ai) ... bn) ==> !iden
 ; (3) (op (co a1 ... an) (co ai ... aj)) ==> (co ai ... aj)
 ; Returns ⊥ if none of the rules applicable; otherwise returns the simplified result.
-(define (simplify-connective:expr/expr op co !iden a b)
+(define (simplify-connective:expr/expr op co !iden a b)       
   (match* (a b)
+    [((expression (== op) _ ... x _ ...) (expression (== @!) x)) !iden]
+    [((expression (== @!) x) (expression (== op) _ ... x _ ...)) !iden]
     [((expression (== op) xs ...) (expression (== op) ys ...))
      (cond [(sublist? xs ys) b]
            [(sublist? ys xs) a]
@@ -312,23 +304,6 @@
 
 (define (spec-tt? s) (equal? s spec-tt))
 
-; A conjunction of specs s1 ... sn is a spec that conjoins their
-; assumes and asserts elementwise, i.e., 
-; (spec (s1.assumes && ... && sn.assumes) (s1.asserts && ... && sn.asserts))
-(define spec-and
-  (case-lambda
-    [()  spec-tt]
-    [(s) s]
-    [(s1 s2)  (spec (&& (spec-assumes s1) (spec-assumes s2))
-                    (&& (spec-asserts s1) (spec-asserts s2)))]
-    [ss (spec (apply && (map spec-assumes ss))
-              (apply && (map spec-asserts ss)))]))
-
-; Guarding a spec s with a guard g, which must be a concrete or
-; symbolic boolean, produces the spec (spec (g => s.assumes) (g => s.asserts)).
-(define (spec-guard s g)
-  (spec (=> g (spec-assumes s)) (=> g (spec-asserts s))))
-
 ; Returns (spec (s.assumes && (s.asserts => g) s.asserts). 
 (define (assuming s g)  ; g must be a symbolic or concrete boolean
   (spec (&& (spec-assumes s) (=> (spec-asserts s) g)) (spec-asserts s)))
@@ -349,17 +324,32 @@
 ; Clears the current vc by setting it to the true spec.
 (define (clear-vc!) (vc spec-tt))
 
+; Returns (field x) && (gs[0] => (field ys[0])) ... && (gs[n-1] => (field gs[n-1])).
+(define (merge-field field x gs ys)
+  (define xf (field x))
+  (apply && xf
+    (for/list ([g gs][y ys])
+      (match (field y)
+        [(== xf) #t]                              ; x && (g => x) --> x
+        [(expression (== @&&) (== xf) (== g)) #t] ; x && (g => (x && g)) --> x
+        [(expression (== @&&) (== g) (== xf)) #t] ; (g => (x && g)) && x --> x
+        [(expression (== @&&) (== xf) (expression (== @||) _ ... (== g) _ ...)) #t] ; x && (g => (x && (_ => g))) --> x
+        [(expression (== @&&) (expression (== @||) _ ... (== g) _ ...) (== xf)) #t] ; (g => (x && (_ => g))) && x --> x
+        [yf (=> g yf)]))))
+
 ; Takes as input a list of n guards and n specs and sets the current vc
 ; to (vc) && (spec-guard guard1 specs1) && ... && (spec-guard guardn specn).
 ; Then, it checks if either the assumes or the asserts of the resulting spec
 ; are false? and if so, throws either an exn:fail:svm:assume? or
-; exn:fail:svm:assert? exception. This procedure assumes that at most one
-; of the given guards is true in any model, and if vc asserts or assumes
-; evaluate to #f under some model, then each of the specs is equivalent to
-; vc under that model.  
+; exn:fail:svm:assert? exception. This procedure makes the following assumptions:
+; * at most one of the given guards is true in any model,
+; * (spec-assumes specs[i]) => (spec-assumes (vc)) for all i, and 
+; * (spec-asserts specs[i]) => (spec-asserts (vc)) for all i.
 (define (merge-vc! guards specs)
   (unless (null? specs)
-    (define specm (apply spec-and (vc) (map spec-guard specs guards)))
+    (define specm
+      (spec (merge-field spec-assumes (vc) guards specs)
+            (merge-field spec-asserts (vc) guards specs)))
     (vc specm)
     (when (false? (spec-assumes specm))
       (raise-exn:fail:svm:assume:core "contradiction"))
