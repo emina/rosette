@@ -45,7 +45,8 @@
 ; The val field of a constant is its unique identifier, and it can be anything.  The val
 ; field of an expression is a list, in which the first argument is always a function.
 ; That function can be interpreted (that is, an operator), or uninterpreted (that is,
-; its interpretation is determined by the solver).
+; its interpretation is determined by the solver). Terms are totally ordered and a 
+; subterm is guaranteed to be term<? than its parent.
 #|-----------------------------------------------------------------------------------|#
 (struct term 
   (val                 ; (or/c any/c (cons/c function? (non-empty-listof any/c)))
