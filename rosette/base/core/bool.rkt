@@ -108,7 +108,7 @@
        [(expression (== @<=>) b (== x)) (=> x b)]
        [_ (|| !x y)])]))
        
-(define (<=> x y) ;(|| (&& x y) (&& (! x) (! y))))))
+(define (<=> x y) 
   (cond [(equal? x y) #t]
         [(boolean? x) (if x y (! y))]
         [(boolean? y) (if y x (! x))]
@@ -231,15 +231,9 @@
     [(expression (== op) _ ... (== y) _ ...) x]
     [(expression (== op) _ ... (expression (== @!) (== y)) _ ...) !iden]
     [(expression (== @!) (expression (== co) _ ... (== y) _ ...)) !iden]
-    ;[(expression (== @!) (expression (== co) _ ... (expression (== @!) (== y)) _ ...)) x]
-    ;[(expression (== @!) (expression (== op) _ ... (expression (== @!) (== y)) _ ...)) y]
     [_  ⊥]))
 
-; Applies the following simplification rules symmetrically:
-; (1) (op (op a1 ... an) (op ai ... aj)) ==> (op a1 ... an)
-; (2) (op (op a1 ... ai ... an) (op b1 ... (neg ai) ... bn) ==> !iden
-; (3) (op (co a1 ... an) (co ai ... aj)) ==> (co ai ... aj)
-; Returns ⊥ if none of the rules applicable; otherwise returns the simplified result.
+
 (define (simplify-connective:expr/expr op co !iden a b)       
   (match* (a b)
     [((expression (== op) _ ... x _ ...) (expression (== @!) x)) !iden]
@@ -324,18 +318,25 @@
 ; Clears the current vc by setting it to the true spec.
 (define (clear-vc!) (vc spec-tt))
 
+; Returns #t if x && (g => y) is equivalent to x according to the embedded
+; rewrite rules. Otherwise returns #f.
+(define (merge-absorbs? x g y)
+  (match y
+    [(== x) #t]                                                                ; x && (g => x)  
+    [(expression (== @&&) (== x) (== g)) #t]                                   ; x && (g => (x && g)) 
+    [(expression (== @&&) (== g) (== x)) #t]                                   ; (g => (x && g)) && x  
+    [(expression (== @&&) (== x) (expression (== @||) _ ... (== g) _ ...)) #t] ; x && (g => (x && (_ => g))) 
+    [(expression (== @&&) (expression (== @||) _ ... (== g) _ ...) (== x)) #t] ; (g => (x && (_ => g))) && x  
+    [_ #f]))
+  
 ; Returns (field x) && (gs[0] => (field ys[0])) ... && (gs[n-1] => (field gs[n-1])).
 (define (merge-field field x gs ys)
   (define xf (field x))
   (apply && xf
-    (for/list ([g gs][y ys])
-      (match (field y)
-        [(== xf) #t]                              ; x && (g => x) --> x
-        [(expression (== @&&) (== xf) (== g)) #t] ; x && (g => (x && g)) --> x
-        [(expression (== @&&) (== g) (== xf)) #t] ; (g => (x && g)) && x --> x
-        [(expression (== @&&) (== xf) (expression (== @||) _ ... (== g) _ ...)) #t] ; x && (g => (x && (_ => g))) --> x
-        [(expression (== @&&) (expression (== @||) _ ... (== g) _ ...) (== xf)) #t] ; (g => (x && (_ => g))) && x --> x
-        [yf (=> g yf)]))))
+    (for*/list ([(g y) (in-parallel gs ys)]
+                [yf    (in-value (field y))]
+                #:unless (merge-absorbs? xf g yf))
+      (=> g yf))))
 
 ; Takes as input a list of n guards and n specs and sets the current vc
 ; to (vc) && (spec-guard guard1 specs1) && ... && (spec-guard guardn specn).
