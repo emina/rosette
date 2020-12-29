@@ -3,7 +3,7 @@ name: Tests
 on: [push, pull_request]
 
 env:
-  CVC4_URL: "http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.5-x86_64-linux-opt"
+  CVC4_URL: "http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.8-x86_64-linux-opt"
   BOOLECTOR_URL: "https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
 
 jobs:

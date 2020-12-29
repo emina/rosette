@@ -8,7 +8,7 @@
 (provide (rename-out [make-cvc4 cvc4]) cvc4? cvc4-available?)
 
 (define-runtime-path cvc4-path (build-path ".." ".." ".." "bin" "cvc4"))
-(define cvc4-opts '("-L" "smt2" "-q" "-m" "-i" "--continued-execution" "--bv-div-zero-const"))
+(define cvc4-opts '("-L" "smt2" "-q" "-m" "-i" "--bv-print-consts-as-indexed-symbols" "--bv-div-zero-const"))
 
 (define (cvc4-available?)
   (not (false? (base/find-solver "cvc4" cvc4-path #f))))
