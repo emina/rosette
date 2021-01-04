@@ -11,7 +11,7 @@
 (define (c2 x) (choose 6 (+ x (c0)) 8))
 (define (c3 x) (choose 1 (c2 x)))
 
-#;(define-synthax (crec x k)
-  #:base (choose x (c0))
-  #:else (let ([smaller (crec x (sub1 k))])
-           (choose smaller (+ x smaller))))
+(define-synthax (crec x k)
+  (assert (>= k 0))
+  (choose x (c0) (+ x (crec x (sub1 k)))))
+
