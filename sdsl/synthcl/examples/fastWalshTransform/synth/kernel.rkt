@@ -1,5 +1,6 @@
 #lang s-exp "../../../lang/main.rkt"
 
+
 (kernel void (fwtKernelSketch [float* tArray] [int step])
   (: int tid group pair match)
   (: float t1 t2)
@@ -25,19 +26,17 @@
   (= [tArray pair]  (+ t1 t2))
   (= [tArray match] (- t1 t2)))
 
+(grammar int (op [int left] [int right])
+ [choose (+ left right)
+         (- left right)
+         (/ left right)
+         (* left right)
+         (% left right)])
 
-(grammar int (idx [int tid] [int step] [int depth])
-  #:base (choose tid step (?? int)) 
-  #:else (locally-scoped
-          (: int left right)
-          (= left  (idx tid step (- depth 1)))
-          (= right (idx tid step (- depth 1)))
-          [choose left 
-                  (+ left right)
-                  (- left right)
-                  (/ left right)
-                  (* left right)
-                  (% left right)]))
+(grammar* int (idx [int tid] [int step] [int depth])
+    [choose tid step (?? int)
+            (op (idx tid step (- depth 1))
+                (idx tid step (- depth 1)))])
 
 (kernel void (fwtKernel [float* tArray] [int step])
   (: int tid group pair match)

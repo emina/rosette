@@ -294,7 +294,7 @@
   (synth #:forall [(: int width in (range 1 5))
                    (: int height in (range 1 5))
                    (: int[(* width height pixelSize)] inputImageData)]
-         #:bitwidth 9
+         #:bitwidth 8
          #:ensure (check (sobelFilter2 inputImageData width height pixelSize)
                          (sobelFilter3Sketch inputImageData width height pixelSize)
                          (* width height pixelSize))))

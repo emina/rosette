@@ -7,8 +7,6 @@
 
 (= dst ((int*) (malloc (* SIZE (sizeof int)))))
 
-(<< 1 2)
-
 (for () (print "hello\n"))
 
 (for [(: int x in (range 4))

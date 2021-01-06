@@ -35,7 +35,8 @@
        (and (identifier? #'proc)
             (or (free-label-identifier=? #'proc #'procedure)
                 (free-label-identifier=? #'proc #'kernel)
-                (free-label-identifier=? #'proc #'grammar)))
+                (free-label-identifier=? #'proc #'grammar)
+                (free-label-identifier=? #'proc #'grammar*)))
        (let ([out-type (identifier->type #'out stx)]
              [arg-types (map (curryr identifier->type stx) (syntax->list #'(type ...)))])
          (when (free-label-identifier=? #'proc #'kernel) 
@@ -318,21 +319,6 @@
 ; Typechecks a grammar declaration.
 (define (typecheck-grammar stx)
   (syntax-case stx ()   
-    [(grammar out (id [type param] ...) #:base expr0 #:else exprk)
-     (parameterize ([current-env (env)])
-       (for-each typecheck (syntax->list #`([: type param] ...)))
-       (let* ([out-type (function-type-result (type-ref (typecheck #'id)))]
-              [texpr0 (typecheck #'expr0)]
-              [texprk (typecheck #'exprk)]
-              [t0 (type-ref texpr0)]
-              [tk (type-ref texprk)])
-         (unless (equal? out-type void)
-           (check-no-conversion t0 out-type stx texpr0)
-           (check-no-conversion tk out-type stx texprk))
-         (type-set
-          (quasisyntax/loc stx
-            (grammar out (id [type param] ...) #:base #,texpr0 #:else #,texprk))
-          void)))]
     [(grammar out (id [type param] ...) expr)
      (parameterize ([current-env (env)])
        (for-each typecheck (syntax->list #`([: type param] ...)))
@@ -449,6 +435,7 @@
     (dict-set! procs #'choose         typecheck-choose)
     (dict-set! procs #'??             typecheck-??)
     (dict-set! procs #'grammar        typecheck-grammar)
+    (dict-set! procs #'grammar*       typecheck-grammar)
     
     (dict-set! procs #'procedure      typecheck-procedure)
     (dict-set! procs #'kernel         typecheck-procedure)

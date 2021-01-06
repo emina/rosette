@@ -4,7 +4,7 @@
          (only-in rackunit test-pred) 
          (for-syntax (only-in racket/syntax with-syntax*))
          (only-in "forms.rkt" range :)
-         (only-in rosette/lib/synthax print-forms)
+         (only-in rosette/lib/synthax generate-forms)
          (prefix-in @ (only-in rosette verify synthesize)))
 
 (provide verify synth expected? query-output-port)
@@ -40,6 +40,20 @@
                  (printf "No counterexample found.\n")
                  (unsat)))))))))]))
 
+(define (inline-let f [env (hash)])
+  (syntax-case f (let)
+    [(let ([x e] ...) body)
+     (let ([vars (syntax->datum #'(x ...))]
+           [exps (map (curryr inline-let env) (syntax->list #'(e ...)))])
+       (inline-let #'body (apply hash-set* env (flatten (map cons vars exps)))))]
+    [(_ ...)
+     #`(#,@(map (curryr inline-let env) (syntax->list f)))]
+    [_ (hash-ref env (syntax->datum f) f)])) 
+
+(define (print-forms sol)
+  (for ([f (generate-forms sol)])
+    (printf "~a:~a:~a\n" (syntax-source f) (syntax-line f) (syntax-column f))
+    (printf "~a\n" (pretty-format (syntax->datum  (inline-let f))))))  
 
 ; The synthesize form.
 (define-syntax (synth stx)

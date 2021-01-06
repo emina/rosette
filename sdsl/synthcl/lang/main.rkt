@@ -30,7 +30,7 @@
          locally-scoped range @ sizeof 
          
          ; Solver-aided statements and forms
-         assert verify synth choose ?? grammar 
+         assert verify synth choose ?? grammar grammar*
          
          ; Real operators
          = += -= *= /= %= &= $= ^= <<= >>=

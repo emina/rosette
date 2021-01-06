@@ -11,9 +11,8 @@
 (generate-forms m1)
 
 (define-synthax (nnf x y depth)
-  #:base (choose x (! x) y (! y))
-  #:else (choose
-          x (! x) y (! y)
+  (assert (>= depth 0))
+  (choose x (! x) y (! y)
           ((choose && ||) (nnf x y (- depth 1))
                           (nnf x y (- depth 1)))))
 
@@ -26,9 +25,10 @@
    #:forall (list a b)
    #:guarantee (assert (equal? (=> a b) (nnf=> a b)))))
 
+(define (cLA) (??))
 ; A grammar for linear arithmetic.
-(define-synthax LA
- ([(_ e ...) (+ (* e (??)) ...)]))
+(define-synthax (LA e1 e2)
+ (+ (* e1 (cLA)) (* e2 (cLA))))
  
 ; The following query has no solution because (??) in
 ; (LA e ...) generates a single integer hole that is
@@ -42,11 +42,9 @@
 
 sol
 
-; The following query has a solution because the second
-; clause of LA2 creates two independent (??) holes.
-(define-synthax LA2
-  ([(_ e) (* e (??))]
-   [(_ e1 e2) (+ (* e1 (??)) (* e2 (??)))]))
+; The following query has a solution because LA2 creates two independent (??) holes.
+(define-synthax (LA2 e1 e2)
+  (+ (* e1 (??)) (* e2 (??))))
  
 (define sol2
   (synthesize

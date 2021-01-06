@@ -9,7 +9,7 @@
          (only-in "builtins.rkt" NULL clCreateProgramWithSource))
 
 (provide assert 
-         print procedure kernel grammar ?? choose
+         print procedure kernel grammar grammar* ?? choose
          sizeof @ : = 
          app-or-ref locally-scoped if-statement for-statement range)
 
@@ -147,21 +147,35 @@
           (set! param ((type) param)) ...
           expr ...))]))
 
-; Grammar syntax.
+; Grammar syntax.  We assume (but don't enforce) that
+; grammar bodies are free of side effects, and that
+; grammars are invoked on side-effect free expressions.
+; This assumption is needed only for simplified code generation,
+; where we treat each grammar application as a substition
+; in the codegen phase. Synthesis works fine without this
+; assumption, and a better code generator could get rid of it
+; by lifting all the lets/lambda to the top level.
+(define-syntax (grammar* stx)
+  (syntax-case stx ()
+    [(_ out (id [type param] ... [int depth]) expr)
+     (quasisyntax/loc stx
+       (define-synthax id
+         [(param ... depth)
+          (assert (>= depth 0))
+          expr]
+         (lambda (e sol)
+           (define vars (syntax->list #'(param ... depth)))
+           (define vals (cdr (syntax->list e)))
+           #`(let (#,@(map list vars vals)) expr))))]))
+
 (define-syntax (grammar stx)
   (syntax-case stx ()
-    [(grammar out (id [type param] ... [type-depth depth])
-      #:base expr0
-      #:else exprk)
-     (quasisyntax/loc stx
-       (define-synthax (id param ... depth) #:base expr0 #:else exprk))]
     [(grammar out (id [type param] ...) expr)
      (quasisyntax/loc stx
-       (define-synthax id ([(_ param ...) expr])))]))
+       (define-synthax (id param ...) expr))]))
 
 ; Constant syntax.
-(define-synthax ??
-  ([(_ t) (@?? (type-base t))]))
+(define-synthax (?? t) (@?? (type-base t)))
 
 ; Syntax for creating a local scope for a sequence of statements. 
 (define-syntax (locally-scoped stx)
