@@ -15,3 +15,6 @@
   (assert (>= k 0))
   (choose x (c0) (+ x (crec x (sub1 k)))))
 
+(define-grammar (grec x)
+  [s (choose x (c0) (+ x (s)))])
+

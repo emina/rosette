@@ -1,13 +1,13 @@
 #lang racket
 
-(require syntax/id-table racket/stxparam racket/syntax
+(require syntax/id-table racket/stxparam racket/syntax racket/local
          (for-syntax "util/syntax-properties.rkt" racket/stxparam)  
          "util/syntax-properties.rkt"
          (only-in rosette/lib/util/syntax read-module)
          (only-in rosette constant model term-cache term?
-                  [boolean? @boolean?] [integer? @integer?] [if @if]))
+                  [boolean? @boolean?] [integer? @integer?] [if @if] [assert @assert]))
 
-(provide ?? choose define-synthax generate-forms print-forms
+(provide ?? choose define-synthax define-grammar generate-forms print-forms
          (for-syntax save-properties) restore-properties)
 
 ; A tag consisting of a canonical identifier (syntax) for
@@ -96,18 +96,22 @@
 ; Maps synthax identfiers to pairs, where each pair
 ; consists of the identifier itself and a procedure
 ; for generating code for that synthax from given a solution.
-(define codegen (make-free-id-table null #:phase 0))
+(define codegen (make-parameter (make-immutable-free-id-table null #:phase 0)))
 
 ; Adds a binding from id to (cons id gen) to the codegen table.
 (define (codegen-add! id gen)
-  (free-id-table-set! codegen id (cons id gen)))
+  (define key 
+    (match (free-id-table-ref (codegen) id #f)
+      [(cons key _) key]
+      [_ id]))
+  (codegen (free-id-table-set (codegen) key (cons key gen))))
 
 ; Creates a tag for the given identifier, which must appear as a 
 ; key in the codegen table.  The id field of the produced tag is 
 ; the identifier from the codgen table that is free-identifier=? 
 ; to the input identifier.
 (define (identifier->tag stx)
-  (tag (car (free-id-table-ref codegen stx)) (syntax->srcloc stx)))
+  (tag (car (free-id-table-ref (codegen) stx)) (syntax->srcloc stx)))
 
 
 (define-syntax (define-synthax stx)
@@ -180,6 +184,44 @@
        [(list x) x]
        [(list x etc ...) (@if (car hs) x  (loop etc (cdr hs)))]))))
 
+(define (codegen-error expr sol)
+  (error 'generate-forms "cannot generate code for ~a" expr))
+
+(define depth (make-parameter 0))
+
+(define-syntax (define-grammar stx)
+  (syntax-case stx ()
+    [(_ (id param ...) [cid clause] ...)
+     (andmap identifier? (syntax->list #'(id param ... cid ...)))
+     (with-syntax ([c0 (car (syntax->list #'(cid ...)))])
+       #'(define-synthax id
+           #:syntax
+           (lambda (stx)
+             (syntax-case stx ()
+               [(call param ...)           #'(call param ... #:depth (depth) #:start c0)]
+               [(call param ... #:depth d) #'(call param ... #:depth d #:start c0)]
+               [(call param ... #:start s) #'(call param ... #:depth (depth) #:start s)]
+               [(call param ... #:depth d #:start s)
+                (with-syntax ([start (car (member #'s (syntax->list #'(cid ...)) free-identifier=?))])
+                  #'(local ()
+                      (define-synthax cid
+                        [() (@assert (>= (depth) 0))
+                            (parameterize ([depth (sub1 (depth))])
+                              clause)]
+                        codegen-error) ...        
+                      (parameterize ([depth d])
+                        (in-context (syntax/source call) base-context (start)))))]))
+           #:codegen
+           (lambda (expr sol)
+             (syntax-case expr ()
+               [(_ param ... _ (... ...))
+                (begin (codegen-add! #'cid (lambda (e s) #'clause)) ...)])
+             (syntax-case expr ()
+               [(_ (... ...) #:start s) #`(#,(car (member #'s (syntax->list #'(cid ...)) free-identifier=?)))]
+               [_ #'(c0)]))))]))
+     
+                
+
 ; Returns the context suffix, if any, that makes up the constant's identifier. 
 ; If the identifier contains no tag suffix, returns #f.
 (define (constant->context c)
@@ -220,8 +262,9 @@
        (let* ([loc (syntax->srcloc #'e)]
               [id  (hash-ref synthaxes loc #f)])
          (if id
-             (parameterize ([context (cons (tag id loc) (context))])
-               (let ([gf ((cdr (free-id-table-ref codegen id)) form sol)])
+             (parameterize ([context (cons (tag id loc) (context))]
+                            [codegen (codegen)])
+               (let ([gf ((cdr (free-id-table-ref (codegen) id)) form sol)])
                  (cond [(equal? gf form) form]
                        [else (generate gf)])))
              (let* ([es (syntax->list form)]
