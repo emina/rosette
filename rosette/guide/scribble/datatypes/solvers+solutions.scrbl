@@ -230,7 +230,7 @@ will send the command @tt{(set-option :smt.relevancy 0)} to Z3 prior to solving.
            [(cvc4? [v any/c]) boolean?])]{
 Returns a @racket[solver?] wrapper for the @hyperlink["http://cvc4.cs.stanford.edu/web/"]{CVC4} solver from NYU and UIowa.
 
-To use this solver, download and install CVC4,
+To use this solver, download and install CVC4 (version 1.8 or later),
 and either add the @tt{cvc4} executable to your @tt{PATH}
 or pass the path to the executable as the optional @racket[path] argument.
 
