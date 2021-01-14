@@ -34,6 +34,15 @@
      (quasisyntax/loc stx 
        (rosette/assert ((bool) val)))]))
 
+; Splits a list of size k*n into k sublists of size n.  The 
+; sublists are returned in a list.  The behavior of this function 
+; is unspecified if the length of the list is not a multiple of n.  
+(define (split-into xs n)
+  (if (null? xs) 
+      null
+      (let-values ([(left right) (split-at xs n)])
+        (cons left (split-into right n)))))
+
 ; Variable declaration.  Declared real variables are bound to fresh symbolic constants created
 ; using define-symbolic*. Declared pointer variables with known length are bound to arrays (pointers)
 ; of that length, also containing fresh define-symbolic* constants.
@@ -46,9 +55,9 @@
                      [tlen (real-type-length t)])
          (quasisyntax/loc stx
            (define-values (x ...)
-             (values (local [(define-symbolic* x base [len tlen])
+             (values (local [(define-symbolic* x base #:length (* len tlen))
                              (define *x ((type*) (malloc (* len (sizeof type)))))]
-                       (for ([i len][v x])
+                       (for ([i len][v (split-into x tlen)])
                          (pointer-set! *x i (apply type v)))
                        *x) ...)))))]
     [(: type x ...)
@@ -58,7 +67,7 @@
                          [tlen (real-type-length t)])
              (quasisyntax/loc stx
                 (define-values (x ...)
-                  (values (local [(define-symbolic* x base[tlen])]
+                  (values (local [(define-symbolic* x base #:length tlen)]
                             (apply type x)) ...))))
            (with-syntax ([(v ...) (make-list (length (syntax->list #'(x ...))) (if (equal? t char*) "" #'NULL))])
              (quasisyntax/loc stx

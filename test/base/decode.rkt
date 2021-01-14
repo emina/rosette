@@ -50,7 +50,7 @@
   (check-true
    (unsat?
     (if (procedure? c)
-        (local [(define-symbolic* x (bitvector 64) [(procedure-arity c)])]
+        (local [(define-symbolic* x (bitvector 64) #:length (procedure-arity c))]
           (verify (assert (equal? (apply v0 x) (apply v1 x)))))
         (verify (assert (equal? v0 v1)))))
    (format "solutions for ~a not equivalent" c)))

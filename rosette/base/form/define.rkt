@@ -1,13 +1,48 @@
 #lang racket
  
-(require (for-syntax racket)
-         "../util/array.rkt" "../core/term.rkt" "state.rkt")
+(require syntax/parse (for-syntax syntax/parse racket)
+         "../core/term.rkt" "state.rkt")
 
 (provide define-symbolic define-symbolic*)
 
-#|--------------define forms--------------|#
+(define-for-syntax (module-or-top? . args)
+  (case (syntax-local-context)
+    [(module top-level) #t]
+    [else #f]))
+
+(define-for-syntax (static? k)
+  (with-handlers ([exn:fail? module-or-top?])
+    (natural? (eval k)))) 
 
 (define-syntax (define-symbolic stx)
+  (syntax-parse stx
+    [(_ var:id type)
+     #'(define var (constant #'var type))]
+    [(_ var:id type #:length k)
+     #:declare k (expr/c #'natural? #:name "length argument")
+     #:fail-unless (static? #'k) "expected a natural? for #:length"
+     #'(define var
+         (for/list ([i k.c])
+           (constant (list #'var i) type)))]
+    [(_ var:id ...+ type)
+     #'(begin (define-symbolic var type) ...)]))
+
+(define-syntax (define-symbolic* stx)
+  (syntax-parse stx
+    [(_ [var:id oracle] type)
+     #'(define var (constant (list #'var (oracle #'var)) type))]
+    [(_ var:id type)
+     #'(define-symbolic* [var (current-oracle)] type)]
+    [(_ var:id type #:length k)
+     #:declare k (expr/c #'natural? #:name "length argument")
+     #'(define var
+         (for/list ([i k.c])
+           (define-symbolic* var type)
+           var))]
+    [(_ var:id ...+ type)
+     #'(begin (define-symbolic* var type) ...)]))
+
+#;(define-syntax (define-symbolic stx)
   (syntax-case stx ()
     [(_ var type)
      (identifier? #'var)
@@ -19,7 +54,7 @@
      (andmap identifier? (syntax->list #'(v ...)))
      (syntax/loc stx (define-values (v ...) (values (constant #'v type) ...)))]))
 
-(define-syntax (define-symbolic* stx)
+#;(define-syntax (define-symbolic* stx)
   (syntax-case stx ()
     [(_ [var oracle] type)
      (identifier? #'var)
@@ -36,50 +71,4 @@
      (and (identifier? #'v0) (andmap identifier? (syntax->list #'(v ...))))
      (syntax/loc stx (begin (define-symbolic* v0 type) (define-symbolic* v type) ...))]
     ))
-
-#|--------------helper functions--------------|#
-
-(module util racket
-  (require racket/syntax)
-  (provide var-ids indices)
-  
-  (define (var-ids id-stx dim-spec [separator '@])
-    (for/list ([idx (apply indices (dims dim-spec))]) 
-      (format-id id-stx "~a~a~a" id-stx separator idx #:source id-stx)))
-  
-  (define (dims spec)
-    (begin0 spec
-            (for ([dim spec])
-              (unless (and (integer? dim) (>= dim 0))
-                (error 'define-symbolic "expected a non-negative integer, given ~a" dim)))))
-  
-  (define (indices . k) 
-    (cond [(null? k) k]
-          [(null? (cdr k)) (build-list (car k) (lambda (i) (format-symbol "~a" i)))]
-          [else (let ([car-idx (indices (car k))]
-                      [cdr-idx (apply indices (cdr k))])
-                  (append-map (lambda (i) 
-                                (map (lambda (j) 
-                                       (format-symbol "~a:~a" i j)) 
-                                     cdr-idx)) 
-                              car-idx))])))
-
-(require (for-syntax 'util) 'util)
-
-(define-for-syntax (define-array stx var type dims)
-  (with-syntax ([var var]
-                [type type]
-                [(k ...) dims])
-    (with-handlers ([exn:fail? 
-                     (lambda (e) 
-                       (case (syntax-local-context)
-                         [(module top-level) 
-                          (quasisyntax/loc stx 
-                            (define var (reshape (list k ...) 
-                                                 (map (lambda (id) (constant id type)) 
-                                                      (var-ids #'var (list k ...))))))]
-                         [else (raise e)]))])
-      (with-syntax ([(v ...) (var-ids #'var (eval #'(list k ...)))]) 
-        (quasisyntax/loc stx 
-          (define var (reshape (list k ...) (list (constant #'v type) ...))))))))
-  
+ 

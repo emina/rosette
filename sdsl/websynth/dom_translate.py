@@ -52,16 +52,16 @@ def generate(args):
         # Create all the zpath symbolic variables
         for f_index in range(0, field_count):
             zpath_name = field_zpath_name(r_index, f_index)
-            f.write('(define-symbolic {zpath_name} tag? [max_zpath_depth])\n'.format(zpath_name=zpath_name))
+            f.write('(define-symbolic {zpath_name} tag? #:length max_zpath_depth)\n'.format(zpath_name=zpath_name))
         f.write('\n')
         
         # Records Masks
         fieldmask_name = field_mask_name(r_index)
-        f.write("(define-symbolic {field_mask_name} boolean? [max_zpath_depth])\n".format(field_mask_name=fieldmask_name))
+        f.write("(define-symbolic {field_mask_name} boolean? #:length max_zpath_depth)\n".format(field_mask_name=fieldmask_name))
     
     f.write('\n')
     f.write('; Cross-record Mask\n')
-    f.write('(define-symbolic recordmask boolean? [max_zpath_depth])\n')
+    f.write('(define-symbolic recordmask boolean? #:length max_zpath_depth)\n')
     
     f.write('(current-bitwidth #f)\n\n')
 

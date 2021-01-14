@@ -1,6 +1,6 @@
 #lang rosette
 
-(define-symbolic xs integer? [4])
+(define-symbolic xs integer? #:length 4)
 (define-symbolic k integer?)
 (define-symbolic n integer?)
 (define (select xs n)

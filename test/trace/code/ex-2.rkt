@@ -1,6 +1,6 @@
 #lang rosette
 
-(define-symbolic xs integer? [4])
+(define-symbolic xs integer? #:length 4)
 (define (sum xs)
   (cond
     [(null? xs) 0]

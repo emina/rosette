@@ -11,72 +11,72 @@
 (define max_zpath_depth (depth dom))
 
 ; Record 0 fields
-(define-symbolic r0f0zpath tag? [max_zpath_depth])
+(define-symbolic r0f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r0fieldmask boolean? [max_zpath_depth])
+(define-symbolic r0fieldmask boolean? #:length max_zpath_depth)
 ; Record 1 fields
-(define-symbolic r1f0zpath tag? [max_zpath_depth])
+(define-symbolic r1f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r1fieldmask boolean? [max_zpath_depth])
+(define-symbolic r1fieldmask boolean? #:length max_zpath_depth)
 ; Record 2 fields
-(define-symbolic r2f0zpath tag? [max_zpath_depth])
+(define-symbolic r2f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r2fieldmask boolean? [max_zpath_depth])
+(define-symbolic r2fieldmask boolean? #:length max_zpath_depth)
 ; Record 3 fields
-(define-symbolic r3f0zpath tag? [max_zpath_depth])
+(define-symbolic r3f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r3fieldmask boolean? [max_zpath_depth])
+(define-symbolic r3fieldmask boolean? #:length max_zpath_depth)
 ; Record 4 fields
-(define-symbolic r4f0zpath tag? [max_zpath_depth])
+(define-symbolic r4f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r4fieldmask boolean? [max_zpath_depth])
+(define-symbolic r4fieldmask boolean? #:length max_zpath_depth)
 ; Record 5 fields
-(define-symbolic r5f0zpath tag? [max_zpath_depth])
+(define-symbolic r5f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r5fieldmask boolean? [max_zpath_depth])
+(define-symbolic r5fieldmask boolean? #:length max_zpath_depth)
 ; Record 6 fields
-(define-symbolic r6f0zpath tag? [max_zpath_depth])
+(define-symbolic r6f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r6fieldmask boolean? [max_zpath_depth])
+(define-symbolic r6fieldmask boolean? #:length max_zpath_depth)
 ; Record 7 fields
-(define-symbolic r7f0zpath tag? [max_zpath_depth])
+(define-symbolic r7f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r7fieldmask boolean? [max_zpath_depth])
+(define-symbolic r7fieldmask boolean? #:length max_zpath_depth)
 ; Record 8 fields
-(define-symbolic r8f0zpath tag? [max_zpath_depth])
+(define-symbolic r8f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r8fieldmask boolean? [max_zpath_depth])
+(define-symbolic r8fieldmask boolean? #:length max_zpath_depth)
 ; Record 9 fields
-(define-symbolic r9f0zpath tag? [max_zpath_depth])
+(define-symbolic r9f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r9fieldmask boolean? [max_zpath_depth])
+(define-symbolic r9fieldmask boolean? #:length max_zpath_depth)
 ; Record 10 fields
-(define-symbolic r10f0zpath tag? [max_zpath_depth])
+(define-symbolic r10f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r10fieldmask boolean? [max_zpath_depth])
+(define-symbolic r10fieldmask boolean? #:length max_zpath_depth)
 ; Record 11 fields
-(define-symbolic r11f0zpath tag? [max_zpath_depth])
+(define-symbolic r11f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r11fieldmask boolean? [max_zpath_depth])
+(define-symbolic r11fieldmask boolean? #:length max_zpath_depth)
 ; Record 12 fields
-(define-symbolic r12f0zpath tag? [max_zpath_depth])
+(define-symbolic r12f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r12fieldmask boolean? [max_zpath_depth])
+(define-symbolic r12fieldmask boolean? #:length max_zpath_depth)
 ; Record 13 fields
-(define-symbolic r13f0zpath tag? [max_zpath_depth])
+(define-symbolic r13f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r13fieldmask boolean? [max_zpath_depth])
+(define-symbolic r13fieldmask boolean? #:length max_zpath_depth)
 ; Record 14 fields
-(define-symbolic r14f0zpath tag? [max_zpath_depth])
+(define-symbolic r14f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r14fieldmask boolean? [max_zpath_depth])
+(define-symbolic r14fieldmask boolean? #:length max_zpath_depth)
 ; Record 15 fields
-(define-symbolic r15f0zpath tag? [max_zpath_depth])
+(define-symbolic r15f0zpath tag? #:length max_zpath_depth)
 
-(define-symbolic r15fieldmask boolean? [max_zpath_depth])
+(define-symbolic r15fieldmask boolean? #:length max_zpath_depth)
 
 ; Cross-record Mask
-(define-symbolic recordmask boolean? [max_zpath_depth])
+(define-symbolic recordmask boolean? #:length max_zpath_depth)
 (current-bitwidth #f)
 
 (define (demonstration)
