@@ -27,7 +27,6 @@
  "base/list.rkt"
  "base/vector.rkt"
  "base/forall.rkt"
- "base/ord-dict.rkt"
  "base/bitvector.rkt"
  "base/bvlib.rkt"
  "base/equality.rkt"

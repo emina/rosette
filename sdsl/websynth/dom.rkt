@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in html read-html-as-xml) xml rosette/base/util/ord-dict net/url net/uri-codec)
+(require (only-in html read-html-as-xml) xml net/url net/uri-codec)
 
 (provide 
  read-DOMNode fetch-DOMNode
@@ -46,12 +46,16 @@
    (first (filter element? (read-html-as-xml (get-pure-port (string->url ustr)))))))
 
 (define (tags dom)
-  (define seen (odict))
+  (define seen (mutable-set))
+  (define keys '())
   (let loop ([dom dom])
     (when (DOMNode? dom)
-      (dict-set! seen (DOMNode-tagname dom) #t)
+      (define t (DOMNode-tagname dom))
+      (unless (set-member? seen t)
+        (set-add! seen t)
+        (set! keys (cons t keys)))
       (map loop (DOMNode-content dom))))
-  (dict-keys seen))
+  (reverse keys))
 
 ; examples
 (define s1 "/div/ul/li[0]")

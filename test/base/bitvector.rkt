@@ -32,8 +32,14 @@
     (rackunit/check-exn e ...)
     (clear-vc!)))
 
+(define-syntax-rule (define-tests (name arg ...) body ...)
+  (define (name arg ...)
+    (test-begin
+     (clear-vc!)
+     body ...
+     (clear-vc!))))
 
-(define (check-nary op id x y z)
+(define-tests (check-nary op id x y z)
   (check-equal? (op id id) id)
   (check-equal? (op id id id) id)
   (check-equal? (op x) x)
@@ -43,7 +49,7 @@
   (check-equal? (op x y) (op y x))
 )
 
-(define (check-semantics op)
+(define-tests (check-semantics op)
   (case (procedure-arity op)
     [(1) 
      (for ([i (in-range minval maxval+1)])
@@ -63,7 +69,7 @@
                  (@bveq z (op x y))) z))
        (check-equal? actual expected))]))
 
-(define (check-cmp-semantics op)
+(define-tests (check-cmp-semantics op)
   (for* ([i (in-range minval maxval+1)]
             [j (in-range minval maxval+1)])
        (define actual (op (bv i) (bv j)))
@@ -74,7 +80,7 @@
        (check-equal? actual expected)))
 
 
-(define (check-pe ops [consts '()])
+(define-tests (check-pe ops [consts '()])
   (define es (test-exprs 2 ops (list* x y z consts)))
   ;(printf "exprs: ~a\n" (length es))
   (for ([e es])
@@ -86,7 +92,7 @@
     (check-equal? actual expected)
     (check-pred unsat? (solve (! (@equal? (expression op e ...) expected))))))
 
-(define (check-bveq-simplifications)
+(define-tests (check-bveq-simplifications)
   (check-valid? (@bveq (ite b (bv 2) (bv 0)) (bv 2)) b)
   (check-valid? (@bveq (ite b (bv 2) (bv 0)) (bv 0)) (! b))
   (check-valid? (@bveq (ite b (bv 2) (bv 0)) (bv 1)) #f)
@@ -100,7 +106,7 @@
   (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 3) (bv 5))) (&& (! a) b))
   (check-valid? (@bveq (ite a (bv 2) (bv 3)) (ite b (bv 5) (bv 3))) (&& (! a) (! b))))
                 
-(define (check-bvcmp-simplifications l* g*)
+(define-tests (check-bvcmp-simplifications l* g*)
   (check-equal? (g* x y) (l* y x))
   (check-valid? (l* (ite b (bv 2) (bv 0)) (bv 1)) (! b))
   (check-valid? (l* (ite b (bv 1) (bv 3)) (bv 2)) b)
@@ -117,35 +123,35 @@
   (check-valid? (l* (ite a (bv 1) (bv 3)) (ite b (bv 0) (bv 2))) (&& a (! b)))
   (check-valid? (l* (ite a (bv 3) (bv 1)) (ite b (bv 2) (bv 0))) (&& (! a) b)))
 
-(define (check-bvslt-simplifications)
+(define-tests (check-bvslt-simplifications)
   (check-bvcmp-simplifications @bvslt @bvsgt)
   (check-valid? (@bvslt x (bv maxval)) (! (@bveq x (bv maxval))))
   (check-valid? (@bvslt (bv maxval) x) #f)
   (check-valid? (@bvslt x (bv minval)) #f)
   (check-valid? (@bvslt (bv minval) x) (! (@bveq x (bv minval)))))
 
-(define (check-bvsle-simplifications)
+(define-tests (check-bvsle-simplifications)
   (check-bvcmp-simplifications @bvsle @bvsge)
   (check-valid? (@bvsle x (bv maxval)) #t)
   (check-valid? (@bvsle (bv maxval) x) (@bveq x (bv maxval)))
   (check-valid? (@bvsle x (bv minval)) (@bveq x (bv minval)))
   (check-valid? (@bvsle (bv minval) x) #t))
 
-(define (check-bvult-simplifications)
+(define-tests (check-bvult-simplifications)
   (check-bvcmp-simplifications @bvult @bvugt)
   (check-valid? (@bvult x (bv -1)) (! (@bveq x (bv -1))))
   (check-valid? (@bvult (bv -1) x) #f)
   (check-valid? (@bvult x (bv 0)) #f)
   (check-valid? (@bvult (bv 0) x) (! (@bveq x (bv 0)))))
 
-(define (check-bvule-simplifications)
+(define-tests (check-bvule-simplifications)
   (check-bvcmp-simplifications @bvule @bvuge)
   (check-valid? (@bvule x (bv -1)) #t)
   (check-valid? (@bvule (bv -1) x) (@bveq x (bv -1)))
   (check-valid? (@bvule x (bv 0)) (@bveq x (bv 0)))
   (check-valid? (@bvule (bv 0) x) #t))
 
-(define (check-bitwise-simplifications op co id)
+(define-tests (check-bitwise-simplifications op co id)
   (check-nary op id x y z)
   (check-valid? (op (bv 1) x) (op x (bv 1)))
   (check-valid? (op x (@bvnot x) ) (@bvnot id))
@@ -167,14 +173,14 @@
   (check-valid? (op (op x (bv minval) z) (@bvnot (bv minval)))  (@bvnot id))
   (check-valid? (op (op x (bv minval) z) (op y (@bvnot (bv minval))))  (@bvnot id)))
 
-(define (check-shift-simplifications op)
+(define-tests (check-shift-simplifications op)
   (check-valid? (op x (bv 0)) x)
   (check-valid? (op (bv 0) x) (bv 0))
   (check-valid? (op x (bv 4)) (bv 0))
   (check-valid? (op x (bv 5)) (bv 0))
   (check-valid? (op x (bv -1)) (bv 0)))
 
-(define (check-bvashr-simplifications)
+(define-tests (check-bvashr-simplifications)
   (check-valid? (@bvashr x (bv 0)) x)
   (check-valid? (@bvashr (bv 0) x) (bv 0))
   (check-valid? (@bvashr (bv -1) x) (bv -1))
@@ -182,7 +188,7 @@
   (check-valid? (@bvashr x (bv 5)) (ite (@bveq (bv 0) (@bvand x (bv minval))) (bv 0) (bv -1)))
   (check-valid? (@bvashr x (bv -1)) (ite (@bveq (bv 0) (@bvand x (bv minval))) (bv 0) (bv -1))))
 
-(define (check-bvadd-simplifications)
+(define-tests (check-bvadd-simplifications)
   (check-nary @bvadd (bv 0) x y z)
   (check-valid? (@bvadd (bv 1) x) (@bvadd x (bv 1)))
   (check-valid? (@bvadd x (@bvneg x)) (bv 0))
@@ -207,7 +213,7 @@
   (check-valid? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv -3))) (bv 0))
   (check-valid? (@bvadd (@bvmul (bv 3) x) (@bvmul x (bv 2))) (@bvmul (bv 5) x)))
 
-(define (check-bvmul-simplifications)
+(define-tests (check-bvmul-simplifications)
   (check-nary @bvmul (bv 1) x y z)
   (check-valid? (@bvmul (bv 3) x) (@bvmul x (bv 3)))
   (check-valid? (@bvmul (bv 0) x) (bv 0))
@@ -216,7 +222,7 @@
   (check-valid? (@bvmul (bv -1) x) (@bvneg x))
   (check-valid? (@bvmul (@bvmul x (bv 2)) (bv 3)) (@bvmul (bv 6) x)))
 
-(define (check-bvudiv-simplifications)
+(define-tests (check-bvudiv-simplifications)
   (check-valid? (@bvudiv (bv 3) (bv 0)) (bv -1))
   (check-valid? (@bvudiv x (bv 0)) (bv -1))
   (check-valid? (@bvudiv (bv 3) (bv 1)) (bv 3))
@@ -227,7 +233,7 @@
   (check-valid? (@bvudiv (ite b (bv 6) (bv 8)) (bv 2)) (ite b (bv 3) (bv 4)))
   (check-valid? (@bvudiv (bv 6) (ite b (bv 2) (bv 3))) (ite b (bv 3) (bv 2))))
 
-(define (check-bvsdiv-simplifications)
+(define-tests (check-bvsdiv-simplifications)
   (check-valid? (@bvsdiv (bv 3) (bv 0)) (bv -1))
   (check-valid? (@bvsdiv (bv -3) (bv 0)) (bv 1))
   (check-valid? (@bvsdiv x (bv 0)) (ite (@bvslt x (bv 0)) (bv 1) (bv -1)))
@@ -242,7 +248,7 @@
   (check-valid? (@bvsdiv (ite b (bv -6) (bv 4)) (bv 2)) (ite b (bv -3) (bv 2)))
   (check-valid? (@bvsdiv (bv 6) (ite b (bv 2) (bv 3))) (ite b (bv 3) (bv 2))))
 
-(define (check-bvurem-simplifications)
+(define-tests (check-bvurem-simplifications)
   (check-valid? (@bvurem (bv 3) (bv 0)) (bv 3))
   (check-valid? (@bvurem (bv 0) (bv 0)) (bv 0))
   (check-valid? (@bvurem (bv -3) (bv 0)) (bv -3))
@@ -264,7 +270,7 @@
   (check-valid? (@bvurem (ite b (bv 6) (bv 4)) (bv 3)) (ite b (bv 0) (bv 1)))
   (check-valid? (@bvurem (bv 6) (ite b (bv 4) (bv 5))) (ite b (bv 2) (bv 1))))
 
-(define (check-signed-remainder-simplifications op)
+(define-tests (check-signed-remainder-simplifications op)
   (check-valid? (op (bv 3) (bv 1)) (bv 0))
   (check-valid? (op (bv 0) (bv 1)) (bv 0))
   (check-valid? (op (bv -3) (bv 1)) (bv 0))
@@ -290,12 +296,12 @@
   (check-valid? (op (ite b (bv 6) (bv 4)) (bv 3)) (ite b (bv 0) (bv 1)))
   (check-valid? (op (bv 6) (ite b (bv 4) (bv 5))) (ite b (bv 2) (bv 1))))
 
-(define (check-bvsrem-simplifications)
+(define-tests (check-bvsrem-simplifications)
   (check-signed-remainder-simplifications @bvsrem)
   (check-valid? (@bvsrem x (bv minval)) (ite (@bveq x (bv minval)) (bv 0) x))
   (check-valid? (@bvsrem (@bvadd x y) (bv minval)) (ite (@bveq (@bvadd x y) (bv minval)) (bv 0) (@bvadd x y))))
 
-(define (check-concat-semantics)
+(define-tests (check-concat-semantics)
   (for* ([i (in-range minval maxval+1)]
          [j (in-range minval maxval+1)])
     (define BVi (bitvector (max 1 (integer-length i))))
@@ -312,7 +318,7 @@
               (@bveq (@concat vi vj) vo)) vo))
     (check-equal? actual expected)))
 
-(define (check-extract-semantics)
+(define-tests (check-extract-semantics)
   (for* ([i 4]
          [j (in-range 0 (add1 i))]
          [x (in-range minval maxval+1)])
@@ -327,10 +333,10 @@
               (@bveq (@extract vi vj (bv x)) vo)) vo))
     (check-equal? actual expected)))
 
-(define (check-concat-simplifications)
+(define-tests (check-concat-simplifications)
   (check-valid? (@concat (@extract 3 2 x) (@extract 1 1 x)) (@extract 3 1 x)))
 
-(define (check-extract-simplifications)
+(define-tests (check-extract-simplifications)
   (check-valid? (@extract 3 0 x) x)
   (check-valid? (@extract 3 0 (@bvadd x y)) (@bvadd x y))
   (check-valid? (@extract 2 1 (@extract 3 1 x)) (@extract 3 2 x))
@@ -349,11 +355,11 @@
   (check-equal? (type-of (@extract n n x)) (bitvector 1))
   )
 
-(define (check-extend-simplifications op)
+(define-tests (check-extend-simplifications op)
   (check-valid? (op x BV) x)
   (check-valid? (op (op x (bitvector 6)) (bitvector 8)) (op x (bitvector 8))))
 
-(define (check-extend-semantics op)
+(define-tests (check-extend-semantics op)
   (for* ([t (in-range 4 8)]
          [v (in-range minval maxval+1)])
     (define BVo (bitvector t))
@@ -364,7 +370,7 @@
               (@bveq vo (op x BVo))) vo))
     (check-equal? actual expected)))
     
-(define (check-bv->*-semantics op)
+(define-tests (check-bv->*-semantics op)
   (for* ([v (in-range minval maxval+1)])
     (define actual (op (bv v BV)))
     (define-symbolic* out @integer?)
@@ -373,7 +379,7 @@
               (@= out (op x))) out))
     (check-equal? actual expected)))
 
-(define (check-integer->bitvector-semantics)
+(define-tests (check-integer->bitvector-semantics)
   (for* ([v (in-range (* 2 minval) (* 2 maxval+1))])
     (define actual (@integer->bitvector v BV))
     (define-symbolic* out BV)
@@ -383,7 +389,7 @@
               (@bveq out (@integer->bitvector in BV))) out))
     (check-equal? actual expected)))
  
-;(define (check-integer->bitvector-simplifications)
+;(define-tests (check-integer->bitvector-simplifications)
 ;  ; This optimization is valid only when current-bitwidth > BV.
 ;  ; The following will fail:
 ;  ;(parameterize ([current-bitwidth 3]) 
@@ -394,7 +400,7 @@
 ;  (parameterize ([current-bitwidth 5])
 ;    (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x)))
 
-(define (check-lifted-bv-type)
+(define-tests (check-lifted-bv-type)
   (define-symbolic* n @integer?)
   (check-exn #px"exact-positive-integer\\?" (thunk (bitvector 0)))
   (check-exn #px"exact-positive-integer\\?" (thunk (bitvector -1)))
@@ -427,7 +433,7 @@
                     (check-true (regexp-match? rx (exn-message e)))])]
        [r (check-pred halt? r)])]))
          
-(define (check-lifted-unary)
+(define-tests (check-lifted-unary)
   (define-symbolic* n @integer?)
   (check-not-exn (thunk (@bvnot (bv 1))))
   (check-bv-exn (@bvnot n))
@@ -441,7 +447,7 @@
                (phi (cons a (bv -1 2)) (cons b (bv 0))) (list)))
 
 
-(define (check-lifted-binary)
+(define-tests (check-lifted-binary)
   (define-symbolic* n @integer?)
   (check-not-exn (thunk (@bvsdiv x y)))
   (check-bv-exn (@bvsdiv x 1))
@@ -480,12 +486,12 @@
                (list (|| (&& b c) (&& a d))))
   )
 
-(define (check-@bvadd-exn bad-arg)
+(define-tests (check-@bvadd-exn bad-arg)
   (check-bv-exn exn:fail? (@bvadd bad-arg x y))
   (check-bv-exn exn:fail? (@bvadd x bad-arg y))
   (check-bv-exn exn:fail? (@bvadd x y bad-arg)))
 
-(define (check-lifted-nary)
+(define-tests (check-lifted-nary)
   (define-symbolic* n @integer?)
   (check-not-exn (thunk (@bvadd x y z)))
   (check-@bvadd-exn 1)
@@ -544,7 +550,7 @@
                     (cons (&& b d f) (bv 6 8)))
                (list (|| (&& a c e) (&& b d f)))))
 
-(define (check-lifted-concat)
+(define-tests (check-lifted-concat)
   (define-symbolic* n @integer?)
   (check-not-exn (thunk (@concat x)))
   (check-not-exn (thunk (@concat x y)))
@@ -588,7 +594,7 @@
                     (cons d (@concat x (bv 1 2))))
                (list a (|| c d)) ))
 
-(define (check-lifted-extract)
+(define-tests (check-lifted-extract)
   (define-symbolic* i j @integer?)
   (check-bv-exn #px"expected integer\\?" (@extract "1" 2 x))
   (check-bv-exn #px"expected integer\\?" (@extract 1 "2" x))
@@ -641,7 +647,7 @@
                (list (|| a c) (|| (@< i 1) (! c)) (|| (@< i 2) (! a)) (@<= 0 j) (@<= j i)))           
   )
     
-(define (check-lifted-extend)
+(define-tests (check-lifted-extend)
   (define err #px"expected \\(bitvector-size t\\) >= \\(bitvector-size \\(get-type v\\)\\)")
   (check-bv-exn #px"expected: bitvector\\?" (@sign-extend 1 BV))
   (check-bv-exn err (@sign-extend x 1))
@@ -695,7 +701,7 @@
                x
                (list (&& a c))))
   
-(define (check-lifted-integer->bitvector)
+(define-tests (check-lifted-integer->bitvector)
   (check-bv-exn exn:fail? (@integer->bitvector "3" BV))
   (check-bv-exn #px"expected a bitvector type" (@integer->bitvector 3 3))
   (check-bv-exn #px"expected a bitvector type" (@integer->bitvector 3 (phi (cons a 1) (cons b "3"))))
@@ -706,7 +712,7 @@
   (check-state (@integer->bitvector 3 (phi (cons a BV) (cons b (bitvector 3)) (cons c '())))
                (phi (cons a (bv 3 4)) (cons b (bv 3 3))) (list (|| a b))))
 
-(define (check-lifted-bv->*)
+(define-tests (check-lifted-bv->*)
   (check-bv-exn #px"expected: bitvector\\?" (@bitvector->integer 3))
   (check-state (@bitvector->integer (bv 3 3)) 3 (list))
   (check-state (@bitvector->integer (phi (cons a (bv 3 4)) (cons b (bv 3 3)))) 
@@ -904,7 +910,8 @@
    "Tests for extract in rosette/base/bitvector.rkt"
    #:features '(qf_bv qf_lia)
    (check-extract-simplifications)
-   (check-extract-semantics)))
+   (check-extract-semantics)
+   (check-lifted-extract)))
 
 (define tests:zero-extend
   (test-suite+
@@ -924,7 +931,8 @@
   (test-suite+
    "Tests for bitvector->integer in rosette/base/bitvector.rkt"
    #:features '(qf_bv qf_lia)
-   (check-bv->*-semantics @bitvector->integer)))
+   (check-bv->*-semantics @bitvector->integer)
+   (check-lifted-bv->*)))
 
 (define tests:bitvector->natural
   (test-suite+
@@ -936,22 +944,19 @@
   (test-suite+
    "Tests for integer->bitvector in rosette/base/bitvector.rkt"
    #:features '(qf_bv qf_lia int2bv)
-   (check-integer->bitvector-semantics)))
+   (check-integer->bitvector-semantics)
+   (check-lifted-integer->bitvector)))
 
 (define tests:lifted-operators
   (test-suite+
-   "Tests for lifted operations in rosette/base/bitvector.rkt"
+   "Tests for lifted QF_BV operations in rosette/base/bitvector.rkt"
    #:features '(qf_bv)
    (check-lifted-bv-type)
    (check-lifted-unary)
    (check-lifted-binary)
    (check-lifted-nary)
    (check-lifted-concat)
-   (check-lifted-extract)
-   (check-lifted-extend)
-   (check-lifted-integer->bitvector)
-   (check-lifted-bv->*)
-   ))
+   (check-lifted-extend)))
 
 (module+ test
   (time (run-tests tests:bv))

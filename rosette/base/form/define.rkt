@@ -41,34 +41,3 @@
            var))]
     [(_ var:id ...+ type)
      #'(begin (define-symbolic* var type) ...)]))
-
-#;(define-syntax (define-symbolic stx)
-  (syntax-case stx ()
-    [(_ var type)
-     (identifier? #'var)
-     (syntax/loc stx (define var (constant #'var type)))]
-    [(_ var type [ k ... ])
-     (and (identifier? #'var) (implies (identifier? #'type) (identifier-binding #'type)))
-     (define-array stx #'var #'type #'(k ...))]
-    [(_ v ... type)
-     (andmap identifier? (syntax->list #'(v ...)))
-     (syntax/loc stx (define-values (v ...) (values (constant #'v type) ...)))]))
-
-#;(define-syntax (define-symbolic* stx)
-  (syntax-case stx ()
-    [(_ [var oracle] type)
-     (identifier? #'var)
-     (syntax/loc stx (define var (constant (list #'var (oracle #'var)) type)))]
-    [(_ var type)
-     (identifier? #'var)
-     (syntax/loc stx (define-symbolic* [var (current-oracle)] type))]
-    [(_ var type [ k ... ])
-     (and (identifier? #'var) (implies (identifier? #'type) (identifier-binding #'type)))
-     (syntax/loc stx (define var (reshape (list k ...) (for/list ([i (in-range (* k ...))])
-                                                         (define-symbolic* var type)
-                                                         var))))]
-    [(_ v0 v ... type)
-     (and (identifier? #'v0) (andmap identifier? (syntax->list #'(v ...))))
-     (syntax/loc stx (begin (define-symbolic* v0 type) (define-symbolic* v type) ...))]
-    ))
- 
