@@ -34,7 +34,7 @@
 
 (define-syntax-rule (define-tests (name arg ...) body ...)
   (define (name arg ...)
-    (test-begin
+    (begin
      (clear-vc!)
      body ...
      (clear-vc!))))
@@ -389,17 +389,6 @@
               (@bveq out (@integer->bitvector in BV))) out))
     (check-equal? actual expected)))
  
-;(define-tests (check-integer->bitvector-simplifications)
-;  ; This optimization is valid only when current-bitwidth > BV.
-;  ; The following will fail:
-;  ;(parameterize ([current-bitwidth 3]) 
-;  ;  (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x))
-;  ; But these two work:
-;  (parameterize ([current-bitwidth 4])
-;    (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x))
-;  (parameterize ([current-bitwidth 5])
-;    (check-valid? (@integer->bitvector (@bitvector->integer x) BV) x)))
-
 (define-tests (check-lifted-bv-type)
   (define-symbolic* n @integer?)
   (check-exn #px"exact-positive-integer\\?" (thunk (bitvector 0)))

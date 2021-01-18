@@ -100,11 +100,14 @@
 
 ; Adds a binding from id to (cons id gen) to the codegen table.
 (define (codegen-add! id gen)
-  (define key 
+  (define kv 
     (match (free-id-table-ref (codegen) id #f)
-      [(cons key _) key]
-      [_ id]))
-  (codegen (free-id-table-set (codegen) key (cons key gen))))
+      [(? cons? key/val)
+       (if (equal? gen codegen-error)
+           key/val
+           (cons (car key/val) gen))]
+      [_ (cons id gen)]))
+  (codegen (free-id-table-set (codegen) (car kv) kv)))
 
 ; Creates a tag for the given identifier, which must appear as a 
 ; key in the codegen table.  The id field of the produced tag is 
