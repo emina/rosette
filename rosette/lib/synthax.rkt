@@ -1,13 +1,13 @@
 #lang racket
 
-(require syntax/id-table racket/stxparam racket/syntax racket/local
-         (for-syntax "util/syntax-properties.rkt" racket/stxparam)  
+(require syntax/id-table racket/stxparam racket/local syntax/parse
+         (for-syntax "util/syntax-properties.rkt" racket/stxparam syntax/parse)  
          "util/syntax-properties.rkt"
          (only-in rosette/lib/util/syntax read-module)
          (only-in rosette constant model term-cache term?
                   [boolean? @boolean?] [integer? @integer?] [if @if] [assert @assert]))
 
-(provide ?? choose define-synthax define-grammar generate-forms print-forms
+(provide ?? choose define-synthax define-grammar define-sketch generate-forms print-forms
          (for-syntax save-properties) restore-properties)
 
 ; A tag consisting of a canonical identifier (syntax) for
@@ -118,18 +118,16 @@
 
 
 (define-syntax (define-synthax stx)
-  (syntax-case stx ()
-    [(_ id #:syntax body #:codegen gen)
-     (identifier? #'id)
+  (syntax-parse stx  
+    [(_ id:id #:syntax body #:codegen gen)
      #'(begin
          (define-syntax id body)
          (codegen-add! #'id gen))]
-    [(_ id [(args ...) body ...] gen)
-     (identifier? #'id)
+    [(_ id:id [(param:id ...) body ...] gen)
      #'(begin
          (define impl
            (procedure-rename
-            (lambda (call base args ...)
+            (lambda (call base param ...)
               (in-context call base body ...))
             'id))
          (define-synthax id
@@ -140,12 +138,11 @@
                 #'(impl (syntax/source call) base-context
                         (in-context (syntax/source call) base-context e) (... ...))]))
            #:codegen gen))]
-    [(_ (id args ...) body ...)
-     (andmap identifier? (syntax->list #'(id args ...)))
+    [(_ (id:id param:id ...) body ...)
      #'(define-synthax id
-         [(args ...) body ...]
+         [(param ...) body ...]
          (lambda (expr sol)
-           (define vars (syntax->list #'(args ...)))
+           (define vars (syntax->list #'(param ...)))
            (define vals (cdr (syntax->list expr)))
            #`(let (#,@(map list vars vals)) body ...)))]))
 
@@ -193,35 +190,41 @@
 (define depth (make-parameter 0))
 
 (define-syntax (define-grammar stx)
-  (syntax-case stx ()
-    [(_ (id param ...) [cid clause] ...)
-     (andmap identifier? (syntax->list #'(id param ... cid ...)))
+  (syntax-parse stx 
+    [(_ (id:id param:id ...) [cid:id clause] ...+)
      (with-syntax ([c0 (car (syntax->list #'(cid ...)))])
        #'(define-synthax id
            #:syntax
            (lambda (stx)
-             (syntax-case stx ()
+             (syntax-parse stx 
                [(call param ...)           #'(call param ... #:depth (depth) #:start c0)]
                [(call param ... #:depth d) #'(call param ... #:depth d #:start c0)]
                [(call param ... #:start s) #'(call param ... #:depth (depth) #:start s)]
-               [(call param ... #:depth d #:start s)
-                (with-syntax ([start (car (member #'s (syntax->list #'(cid ...)) free-identifier=?))])
-                  #'(local ()
+               [(call param ... #:depth d #:start (~and s:id (~or (~literal cid) ...)))
+                #:with start (car (member #'s (syntax->list #'(cid ...)) free-label-identifier=?))
+                #'(local ()
                       (define-synthax cid
                         [() (@assert (>= (depth) 0))
                             (parameterize ([depth (sub1 (depth))])
                               clause)]
                         codegen-error) ...        
                       (parameterize ([depth d])
-                        (in-context (syntax/source call) base-context (start)))))]))
+                        (in-context (syntax/source call) base-context (start))))]))
            #:codegen
            (lambda (expr sol)
              (syntax-case expr ()
                [(_ param ... _ (... ...))
                 (begin (codegen-add! #'cid (lambda (e s) #'clause)) ...)])
              (syntax-case expr ()
-               [(_ (... ...) #:start s) #`(#,(car (member #'s (syntax->list #'(cid ...)) free-identifier=?)))]
+               [(_ (... ...) #:start s) #`(#,(car (member #'s (syntax->list #'(cid ...)) free-label-identifier=?)))]
                [_ #'(c0)]))))]))
+
+(define-syntax (define-sketch stx)
+  (syntax-parse stx
+    [(_ (id:id param:id ...) body)
+     #'(define-grammar (id param ...)
+         [id body])]))
+                
      
                 
 

@@ -12,7 +12,12 @@
 (define-grammar (rec x)
   [s (choose x (??) (+ x (s)))])
 
+(define-sketch (srec x)
+  (choose x (??) (+ x (srec))))
+
 (define (hrec x d) (rec x #:depth d))
+
+(define (hsrec x d) (srec x #:depth d))
 
 (define-grammar (LIA x y)
    [I  (choose 0 1 x y (+ (I) (I)) (* (Ic) (I)))]
@@ -91,13 +96,15 @@
                                                 (define (h6 x) (+ x (h5)))))))
 
 (define one-arg-recursive-grammar-tests
-  (test-suite+ "One-argument recursive grammar tests."
+  (test-suite+ "One-argument recursive grammar / sketch tests."
     (check-synth a (= -5 (hrec a 1)) '((define (hrec x d) -5)))
     (check-synth a (= -5 (hrec a 2)) '((define (hrec x d) -5)))
     (check-synth a (= -5 (hrec a 3)) '((define (hrec x d) -5)))
     (check-synth a (= a (hrec a 1)) '((define (hrec x d) x)))
     (check-synth a (= (+ a 3) (hrec a 1)) '((define (hrec x d) (+ x 3))))
-    (check-synth a (= (* a 3) (hrec a 2)) '((define (hrec x d) (+ x (+ x x)))))))
+    (check-synth a (= (* a 3) (hrec a 2)) '((define (hrec x d) (+ x (+ x x)))))
+    (check-synth a (= a (hsrec a 1)) '((define (hsrec x d) x)))
+    (check-synth a (= (* a 3) (hsrec a 2)) '((define (hsrec x d) (+ x (+ x x)))))))
   
 (define two-arg-recursive-grammar-tests
   (test-suite+ "Two-argument recursive grammar tests."
