@@ -6,7 +6,7 @@
 (provide
  term-cache clear-terms!
  term? constant? expression? 
- (rename-out [a-term term] [an-expression expression] [a-constant constant]) 
+ (rename-out [a-term term] [an-expression expression] [a-constant constant] [term-ord term-id]) 
  term-type term<? sublist? @app
  define-operator operator? operator-unsafe
  (all-from-out "type.rkt"))

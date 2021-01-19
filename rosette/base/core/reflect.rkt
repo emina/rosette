@@ -18,25 +18,32 @@
 (define (symbolics vs)
   (match vs
     [(list (? constant?) ...) (remove-duplicates vs)]
-    [_ (let ([cache (mutable-set)]
+    [(? constant?) (list vs)]
+    [_ (let ([terms (mutable-set)]
+             [objs  (mutable-set)]
              [result '()])
-         (let loop ([vs vs])
-           (unless (set-member? cache vs)
-             (set-add! cache vs)
-             (match vs
-               [(union (list (cons guard value) ...))
-                (for-each loop guard) (for-each loop value)]
-               [(expression _ x ...) (for-each loop x)]
-               [(? constant? v) (set! result (cons v result))]
-               [(box v) (loop v)]
-               [(? list?) (for-each loop vs)]
-               [(cons x y) (loop x) (loop y)]
-               [(vector v ...) (for-each loop v)]
-               [(and (? typed?) (app get-type t))
-                (match (type-deconstruct t vs)
-                  [(list (== vs)) (void)]
-                  [components (for-each loop components)])]
-               [_ (void)])))
+         (let loop ([datum vs])
+           (if (term? datum)
+               (let ([id (term-id datum)])
+                 (unless (set-member? terms id)
+                   (set-add! terms id)
+                   (match datum
+                     [(expression _ x ...) (for-each loop x)]
+                     [(? constant?) (set! result (cons datum result))]))) 
+               (unless (set-member? objs datum)
+                 (set-add! objs datum)
+                 (match datum
+                   [(union (list (cons guard value) ...))
+                    (for-each loop guard) (for-each loop value)]
+                   [(box v) (loop v)]
+                   [(? list?) (for-each loop datum)]
+                   [(cons x y) (loop x) (loop y)]
+                   [(vector v ...) (for-each loop v)]
+                   [(and (? typed?) (app get-type t))
+                    (match (type-deconstruct t datum)
+                      [(list (== datum)) (void)]
+                      [components (for-each loop components)])]
+                   [_ (void)]))))
          (reverse result))]))
 
 (define (term->datum val)
