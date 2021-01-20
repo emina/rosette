@@ -113,8 +113,8 @@
     (check-unsynth (list a b) (= (+ a a) (hLIA a b 0)))
     (check-synth (list a b) (= (+ a b) (hLIA a b 1)) '((define (hLIA x y d) (+ y x))))
     (check-unsynth (list a b) (= (- a 1) (hLIA a b 1)))
-    (check-synth (list a b) (= (- a 1) (hLIA a b 2)) '((define (hLIA x y d) (+ (* -1 1) x))))
-    (check-synth (list a b) (= (- (* 2 a) (* 2 b)) (hLIA a b 2)) '((define (hLIA x y d) (+ (* -2 y) (* 2 x)))))
+    (check-synth (list a b) (= (- a 1) (hLIA a b 2)) '((define (hLIA x y d) (+ (* -1 1) (+ 0 x)))))
+    (check-synth (list a b) (= (- (* 2 a) (* 2 b)) (hLIA a b 2)) '((define (hLIA x y d) (+ (+ x x) (* -2 y)))))
     (check-unsynth (list a b) (= (* a b) (hLIA a b 1)))))
 
 (define mutually-recursive-grammar-tests

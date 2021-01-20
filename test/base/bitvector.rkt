@@ -627,7 +627,7 @@
                     (cons (@= j 1) (@extract 1 1 (phi (cons a x)  (cons c y))))) 
                (list (@<= j 1) (@<= 0 j) (|| a c)))
   (check-state (@extract i j (phi (cons a (bv 2 2)) (cons b 3) (cons c (bv 1 1))))
-               (phi (cons (&& a (@= i 1) (@= j 0)) (@extract 1 0 (bv 2 2)))
+               (phi (cons (&& a (&& (@= i 1) (@= j 0))) (@extract 1 0 (bv 2 2)))
                     (cons (|| c (&& a (|| (&& (@= i 1) (@= j 1)) (&& (@= i 0) (@= j 0)))))
                           (phi (cons (&& a (|| (&& (@= i 1) (@= j 1)) (&& (@= i 0) (@= j 0))))
                                      (phi (cons (&& (@= i 1) (@= j 1)) (@extract 1 1 (bv 2 2)))
