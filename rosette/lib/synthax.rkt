@@ -8,6 +8,7 @@
                   [boolean? @boolean?] [integer? @integer?] [if @if] [assert @assert]))
 
 (provide ?? choose define-synthax define-grammar define-sketch generate-forms print-forms
+         (rename-out [depth current-grammar-depth])
          (for-syntax save-properties) restore-properties)
 
 ; A tag consisting of a canonical identifier (syntax) for
