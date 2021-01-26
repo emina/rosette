@@ -2,11 +2,12 @@
 
 @(require (for-label racket)
           (for-label  
-           rosette/base/form/define (only-in rosette/base/core/safe assert)
-           rosette/query/query (only-in rosette asserts clear-asserts!)
+           rosette/base/form/define
+           (only-in rosette/base/base assert assume vc spec-asserts spec-assumes clear-vc!)
+           rosette/query/query  
            (only-in rosette/base/base bv?)
            rosette/query/eval
-           (only-in rosette/lib/synthax ?? print-forms)))
+           rosette/lib/synthax))
 
 @(require racket/sandbox  racket/runtime-path  scribble/core
           scribble/eval scribble/html-properties ;scriblib/footnote 
@@ -17,7 +18,7 @@
           "../util/lifted.rkt")
  
 @(define-runtime-path root ".")
-@(define rosette-eval (rosette-log-evaluator (logfile root "essentials-log")))
+@(define rosette-eval (rosette-evaluator) #;(rosette-log-evaluator (logfile root "essentials-log")))
 
 @(define (symbolic s) @racketresultfont[s]) 
 
@@ -42,16 +43,16 @@
 
 Rosette adds to Racket a collection of solver-aided facilities.
 These facilities enable programmers to conveniently access a constraint solver 
-that can answer interesting questions about program behaviors.  They are based on three 
-key concepts: @emph{symbolic values}, @emph{assertions} and @emph{queries}. 
-We use assertions to express desired program behaviors and symbolic values to 
+that can answer interesting questions about program behaviors.  They are based on four 
+key concepts: @emph{symbolic values}, @emph{assertions}, @emph{assumptions}, and @emph{queries}. 
+We use assertions and assumptions to express desired program behaviors and symbolic values to 
 formulate queries about these behaviors.
 
-This chapter illustrates the basics of solver-aided programming with a 
-few simple examples. More advanced tutorials, featuring extended examples, can be found 
+This chapter illustrates the basics of solver-aided programming.
+More advanced tutorials, featuring extended examples, can be found 
 in Section 2 of @~cite[rosette:onward13 rosette:pldi14].@footnote{Code examples in  
-these references are written in Rosette 1.0.
-While Rosette 2.0 is not backward compatible with Rosette 1.0,
+these references are written in earlier versions of Rosette.
+While Rosette 4 is not backward compatible with these versions,
 they share the same conceptual core.} 
 
 The following chapters describe the subset 
@@ -62,7 +63,7 @@ and @seclink["ch:programmer-defined-datatypes"]{programmer-defined}),
 
 @section[#:tag "sec:symbolic-values"]{Symbolic Values}
 
-The Rosette language includes two kinds of values: concrete and symbolic.  Concrete values are plain Racket values (@racket[#t], @racket[#f], @racket[0], @racket[1], etc.), and Rosette programs that operate only on concrete values behave just like Racket programs.  Accessing the solver-aided features of Rosette---such as code synthesis or verification---requires the use of symbolic values.
+The Rosette language includes two kinds of values: concrete and symbolic.  Concrete values are plain Racket values (@racket[#t], @racket[#f], @racket[0], @racket[1], etc.), and Rosette programs that operate only on concrete values behave like Racket programs.  Accessing the solver-aided features of Rosette---such as code synthesis or verification---requires the use of symbolic values.
 
 @deftech[#:key "symbolic constant"]{Symbolic constants} are the simplest kind of symbolic value.  They can be created using the @racket[define-symbolic] form:
 @def+int[#:eval rosette-eval
@@ -110,67 +111,157 @@ Printed constant names, such as @symbolic{x} or @symbolic{b}, are just comments.
 ; constant returned by (static) and the constant returned by (yet-another-x)
 ; have the same concrete interpretation.
 (eq? (static) (yet-another-x))]
-    
 
-@section[#:tag "sec:asserts"]{Assertions}
 
-Like many other languages, Rosette provides a construct for expressing @emph{assertions}---important properties of programs that are checked in every execution.  Rosette assertions work just like Java or Racket assertions when given a concrete value:  if the value is false, the execution terminates with a runtime error.  Otherwise, the execution proceeds normally.  
+
+@section[#:tag "sec:asserts"]{Assertions and Assumptions}
+
+Like many other languages, Rosette provides a construct for expressing @emph{assertions}---important properties of programs that are checked in every execution.  Rosette assertions work just like Java or Racket assertions when given a concrete value:  if the value is false, the execution terminates with a runtime exception.  Otherwise, the execution proceeds normally.  
 @interaction[#:eval rosette-eval
 (assert #t) 
 (assert #f)]
 
-When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, its effect (whether it passes or fails) is eventually determined by the solver.
-@interaction[#:eval rosette-eval
-(code:comment "add (not b) to the stack of assertions to be solved")
-(assert (not b))
-(code:comment "retrieve the assertion store")
-(asserts)
-(code:comment "clear the assertion store")
-(clear-asserts!)
-(asserts)]
+When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, the value is accumulated in the current @tech[#:key "vc"]{verification condition} (VC), and the assertion's effect (whether it passes or fails) is eventually determined by the solver.
 
-@(rosette-eval '(clear-asserts!))
+@interaction[#:eval rosette-eval
+(code:line (spec-asserts (vc)) (code:comment "we asserted #f above, so the assert in the current VC is #f"))
+(code:line (clear-vc!)         (code:comment "clear the current VC"))
+(spec-asserts (vc))
+(code:line (assert (not b))    (code:comment "assert (not b) in the VC"))
+(spec-asserts (vc))
+(clear-vc!)]
+
+Assertions express properties that a program must satisfy on all @emph{legal} inputs. In Rosette, as in other solver-aided frameworks, we use @emph{assumptions} to describe which inputs are legal. If a program violates an assertion on a legal input, we blame the program. But if it violates an assertion on an illegal input, we blame the caller. In other words, a program is considered incorrect only when it violates an assertion on a legal input.
+
+Assumptions behave analogously to assertions on both concrete and symbolic values. In the concrete case, assuming @racket[#f] aborts the execution with a runtime exception, and assuming a true value is equivalent to calling @racket[(void)]. In the symbolic case, the assumed value is accumulated in the current VC.
+
+@interaction[#:eval rosette-eval
+(assume #t)
+(spec-assumes (vc))
+(code:line (assume #f)          (code:comment "assuming #f aborts the execution with an exception"))
+(spec-assumes (vc))
+(clear-vc!)
+(define-symbolic i j integer?)
+(code:line (assume (> j 0))     (code:comment "assume (> j 0) in the VC"))
+(spec-assumes (vc))
+(assert (< (- i j) i))
+(code:line (spec-asserts (vc))  (code:comment "the assertions must hold when the assumptions hold"))
+(code:line (pretty-print (vc))  (code:comment "VC tracks the assumptions and the assertions"))]
+
+@(rosette-eval '(clear-vc!))
 
 @section[#:tag "sec:queries"]{Solver-Aided Queries}
 
-The solver reasons about asserted properties only when we ask a question about them---for example, "Does my program have an execution that violates an assertion?"  We pose such @emph{solver-aided queries} with the help of constructs explained in the remainder of this chapter.
+The solver reasons about assumed and asserted properties only when we ask a question about them---for example, "Does my program have an execution that violates an assertion while satisfying all the assumptions?"  We pose such @emph{solver-aided queries} with the help of constructs explained in the remainder of this chapter.
 
-We will illustrate the queries on the following toy example, where the @racket[factored] polynomial is intended to behave just like @racket[poly] on all inputs:
+We will illustrate the queries on the following toy example. Suppose that we want to implement a
+procedure @racket[bvmid] that takes as input two non-negative 32-bit integers, @racket[lo] ≤ @racket[hi],
+and returns the midpoint of the interval [@racket[lo], @racket[hi]]. In C or Java, we would declare
+the inputs and output of @racket[bvmid] to be of type ``int''. In Rosette, we model finite precision
+(i.e., machine) integers as @seclink["sec:bitvectors"]{bitvectors} of length 32.
+
 @defs+int[#:eval rosette-eval
-((define (poly x)
-  (+ (* x x x x) (* 6 x x x) (* 11 x x) (* 6 x)))
+((code:comment "int32? is a shorthand for the type (bitvector 32).")
+ (define int32? (bitvector 32))
 
- (define (factored x)
-  (* x (+ x 1) (+ x 2) (+ x 2)))
- 
- (define (same p f x)
-  (assert (= (p x) (f x)))))
+ (code:comment "int32 takes as input an integer literal and returns")
+ (code:comment "the corresponding 32-bit bitvector value.")
+ (define (int32 i)
+   (bv i int32?)))
 
-(code:comment "check zeros; all seems well ...")
-(same poly factored 0)
-(same poly factored -1)
-(same poly factored -2)]
+ (code:line (int32? 1)         (code:comment "1 is not a 32-bit integer"))
+ (code:line (int32? (int32 1)) (code:comment "but (int32 1) is."))
+ (int32 1)]
+
+Bitvectors support the usual operations on machine integers, and we can use them to implement @racket[bvmid] as follows: 
+
+@defs+int[#:eval rosette-eval
+((code:comment "Returns the midpoint of the interval [lo, hi].") 
+ (define (bvmid lo hi)              
+  (bvsdiv (bvadd lo hi) (int32 2))) (code:comment "(lo + hi) / 2"))]
+
+As the above implementation suggests, we intend the midpoint to be the mathematical
+integer @tt{mi = (lo + hi) / 2}, where @tt{/} stands for integer division. Assuming
+that @tt{0 ≤ lo ≤ hi}, the midpoint @tt{mi} is fully characterized by the property 
+@tt{0 ≤ (hi - mi) - (mi - lo) ≤ 1}. We can use this property to define a generic 
+correctness specification for any implementation of @racket[bvmid] as follows: 
+
+@defs+int[#:eval rosette-eval
+((define (check-mid impl lo hi)      (code:comment "Assuming that")
+   (assume (bvsle (int32 0) lo))      (code:comment "0 ≤ lo and")             
+   (assume (bvsle lo hi))             (code:comment "lo ≤ hi, ") 
+   (define mi (impl lo hi))           (code:comment "and letting mi = impl(lo, hi) and") 
+   (define diff                       (code:comment "diff = (hi - mi) - (mi - lo),")
+     (bvsub (bvsub hi mi)             
+            (bvsub mi lo)))           (code:comment "we require that")
+   (assert (bvsle (int32 0) diff))    (code:comment "0 ≤ diff and")
+   (assert (bvsle diff (int32 1))))   (code:comment "diff ≤ 1."))]
+
+This is not the only way to specify the behavior of @racket[bvmid], and we will see an
+alternative specification later on. In general, there are many ways to describe what it
+means for a program to be correct, and often, these descriptions are partial: 
+they constrain some aspects of the implementation (e.g., the output is positive)
+without fully defining its behavior. In our example, @racket[check-mid] is a
+@emph{full functional correctness specification} in that it admits exactly one output value for @racket[(impl lo hi)], namely, @tt{(lo + hi) / 2}.
+
+Testing @racket[bvmid] against its specification on a few concrete legal inputs, we find
+that it triggers no assertion failures, as expected:
+
+@interaction[#:eval rosette-eval
+ (check-mid bvmid (int32 0) (int32 0))
+ (check-mid bvmid (int32 0) (int32 1))
+ (check-mid bvmid (int32 0) (int32 2))
+ (check-mid bvmid (int32 10) (int32 10000)) ]
+
+But does it work correctly on @emph{all} legal inputs?  The answer, as we will see below, is ``no''.
+In fact, @racket[bvmid] reproduces  @hyperlink["https://en.wikipedia.org/wiki/Binary_search_algorithm#Implementation_issues"]{a famous bug}
+that lurked for years in widely used C and Java implementations of binary search.
        
 
 @subsection[#:tag "sec:verify"]{Verification}
 
-To verify that @racket[poly] and @racket[factored] behave identically, we could simply enumerate all k-bit integers and apply the @racket[same] check to each.  This naive approach to verification would, of course, be very slow for a large k---and impossible for infinite precision integers. A better approach is to delegate such checks to a constraint solver, which can search large input spaces more effectively.  In Rosette, this is done with the help of the @racket[verify] query:
-@interaction[#:eval rosette-eval
-(define-symbolic i integer?)
-(define cex (verify (same poly factored i)))] 
+How can we check if @racket[bvmid] satisfies its specification on all legal inputs? One approach is to enumerate all pairs of 32-bit integers with @racket[0 ≤ lo ≤ hi] and apply @racket[(check-mid bvmid hi lo)] to each. This approach is sound (it is guaranteed to find a bug if one exists), but a quick calculation shows that it is impractical even for our toy example: @racket[bvmid] has roughly 2.3 × 10@superscript{18} legal inputs. A better approach is to delegate such checks to a constraint solver, which can search  large input spaces much more effectively than naive enumeration.  In Rosette, this is done with the help of the @racket[verify] query:
 
-The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{binding} from symbolic constants to concrete values that causes the evaluation of @var[expr] to fail when the bound symbolic constants are replaced with the corresponding concrete values. If such a binding exists, as it does in our case, it is called a @emph{counterexample}. 
+@interaction[#:eval rosette-eval
+(define-symbolic l h int32?)
+(define cex (verify (check-mid bvmid l h)))] 
+
+The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{binding} from symbolic constants to concrete values that causes the evaluation of @var[expr] to violate an assertion, while satisfying all the assumptions, when the bound symbolic constants are replaced with the corresponding concrete values. If such a binding exists, as it does in our case, it is called a @emph{counterexample}. 
 
 Bindings are first-class values in Rosette, and they can be freely manipulated by programs.  We can also interpret any Rosette value with respect to a binding using the built-in @racket[evaluate] procedure:
 @interaction[#:eval rosette-eval
-(evaluate i cex)
-(poly 14)
-(factored 14)
-(same poly factored 14)]
-In our example, evaluating @racket[i] with respect to @racket[cex] reveals that @racket[poly] and @racket[factored] produce different results on the input -6 thus causing the assertion in the @racket[same] procedure to fail.
+(define cl (evaluate l cex))
+(define ch (evaluate h cex))
+(list cl ch)
+(code:comment "We can convert these values to integer? constants for debugging:")
+(define il (bitvector->integer cl))
+(define ih (bitvector->integer ch))
+(list il ih)
+(code:comment "Here is the computed midpoint:")
+(define m (bvmid cl ch))
+m
+(bitvector->integer m) 
+(code:comment "This is clearly wrong. We expect (il + ih) / 2 instead:")
+(quotient (+ il ih) 2)
+(code:comment "Expressed as a 32-bit integer, the correct answer is:")
+(int32 (quotient (+ il ih) 2))
+(code:comment "So, check-mid fails on (bvmid cl ch):")
+(check-mid bvmid cl ch)]
+@(rosette-eval '(clear-vc!))
 
-@(rosette-eval '(clear-asserts!))
-@(rosette-eval '(require (only-in racket/draw read-bitmap)))
+In our example, evaluating @racket[l] and @racket[h] with respect to @racket[cex] reveals that @racket[bvmid] fails to return the correct midpoint value, thus causing the assertion in the @racket[check-mid] procedure to fail. The bug is due to overflow:  
+the expression @racket[(bvadd lo hi)] in @racket[bvmid] produces a negative value in
+the 32-bit representation when the sum of
+@racket[lo] and @racket[hi] exceeds 2@\superscript{31}-1.
+
+@interaction[#:eval rosette-eval
+(bvadd cl ch)
+(bitvector->integer (bvadd cl ch))
+(+ il ih)
+(- (expt 2 31) 1)]
+             
+@(rosette-eval '(clear-vc!))
+
 
 
 @subsection[#:tag "sec:synthesize"]{Synthesis}
@@ -224,7 +315,7 @@ Angelic execution can be used to solve puzzles, to run incomplete code, or to "i
 
 You can find more examples of angelic execution and other solver-aided queries in the @hyperlink["https://github.com/emina/rosette/blob/master/sdsl/"]{@racket[sdsl]} folder of your Rosette distribution.
 
-@(rosette-eval '(clear-asserts!))
+@(rosette-eval '(clear-vc!))
 
 @section[#:tag "sec:notes"]{Symbolic Reasoning}
 
