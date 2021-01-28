@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket)
+@(require (for-label racket (only-in racket/sandbox with-deep-time-limit))
           (for-label  
            rosette/base/form/define
            (only-in rosette/base/base assert assume vc spec-asserts spec-assumes clear-vc!)
@@ -373,6 +373,44 @@ As a fun exercise that builds on this result, try using program synthesis to dis
 
 @section[#:tag "sec:notes"]{Symbolic Reasoning}
 
+We conclude this chapter with a quick overview of some common patterns and anti-patterns for effective programming in Rosette. For more details, see Chapters @seclink["ch:unsafe"]{8}--@seclink["ch:error-tracing"]{10}.
+
+@subsection{Mixing Theories}
+
+Rosette implements solver-aided queries by translating them to the input language of an SMT solver. By default, this translation respects types: a symbolic constant of type @racket[integer?] will be translated to an SMT constant of the same type, i.e., an infinite precision mathematical integer. These types determine which @emph{theories} the solver will need to use to solve a query. As a rule of thumb, the theory of bitvectors tends to be most performant, and mixing theories often leads to severe performance degradation. For that reason, it is best to use the types from the same theory throughout your program (e.g., bitvectors of any length, booleans, and @seclink["sec:UF"]{uninterpreted functions} over these types).
+
+To illustrate the impact of mixing theories, consider the following mixed-theory specification for our midpoint example:
+
+@defs+int[#:eval rosette-eval
+((define (check-mid-slow impl lo hi)     (code:comment "Assuming that")        
+  (assume (bvsle (int32 0) lo))          (code:comment "0 ≤ lo and")                  
+  (assume (bvsle lo hi))                 (code:comment "lo ≤ hi,")
+  (assert                                (code:comment "we require that")
+   (equal?                               
+    (bitvector->integer (impl lo hi))    (code:comment "⌈impl(lo, hi)⌉ = ")
+    (quotient                            (code:comment "(⌈lo⌉ + ⌈hi⌉) / 2, where")
+     (+ (bitvector->integer lo)          (code:comment "⌈e⌉ stands for the mathematical")
+        (bitvector->integer hi))         (code:comment "integer corresponding to the")
+     2))))                               (code:comment "32-bit integer e."))]
+
+This new specification uses both bitvectors and integers. Compared to @racket[check-mid], which uses only bitvectors, @racket[check-mid-slow] causes one of our verification queries to become an order of magnitude slower and the other to time out:
+
+@(rosette-eval '(require (only-in racket error)))
+
+@interaction[#:eval rosette-eval
+(time (verify (check-mid bvmid l h)))
+(time (verify (check-mid-slow bvmid l h)))
+(time (verify (check-mid bvmid-no-overflow l h)))
+(eval:alts
+(with-deep-time-limit 600 (code:comment "timeout after 10 minutes ...")
+  (verify (check-mid-slow bvmid-no-overflow l h)))
+(error 'call-with-deep-time-limit "out of time"))]
+
+
+@subsection{Reasoning Precision}
+
+@subsection{Termination}
+
 Rosette implements solver-aided queries by translating them to the input language of an SMT solver.
 This translation is performed using a given @tech["reasoning precision"], as specified
 by the @racket[current-bitwidth] parameter.  Setting @racket[current-bitwidth]
@@ -380,6 +418,7 @@ to a positive integer @var{k} instructs Rosette to approximate both reals and in
 Setting it to @racket[#f] instructs Rosette to use infinite precision for real and integer operations.
 
 The following snippet shows the effect of different @racket[current-bitwidth] settings on query behavior:
+
 @interaction[#:eval rosette-eval
 (define-symbolic x integer?)
 (current-bitwidth 5)  (code:comment "64 = 0 in the 5-bit representation")
