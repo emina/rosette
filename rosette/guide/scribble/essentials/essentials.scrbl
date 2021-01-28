@@ -265,8 +265,6 @@ the 32-bit representation when the sum of
              
 @(rosette-eval '(clear-vc!))
 
-@subsection[#:tag "sec:synthesize"]{Synthesis}
-
 One @hyperlink["https://en.wikipedia.org/wiki/Binary_search_algorithm#Implementation_issues"]{solution}
 to this problem is to calculate the midpoint as @tt{lo + ((hi - lo) / 2)}. It is easy to see that all
 intermediate values in this calculation are at most @racket[hi] when @racket[lo] and @racket[hi] are both non-negative, so no overflow can happen. We can also verify this with Rosette:
@@ -277,7 +275,10 @@ intermediate values in this calculation are at most @racket[hi] when @racket[lo]
 
 (verify (check-mid bvmid-no-overflow l h))]
 
-But is there a better solution? The correct solution, like our buggy one, relies on signed division by 2, so we may wonder if there is another correct solution that uses a shifting operation instead. To find out, we can, once again, ask the solver for help---this time, via the @racket[synthesize] query.
+@subsection[#:tag "sec:synthesize"]{Synthesis}
+
+
+The correct solution, like our buggy one, relies on signed division by 2, creating a potential opportunity for optimization. In general, signed division cannot be replaced by a shifting operation, but is there be a way to do so in our example? To find out, we can, once again, ask the solver for help---this time, via the @racket[synthesize] query.
 
 The synthesis query uses the solver to search for a correct program in a space of candidate implementations defined by a syntactic @deftech{sketch}. A sketch is a program with @deftech[#:key "hole"]{holes}, which the solver fills with expressions drawn from a specified set of options. For example, @racket[(?? int32?)] stands for a hole that can be filled with any 32-bit integer constant, so the sketch @racket[(bvadd x (?? int32?))] represents all 2@superscript{32} programs that add a 32-bit constant to the variable @racket[x]. Rosette also lets you define richer holes that can be filled with expressions from a given grammar. For example, here is a grammar of all @racket[int32?] expressions that consist of cheap arithmetic and bitwise operations:
 
@@ -324,7 +325,7 @@ With this in mind, we can query the solver for a completion of the @racket[bvmid
 (print-forms sol)
 '(define (bvmid-fast lo hi) (bvlshr (bvadd hi lo) (bv #x00000001 32))))]
 
-The synthesis query takes the form @racket[(synthesize #:forall #, @var[input] #:guarantee #, @var[expr])], where @var[input] lists the symbolic constants that represent inputs to a sketched program, and @var[expr] gives the correctness specification for the sketch. The solver searches for a binding from the hole (i.e., non-@var[input]) constants to values such that @var[expr] satisfies its assertions on all legal @var[input]s. Passing this binding to @racket[print-forms] converts it to a syntactic representation of the completed sketch.@footnote{@racket[print-forms] works only on sketches that have been saved to disk.}
+The synthesis query takes the form @racket[(synthesize #:forall #, @var[input] #:guarantee #, @var[expr])], where @var[input] lists the symbolic constants that represent inputs to a sketched program, and @var[expr] gives the correctness specification for the sketch. The solver searches for a binding from the hole (i.e., non-@var[input]) constants to values such that @var[expr] satisfies its assertions on all legal @var[input]s. Passing this binding to @racket[print-forms] converts it to a syntactic representation of the completed sketch.@footnote{@racket[print-forms] works only on sketches that have been saved to disk.} In our example, the synthesized program implements the midpoint calculation using the logical shift operation, i.e., the midpoint between @racket[lo] and @racket[hi] can be calculated as @tt{(lo + hi) >>@subscript{u} 1}.
 
 @subsection[#:tag "sec:solve"]{Angelic Execution}
 
