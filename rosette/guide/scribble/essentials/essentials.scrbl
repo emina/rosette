@@ -326,25 +326,48 @@ With this in mind, we can query the solver for a completion of the @racket[bvmid
 
 The synthesis query takes the form @racket[(synthesize #:forall #, @var[input] #:guarantee #, @var[expr])], where @var[input] lists the symbolic constants that represent inputs to a sketched program, and @var[expr] gives the correctness specification for the sketch. The solver searches for a binding from the hole (i.e., non-@var[input]) constants to values such that @var[expr] satisfies its assertions on all legal @var[input]s. Passing this binding to @racket[print-forms] converts it to a syntactic representation of the completed sketch.@footnote{@racket[print-forms] works only on sketches that have been saved to disk.} In our example, the synthesized program implements the midpoint calculation using the logical shift operation, i.e., the midpoint between @racket[lo] and @racket[hi] is calculated as @tt{(lo + hi) >>@subscript{u} 1}.
 
+@(rosette-eval '(clear-vc!))
+
 @subsection[#:tag "sec:solve"]{Angelic Execution}
 
-Rosette supports one more solver-aided query, which we call "angelic execution." This query is the opposite of verification.  Given a program with symbolic values, it instructs the solver to find a binding for them that will cause the program to execute successfully---that is, without any assertion failures. 
+Rosette supports one more solver-aided query, which we call angelic execution. This query is the dual of verification.  Given a program with symbolic values, it instructs the solver to find a binding for them that will cause the program to execute normally---that is, without any assumption or assertion failures. 
 
-Angelic execution can be used to solve puzzles, to run incomplete code, or to "invert" a program, by searching for inputs that produce a desired output.  For example, we can ask the solver to find two distinct input values, which are not zeros of the @racket[poly] function, but which @racket[poly] still maps to the same output: 
+Angelic execution can be used to solve puzzles, to run incomplete code, or to "invert" a program, by searching for inputs that produce a desired output.  For example, we can ask the solver to search for two distinct legal inputs, @racket[l] and @racket[h], whose midpoint is the bitwise-and of their bits: 
 @interaction[#:eval rosette-eval
-(define-symbolic x y integer?)
-(define sol 
-  (solve (begin (assert (not (= x y)))
-                (assert (< (abs x) 10))
-                (assert (< (abs y) 10))
-                (assert (not (= (poly x) 0)))
-                (assert (= (poly x) (poly y))))))
-(evaluate x sol)
-(evaluate y sol)
-(evaluate (poly x) sol)
-(evaluate (poly y) sol)]
+(define (bvmid-fast lo hi)
+  (bvlshr (bvadd hi lo) (bv #x00000001 32)))
 
-You can find more examples of angelic execution and other solver-aided queries in the @hyperlink["https://github.com/emina/rosette/blob/master/sdsl/"]{@racket[sdsl]} folder of your Rosette distribution.
+(define sol 
+  (solve
+   (begin
+     (assume (not (equal? l h)))
+     (assume (bvsle (int32 0) l))
+     (assume (bvsle l h))
+     (assert (equal? (bvand l h) (bvmid-fast l h))))))
+
+sol
+
+(evaluate (bvand l h) sol)
+(evaluate (bvmid-fast l h) sol)]
+As a fun exercise that builds on this result, try using program synthesis to discover the condition, @racket[(bvmid-and? l h)], that is both necessary and sufficient to ensure that @racket[bvand] and @racket[bvmid-fast] produce the same value on all distinct legal inputs @racket[l] and @racket[r]. (Hint: you can reuse the @racket[fast-int32] grammar from the previous section.)
+
+@defs+int[#:eval rosette-eval
+((define (bvmid-and? lo hi)
+  #f) (code:comment "<--- replace with your sketch"))
+
+(eval:alts
+(print-forms 
+ (synthesize
+  #:forall (list l h)
+  #:guarantee
+  (begin
+    (assume (not (equal? l h)))
+    (assume (bvsle (int32 0) l))
+    (assume (bvsle l h))
+    (assert
+     (<=> (bvmid-and? l h)
+          (equal? (bvand l h) (bvmid-fast l h)))))))
+  (void))]
 
 @(rosette-eval '(clear-vc!))
 
