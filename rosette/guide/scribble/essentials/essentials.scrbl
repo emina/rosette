@@ -278,7 +278,7 @@ intermediate values in this calculation are at most @racket[hi] when @racket[lo]
 @subsection[#:tag "sec:synthesize"]{Synthesis}
 
 
-The correct solution, like our buggy one, relies on signed division by 2, creating a potential opportunity for optimization. In general, signed division cannot be replaced by a shifting operation, but is there be a way to do so in our example? To find out, we can, once again, ask the solver for help---this time, via the @racket[synthesize] query.
+The correct solution, like our buggy one, relies on signed division by 2, creating a potential opportunity for optimization. In general, this division cannot be replaced by a shifting operation, but is there be a way to do so in our example? To find out, we can, once again, ask the solver for help---this time, via the @racket[synthesize] query.
 
 The synthesis query uses the solver to search for a correct program in a space of candidate implementations defined by a syntactic @deftech{sketch}. A sketch is a program with @deftech[#:key "hole"]{holes}, which the solver fills with expressions drawn from a specified set of options. For example, @racket[(?? int32?)] stands for a hole that can be filled with any 32-bit integer constant, so the sketch @racket[(bvadd x (?? int32?))] represents all 2@superscript{32} programs that add a 32-bit constant to the variable @racket[x]. Rosette also lets you define richer holes that can be filled with expressions from a given grammar. For example, here is a grammar of all @racket[int32?] expressions that consist of cheap arithmetic and bitwise operations:
 
