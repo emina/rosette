@@ -277,7 +277,7 @@ intermediate values in this calculation are at most @racket[hi] when @racket[lo]
 
 (verify (check-mid bvmid-no-overflow l h))]
 
-But is there a better solution? The correct solution, like our buggy one, relies on signed division by 2, so we may wonder if there is a correct solution that uses a shifting operation instead. To find out, we can, once again, ask the solver for help---this time, via the @racket[synthesize] query.
+But is there a better solution? The correct solution, like our buggy one, relies on signed division by 2, so we may wonder if there is another correct solution that uses a shifting operation instead. To find out, we can, once again, ask the solver for help---this time, via the @racket[synthesize] query.
 
 The synthesis query uses the solver to search for a correct program in a space of candidate implementations defined by a syntactic @deftech{sketch}. A sketch is a program with @deftech[#:key "hole"]{holes}, which the solver needs to fill with expressions drawn from a specified set of options. For example, @racket[(?? int32?)] stands for a hole that can be filled with any 32-bit integer constant, so the sketch @racket[(bvadd x (?? int32?))] represents all 2@superscript{32} programs that add a 32-bit constant to the variable @racket[x]. Rosette also lets you define richer holes that can be filled with expressions from a given grammar. For example, here is a grammar of all @racket[int32?] expressions that consist of cheap arithmetic and bitwise operations:
 
