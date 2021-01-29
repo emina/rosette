@@ -50,6 +50,7 @@
   (or (not the-path)
       (not (or (string-contains? the-path "rosette/base/form/module.rkt")
                (string-contains? the-path "rosette/base/form/control.rkt")
+               (string-contains? the-path "rosette/base/core/bool.rkt")
                (string-contains? the-path "rosette/query/form.rkt")
                (string-contains? the-path "rosette/query/core.rkt")))))
 

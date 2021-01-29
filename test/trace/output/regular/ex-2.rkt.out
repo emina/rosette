@@ -1,6 +1,6 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("$*: expected real? arguments\n  arguments...."
+  (("[assert] $*: expected real? arguments\n  ...."
     (#%app "ex-2.rkt" 9 5)
-    ((* "ex-2.rkt" 9 5) (sum "ex-2.rkt" 13 29))
+    ((* "ex-2.rkt" 9 5) (sum "ex-2.rkt" 14 22))
     (&& (= ...) ...)))))

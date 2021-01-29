@@ -2,11 +2,9 @@
 
 (define-symbolic x integer?)
 
-(verify #:assume (1)
-        #:guarantee (2))
+(verify (1))
 
 (synthesize #:forall x
-            #:assume (1)
             #:guarantee (2))
 
-(solve (1))
+(solve (3))

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "term.rkt" "union.rkt" "exn.rkt" "result.rkt")
+(require "term.rkt" "union.rkt" "exn.rkt" "result.rkt" "reporter.rkt")
 
 (provide
  ;; ---- lifted boolean? operations ---- ;;
@@ -442,11 +442,16 @@
     [(_ val msg) (syntax/loc stx ($assume val msg raise-exn:fail:svm:assume:user))]))
 
 (define (halt-svm ex)
-  (halt ex (vc)))
+  (define result (halt ex (vc)))
+  ((current-reporter) 'exception result)
+  result)
 
 (define (halt-err ex) ; Treat an exn:fail? error as an assertion failure.
-  (halt (make-exn:fail:svm:assert:err (exn-message ex) (exn-continuation-marks ex))
-        (asserting (vc) #f)))
+  (define result
+    (halt (make-exn:fail:svm:assert:err (exn-message ex) (exn-continuation-marks ex))
+          (asserting (vc) #f)))
+  ((current-reporter) 'exception result)
+  result)
 
 ; The with-vc form has two variants, (with-vc body) and (with-vc vc0 body).
 ; The former expands into (with-vc (vc) body). The latter sets the current

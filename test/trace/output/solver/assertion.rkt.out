@@ -1,2 +1,2 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
- (#:trace (("assert: bad\n" (assert "assertion.rkt" 4 9) () b))))
+ (#:trace (("[assert] bad\n" (assert "assertion.rkt" 4 9) () b))))

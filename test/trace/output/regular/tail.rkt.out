@@ -1,6 +1,6 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("application: not a procedure;\n expected ...."
+  (("[assert] application: not a procedure;\n ...."
     (#%app "tail.rkt" 6 15)
     ((1 "tail.rkt" 6 15) (tri "tail.rkt" 9 14))
     b))))

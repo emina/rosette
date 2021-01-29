@@ -1,6 +1,6 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("@add1: arity mismatch;\n the expected num...."
+  (("[assert] @add1: arity mismatch;\n the exp...."
     (#%app "infeasible-solver.rkt" 7 2)
     ((@apply "infeasible-solver.rkt" 7 2))
     (&& (! ...) ...)))))

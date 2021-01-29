@@ -10,5 +10,6 @@
     [else (apply + xs)]))
 
 (verify
- #:assume (assert (positive? (sum xs)))
- #:guarantee (assert (ormap positive? xs)))
+ (begin
+   (assume (positive? (sum xs)))
+   (assert (ormap positive? xs))))

@@ -1,6 +1,6 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("error: bad\n"
+  (("[assert] error: bad\n"
     (#%app "list-2.rkt" 9 13)
     ((error "list-2.rkt" 9 13)
      (...race/code/list-2.rkt:9:5 "list-2.rkt" 6 16)
