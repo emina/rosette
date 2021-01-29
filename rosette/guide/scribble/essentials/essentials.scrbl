@@ -4,6 +4,7 @@
           (for-label  
            rosette/base/form/define
            (only-in rosette/base/base assert assume vc spec-asserts spec-assumes clear-vc!)
+           (only-in rosette/solver/smt/boolector boolector)
            rosette/query/query  
            (only-in rosette/base/base bv? bitvector bvsdiv bvadd bvsle bvsub bvand bvor bvxor bvshl bvlshr bvashr bvnot bvneg)
            rosette/query/eval
@@ -373,11 +374,11 @@ As a fun exercise that builds on this result, try using program synthesis to dis
 
 @section[#:tag "sec:notes"]{Symbolic Reasoning}
 
-We conclude this chapter with a quick overview of some common patterns and anti-patterns for effective programming in Rosette. For more details, see Chapters @seclink["ch:unsafe"]{8}--@seclink["ch:error-tracing"]{10}.
+We conclude this chapter with a quick overview of common patterns and anti-patterns for programming in Rosette. For more details, see Chapters @seclink["ch:unsafe"]{8}--@seclink["ch:error-tracing"]{10}.
 
 @subsection{Mixing Theories}
 
-Rosette implements solver-aided queries by translating them to the input language of an SMT solver. By default, this translation respects types: a symbolic constant of type @racket[integer?] will be translated to an SMT constant of the same type, i.e., an infinite precision mathematical integer. These types determine which @emph{theories} the solver will need to use to solve a query. As a rule of thumb, the theory of bitvectors tends to be most performant, and mixing theories often leads to severe performance degradation. For that reason, it is best to use the types from the same theory throughout your program (e.g., bitvectors of any length, booleans, and @seclink["sec:UF"]{uninterpreted functions} over these types).
+Rosette implements solver-aided queries by translating them to the input language of an SMT solver. By default, this translation respects types: a symbolic constant of type @racket[integer?] will be translated to an SMT constant of the same type, i.e., an infinite precision mathematical integer. These types determine which @emph{theories} the solver will need to use to solve a query. As a rule of thumb, the theory of bitvectors tends to be most performant, and mixing theories can lead to severe performance degradation. For that reason, it is best to use the types from the same theory throughout your program (e.g., bitvectors of any length, booleans, and @seclink["sec:UF"]{uninterpreted functions} over these types).
 
 To illustrate the impact of mixing theories, consider the following mixed-theory specification for our midpoint example:
 
@@ -402,38 +403,46 @@ This new specification uses both bitvectors and integers. Compared to @racket[ch
 (time (verify (check-mid-slow bvmid l h)))
 (time (verify (check-mid bvmid-no-overflow l h)))
 (eval:alts
-(with-deep-time-limit 600 (code:comment "timeout after 10 minutes ...")
+(with-deep-time-limit 600 (code:comment "Timeout after 10 minutes ...")
   (verify (check-mid-slow bvmid-no-overflow l h)))
 (error 'call-with-deep-time-limit "out of time"))]
 
 
 @subsection{Reasoning Precision}
 
+While less performant than bitvectors, integers are more convenient to use for demos, prototyping, and interfacing with Racket. To bridge this gap, Rosette provides the option of approximating symbolic integers (and reals) as bitvectors of length @var{k}, by setting the @racket[current-bitwidth] parameter to @var{k}. With this setting, integers (and reals) are treated as infinite precision values during evaluation, but when solving queries, they are translated to bitvectors of length @var{k} for better performance.
+
+For example, our slow midpoint queries become significantly faster when allowed to approximate integers with bitvectors:
+@interaction[#:eval rosette-eval
+(code:comment "By default, current-bitwidth is set to #f, so Rosette translates")
+(code:comment "integer? values precisely, using the SMT theory of integers.")
+(current-bitwidth)
+(code:comment "After we set current-bitwidth to 64, integer? values in")
+(code:comment "check-mid-slow are translated to SMT bitvectors of length 64.")
+(current-bitwidth 64)
+(time (verify (check-mid bvmid l h)))
+(time (verify (check-mid-slow bvmid l h)))
+(time (verify (check-mid bvmid-no-overflow l h)))
+(time (verify (check-mid-slow bvmid-no-overflow l h)))]
+
+But this approximation comes with a downside. Because it is unsound, queries may produce results that are incorrect under the integer semantics, while being correct under the approximate bitvector semantics. For example, if we re-run the buggy @racket[(check-mid-slow bvmid l h)] query with @racket[current-bitwidth] set to 32, the solver fails to discover a counterexample, since one does not exist when the integer expressions in @racket[check-mid-slow] are translated to 32-bit bitvectors:
+@interaction[#:eval rosette-eval           
+(current-bitwidth 32)
+(code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Loss of soundness!"))]    
+
+
+Navigating this tradeoff between performance and soundness can be tricky. So, when possible, it is best to set @racket[current-bitwidth] to @racket[#f] and limit the use of integers to code that will be evaluated concretely. This approach works well with solvers that reject queries with integers (e.g., @racket[boolector]), so if any make it into a query, the solver fails fast:
+@interaction[#:eval rosette-eval
+(current-bitwidth #f)
+(require rosette/solver/smt/boolector)
+(code:line (current-solver (boolector)) (code:comment "Use boolector to reject integers."))
+(code:line (time (verify (check-mid bvmid l h))) (code:comment "Accepted."))
+(code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Rejected."))]
+
 @subsection{Termination}
 
-Rosette implements solver-aided queries by translating them to the input language of an SMT solver.
-This translation is performed using a given @tech["reasoning precision"], as specified
-by the @racket[current-bitwidth] parameter.  Setting @racket[current-bitwidth]
-to a positive integer @var{k} instructs Rosette to approximate both reals and integers with @var{k}-bit words.
-Setting it to @racket[#f] instructs Rosette to use infinite precision for real and integer operations.
+Solver slowdowns are not the only source of performance problems 
 
-The following snippet shows the effect of different @racket[current-bitwidth] settings on query behavior:
-
-@interaction[#:eval rosette-eval
-(define-symbolic x integer?)
-(current-bitwidth 5)  (code:comment "64 = 0 in the 5-bit representation")
-(solve (begin (assert (= x 64))
-              (assert (= x 0))))
-(verify (assert (not (and (= x 64) (= x 0))))) 
-(current-bitwidth #f) (code:comment "but no solutions exist under infinite-precision semantics")
-(solve (begin (assert (= x 64))
-              (assert (= x 0))))
-(verify (assert (not (and (= x 64) (= x 0)))))]
-
-By default, @racket[current-bitwidth] is set to @racket[#f] to be consistent with Racket's
-infinite-precision semantics for integers and reals. Beware, however, that using @racket[#f] or a large @var{k}
-for @racket[current-bitwidth] may have a negative effect on solver performance.  In the worst case, using @racket[#f] can cause the underlying solver to run forever.@footnote{Technically, Rosette translates solver-aided queries to the theory of bitvectors when @racket[current-bitwidth] is set to an integer @var{k}. In particular, it uses @var{k}-bit bitvectors to represent integers and reals, with smaller bitvectors leading to better performance.  When @racket[current-bitwidth] is @racket[#f], Rosette uses the theories of integers and reals instead.  These theories work well for linear constraints, but reasoning about non-linear integer arithmetic is undecidable.}
-                                                               
 Non-termination can also be caused by passing symbolic values to recursive procedures.  In particular, the expression that determines whether a recursion (or a loop) terminates must be executed on concrete values.   
 
 @interaction[
