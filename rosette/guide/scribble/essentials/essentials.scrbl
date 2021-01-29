@@ -431,7 +431,7 @@ But this approximation comes with a downside. Because it is unsound, queries may
 (code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Loss of soundness!"))]    
 
 
-Navigating this tradeoff between performance and soundness can be tricky. So, when possible, it is best to set @racket[current-bitwidth] to @racket[#f] and limit the use of integers to code that will be evaluated concretely. This approach works well with solvers that reject queries with integers (e.g., @racket[boolector]), so if any make it into a query, the solver fails fast:
+Navigating this tradeoff between performance and soundness can be tricky. So, when possible, it is best to set @racket[current-bitwidth] to @racket[#f] and limit the use of integers to code that will be evaluated concretely. This approach works well with solvers that reject queries over symbolic integers (e.g., @racket[boolector]), so if any have made it into a query, the solver fails fast:
 @interaction[#:eval rosette-eval
 (current-bitwidth #f)
 (require rosette/solver/smt/boolector)
