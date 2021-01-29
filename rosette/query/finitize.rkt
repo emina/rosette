@@ -49,7 +49,7 @@
 (define (unfinitize sol fmap) 
   (match sol
     [(model m)
-     (sat (for/hash ([(k fk) fmap] #:when (dict-has-key? m fk))
+     (sat (for/hash ([(k fk) fmap] #:when (and (constant? k) (dict-has-key? m fk)))
             (let ([t (term-type k)])
               (values k (cond [(equal? k fk) (dict-ref m fk)]
                               [else (bv-value (dict-ref m fk))])))))]
