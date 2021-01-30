@@ -410,9 +410,9 @@ This new specification uses both bitvectors and integers. Compared to @racket[ch
 
 @subsection{Reasoning Precision}
 
-While less performant than bitvectors, integers are more convenient to use for demos, prototyping, and interfacing with Racket. To bridge this gap, Rosette provides the option of approximating symbolic integers (and reals) as bitvectors of length @var{k}, by setting the @racket[current-bitwidth] parameter to @var{k}. With this setting, integers (and reals) are treated as infinite precision values during evaluation, but when solving queries, they are translated to bitvectors of length @var{k} for better performance.
+While less performant than bitvectors, integers are more convenient to use for demos, prototyping, and interfacing with Racket. To bridge this gap, Rosette provides the option of approximating symbolic integers (and reals) as bitvectors of length @var{k}, by setting the @racket[current-bitwidth] parameter to @var{k}. With this setting, integers (and reals) are treated as infinite precision values during evaluation, but when solving queries, they are translated to bitvectors of length @var{k} for better performance. 
 
-For example, our slow midpoint queries become significantly faster when allowed to approximate integers with bitvectors:
+For example, our slow midpoint queries become orders-of-magnitude faster when allowed to approximate integers with bitvectors:
 @interaction[#:eval rosette-eval
 (code:comment "By default, current-bitwidth is set to #f, so Rosette translates")
 (code:comment "integer? values precisely, using the SMT theory of integers.")
@@ -420,57 +420,116 @@ For example, our slow midpoint queries become significantly faster when allowed 
 (code:comment "After we set current-bitwidth to 64, integer? values in")
 (code:comment "check-mid-slow are translated to SMT bitvectors of length 64.")
 (current-bitwidth 64)
-(time (verify (check-mid bvmid l h)))
 (time (verify (check-mid-slow bvmid l h)))
-(time (verify (check-mid bvmid-no-overflow l h)))
 (time (verify (check-mid-slow bvmid-no-overflow l h)))]
 
-But this approximation comes with a downside. Because it is unsound, queries may produce results that are incorrect under the integer semantics, while being correct under the approximate bitvector semantics. For example, if we re-run the buggy @racket[(check-mid-slow bvmid l h)] query with @racket[current-bitwidth] set to 32, the solver fails to discover a counterexample, since one does not exist when the integer expressions in @racket[check-mid-slow] are translated to 32-bit bitvectors:
-@interaction[#:eval rosette-eval           
-(current-bitwidth 32)
-(code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Loss of soundness!"))]    
+In this example, we have chosen @racket[current-bitwidth] carefully to ensure that the resulting approximation is both performant and @emph{sound}---i.e., the approximate query returns a counterexample exactly when one would be returned by the corresponding integer query. But choosing the right bitwidth is difficult to do in general. If we underapproximate the number of bits that are needed to represent every integer value in a query, we lose soundness, and if we overapproximate it, we lose performance.
 
+For instance, when we re-run the slow midpoint queries with @racket[current-bitwidth] set to 32, the buggy query fails to produce a counterexample and the correct query returns a bogus counterexample.  Both results are correct for 32-bit machine integers but incorrect for (infinite-precision) mathematical integers:
+@interaction[#:eval rosette-eval
+(code:comment "The bitwidth is too low, so we get ...")
+(current-bitwidth 32) 
+(code:comment "no counterexample to a buggy query, and")
+(time (verify (check-mid-slow bvmid l h)))
+(code:comment "a bogus counterexample to a correct query.")
+(time (verify (check-mid-slow bvmid-no-overflow l h)))]
+We can restore soundness by sacrificing performance and setting @racket[current-bitwidth] conservatively to a large value (e.g., 512). In our case, the queries are small so an order-of-magnitude slowdown is acceptable. For large queries, this would lead to timeouts:
+@interaction[#:eval rosette-eval
+(code:comment "The bitwidth is too high, so we get a 3-10X slowdown.")
+(current-bitwidth 512) 
+(time (verify (check-mid-slow bvmid l h)))
+(time (verify (check-mid-slow bvmid-no-overflow l h)))]
 
-Navigating this tradeoff between performance and soundness can be tricky. So, when possible, it is best to set @racket[current-bitwidth] to @racket[#f] and limit the use of integers to code that will be evaluated concretely. This approach works well with solvers that reject queries over symbolic integers (e.g., @racket[boolector]), so if any have made it into a query, the solver fails fast:
+In practice, it is usually best to leave @racket[current-bitwidth] at its default setting (@racket[#f]), and limit the use of integers to code that will be evaluated concretely. This approach works especially well with solvers that reject queries with integers, so if any have made it into a query, the solver fails fast:
 @interaction[#:eval rosette-eval
 (current-bitwidth #f)
+(code:line (current-solver)             (code:comment "The default solver (z3) accepts integers."))
 (require rosette/solver/smt/boolector)
 (code:line (current-solver (boolector)) (code:comment "Use boolector to reject integers."))
-(code:line (time (verify (check-mid bvmid l h))) (code:comment "Accepted."))
+(code:line (time (verify (check-mid bvmid l h)))      (code:comment "Accepted."))
 (code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Rejected."))]
 
-@subsection{Termination}
+@(rosette-eval '(clear-vc!))
+@(rosette-eval '(require rosette/solver/smt/z3))
+@(rosette-eval '(current-solver (z3)))
 
-Solver slowdowns are not the only source of performance problems 
+@subsection{Symbolic Evaluation}
 
-Non-termination can also be caused by passing symbolic values to recursive procedures.  In particular, the expression that determines whether a recursion (or a loop) terminates must be executed on concrete values.   
+The process by which Rosette turns a query into an SMT constraint is called @deftech{symbolic evaluation}. At a high level, Rosette's symbolic evaluation works by executing @emph{all} paths through a program, and collecting all the assumptions and assertions on these paths into the current verification condition @racket[(vc)]. The resulting @racket[(vc)] is then translated to the SMT language and passed to the solver.  This evaluation model has two practical implications on writing performant and terminating Rosette code.
 
-@interaction[
-(code:comment "while sandboxed evaluation of (ones x) times out,")
-(code:comment "normal evaluation would not terminate")
-(eval:alts (define-symbolic x integer?) (void))
-(eval:alts 
-(letrec ([ones (lambda (n)
-                  (if (<= n 0)
-                      (list)
-                      (cons 1 (ones (- n 1)))))])
-  (printf "~a" (ones 3))
-  (printf "~a" (ones x)))
-(begin (printf "(1 1 1)")
-       (fprintf (current-error-port) "with-limit: out of time")))]
+First, if a program is slow or runs forever under standard (concrete) evaluation, it will perform at least as poorly under all-path (symbolic) evaluation. Second, if a program terminates quickly on all concrete inputs, it can still perform poorly or fail to terminate on symbolic inputs. So, extra care must be taken to ensure good performance and termination in the presence of symbolic values. 
 
-
-It is, however, safe to apply recursive procedures to symbolic values if they are not used in termination checks.  
+To illustrate, consider the procedure @racket[bvsqrt] for computing the @hyperlink["https://en.wikipedia.org/wiki/Integer_square_root#Using_bitwise_operations"]{integer square root} of non-negative 32-bit integers. This procedure terminates on all concrete values of @racket[n] but runs forever when given a symbolic input:
+@defs+int[#:eval rosette-eval
+((define (bvsqrt n)
+  (cond
+    [(bvult n (int32 2)) n]
+    [else
+     (define s0 (bvshl (bvsqrt (bvlshr n (int32 2))) (int32 1)))
+     (define s1 (bvadd s0 (int32 1)))
+     (if (bvugt (bvmul s1 s1) n) s0 s1)])))
+(bvsqrt (int32 3))
+(bvsqrt (int32 4))
+(bvsqrt (int32 15))
+(bvsqrt (int32 16))
+(eval:alts
+(with-deep-time-limit 10 (code:comment "Timeout after 10 seconds ...")
+  (bvsqrt l))
+(error 'call-with-deep-time-limit "out of time"))]
+The reason is simple: a call to @racket[bvsqrt] terminates when @racket[n] becomes less than 2. But if we start with a symbolic @racket[n], this never happens because Rosette right-shifts @racket[n] by 2 in each recursive call to generate a new symbolic value:
 @interaction[#:eval rosette-eval
-(define-symbolic x integer?)
-(letrec ([adder (lambda (vs n)
-                  (if (null? vs)
-                      (list)
-                      (cons (+ (car vs) n) (adder (cdr vs) n))))])
-  (adder '(1 2 3) x))]
+(define n l)
+n
+(define n (bvlshr n (int32 2)))      
+n
+(define n (bvlshr n (int32 2))) 
+n
+(define n (bvlshr n (int32 2))) 
+n]
+In general, recursion terminates under symbolic evaluation only when the stopping condition is reached with concrete values.
 
-See Chapters @seclink["ch:symbolic-reflection"]{7} and @seclink["ch:unsafe"]{8} to
-learn more about common patterns and anti-patterns for effective symbolic reasoning.
+We can ensure termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. In our example, the bound of 16 is sufficient to cover all possible executions of @racket[bvsqrt]:
+
+@(rosette-eval '(clear-vc!))
+@(rosette-eval '(require (only-in racket make-parameter parameterize)))
+@defs+int[#:eval rosette-eval
+((define fuel   
+  (make-parameter 5)) (code:comment "Default finitization limit.")
+ 
+(code:comment "A simple macro for defining bounded procedures")
+(code:comment "that use (fuel) to limit recursion.")
+(define-syntax-rule
+  (define-bounded (id param ...) body ...)
+  (define (id param ...)
+    (assert (> (fuel) 0) "Out of fuel.")
+    (parameterize ([fuel (sub1 (fuel))])
+      body ...)))
+
+(code:comment "Computes bvsqrt taking at most (fuel) steps.")
+(define-bounded (bvsqrt n) 
+  (cond
+    [(bvult n (int32 2)) n]
+    [else
+     (define s0 (bvshl (bvsqrt (bvlshr n (int32 2))) (int32 1)))
+     (define s1 (bvadd s0 (int32 1)))
+     (if (bvugt (bvmul s1 s1) n) s0 s1)]))
+
+(define (check-sqrt impl n)
+  (assume (bvsle (int32 0) n))          (code:comment "Assuming n ≥ 0,")
+  (define √n (impl l))                 
+  (define √n+1 (bvadd √n (int32 1)))    (code:comment "we require that")
+  (assert (bvule (bvmul √n √n) n))      (code:comment "(√n)^2 ≤ n and")
+  (assert (bvult n (bvmul √n+1 √n+1)))) (code:comment "n < (√n + 1)^2."))
+
+(code:comment "Verification fails due to insufficient fuel.")
+(define cex (time (verify (check-sqrt bvsqrt l))))
+(bvsqrt (evaluate l cex))
+(clear-vc!)
+(code:comment "Verification succeeds with enough fuel.")
+(fuel 16)
+(time (verify (check-sqrt bvsqrt l)))]
+
+
 
 @(kill-evaluator rosette-eval)
 
