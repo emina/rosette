@@ -378,7 +378,7 @@ We conclude this chapter with a quick overview of common patterns and anti-patte
 
 @subsection{Mixing Theories}
 
-Rosette implements solver-aided queries by translating them to the input language of an SMT solver. By default, this translation respects types: a symbolic constant of type @racket[integer?] will be translated to an SMT constant of the same type, i.e., an infinite precision mathematical integer. These types determine which @emph{theories} the solver will need to use to solve a query. As a rule of thumb, the theory of bitvectors tends to be most performant, and mixing theories can lead to severe performance degradation. For that reason, it is best to use the types from the same theory throughout your program (e.g., bitvectors of any length, booleans, and @seclink["sec:UF"]{uninterpreted functions} over these types).
+Rosette implements solver-aided queries by translating them to the input language of an SMT solver. By default, this translation respects types: a symbolic constant of type @racket[integer?] will be translated to an SMT constant of the same type, i.e., an infinite precision mathematical integer. These types determine which @emph{theories} the solver will need to use to solve a query. As a rule of thumb, the theory of bitvectors tends to elicit fastest solving times, and mixing theories can lead to severe performance degradation. For that reason, it is best to use the types from the same theory throughout your program (e.g., bitvectors of any length, booleans, and @seclink["sec:UF"]{uninterpreted functions} over these types).
 
 To illustrate the impact of mixing theories, consider the following mixed-theory specification for our midpoint example:
 
@@ -410,7 +410,7 @@ This new specification uses both bitvectors and integers. Compared to @racket[ch
 
 @subsection{Reasoning Precision}
 
-While less performant than bitvectors, integers are more convenient to use for demos, prototyping, and interfacing with Racket. To bridge this gap, Rosette provides the option of approximating symbolic integers (and reals) as bitvectors of length @var{k}, by setting the @racket[current-bitwidth] parameter to @var{k}. With this setting, integers (and reals) are treated as infinite precision values during evaluation, but when solving queries, they are translated to bitvectors of length @var{k} for better performance. 
+While slower than bitvectors, integers are more convenient to use for demos, prototyping, and interfacing with Racket. To bridge this gap, Rosette provides the option of approximating symbolic integers (and reals) as bitvectors of length @var{k}, by setting the @racket[current-bitwidth] parameter to @var{k}. With this setting, integers (and reals) are treated as infinite precision values during evaluation, but when solving queries, they are translated to bitvectors of length @var{k} for better performance. 
 
 For example, our slow midpoint queries become orders-of-magnitude faster when allowed to approximate integers with bitvectors:
 @interaction[#:eval rosette-eval
@@ -488,7 +488,7 @@ n
 n]
 In general, recursion terminates under symbolic evaluation only when the stopping condition is reached with concrete values.
 
-We can ensure termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. In our example, the bound of 16 is sufficient to cover all possible executions of @racket[bvsqrt]:
+We can ensure termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. In our example, the bound of 16 is sufficient to cover all possible executions of @racket[bvsqrt].
 
 @(rosette-eval '(clear-vc!))
 @(rosette-eval '(require (only-in racket make-parameter parameterize)))
