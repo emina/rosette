@@ -1,14 +1,14 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("application: not a procedure;\n expected ...."
+  (("[assert] application: not a procedure;\n ...."
     (#%app "macro.rkt" 5 5)
     ((1 "macro.rkt" 5 5))
     a)
-   ("application: not a procedure;\n expected ...."
+   ("[assert] application: not a procedure;\n ...."
     (#%app "macro.rkt" 7 8)
     ((3 "macro.rkt" 7 8))
     (&& (! ...) ...))
-   ("application: not a procedure;\n expected ...."
+   ("[assert] application: not a procedure;\n ...."
     (#%app "macro.rkt" 12 6)
     ((1 "macro.rkt" 12 6))
-    b))))
+    (|| b ...)))))

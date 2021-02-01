@@ -17,6 +17,7 @@
             [else (select >=pivot (- n len< 1))])]))
 
 (verify
- #:assume (assert (and (<= 0 n (sub1 (length xs)))
-                       (= k (select xs n))))
- #:guarantee (assert (= k (list-ref (sort xs <) n))))
+ (begin
+   (assume (and (<= 0 n (sub1 (length xs)))
+                (= k (select xs n))))
+   (assert (= k (list-ref (sort xs <) n)))))

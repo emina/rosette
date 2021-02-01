@@ -7,6 +7,8 @@
 (require rosette/base/core/reporter
          rosette/base/core/bool
          rosette/base/core/exn
+         rosette/base/core/result
+         rosette/base/core/bool
          syntax/parse/define
          (only-in "../util/syntax.rkt" syntax->readable-location)
          (only-in rosette/query/core [∃-solve query:solve])
@@ -61,15 +63,24 @@
 
 (define reporter
   (match-lambda*
-    [(list 'exception guard e)
-     (define the-pc (&&  guard)) ; <-- remove reference to the PC ... this code will need updating
+    [(list 'exception (halt e s))
+     (define assumes (spec-assumes s))
+     (define asserts (spec-asserts s))
      (define skip?
-       (or (exn:fail:svm:merge? e) ; <-- replace with new exn types ... this code will need updating
+       (or (exn:fail:svm:merge? e)
+           ;; We skip exn:fail:svm:merge? because we already present data of
+           ;; leave nodes.
+           (false? assumes)
+           ;; Skip false? to make it match the old behavior. We can remove this
+           ;; or add an option to conditionally filter this later.
            (and (and (symbolic-trace-skip-assertion?)
-                     (exn:fail:svm:assert? e))  ; <-- replace with new exn types ... this code will need updating
+                     (or (exn:fail:svm:assert:user? e)
+                         (exn:fail:svm:assume:user? e)))
                 (collect-stats 'assertion))
+           ;; TODO: need to fix the name. symbolic-trace-skip-assertion?
+           ;; doesn't make sense anymore
            (and (and (symbolic-trace-skip-infeasible-solver?)
-                     (unsat? (query:solve (list the-pc))))
+                     (unsat? (query:solve (list assumes))))
                 (collect-stats 'solver))))
      (unless skip?
        (define entry
@@ -80,7 +91,7 @@
                (continuation-mark-set->list
                 (exn-continuation-marks e)
                 'symbolic-trace:stack-key)
-               the-pc))
+               assumes))
        (current-entry-handler
         entry
         (λ (e) (set! current-trace (cons e current-trace)))

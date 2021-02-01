@@ -1,22 +1,14 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("application: not a procedure;\n expected ...."
-    (#%app "toplevel.rkt" 5 17)
-    ((1 "toplevel.rkt" 5 17))
+  (("[assert] application: not a procedure;\n ...."
+    (#%app "toplevel.rkt" 5 8)
+    ((1 "toplevel.rkt" 5 8))
     #t)
-   ("application: not a procedure;\n expected ...."
-    (#%app "toplevel.rkt" 6 20)
-    ((2 "toplevel.rkt" 6 20))
+   ("[assert] application: not a procedure;\n ...."
+    (#%app "toplevel.rkt" 8 24)
+    ((2 "toplevel.rkt" 8 24))
     #t)
-   ("application: not a procedure;\n expected ...."
-    (#%app "toplevel.rkt" 9 21)
-    ((1 "toplevel.rkt" 9 21))
-    #t)
-   ("application: not a procedure;\n expected ...."
-    (#%app "toplevel.rkt" 10 24)
-    ((2 "toplevel.rkt" 10 24))
-    #t)
-   ("application: not a procedure;\n expected ...."
-    (#%app "toplevel.rkt" 12 7)
-    ((1 "toplevel.rkt" 12 7))
+   ("[assert] application: not a procedure;\n ...."
+    (#%app "toplevel.rkt" 10 7)
+    ((3 "toplevel.rkt" 10 7))
     #t))))

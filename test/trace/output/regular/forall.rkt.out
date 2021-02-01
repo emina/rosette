@@ -1,6 +1,6 @@
 ((#:stats #hash((assertion . 0) (solver . 0)))
  (#:trace
-  (("rest: contract violation\n  expected: (an...."
+  (("[assert] rest: contract violation\n  expe...."
     (#%app "forall.rkt" 6 2)
     ((@rest "forall.rkt" 6 2))
     b))))

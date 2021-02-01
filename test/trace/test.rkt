@@ -10,9 +10,13 @@
          racket/runtime-path
          "../config.rkt")
 
-(define overwriting? (match (current-command-line-arguments)
-                       [(vector "overwrite") #t]
-                       [_ #f]))
+(define overwrite-mode
+  (match (current-command-line-arguments)
+    [(vector "overwrite-on-demand") 'on-demand]
+    [(vector "overwrite") 'overwrite]
+    [_ #f]))
+
+(printf "Current mode: ~a\n" (current-command-line-arguments))
 
 ;; convert a path to a filename string so that it can be written and read back
 (define (path->name p)
@@ -69,16 +73,28 @@
 
 (define ns (current-namespace))
 
+(define (user-agree?)
+  (printf "Overwrite this file? (y/N): ")
+  (equal? "y" (string-trim (read-line))))
+
 (define (run-trace-test fname mode)
   (define (perform-test output)
     (define outpath (build-path here-dir "output" mode (~a fname ".out")))
+    (define (do-overwrite)
+      (with-output-to-file outpath #:exists 'replace
+        (thunk (pretty-write output)))
+      (printf "Wrote new output for `~a`: ~v\n" fname output))
     (cond
-      [(and (file-exists? outpath) (not overwriting?))
-       (check-equal? output (call-with-input-file outpath read))]
-      [else
-       (with-output-to-file outpath #:exists 'replace
-         (thunk (pretty-write output)))
-       (printf "Wrote new output for `~a`: ~v\n" fname output)]))
+      [(file-exists? outpath)
+       (cond
+         [(not overwrite-mode)
+          (check-equal? output (call-with-input-file outpath read))]
+         [(eq? overwrite-mode 'overwrite) (do-overwrite)]
+         [else (check-equal? output (call-with-input-file outpath read))
+               (when (and (not (equal? output (call-with-input-file outpath read)))
+                          (user-agree?))
+                 (do-overwrite))])]
+      [else (do-overwrite)]))
 
   (define (exn-handler e)
     ((error-display-handler)

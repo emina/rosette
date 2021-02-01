@@ -1,1 +1,1 @@
-((#:error "assert: both branches infeasible\n"))
+((#:error "[assert] contradiction\n"))
