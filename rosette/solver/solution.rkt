@@ -24,12 +24,16 @@
           arg)))
   #:methods gen:custom-write
   [(define (write-proc self port mode)
-     (let ([bindings (sort (dict->list (sat-model self)) term<? #:key car)])
+     (let ([limit (error-print-width)]
+           [bindings (sort (dict->list (sat-model self)) term<? #:key car)])
        (fprintf port "(model")
        (unless (null? bindings)
-         (for ([binding bindings])
+         (for ([binding bindings]
+                #:break (>= (file-position port) limit))
            (fprintf port "\n [~a ~a]" (car binding) (cdr binding))))
-       (fprintf port ")")))])
+       (if (<= (file-position port) limit)
+           (fprintf port ")")
+           (fprintf port " ...)"))))])
 
 ; If a solution is unsatisfiable, and no core has been extracted, the core field is #f.
 ; If a core has been extracted, the core is a list of constraints (that is @boolean? terms or 
