@@ -57,7 +57,11 @@
      (fprintf port "~a" (opaque-str self)))])
 
 (define (serializing-evaluator evaluator)
-  (lambda (expr) (serialize-for-logging (evaluator expr))))
+  (lambda (expr)
+    (define v (evaluator expr))
+    (printf "~a" (get-output evaluator))
+    (eprintf "~a" (get-error-output evaluator))
+    (serialize-for-logging v)))
 
 (define (rosette-log-evaluator logfile [eval-limits #f] [lang 'rosette/safe])  
   (if (file-exists? logfile)
