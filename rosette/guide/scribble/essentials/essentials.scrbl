@@ -14,33 +14,18 @@
            rosette/lib/synthax))
 
 @(require racket/sandbox  racket/runtime-path  scribble/core scribble/racket
-          scribble/eval scribble/html-properties ;scriblib/footnote 
+          scribble/example scribble/html-properties scriblib/footnote 
           (only-in racket [unsyntax racket/unsyntax]))
 
 @(require (only-in "../refs.scrbl" ~cite rosette:onward13 rosette:pldi14)
           "../util/lifted.rkt")
  
 @(define-runtime-path root ".")
-@(define rosette-eval #;(rosette-evaluator) (rosette-log-evaluator (logfile root "essentials-log")))
+@(define rosette-eval (rosette-log-evaluator (logfile root "essentials-log")))
 
 @(define (symbolic s) @racketresultfont[s]) 
 
-@(define seen '())
-@(define (footnote . xs)
-   (define ord (add1 (length seen)))
-   (define mark (superscript (format "~a" ord)))
-   (define t (format "footnote~a" ord))
-   (set! seen (cons (apply elemtag t mark xs) seen))
-   (elemref t mark))
-@(define (footnote-part)
-   (let ([ts (reverse seen)])
-     (if (null? ts)
-         null
-         (cons (para #:style (style #f (list (attributes '((class . "footnoteblock")))))
-                     (car ts))
-               (map para (cdr ts))))))
-   
-@;(define-footnote footnote footnote-part)
+@(define-footnote footnote footnote-part)
 
 @title[#:tag "ch:essentials"]{Rosette Essentials}
 
@@ -69,7 +54,7 @@ and @seclink["ch:programmer-defined-datatypes"]{programmer-defined}),
 The Rosette language includes two kinds of values: concrete and symbolic.  Concrete values are plain Racket values (@racket[#t], @racket[#f], @racket[0], @racket[1], etc.), and Rosette programs that operate only on concrete values behave like Racket programs.  Accessing the solver-aided features of Rosette---such as code synthesis or verification---requires the use of symbolic values.
 
 @deftech[#:key "symbolic constant"]{Symbolic constants} are the simplest kind of symbolic value.  They can be created using the @racket[define-symbolic] form:
-@def+int[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
 (define-symbolic b boolean?)
 b]
 This generates a fresh symbolic constant of type boolean and binds it to the variable @racket[b].
@@ -77,7 +62,7 @@ This generates a fresh symbolic constant of type boolean and binds it to the var
 You can think of a symbolic constant as a placeholder for a concrete constant of the same type. As we will see shortly, the solver, once called, determines which concrete value a given symbolic constant represents:  it will tell us whether the constant @symbolic{b} is @racket[#t] or @racket[#f], depending on what question we ask about the behavior of a program (or a procedure) applied to @symbolic{b}.
 
 Symbolic values, including constants, can be used just like concrete values of the same type.  They can be stored in data structures or passed to procedures to obtain other values, either concrete or symbolic:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
 (boolean? b)     
 (integer? b)
 (vector b 1)
@@ -87,16 +72,18 @@ In our example, all but the fourth expression produce concrete values.  The four
 
 
 Rosette provides one more construct for creating symbolic constants besides @racket[define-symbolic]:
-@def+int[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f #:no-prompt
 (define-symbolic* n integer?)]
 The two constructs differ in how they bind variables to constants when evaluated more than once.
 The @racket[define-symbolic] form binds the variable to the same (unique) constant every time it is evaluated. The @racket[define-symbolic*] form, in contrast, creates a stream of (unique) constants, binding the variable to the next constant from its stream whenever the form is evaluated. The following example illustrates the difference:
-@defs+int[#:eval rosette-eval
-((define (static) 
+@examples[#:eval rosette-eval #:label #f
+(eval:no-prompt
+ (define (static) 
   (define-symbolic x boolean?)  (code:comment "Creates the same constant when evaluated.")
-  x)
+  x))
 
-(define (dynamic) 
+(eval:no-prompt
+ (define (dynamic) 
   (define-symbolic* y integer?) (code:comment "Creates a fresh constant when evaluated.")
   y))
 
@@ -105,10 +92,11 @@ The @racket[define-symbolic] form binds the variable to the same (unique) consta
 
 Printed constant names, such as @symbolic{x} or @symbolic{b}, are just comments.  Two constants created by evaluating two distinct @racket[define-symbolic] (or, @racket[define-symbolic*]) forms are distinct, even if they have the same printed name.  They may still represent the same concrete value, but that is determined by the solver:
 
-@def+int[#:eval rosette-eval
-(define (yet-another-x) 
+@examples[#:eval rosette-eval #:label #f
+(eval:no-prompt
+ (define (yet-another-x) 
   (define-symbolic x boolean?) 
-  x)
+  x))
 
 (eq? (static) (yet-another-x))]
 
@@ -116,14 +104,14 @@ Printed constant names, such as @symbolic{x} or @symbolic{b}, are just comments.
 
 @section[#:tag "sec:asserts"]{Assertions and Assumptions}
 
-Like many other languages, Rosette provides a construct for expressing @emph{assertions}---important properties of programs that are checked in every execution.  Rosette assertions work just like Java or Racket assertions when given a concrete value:  if the value is false, the execution terminates with a runtime exception.  Otherwise, the execution proceeds normally.  
-@interaction[#:eval rosette-eval
+Like many languages, Rosette provides a construct for expressing @emph{assertions}---important properties of programs that are checked in every execution.  Rosette assertions work just like Java or Racket assertions when given a concrete value:  if the value is false, the execution terminates with a runtime exception.  Otherwise, the execution proceeds normally.  
+@examples[#:eval rosette-eval #:label #f
 (assert #t) 
-(assert #f)]
+(eval:error (assert #f))]
 
 When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, the value is accumulated in the current @tech[#:key "vc"]{verification condition} (VC), and the assertion's effect (whether it passes or fails) is eventually determined by the solver.
 
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
 (code:line (spec-asserts (vc)) (code:comment "We asserted #f above, so the current VC reflects that."))
 (code:line (clear-vc!)         (code:comment "Clear the current VC."))
 (spec-asserts (vc))
@@ -135,17 +123,19 @@ Assertions express properties that a program must satisfy on all @emph{legal} in
 
 Assumptions behave analogously to assertions on both concrete and symbolic values. In the concrete case, assuming @racket[#f] aborts the execution with a runtime exception, and assuming a true value is equivalent to calling @racket[(void)]. In the symbolic case, the assumed value is accumulated in the current VC.
 
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
 (assume #t)
 (spec-assumes (vc))
-(code:line (assume #f)          (code:comment "Assuming #f aborts the execution with an exception."))
+(eval:alts
+ (code:line (assume #f)         (code:comment "Assuming #f aborts the execution with an exception."))
+ (eval:error (assume #f)))
 (spec-assumes (vc))
 (clear-vc!)
 (define-symbolic i j integer?)
 (code:line (assume (> j 0))     (code:comment "Add the assumption (> j 0) to the VC."))
 (spec-assumes (vc))
 (assert (< (- i j) i))
-(code:line (spec-asserts (vc))  (code:comment "The assertions must hold when the assumptions hold"))
+(code:line (spec-asserts (vc))  (code:comment "The assertions must hold when the assumptions hold."))
 (code:line (pretty-print (vc))  (code:comment "VC tracks the assumptions and the assertions."))]
 
 @(rosette-eval '(clear-vc!))
@@ -160,25 +150,25 @@ and returns the midpoint of the interval [@racket[lo], @racket[hi]]. In C or Jav
 the inputs and output of @racket[bvmid] to be of type ``int''. In Rosette, we model finite precision
 (i.e., machine) integers as @seclink["sec:bitvectors"]{bitvectors} of length 32.
 
-@defs+int[#:eval rosette-eval
-((code:comment "int32? is a shorthand for the type (bitvector 32).")
- (define int32? (bitvector 32))
-
- (code:comment "int32 takes as input an integer literal and returns")
- (code:comment "the corresponding 32-bit bitvector value.")
- (define (int32 i)
-   (bv i int32?)))
-
- (code:line (int32? 1)         (code:comment "1 is not a 32-bit integer"))
- (code:line (int32? (int32 1)) (code:comment "but (int32 1) is."))
- (int32 1)]
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:comment "int32? is a shorthand for the type (bitvector 32).")
+(define int32? (bitvector 32))]
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:comment "int32 takes as input an integer literal and returns")
+(code:comment "the corresponding 32-bit bitvector value.")
+(define (int32 i)
+  (bv i int32?))]
+@examples[#:eval rosette-eval #:label #f 
+(code:line (int32? 1)         (code:comment "1 is not a 32-bit integer"))
+(code:line (int32? (int32 1)) (code:comment "but (int32 1) is."))
+(int32 1)]
 
 Bitvectors support the usual operations on machine integers, and we can use them to implement @racket[bvmid] as follows: 
 
-@defs+int[#:eval rosette-eval
-((code:comment "Returns the midpoint of the interval [lo, hi].") 
- (define (bvmid lo hi)              
-  (bvsdiv (bvadd lo hi) (int32 2))) (code:comment "(lo + hi) / 2"))]
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:comment "Returns the midpoint of the interval [lo, hi].") 
+(define (bvmid lo hi)  (code:comment "(lo + hi) / 2")            
+  (bvsdiv (bvadd lo hi) (int32 2)))]
 
 As the above implementation suggests, we intend the midpoint to be the mathematical
 integer @tt{mi = (lo + hi) / 2}, where @tt{/} stands for integer division. Assuming
@@ -187,18 +177,19 @@ that @tt{0 ≤ lo ≤ hi}, the midpoint @tt{mi} is fully characterized by two pr
 properties to define a generic correctness specification for any implementation of
 @racket[bvmid] as follows: 
 
-@defs+int[#:eval rosette-eval
-((define (check-mid impl lo hi)     (code:comment "Assuming that")
-   (assume (bvsle (int32 0) lo))    (code:comment "0 ≤ lo and")             
-   (assume (bvsle lo hi))           (code:comment "lo ≤ hi,") 
-   (define mi (impl lo hi))         (code:comment "and letting mi = impl(lo, hi) and") 
-   (define diff                     (code:comment "diff = (hi - mi) - (mi - lo),")
-     (bvsub (bvsub hi mi)             
-            (bvsub mi lo)))         (code:comment "we require that")
-   (assert (bvsle lo mi))           (code:comment "lo ≤ mi,")
-   (assert (bvsle mi hi))           (code:comment "mi ≤ hi,")
-   (assert (bvsle (int32 0) diff))  (code:comment "0 ≤ diff, and")
-   (assert (bvsle diff (int32 1)))) (code:comment "diff ≤ 1."))]
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:line
+(define (check-mid impl lo hi)     (code:comment "Assuming that")
+  (assume (bvsle (int32 0) lo))    (code:comment "0 ≤ lo and")             
+  (assume (bvsle lo hi))           (code:comment "lo ≤ hi,") 
+  (define mi (impl lo hi))         (code:comment "and letting mi = impl(lo, hi) and") 
+  (define diff                     (code:comment "diff = (hi - mi) - (mi - lo),")
+    (bvsub (bvsub hi mi)             
+           (bvsub mi lo)))         (code:comment "we require that")
+  (assert (bvsle lo mi))           (code:comment "lo ≤ mi,")
+  (assert (bvsle mi hi))           (code:comment "mi ≤ hi,")
+  (assert (bvsle (int32 0) diff))  (code:comment "0 ≤ diff, and")
+  (assert (bvsle diff (int32 1)))) (code:comment "diff ≤ 1."))]
 
 This is not the only way to specify the behavior of @racket[bvmid], and we will see an
 alternative specification later on. In general, there are many ways to describe what it
@@ -210,7 +201,7 @@ without fully defining its behavior. In our example, @racket[check-mid] is a
 Testing @racket[bvmid] against its specification on a few concrete legal inputs, we find
 that it triggers no assertion failures, as expected:
 
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f  
  (check-mid bvmid (int32 0) (int32 0))
  (check-mid bvmid (int32 0) (int32 1))
  (check-mid bvmid (int32 0) (int32 2))
@@ -225,15 +216,15 @@ that lurked for years in widely used C and Java implementations of binary search
 
 How can we check if @racket[bvmid] satisfies its specification on all legal inputs? One approach is to enumerate all pairs of 32-bit integers with @racket[0 ≤ lo ≤ hi] and apply @racket[(check-mid bvmid hi lo)] to each. This approach is sound (it is guaranteed to find a bug if one exists), but a quick calculation shows that it is impractical even for our toy example: @racket[bvmid] has roughly 2.3 × 10@superscript{18} legal inputs. A better approach is to delegate such checks to a constraint solver, which can search  large input spaces much more effectively than naive enumeration.  In Rosette, this is done with the help of the @racket[verify] query:
 
-@interaction[#:eval rosette-eval
-(define-symbolic l h int32?)
+@examples[#:eval rosette-eval #:label #f  
+(eval:no-prompt (define-symbolic l h int32?))
 (define cex (verify (check-mid bvmid l h)))
 cex] 
 
 The @racket[(verify #, @var[expr])] form queries the solver for a @deftech{binding} from symbolic constants to concrete values that causes the evaluation of @var[expr] to violate an assertion, while satisfying all the assumptions, when the bound symbolic constants are replaced with the corresponding concrete values. If such a binding exists, as it does in our case, it is called a @emph{counterexample}. 
 
 Bindings are first-class values in Rosette, and they can be freely manipulated by programs.  We can also interpret any Rosette value with respect to a binding using the built-in @racket[evaluate] procedure:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (define cl (evaluate l cex))
 (define ch (evaluate h cex))
 (list cl ch)
@@ -250,7 +241,7 @@ m
 (code:comment "Expressed as a 32-bit integer, the correct answer is:")
 (int32 (quotient (+ il ih) 2))
 (code:comment "So, check-mid fails on (bvmid cl ch):")
-(check-mid bvmid cl ch)]
+(eval:error (check-mid bvmid cl ch))]
 @(rosette-eval '(clear-vc!))
 
 In our example, evaluating @racket[l] and @racket[h] with respect to @racket[cex] reveals that @racket[bvmid] fails to return the correct midpoint value, thus causing the first assertion in the @racket[check-mid] procedure to fail. The bug is due to overflow:  
@@ -258,7 +249,7 @@ the expression @racket[(bvadd lo hi)] in @racket[bvmid] produces a negative valu
 the 32-bit representation when the sum of
 @racket[lo] and @racket[hi] exceeds 2@\superscript{31}-1.
 
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (bvadd cl ch)
 (bitvector->integer (bvadd cl ch))
 (+ il ih)
@@ -269,9 +260,10 @@ the 32-bit representation when the sum of
 A common  @hyperlink["https://en.wikipedia.org/wiki/Binary_search_algorithm#Implementation_issues"]{solution}
 to this problem is to calculate the midpoint as @tt{lo + ((hi - lo) / 2)}. It is easy to see that all intermediate values in this calculation are at most @racket[hi] when @racket[lo] and @racket[hi] are both non-negative, so no overflow can happen. We can also verify this with Rosette:
 
-@def+int[#:eval rosette-eval
-(define (bvmid-no-overflow lo hi)
-  (bvadd lo (bvsdiv (bvsub hi lo) (int32 2))))
+@examples[#:eval rosette-eval #:label #f 
+(eval:no-prompt
+ (define (bvmid-no-overflow lo hi)
+  (bvadd lo (bvsdiv (bvsub hi lo) (int32 2)))))
 
 (verify (check-mid bvmid-no-overflow l h))]
 
@@ -282,8 +274,10 @@ The solution given in @racket[bvmid-no-overflow] avoids the overflow problem in 
 
 The synthesis query uses the solver to search for a correct program in a space of candidate implementations defined by a syntactic @deftech{sketch}. A sketch is a program with @deftech[#:key "hole"]{holes}, which the solver fills with expressions drawn from a specified set of options. For example, @racket[(?? int32?)] stands for a hole that can be filled with any 32-bit integer constant, so the sketch @racket[(bvadd x (?? int32?))] represents all 2@superscript{32} programs that add a 32-bit constant to the variable @racket[x]. Rosette also lets you define richer holes that can be filled with expressions from a given grammar. For example, here is a grammar of all @racket[int32?] expressions that consist of cheap arithmetic and bitwise operations:
 
-@defs+int[#:eval rosette-eval
-((require rosette/lib/synthax)     (code:comment "Require the sketching library.")
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:line
+ (require rosette/lib/synthax)     (code:comment "Require the sketching library."))
+(code:line
  (define-grammar (fast-int32 x y)  (code:comment "Grammar of int32 expressions over two inputs:")
    [expr
     (choose x y (?? int32?)        (code:comment "<expr> := x | y | <32-bit integer constant> |")
@@ -298,11 +292,11 @@ The synthesis query uses the solver to search for a correct program in a space o
 
 Using this grammar, we can sketch a fast implementation of the midpoint calculation as follows:
 
-@defs+int[#:eval rosette-eval
-((eval:alts
+@examples[#:eval rosette-eval #:label #f #:no-prompt 
+(eval:alts
   (define (bvmid-fast lo hi)
     (fast-int32 lo hi #:depth 2))
-  (require (only-in "bvmid.rkt" bvmid-fast))))]
+  (require (only-in "bvmid.rkt" bvmid-fast)))]
 
 The above sketch describes the space of all expressions from the @racket[fast-int32] grammar that have parse trees of depth at most 2. The depth argument is optional. If ommitted, Rosette will use the value of the @racket[(current-grammar-depth)] parameter to bound the depth of the expressions drawn from the grammar.
 
@@ -310,7 +304,7 @@ At this point, it is worth noting that holes and sketches are not fundamental co
 
 With this in mind, we can query the solver for a completion of the @racket[bvmid-fast] sketch (if any) that satisfies our correctness specification:
 @(rosette-eval '(require (only-in racket syntax->datum)))
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
 (code:comment "Save the above definitions to a file before calling print-forms.")
 (define sol
   (synthesize
@@ -330,7 +324,7 @@ The synthesis query takes the form @racket[(synthesize #:forall #, @var[input] #
 Rosette supports one more solver-aided query, which we call angelic execution. This query is the dual of verification.  Given a program with symbolic values, it instructs the solver to find a binding for them that will cause the program to execute normally---that is, without any assumption or assertion failures. 
 
 Angelic execution can be used to solve puzzles, to run incomplete code, or to "invert" a program, by searching for inputs that produce a desired output.  For example, we can ask the solver to search for two distinct legal inputs, @racket[l] and @racket[h], whose midpoint is the bitwise-and of their bits: 
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (define (bvmid-fast lo hi)
   (bvlshr (bvadd hi lo) (bv #x00000001 32)))
 
@@ -348,9 +342,11 @@ sol
 (evaluate (bvmid-fast l h) sol)]
 As a fun exercise that builds on this result, try using program synthesis to discover the condition, @racket[(bvmid-and? l h)], that is both necessary and sufficient to ensure that @racket[bvand] and @racket[bvmid-fast] produce the same value on all distinct legal inputs @racket[l] and @racket[r]. (Hint: you can reuse the @racket[fast-int32] grammar from the previous section.)
 
-@defs+int[#:eval rosette-eval
-((define (bvmid-and? lo hi)
-  #f) (code:comment "<--- replace with your sketch"))
+@examples[#:eval rosette-eval #:label #f 
+(eval:no-prompt
+ (define (bvmid-and? lo hi)
+  #f (code:comment "<--- replace with your sketch\n")
+  ))
 
 (eval:alts
 (print-forms 
@@ -378,8 +374,9 @@ Rosette implements solver-aided queries by translating them to the input languag
 
 To illustrate the impact of mixing theories, consider the following mixed-theory specification for our midpoint example:
 
-@defs+int[#:eval rosette-eval
-((define (check-mid-slow impl lo hi)     (code:comment "Assuming that")        
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:line
+(define (check-mid-slow impl lo hi)      (code:comment "Assuming that")        
   (assume (bvsle (int32 0) lo))          (code:comment "0 ≤ lo and")                  
   (assume (bvsle lo hi))                 (code:comment "lo ≤ hi,")
   (assert                                (code:comment "we require that")
@@ -394,14 +391,14 @@ This new specification uses both bitvectors and integers. Compared to @racket[ch
 
 @(rosette-eval '(require (only-in racket error)))
 
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (time (verify (check-mid bvmid l h)))
 (time (verify (check-mid-slow bvmid l h)))
 (time (verify (check-mid bvmid-no-overflow l h)))
 (eval:alts
 (with-deep-time-limit 600 (code:comment "Timeout after 10 minutes ...")
   (verify (check-mid-slow bvmid-no-overflow l h)))
-(error 'call-with-deep-time-limit "out of time"))]
+(eval:error (error 'call-with-deep-time-limit "out of time")))]
 
 
 @subsection{Reasoning Precision}
@@ -409,7 +406,7 @@ This new specification uses both bitvectors and integers. Compared to @racket[ch
 While slower than bitvectors, integers are more convenient to use for demos, prototyping, and interfacing with Racket. To bridge this gap, Rosette provides the option of approximating symbolic integers (and reals) as bitvectors of length @var{k}, by setting the @racket[current-bitwidth] parameter to @var{k}. With this setting, integers (and reals) are treated as infinite precision values during evaluation, but when solving queries, they are translated to bitvectors of length @var{k} for better performance. 
 
 For example, our slow midpoint queries become orders-of-magnitude faster when allowed to approximate integers with bitvectors:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (code:comment "By default, current-bitwidth is set to #f, so Rosette translates")
 (code:comment "integer? values precisely, using the SMT theory of integers.")
 (current-bitwidth)
@@ -422,7 +419,7 @@ For example, our slow midpoint queries become orders-of-magnitude faster when al
 In this example, we have chosen @racket[current-bitwidth] carefully to ensure that the resulting approximation is both performant and sound---i.e., the approximate query returns a counterexample exactly when one would be returned by the corresponding integer query. But choosing the right bitwidth is difficult to do in general. If we underapproximate the number of bits that are needed to represent every integer value in a query, we lose soundness, and if we overapproximate it, we lose performance.
 
 For instance, when we re-run the slow midpoint queries with @racket[current-bitwidth] set to 32, the buggy query fails to produce a counterexample and the correct query returns a bogus counterexample.  Both results are correct for 32-bit machine integers but incorrect for (infinite-precision) mathematical integers:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (code:comment "The bitwidth is too low, so we get ...")
 (current-bitwidth 32) 
 (code:comment "no counterexample to a buggy query, and")
@@ -430,19 +427,21 @@ For instance, when we re-run the slow midpoint queries with @racket[current-bitw
 (code:comment "a bogus counterexample to a correct query.")
 (time (verify (check-mid-slow bvmid-no-overflow l h)))]
 We can restore soundness by sacrificing performance and setting @racket[current-bitwidth] conservatively to a large value (e.g., 512). In our case, the queries are small so an order-of-magnitude slowdown is acceptable. For large queries, this would lead to timeouts:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (code:comment "The bitwidth is too high, so we get a 3-10X slowdown.")
 (current-bitwidth 512) 
 (time (verify (check-mid-slow bvmid l h)))
 (time (verify (check-mid-slow bvmid-no-overflow l h)))]
 
 In practice, it is usually best to leave @racket[current-bitwidth] at its default setting (@racket[#f]), and limit the use of integers to code that will be evaluated concretely. This approach works especially well when the solver is configured to accept only bitvectors, so if any integers have made it into a query, the solver fails fast:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (current-bitwidth #f)
 (require rosette/solver/smt/z3)
 (code:line (current-solver (z3 #:logic 'QF_BV))       (code:comment "Allow only bitvectors."))
 (code:line (time (verify (check-mid bvmid l h)))      (code:comment "Accepted."))
-(code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Rejected."))]
+(eval:alts
+(code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Rejected."))
+(eval:error (time (verify (check-mid-slow bvmid l h)))))]
 
 @(rosette-eval '(clear-vc!))
 @(rosette-eval '(current-solver (z3)))
@@ -454,8 +453,9 @@ The process by which Rosette turns a query into an SMT constraint is called @def
 First, if a program is slow or runs forever under standard (concrete) evaluation, it will perform at least as poorly under all-path (symbolic) evaluation. Second, if a program terminates quickly on all concrete inputs, it can still perform poorly or fail to terminate on symbolic inputs. So, extra care must be taken to ensure good performance and termination in the presence of symbolic values. 
 
 To illustrate, consider the procedure @racket[bvsqrt] for computing the @hyperlink["https://en.wikipedia.org/wiki/Integer_square_root#Using_bitwise_operations"]{integer square root} of non-negative 32-bit integers. This procedure terminates on all concrete values of @racket[n] but runs forever when given a symbolic input:
-@defs+int[#:eval rosette-eval
-((define (bvsqrt n)
+@examples[#:eval rosette-eval #:label #f
+(eval:no-prompt
+ (define (bvsqrt n)
   (cond
     [(bvult n (int32 2)) n]
     [else
@@ -469,9 +469,9 @@ To illustrate, consider the procedure @racket[bvsqrt] for computing the @hyperli
 (eval:alts
 (with-deep-time-limit 10 (code:comment "Timeout after 10 seconds ...")
   (bvsqrt l))
-(error 'call-with-deep-time-limit "out of time"))]
+(eval:error (error 'call-with-deep-time-limit "out of time")))]
 The reason is simple: a call to @racket[bvsqrt] terminates when @racket[n] becomes less than 2. But if we start with a symbolic @racket[n], this never happens because Rosette right-shifts @racket[n] by 2 in each recursive call to generate a new symbolic value:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
 (define n l)
 n
 (define n (bvlshr n (int32 2)))      
@@ -485,10 +485,11 @@ In general, recursion terminates under symbolic evaluation only when the stoppin
 We can force termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. The following code shows how to implement a @emph{sound} finitization policy. If a @racket[verify] query returns @racket[(unsat)] under a sound policy, we know that (1) the unrolling bound @var{k} is sufficient to execute all possible inputs to  @racket[bvsqrt], and (2) all of these executions satisfy the query. If we pick a bound that is too small, the query will generate a counterexample input that needs a larger bound to compute the result. In our example, the bound of 16 is sufficient to verify the correctness of @racket[sqrt] on all inputs: 
 @(rosette-eval '(clear-vc!))
 @(rosette-eval '(require (only-in racket make-parameter parameterize)))
-@defs+int[#:eval rosette-eval
-((define fuel   
-  (make-parameter 5)) (code:comment "Default finitization limit.")
- 
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(code:comment "Parameter that controls the number of unrollings (5 by default).")  
+(define fuel (make-parameter 5)) 
+
+(eval:no-prompt)
 (code:comment "A simple macro for defining bounded procedures")
 (code:comment "that use (fuel) to limit recursion.")
 (define-syntax-rule
@@ -498,6 +499,7 @@ We can force termination by placing a concrete bound @var{k} on the number of ti
     (parameterize ([fuel (sub1 (fuel))])
       body ...)))
 
+(eval:no-prompt)
 (code:comment "Computes bvsqrt taking at most (fuel) steps.")
 (define-bounded (bvsqrt n) 
   (cond
@@ -507,16 +509,20 @@ We can force termination by placing a concrete bound @var{k} on the number of ti
      (define s1 (bvadd s0 (int32 1)))
      (if (bvugt (bvmul s1 s1) n) s0 s1)]))
 
+(eval:no-prompt)
+(code:comment "Correctness specification for bvsqrt:")
+(code:line
 (define (check-sqrt impl n)
   (assume (bvsle (int32 0) n))          (code:comment "Assuming n ≥ 0,")
   (define √n (impl l))                 
   (define √n+1 (bvadd √n (int32 1)))    (code:comment "we require that")
   (assert (bvule (bvmul √n √n) n))      (code:comment "(√n)^2 ≤ n and")
-  (assert (bvult n (bvmul √n+1 √n+1)))) (code:comment "n < (√n + 1)^2."))
+  (assert (bvult n (bvmul √n+1 √n+1)))) (code:comment "n < (√n + 1)^2."))]
 
+@examples[#:eval rosette-eval #:label #f
 (code:comment "Verification fails due to insufficient fuel.")
 (define cex (time (verify (check-sqrt bvsqrt l))))
-(bvsqrt (evaluate l cex))
+(eval:error (bvsqrt (evaluate l cex)))
 (clear-vc!)
 (code:comment "Verification succeeds with enough fuel.")
 (fuel 16)
