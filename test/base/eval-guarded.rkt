@@ -9,7 +9,7 @@
          (only-in rosette/base/form/define define-symbolic)
          (only-in rosette/base/core/bool
                   @boolean? @true? && || ! => <=>
-                  vc vc-clear! with-vc merge-vc!
+                  vc vc-clear! with-vc vc-merge!
                   $assume $assert @assume @assert
                   vc-true vc-true?
                   spec-assumes spec-asserts)
@@ -125,10 +125,10 @@
   (check-vc-and-cell #t #t x 4)
   (check-equal? (eval-guarded! (list #t #f) (list (λ-set 4) (λ-set-err 3))) 4)
   (check-vc-and-cell #t #t x 4)
-  (check-exn exn:fail:svm:assume:core? ; fails during merge-vc!
+  (check-exn exn:fail:svm:assume:core? ; fails during vc-merge!
      (thunk (eval-guarded! (list #t #f) (list (λ-set-assume 2 #f) (λ-set 3)))))
   (check-vc-and-cell #f #t x 1)
-  (check-exn exn:fail:svm:assert:core? ; fails during merge-vc!
+  (check-exn exn:fail:svm:assert:core? ; fails during vc-merge!
      (thunk (eval-guarded! (list #t #f) (list (λ-set-assert 2 #f) (λ-set 3)))))
   (check-vc-and-cell #t #f x 1)
   (check-equal? (eval-guarded! (list #t #f) (list (λ-set-assume 4 g) (λ-set-err 3))) 4)
@@ -150,10 +150,10 @@
   (check-vc-and-cell #t (! g) x 3)
   (check-equal? (eval-guarded! (list g !g) (list (λ-set-err 2) (λ-set 3 2))) 2)
   (check-vc-and-cell #t (! g) x 3)
-  (check-exn exn:fail:svm:assume:core? ; fails during merge-vc!
+  (check-exn exn:fail:svm:assume:core? ; fails during vc-merge!
     (thunk (eval-guarded! (list g !g) (list (λ-set-assume 2 #f) (λ-set-assume 3 #f)))))
   (check-vc-and-cell #f #t x 1)
-  (check-exn exn:fail:svm:assert:core? ; fails during merge-vc!
+  (check-exn exn:fail:svm:assert:core? ; fails during vc-merge!
     (thunk (eval-guarded! (list g !g) (list (λ-set-assert 2 #f) (λ-set-assert 3 #f)))))
   (check-vc-and-cell #t #f x 1)
   (check-exn exn:fail:svm:merge? 

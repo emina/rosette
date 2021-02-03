@@ -9,7 +9,7 @@
  and-&& or-|| instance-of? T*->boolean?
  ;; ---- VC generation ---- ;;       
  @assert @assume $assert $assume
- (rename-out [get-vc vc]) vc-clear! with-vc merge-vc!
+ (rename-out [get-vc vc]) vc-clear! with-vc vc-merge!
  spec? spec-assumes spec-asserts
  vc-true vc-true?)
 
@@ -363,7 +363,7 @@
 ; * at most one of the given guards is true in any model,
 ; * (spec-assumes specs[i]) => (spec-assumes (vc)) for all i, and 
 ; * (spec-asserts specs[i]) => (spec-asserts (vc)) for all i.
-(define (merge-vc! guards specs)
+(define (vc-merge! guards specs)
   (unless (null? specs)
     (define specm
       (spec (merge-field spec-assumes (vc) guards specs)
