@@ -11,16 +11,15 @@
 ; and returns the result. This result takes one of two forms.
 ;
 ; If the evaluation of the thunk terminates normally, the result
-; is (ans (ans v st) sp) where v is the value computed by the
+; is (ans (ans v st) vc*) where v is the value computed by the
 ; thunk, st captures all stores mutations performed during evaluation,
-; and sp captures the verification condition generated during the
+; and vc* captures the verification condition generated during the
 ; evaluation, starting from the current vc.
 ;
-; If the thunk terminates abnormally, the result is (halt ex sp),
+; If the thunk terminates abnormally, the result is (halt ex vc*),
 ; where ex is an exn:fail:svm? exception that represents the cause
-; of the abnormal termination, and s is the specification
-; (i.e., assumes and asserts) generated during the evaluation, starting
-; from the current vc.
+; of the abnormal termination, and vc* captures the verification
+; condition generated during the evaluation, starting from the current vc.
 ;
 ; Neither the current store nor the current vc are modified after
 ; eval-assuming returns.
@@ -31,7 +30,7 @@
         (with-store (thunk)))))
 
 ; Takes as input a list of n guards and n thunks, evaluates each thunk
-; under its guard using eval-assuming, merges the resulting specs into
+; under its guard using eval-assuming, merges the resulting vcs into
 ; the current vc, merges the resulting stores (if any) into the current
 ; store, and merges the resulting values (if any) before returning them
 ; as output. If all of the thunks fail under their guards, eval-guarded
@@ -43,7 +42,7 @@
 ; (2) For all models m under which (vc) evaluates to vc-true, there is
 ; exactly one guard in guards that evaluates to #t under m.
 ; (3) For all models m under which (vc) doesn't evaluate to vc-true,
-; every spec produced by evaluating the given thunks evaluates to
+; every vc produced by evaluating the given thunks evaluates to
 ; the same spec as (vc) under m.
 (define (eval-guarded! guards thunks)
   (define results (map eval-assuming guards thunks))
