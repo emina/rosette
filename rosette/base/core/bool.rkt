@@ -9,7 +9,7 @@
  and-&& or-|| instance-of? T*->boolean?
  ;; ---- VC generation ---- ;;       
  @assert @assume $assert $assume
- (rename-out [get-vc vc]) vc-clear! with-vc vc-merge!
+ (rename-out [vc-get vc]) vc-clear! with-vc vc-merge!
  spec? spec-assumes spec-asserts
  vc-true vc-true?)
 
@@ -313,7 +313,7 @@
             (lambda (v) (unless (spec? v) (raise-argument-error 'vc "spec?" v)) v)))
 
 ; Returns the current vc, without exposing the parameter outside the module. 
-(define (get-vc) (vc))
+(define (vc-get) (vc))
 
 ; Clears the current vc by setting it to the true spec.
 (define (vc-clear!) (vc vc-true))
