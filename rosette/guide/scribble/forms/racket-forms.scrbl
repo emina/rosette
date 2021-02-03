@@ -2,7 +2,7 @@
 
 @(require (for-label rosette/base/form/define)
           (for-label racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/examples racket/sandbox
           "../util/lifted.rkt")
 
 
@@ -58,7 +58,7 @@ Rosette lifts the following @seclink["syntax" #:doc '(lib "scribblings/reference
       (list @elem{Syntax Quoting} @syntax-quoting))]
 
 Lifted forms have the same meaning in Rosette programs as they do in Racket programs. For example, the Racket expression @racket[(if #, @var[test-expr] #, @var[then-expr] #, @var[else-expr])] evaluates @var[test-expr] first and then, depending on the outcome, it returns the result of evaluating either @var[then-expr] or @var[else-expr]. Rosette preserves this interpretation of @racket[if] for concrete values, and also extends it to work with symbolic values:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f
  (let ([y 0])
    (if #t (void) (set! y 3))
    (printf "y unchanged: ~a\n" y)

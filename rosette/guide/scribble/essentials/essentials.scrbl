@@ -4,7 +4,6 @@
           (for-label  
            rosette/base/form/define
            (only-in rosette/base/base assert assume vc spec-asserts spec-assumes clear-vc!)
-           (only-in rosette/solver/smt/boolector boolector)
            rosette/query/query  
            (only-in rosette/base/base bv? bitvector
                     bvsdiv bvadd bvsle bvsub bvand
