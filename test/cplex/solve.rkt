@@ -9,7 +9,7 @@
 (define solver (cplex))
 (current-solver solver)
 
-(define (asserts) (list (spec-assumes (vc)) (spec-asserts (vc))))
+(define (asserts) (list (vc-assumes (vc)) (vc-asserts (vc))))
 
 (define basic-tests
   (test-suite+ "Solve basic tests."

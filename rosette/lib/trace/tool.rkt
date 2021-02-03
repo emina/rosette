@@ -64,8 +64,8 @@
 (define reporter
   (match-lambda*
     [(list 'exception (halt e s))
-     (define assumes (spec-assumes s))
-     (define asserts (spec-asserts s))
+     (define assumes (vc-assumes s))
+     (define asserts (vc-asserts s))
      (define skip?
        (or (exn:fail:svm:merge? e)
            ;; We skip exn:fail:svm:merge? because we already present data of

@@ -12,12 +12,12 @@
                   vc vc-clear! with-vc vc-merge!
                   $assume $assert @assume @assert
                   vc-true vc-true?
-                  spec-assumes spec-asserts)
+                  vc-assumes vc-asserts)
          (only-in rosette/base/core/real @integer? @= @<)
          (only-in rosette/base/core/merge merge merge*))
 
-(define (spec-eqv? actual assumes asserts)
-  (unsat? (solve (! (&&  (<=> (spec-assumes actual) assumes) (<=> (spec-asserts actual) asserts))))))
+(define (vc-eqv? actual assumes asserts)
+  (unsat? (solve (! (&&  (<=> (vc-assumes actual) assumes) (<=> (vc-asserts actual) asserts))))))
 
 (define (int-eqv? actual expected)
   (unsat? (solve (! (@= actual expected)))))
@@ -27,13 +27,13 @@
     (match-define (ans (ans v st) sp) actual)
     (check-equal? v e-val)
     (check-store st e-store)
-    (check-true (spec-eqv? sp e-assumes e-asserts))))
+    (check-true (vc-eqv? sp e-assumes e-asserts))))
 
 (define-syntax-rule (check-halt actual e-exn? e-assumes e-asserts)
   (begin
     (match-define (halt ex sp) actual)
     (check-pred e-exn? ex) 
-    (check-true (spec-eqv? sp e-assumes e-asserts))))
+    (check-true (vc-eqv? sp e-assumes e-asserts))))
 
 (define (check-eval-assuming)
   (define-symbolic g a b @boolean?)

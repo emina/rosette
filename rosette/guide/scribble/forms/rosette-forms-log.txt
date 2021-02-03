@@ -166,7 +166,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((define-symbolic x boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -180,7 +180,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t x)"))))
+  (c values c (0 (u . "#(struct:vc #t x)"))))
  #""
  #"")
 ((assert #f "bad value")
@@ -196,7 +196,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #f)"))))
+  (c values c (0 (u . "#(struct:vc #t #f)"))))
  #""
  #"")
 ((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -209,7 +209,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((vc)
@@ -221,7 +221,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((assume #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -235,7 +235,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((define-symbolic x boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -249,7 +249,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec x #t)"))))
+  (c values c (0 (u . "#(struct:vc x #t)"))))
  #""
  #"")
 ((assume #f "bad value")
@@ -265,7 +265,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #f #t)"))))
+  (c values c (0 (u . "#(struct:vc #f #t)"))))
  #""
  #"")
 ((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -278,7 +278,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((define-symbolic a b c d boolean?)
@@ -294,7 +294,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((verify (assert a))
@@ -318,7 +318,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -332,7 +332,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec a (|| b (! a)))"))))
+  (c values c (0 (u . "#(struct:vc a (|| b (! a)))"))))
  #""
  #"")
 ((verify (begin (assume c) (assert d)))
@@ -356,7 +356,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec a (|| b (! a)))"))))
+  (c values c (0 (u . "#(struct:vc a (|| b (! a)))"))))
  #""
  #"")
 ((verify (assert a))
@@ -381,7 +381,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((verify (assert a))
@@ -407,7 +407,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((synthesize
@@ -435,7 +435,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((assume (odd? x)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -448,7 +448,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec (! (= 0 (remainder x 2))) #t)"))))
+  (c values c (0 (u . "#(struct:vc (! (= 0 (remainder x 2))) #t)"))))
  #""
  #"")
 ((synthesize #:forall (list x) #:guarantee (assert (odd? (+ x c))))
@@ -472,7 +472,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec (! (= 0 (remainder x 2))) #t)"))))
+  (c values c (0 (u . "#(struct:vc (! (= 0 (remainder x 2))) #t)"))))
  #""
  #"")
 ((synthesize
@@ -501,7 +501,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((synthesize
@@ -532,7 +532,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec x #t)"))))
+  (c values c (0 (u . "#(struct:vc x #t)"))))
  #""
  #"")
 ((solve (assert y))
@@ -556,7 +556,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec x #t)"))))
+  (c values c (0 (u . "#(struct:vc x #t)"))))
  #""
  #"")
 ((solve (assert (not x)))
@@ -581,7 +581,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#(struct:spec #t #t)"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
 ((solve (assert (not x)))

@@ -406,9 +406,9 @@
          [v expected-value]
          [a (apply && expected-asserts)])
     (check-equal? (result-value r) v)
-    (check-equal? (spec-assumes (result-state r)) #t)
-    (or (equal? (spec-asserts (result-state r)) a)
-        (check-pred unsat? (solve (! (<=> (spec-asserts (result-state r)) a)))))))
+    (check-equal? (vc-assumes (result-state r)) #t)
+    (or (equal? (vc-asserts (result-state r)) a)
+        (check-pred unsat? (solve (! (<=> (vc-asserts (result-state r)) a)))))))
 
 (define-syntax check-bv-exn
   (syntax-rules ()

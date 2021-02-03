@@ -2,7 +2,7 @@
 
 (require rackunit rackunit/text-ui (rename-in rackunit [check-exn rackunit/check-exn])
          rosette/lib/roseunit (only-in rosette/base/core/merge merge*))
-(require (only-in rosette/base/core/bool spec-assumes spec-asserts) )
+(require (only-in rosette/base/core/bool vc-assumes vc-asserts) )
 
 (define-symbolic z (bitvector 1))
 (define-symbolic x u (bitvector 4))
@@ -19,13 +19,13 @@
   (let ([ra (with-vc actual)]
         [re (with-vc expected)])
     (check-pred unsat?
-                (verify (assert (equal? (spec-assumes (result-state ra))
-                                        (spec-assumes (result-state re))))))
+                (verify (assert (equal? (vc-assumes (result-state ra))
+                                        (vc-assumes (result-state re))))))
     (check-pred unsat?
-                (verify (assert (equal? (spec-asserts (result-state ra))
-                                        (spec-asserts (result-state re))))))
+                (verify (assert (equal? (vc-asserts (result-state ra))
+                                        (vc-asserts (result-state re))))))
     (check-pred unsat?
-                (verify (begin (assume (&& (spec-assumes (result-state ra)) (spec-asserts (result-state ra))))
+                (verify (begin (assume (&& (vc-assumes (result-state ra)) (vc-asserts (result-state ra))))
                                (assert (equal? (result-value ra) (result-value re))))))))
 
 

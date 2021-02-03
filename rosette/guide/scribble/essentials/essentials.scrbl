@@ -3,7 +3,7 @@
 @(require (for-label racket (only-in racket/sandbox with-deep-time-limit))
           (for-label  
            rosette/base/form/define
-           (only-in rosette/base/base assert assume vc spec-asserts spec-assumes vc-clear!)
+           (only-in rosette/base/base assert assume vc vc-asserts vc-assumes vc-clear!)
            rosette/query/query  
            (only-in rosette/base/base bv? bitvector
                     bvsdiv bvadd bvsle bvsub bvand
@@ -111,11 +111,11 @@ Like many languages, Rosette provides a construct for expressing @emph{assertion
 When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, the value is accumulated in the current @tech[#:key "vc"]{verification condition} (VC), and the assertion's effect (whether it passes or fails) is eventually determined by the solver.
 
 @examples[#:eval rosette-eval #:label #f
-(code:line (spec-asserts (vc)) (code:comment "We asserted #f above, so the current VC reflects that."))
-(code:line (vc-clear!)         (code:comment "Clear the current VC."))
-(spec-asserts (vc))
-(code:line (assert (not b))    (code:comment "Add the assertion (not b) to the VC."))
-(spec-asserts (vc))
+(code:line (vc-asserts (vc)) (code:comment "We asserted #f above, so the current VC reflects that."))
+(code:line (vc-clear!)       (code:comment "Clear the current VC."))
+(vc-asserts (vc))
+(code:line (assert (not b))  (code:comment "Add the assertion (not b) to the VC."))
+(vc-asserts (vc))
 (vc-clear!)]
 
 Assertions express properties that a program must satisfy on all @emph{legal} inputs. In Rosette, as in other solver-aided frameworks, we use @emph{assumptions} to describe which inputs are legal. If a program violates an assertion on a legal input, we blame the program. But if it violates an assertion on an illegal input, we blame the caller. In other words, a program is considered incorrect only when it violates an assertion on a legal input.
@@ -124,17 +124,17 @@ Assumptions behave analogously to assertions on both concrete and symbolic value
 
 @examples[#:eval rosette-eval #:label #f
 (assume #t)
-(spec-assumes (vc))
+(vc-assumes (vc))
 (eval:alts
  (code:line (assume #f)         (code:comment "Assuming #f aborts the execution with an exception."))
  (eval:error (assume #f)))
-(spec-assumes (vc))
+(vc-assumes (vc))
 (vc-clear!)
 (define-symbolic i j integer?)
 (code:line (assume (> j 0))     (code:comment "Add the assumption (> j 0) to the VC."))
-(spec-assumes (vc))
+(vc-assumes (vc))
 (assert (< (- i j) i))
-(code:line (spec-asserts (vc))  (code:comment "The assertions must hold when the assumptions hold."))
+(code:line (vc-asserts (vc))    (code:comment "The assertions must hold when the assumptions hold."))
 (code:line (pretty-print (vc))  (code:comment "VC tracks the assumptions and the assertions."))]
 
 @(rosette-eval '(vc-clear!))

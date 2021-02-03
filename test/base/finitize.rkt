@@ -35,7 +35,7 @@
 
 (define-syntax-rule (finitize/solve bw constraint ...)
   (let* ([terms (result-state (with-vc (begin (@assert constraint) ...)))]
-         [terms (list (spec-assumes terms) (spec-asserts terms))]
+         [terms (list (vc-assumes terms) (vc-asserts terms))]
          [fmap (finitize terms bw)]
          [fsol (apply solve (map (curry hash-ref fmap) terms))])
     (lift-solution fsol fmap)))

@@ -5,7 +5,7 @@
   (only-in "program.rkt" trace* trace-args trace-out well-formed-program well-formed-trace)
   rosette/query/eval "log.rkt"
   (only-in rosette/base/core/term term? constant? get-type term-cache term<?)
-  (only-in rosette/base/core/bool ! || && => with-vc spec-assumes spec-asserts)
+  (only-in rosette/base/core/bool ! || && => with-vc vc-assumes vc-asserts)
   (only-in rosette/base/core/result result-state)
   (only-in rosette/base/core/real @integer?)
   (only-in rosette/base/core/bitvector bitvector bitvector-size)
@@ -93,8 +93,8 @@
             [(unsat? cex) candidate]
             [else (loop (guess cex))]))])))
 
-(define (normal? sp) (list (spec-assumes sp) (spec-asserts sp)))
-(define (crash? sp)  (list (spec-assumes sp) (! (spec-asserts sp))))
+(define (normal? sp) (list (vc-assumes sp) (vc-asserts sp)))
+(define (crash? sp)  (list (vc-assumes sp) (! (vc-asserts sp))))
 
 (define (φ_synth trace spec) ;(printf "φ_synth: ~a\n" trace)
   `(,@(normal? (φ_wft trace)) ,@(normal? (φ_spec trace spec))))

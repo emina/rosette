@@ -3,14 +3,14 @@
 (require "core.rkt" 
          (only-in "../base/core/reflect.rkt" symbolics)
          (only-in "../base/core/result.rkt" result-state)
-         (only-in "../base/core/bool.rkt" ! vc with-vc spec-assumes spec-asserts vc-true))
+         (only-in "../base/core/bool.rkt" ! vc with-vc vc-assumes vc-asserts vc-true))
 
 (provide solve verify synthesize optimize
          current-solver (rename-out [∃-solve+ solve+]))
 
 (define (pre)
   (define s (vc))
-  (list (spec-assumes s) (spec-asserts s)))
+  (list (vc-assumes s) (vc-asserts s)))
 
 (define-syntax-rule (query-vc expr)
   (result-state (with-vc vc-true expr)))
@@ -24,7 +24,7 @@
 ; (vc) is unchanged after solve returns.
 (define-syntax-rule (solve expr)
   (let ([post (query-vc expr)])
-    (∃-solve `(,@(pre) ,(spec-assumes post) ,(spec-asserts post)))))
+    (∃-solve `(,@(pre) ,(vc-assumes post) ,(vc-asserts post)))))
                
 
 ; The (verify expr) query evaluates expr, gathers all 
@@ -38,7 +38,7 @@
 ; verify returns.
 (define-syntax-rule (verify expr)
   (let ([post (query-vc expr)])
-    (∃-solve `(,@(pre) ,(spec-assumes post) ,(! (spec-asserts post))))))
+    (∃-solve `(,@(pre) ,(vc-assumes post) ,(! (vc-asserts post))))))
 
 ; The (synthesize vars expr) query evaluates the given forms, gathers all  
 ; assumptions and assertions generated during the evaluation, 
@@ -56,7 +56,7 @@
     [(_ #:forall inputs #:guarantee expr)
      (let ([vars (symbolics inputs)] ; evaluate inputs first to add their spec to (vc)
            [post (query-vc expr)])
-       (∃∀-solve vars `(,@(pre) ,(spec-assumes post)) `(,(spec-asserts post))))]
+       (∃∀-solve vars `(,@(pre) ,(vc-assumes post)) `(,(vc-asserts post))))]
     [(_ inputs expr)
      (synthesize #:forall inputs #:guarantee expr)]))
 
@@ -75,9 +75,9 @@
     [(_ kw opt #:guarantee expr)
      (let ([obj opt]    ; evaluate objective first to add its spec to (vc)
            [post (query-vc expr)])
-       (∃-solve `(,@(pre) ,(spec-assumes post) ,(spec-asserts post)) kw obj))]
+       (∃-solve `(,@(pre) ,(vc-assumes post) ,(vc-asserts post)) kw obj))]
     [(_ kw1 opt1 kw2 opt2 #:guarantee expr)
      (let ([obj1 opt1]  ; evaluate objectives first to add their spec to (vc)
            [obj2 opt2]
            [post (query-vc expr)])  
-       (∃-solve `(,@(pre) ,(spec-assumes post) ,(spec-asserts post)) kw1 obj1 kw2 obj2))]))
+       (∃-solve `(,@(pre) ,(vc-assumes post) ,(vc-asserts post)) kw1 obj1 kw2 obj2))]))

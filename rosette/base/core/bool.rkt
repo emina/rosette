@@ -9,8 +9,8 @@
  and-&& or-|| instance-of? T*->boolean?
  ;; ---- VC generation ---- ;;       
  @assert @assume $assert $assume
- (rename-out [vc-get vc]) vc-clear! with-vc vc-merge!
- spec? spec-assumes spec-asserts
+ (rename-out [vc-get vc]) vc-clear! vc-merge! with-vc 
+ vc? vc-assumes vc-asserts
  vc-true vc-true?)
 
 ;; ----------------- Boolean type ----------------- ;; 
@@ -287,36 +287,38 @@
 
 ;; ----------------- VC generation ----------------- ;;
 
-; A spec consists of two (symbolic or concrete) @boolean?
-; values representing the assumptions and assertions issued
-; so far. A spec is legal if at least one of its assumes or
-; asserts is true under all models.
-(struct spec (assumes asserts) #:transparent)
+; A verification condition (VC) consists of two @boolean?
+; values representing assumptions and assertions issued
+; during execution. A VC is legal if at least one of its
+; constituent fields is true under all models.
 
-; The true (top) spec.
-(define vc-true (spec #t #t))
+(struct vc (assumes asserts) #:transparent)
+
+; The true verification condition.
+(define vc-true (vc #t #t))
 
 (define (vc-true? s) (equal? s vc-true))
 
-; Returns (spec (s.assumes && (s.asserts => g) s.asserts). 
+; Returns (vc (s.assumes && (s.asserts => g)) s.asserts). 
 (define (assuming s g)  ; g must be a symbolic or concrete boolean
-  (spec (&& (spec-assumes s) (=> (spec-asserts s) g)) (spec-asserts s)))
+  (vc (&& (vc-assumes s) (=> (vc-asserts s) g)) (vc-asserts s)))
 
-; Returns (spec s.assumes (s.asserts && (s.assumes => g))). 
+; Returns (vc s.assumes (s.asserts && (s.assumes => g))). 
 (define (asserting s g) ; g must be a symbolic or concrete boolean 
-  (spec (spec-assumes s) (&& (spec-asserts s) (=> (spec-assumes s) g))))
+  (vc (vc-assumes s) (&& (vc-asserts s) (=> (vc-assumes s) g))))
 
-; The vc parameter keeps track of the current verification condition,
-; which is an instance of spec?. The default vc is the true spec.
-(define vc (make-parameter
-            vc-true
-            (lambda (v) (unless (spec? v) (raise-argument-error 'vc "spec?" v)) v)))
+; The current-vc parameter keeps track of the current verification condition,
+; which is an instance of vc?. The default value for this parameter is vc-true.
+(define current-vc
+  (make-parameter
+   vc-true
+   (lambda (v) (unless (vc? v) (raise-argument-error 'vc "vc?" v)) v)))
 
 ; Returns the current vc, without exposing the parameter outside the module. 
-(define (vc-get) (vc))
+(define (vc-get) (current-vc))
 
 ; Clears the current vc by setting it to the true spec.
-(define (vc-clear!) (vc vc-true))
+(define (vc-clear!) (current-vc vc-true))
 
 ; Returns #t if x && (g => y) is equivalent to x according to the embedded
 ; rewrite rules. Otherwise returns #f.
@@ -355,48 +357,48 @@
 ;     (apply && gs=>ys)]
 ;    [_ (apply && xf gs=>ys)]))
 
-; Takes as input a list of n guards and n specs and sets the current vc
-; to (vc) && (spec-guard guard1 specs1) && ... && (spec-guard guardn specn).
-; Then, it checks if either the assumes or the asserts of the resulting spec
+; Takes as input a list of n guards and n vcs and sets the current vc
+; to (current-vc) && (vc-guard guard1 vc1) && ... && (vc-guard guardn vcn).
+; Then, it checks if either the assumes or the asserts of the resulting vc
 ; are false? and if so, throws either an exn:fail:svm:assume? or
 ; exn:fail:svm:assert? exception. This procedure makes the following assumptions:
 ; * at most one of the given guards is true in any model,
-; * (spec-assumes specs[i]) => (spec-assumes (vc)) for all i, and 
-; * (spec-asserts specs[i]) => (spec-asserts (vc)) for all i.
-(define (vc-merge! guards specs)
-  (unless (null? specs)
-    (define specm
-      (spec (merge-field spec-assumes (vc) guards specs)
-            (merge-field spec-asserts (vc) guards specs)))
-    (vc specm)
-    (when (false? (spec-assumes specm))
+; * (vc-assumes specs[i]) => (vc-assumes (current-vc)) for all i, and 
+; * (vc-asserts specs[i]) => (vc-asserts (current-vc)) for all i.
+(define (vc-merge! guards vcs)
+  (unless (null? vcs)
+    (define vc*
+      (vc (merge-field vc-assumes (current-vc) guards vcs)
+          (merge-field vc-asserts (current-vc) guards vcs)))
+    (current-vc vc*)
+    (when (false? (vc-assumes vc*))
       (raise-exn:fail:svm:assume:core "contradiction"))
-    (when (false? (spec-asserts specm))
+    (when (false? (vc-asserts vc*))
       (raise-exn:fail:svm:assert:core "contradiction"))))
 
-; Sets the current vc to (spec-proc (vc) g) where g is (@true? val).
-; If g is #f or the resulting vc's spec-field value is #f,
+; Sets the current vc to (vc-proc (current-vc) g) where g is (@true? val).
+; If g is #f or the resulting vc's vc-field value is #f,
 ; uses raise-exn throws an exn:fail:svm exception. 
-(define-syntax-rule (vc-set! val msg spec-proc spec-field raise-exn)
+(define-syntax-rule (vc-set! val msg vc-proc vc-field raise-exn)
   (let* ([guard (@true? val)]
-         [specg (spec-proc (vc) guard)])
-    (vc specg)
+         [vc* (vc-proc (current-vc) guard)])
+    (current-vc vc*)
     (when (false? guard)
       (raise-exn msg))
-    (when (false? (spec-field specg))
+    (when (false? (vc-field vc*))
       (raise-exn "contradiction"))))
 
-; Sets the current vc to (asserting (vc) g) where g is (@true? val).
+; Sets the current vc to (asserting (current-vc) g) where g is (@true? val).
 ; If g is #f or the resulting vc's asserts field is #f, throws an
 ; exn:fail:svm:assert exception of the given kind.  
 (define-syntax-rule (vc-assert! val msg raise-kind)
-  (vc-set! val msg asserting spec-asserts raise-kind))
+  (vc-set! val msg asserting vc-asserts raise-kind))
 
-; Sets the current vc to (assuming (vc) g) where g is (@true? val).
+; Sets the current vc to (assuming (current-vc) g) where g is (@true? val).
 ; If g is #f or the resulting vc's assumes field is #f, throws an
 ; exn:fail:svm:assume exception of the given kind. 
 (define-syntax-rule (vc-assume! val msg raise-kind)
-  (vc-set! val msg assuming spec-assumes raise-kind))
+  (vc-set! val msg assuming vc-assumes raise-kind))
 
 ; The $assert form has three variants: ($assert val), ($assert val msg),
 ; and ($assert val msg kind), where val is the value being asserted, msg
@@ -406,7 +408,7 @@
 ; The first two variants of this form are used for issuing assertions from
 ; within the Rosette core. The third variant is used to implement the @assert
 ; form that is exposed to user code. An $assert call modifies the current vc to
-; reflect the issued assertion. If the issued assertion or the spec-assert of the
+; reflect the issued assertion. If the issued assertion or the vc-assert of the
 ; current vc reduce to #f, the call throws an exception of the given kind after
 ; updating the vc.
 (define-syntax ($assert stx)
@@ -442,38 +444,37 @@
     [(_ val msg) (syntax/loc stx ($assume val msg raise-exn:fail:svm:assume:user))]))
 
 (define (halt-svm ex)
-  (define result (halt ex (vc)))
+  (define result (halt ex (current-vc)))
   ((current-reporter) 'exception result)
   result)
 
 (define (halt-err ex) ; Treat an exn:fail? error as an assertion failure.
   (define result
     (halt (make-exn:fail:svm:assert:err (exn-message ex) (exn-continuation-marks ex))
-          (asserting (vc) #f)))
+          (asserting (current-vc) #f)))
   ((current-reporter) 'exception result)
   result)
 
 ; The with-vc form has two variants, (with-vc body) and (with-vc vc0 body).
-; The former expands into (with-vc (vc) body). The latter sets the current
-; vc to vc0, evaluates the given body, returns the result, and reverts vc
+; The former expands into (with-vc (current-vc) body). The latter sets the current
+; vc to vc0, evaluates the given body, returns the result, and reverts current-vc
 ; to the value it held before the call to with-vc.
 ;
 ; If the evaluation of the body terminates normally, (with-vc vc0 body)
-; outputs (ans v s) where v is the value computed by the body, and s is 
-; the specification (i.e., assumes and asserts) generated during the evaluation,
-; with v0 as the initial specification. 
+; outputs (ans v vc*) where v is the value computed by the body, and vc* is 
+; the vc (i.e., assumes and asserts) generated during the evaluation,
+; with vc0 as the initial vc. 
 ;
 ; If the evaluation of the body terminates abnormally with an exn:fail? exception,
-; (with-vc vc0 body) outputs (halt v s) where v is an exn:fail:svm? exception
-; that represents the cause of the abnormal termination, and s is the specification
-; (i.e., assumes and asserts) generated during the evaluation, with v0 as
-; the initial specification.
+; (with-vc vc0 body) outputs (halt v vc*) where v is an exn:fail:svm? exception
+; that represents the cause of the abnormal termination, and vc* is the vc
+; generated during the evaluation, with vc0 as the initial vc.
 (define-syntax (with-vc stx)
   (syntax-case stx ()
-    [(_ body) (syntax/loc stx (with-vc (vc) body))]
+    [(_ body) (syntax/loc stx (with-vc (current-vc) body))]
     [(_ vc0 body)
      (syntax/loc stx
-       (parameterize ([vc vc0])
+       (parameterize ([current-vc vc0])
          (with-handlers ([exn:fail:svm? halt-svm]
                          [exn:fail?     halt-err])
-           (ans body (vc)))))]))
+           (ans body (current-vc)))))]))
