@@ -8,7 +8,7 @@
                   @boolean? @true? && ! => <=>
                   vc clear-vc! with-vc merge-vc!
                   $assume $assert @assume @assert
-                  spec-tt spec-tt?
+                  vc-true vc-true?
                   spec-assumes spec-asserts)
          (only-in rosette/base/core/real @integer? @=)
          (only-in rosette/base/core/merge merge merge*))
@@ -38,15 +38,15 @@
       (check-equal? (spec-other actual) expected-other))
     ;---------------------------;
     ($a #t)
-    (check-pred spec-tt? (vc))
+    (check-pred vc-true? (vc))
     ($a 1)
-    (check-pred spec-tt? (vc))
+    (check-pred vc-true? (vc))
     ;---------------------------;
     (check-exn-svm user? #rx"failed" (thunk (@a #f)))
     (check-vc #f #t)
     (clear-vc!)
     ;---------------------------;
-    (check-pred spec-tt? (vc))
+    (check-pred vc-true? (vc))
     (check-exn-svm user? #rx"test" (thunk (@a #f "test")))
     (check-vc #f #t)
     (clear-vc!)
@@ -94,17 +94,17 @@
 (define (check-with-vc-0)
   (define-symbolic a @boolean?)
   ;---------------------------;
-  (check-match (with-vc (@assume 1)) (ans (? void?) (? spec-tt?)))
-  (check-pred spec-tt? (vc))
+  (check-match (with-vc (@assume 1)) (ans (? void?) (? vc-true?)))
+  (check-pred vc-true? (vc))
   (check-match (with-vc (@assume a)) (ans (? void?) (app spec->pair (cons (== a) #t))))
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   (check-match (with-vc (@assume #f)) (halt (? exn:fail:svm:assume:user?) (app spec->pair (cons #f #t))))
   (check-match (with-vc ($assume #f)) (halt (? exn:fail:svm:assume:core?) (app spec->pair (cons #f #t))))
   ;---------------------------;
-  (check-match (with-vc (@assert 1)) (ans (? void?) (? spec-tt?)))
-  (check-pred spec-tt? (vc))
+  (check-match (with-vc (@assert 1)) (ans (? void?) (? vc-true?)))
+  (check-pred vc-true? (vc))
   (check-match (with-vc (@assert a)) (ans (? void?) (app spec->pair (cons #t (== a)))))
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   (check-match (with-vc (@assert #f)) (halt (? exn:fail:svm:assert:user?) (app spec->pair (cons #t #f))))
   (check-match (with-vc ($assert #f)) (halt (? exn:fail:svm:assert:core?) (app spec->pair (cons #t #f))))
   (check-match (with-vc (1)) (halt (? exn:fail:svm:assert:err?) (app spec->pair (cons #t #f)))))
@@ -168,7 +168,7 @@
   (define-symbolic a b c @boolean?)
   ;---------------------------;
   (merge-vc! null null)
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   ;---------------------------;
   (match-define (ans _ vc0) (with-vc (begin (@assume a) (@assert b))))
   (merge-vc! (list #t) (list vc0))
@@ -178,11 +178,11 @@
   (check-match (vc) (app spec->pair (cons (== (=> c a)) (== (=> c (=> a b))))))
   (clear-vc!)
   (merge-vc! (list #f) (list vc0))
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   ;---------------------------;
   (match-define (halt _ vc1) (with-vc (@assume #f)))
   (merge-vc! (list #f) (list vc1))
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   (merge-vc! (list c) (list vc1))
   (check-match (vc) (app spec->pair (cons (== (=> c #f)) #t)))
   (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc1))))
@@ -190,20 +190,20 @@
   ;---------------------------;
   (match-define (halt _ vc2) (with-vc (@assert #f)))
   (merge-vc! (list #f) (list vc2))
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   (merge-vc! (list c) (list vc2))
   (check-match (vc) (app spec->pair (cons #t (==  (=> c #f)))))
   (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc2))))
   (clear-vc!)
   ;---------------------------;
   (@assume a)
-  (match-define (ans _ vc3) (with-vc spec-tt (@assume (! a))))
+  (match-define (ans _ vc3) (with-vc vc-true (@assume (! a))))
   (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc3))))
   (check-match (vc) (app spec->pair (cons #f #t)))
   (clear-vc!)
   ;---------------------------;
   (@assert a)
-  (match-define (ans _ vc4) (with-vc spec-tt (@assert (! a))))
+  (match-define (ans _ vc4) (with-vc vc-true (@assert (! a))))
   (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc4))))
   (check-match (vc) (app spec->pair (cons #t #f)))
   (clear-vc!))
@@ -211,8 +211,8 @@
 (define (check-merge-vc-1)
   (define-symbolic a b c d e @boolean?)
   (define not-a (! a))
-  (merge-vc! (list a not-a) (list spec-tt spec-tt))
-  (check-pred spec-tt? (vc))
+  (merge-vc! (list a not-a) (list vc-true vc-true))
+  (check-pred vc-true? (vc))
   ;---------------------------;
   (merge-vc! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assume c)))))
   (check-match (vc) (app spec->pair (cons (== (&& (=> a b) (=> not-a c))) #t)))

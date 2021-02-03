@@ -78,7 +78,7 @@
   (clear-vc!)
   (define s* (merge a s *))
   (check-equal? (s*) 1)
-  (check-pred spec-tt? (vc))
+  (check-pred vc-true? (vc))
   (check-equal? (s* 3 2) 6)
   (check-vc-eqv #t (! a))
   (clear-vc!) 

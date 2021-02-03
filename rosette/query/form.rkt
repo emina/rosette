@@ -3,7 +3,7 @@
 (require "core.rkt" 
          (only-in "../base/core/reflect.rkt" symbolics)
          (only-in "../base/core/result.rkt" result-state)
-         (only-in "../base/core/bool.rkt" ! vc with-vc spec-assumes spec-asserts spec-tt))
+         (only-in "../base/core/bool.rkt" ! vc with-vc spec-assumes spec-asserts vc-true))
 
 (provide solve verify synthesize optimize
          current-solver (rename-out [∃-solve+ solve+]))
@@ -13,7 +13,7 @@
   (list (spec-assumes s) (spec-asserts s)))
 
 (define-syntax-rule (query-vc expr)
-  (result-state (with-vc spec-tt expr)))
+  (result-state (with-vc vc-true expr)))
 
 ; The (solve expr) query evaluates expr, gathers all  
 ; assumptions assertions generated during the evaluation, 

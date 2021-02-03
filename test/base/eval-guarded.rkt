@@ -11,7 +11,7 @@
                   @boolean? @true? && || ! => <=>
                   vc clear-vc! with-vc merge-vc!
                   $assume $assert @assume @assert
-                  spec-tt spec-tt?
+                  vc-true vc-true?
                   spec-assumes spec-asserts)
          (only-in rosette/base/core/real @integer? @= @<)
          (only-in rosette/base/core/merge merge merge*))
@@ -64,7 +64,7 @@
               exn:fail:svm:assert:err? g (! g))
   ;---------------------------;
   (check-equal? (@unbox x) 3)
-  (check-pred spec-tt? (vc)))
+  (check-pred vc-true? (vc)))
 
 (define-syntax-rule (check-vc-and-cell e-assumes e-asserts cell e-cell-val)
   (begin

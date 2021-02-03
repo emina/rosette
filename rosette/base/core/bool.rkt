@@ -11,7 +11,7 @@
  @assert @assume $assert $assume
  (rename-out [get-vc vc]) clear-vc! with-vc merge-vc!
  spec? spec-assumes spec-asserts
- spec-tt spec-tt?)
+ vc-true vc-true?)
 
 ;; ----------------- Boolean type ----------------- ;; 
 (define-lifted-type @boolean? 
@@ -294,9 +294,9 @@
 (struct spec (assumes asserts) #:transparent)
 
 ; The true (top) spec.
-(define spec-tt (spec #t #t))
+(define vc-true (spec #t #t))
 
-(define (spec-tt? s) (equal? s spec-tt))
+(define (vc-true? s) (equal? s vc-true))
 
 ; Returns (spec (s.assumes && (s.asserts => g) s.asserts). 
 (define (assuming s g)  ; g must be a symbolic or concrete boolean
@@ -309,14 +309,14 @@
 ; The vc parameter keeps track of the current verification condition,
 ; which is an instance of spec?. The default vc is the true spec.
 (define vc (make-parameter
-            spec-tt
+            vc-true
             (lambda (v) (unless (spec? v) (raise-argument-error 'vc "spec?" v)) v)))
 
 ; Returns the current vc, without exposing the parameter outside the module. 
 (define (get-vc) (vc))
 
 ; Clears the current vc by setting it to the true spec.
-(define (clear-vc!) (vc spec-tt))
+(define (clear-vc!) (vc vc-true))
 
 ; Returns #t if x && (g => y) is equivalent to x according to the embedded
 ; rewrite rules. Otherwise returns #f.

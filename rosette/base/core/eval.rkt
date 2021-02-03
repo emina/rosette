@@ -40,9 +40,9 @@
 ; This procedure makes the following assumptions, based on the Lean
 ; formalization:
 ; (1) At most one guard evaluates to true under any model.
-; (2) For all models m under which (vc) evaluates to spec-tt, there is
+; (2) For all models m under which (vc) evaluates to vc-true, there is
 ; exactly one guard in guards that evaluates to #t under m.
-; (3) For all models m under which (vc) doesn't evaluate to spec-tt,
+; (3) For all models m under which (vc) doesn't evaluate to vc-true,
 ; every spec produced by evaluating the given thunks evaluates to
 ; the same spec as (vc) under m.
 (define (eval-guarded! guards thunks)
