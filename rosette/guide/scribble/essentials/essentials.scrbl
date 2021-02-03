@@ -295,7 +295,7 @@ Using this grammar, we can sketch a fast implementation of the midpoint calculat
 (eval:alts
   (define (bvmid-fast lo hi)
     (fast-int32 lo hi #:depth 2))
-  (require (only-in "bvmid.rkt" bvmid-fast)))]
+  (require (only-in rosette/guide/scribble/essentials/bvmid bvmid-fast)))]
 
 The above sketch describes the space of all expressions from the @racket[fast-int32] grammar that have parse trees of depth at most 2. The depth argument is optional. If ommitted, Rosette will use the value of the @racket[(current-grammar-depth)] parameter to bound the depth of the expressions drawn from the grammar.
 

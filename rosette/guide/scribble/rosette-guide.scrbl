@@ -29,13 +29,13 @@ Chapters @seclink["ch:syntactic-forms"]{3}-@seclink["ch:libraries"]{6} define th
 @include-section["welcome/welcome.scrbl"]
 @include-section["essentials/essentials.scrbl"]
 @include-section["forms/forms.scrbl"]
-@include-section["datatypes/builtin-datatypes.scrbl"]
-@include-section["datatypes/defined-datatypes.scrbl"]
-@include-section["libs/libraries.scrbl"]
-@include-section["reflection/symbolic-reflection.scrbl"]
-@include-section["unsafe/unsafe.scrbl"]
-@include-section["performance/performance.scrbl"]
-@include-section["error-tracing/error-tracing.scrbl"]
+@;include-section["datatypes/builtin-datatypes.scrbl"]
+@;include-section["datatypes/defined-datatypes.scrbl"]
+@;include-section["libs/libraries.scrbl"]
+@;include-section["reflection/symbolic-reflection.scrbl"]
+@;include-section["unsafe/unsafe.scrbl"]
+@;include-section["performance/performance.scrbl"]
+@;include-section["error-tracing/error-tracing.scrbl"]
 
 @(require (only-in "refs.scrbl" generate-bibliography))
 @(define bib @(generate-bibliography #:tag "refs" #:sec-title "References"))
