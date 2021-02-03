@@ -3,7 +3,7 @@
 @(require (for-label racket (only-in racket/sandbox with-deep-time-limit))
           (for-label  
            rosette/base/form/define
-           (only-in rosette/base/base assert assume vc spec-asserts spec-assumes clear-vc!)
+           (only-in rosette/base/base assert assume vc spec-asserts spec-assumes vc-clear!)
            rosette/query/query  
            (only-in rosette/base/base bv? bitvector
                     bvsdiv bvadd bvsle bvsub bvand
@@ -112,11 +112,11 @@ When given a symbolic boolean value, however, a Rosette assertion has no immedia
 
 @examples[#:eval rosette-eval #:label #f
 (code:line (spec-asserts (vc)) (code:comment "We asserted #f above, so the current VC reflects that."))
-(code:line (clear-vc!)         (code:comment "Clear the current VC."))
+(code:line (vc-clear!)         (code:comment "Clear the current VC."))
 (spec-asserts (vc))
 (code:line (assert (not b))    (code:comment "Add the assertion (not b) to the VC."))
 (spec-asserts (vc))
-(clear-vc!)]
+(vc-clear!)]
 
 Assertions express properties that a program must satisfy on all @emph{legal} inputs. In Rosette, as in other solver-aided frameworks, we use @emph{assumptions} to describe which inputs are legal. If a program violates an assertion on a legal input, we blame the program. But if it violates an assertion on an illegal input, we blame the caller. In other words, a program is considered incorrect only when it violates an assertion on a legal input.
 
@@ -129,7 +129,7 @@ Assumptions behave analogously to assertions on both concrete and symbolic value
  (code:line (assume #f)         (code:comment "Assuming #f aborts the execution with an exception."))
  (eval:error (assume #f)))
 (spec-assumes (vc))
-(clear-vc!)
+(vc-clear!)
 (define-symbolic i j integer?)
 (code:line (assume (> j 0))     (code:comment "Add the assumption (> j 0) to the VC."))
 (spec-assumes (vc))
@@ -137,7 +137,7 @@ Assumptions behave analogously to assertions on both concrete and symbolic value
 (code:line (spec-asserts (vc))  (code:comment "The assertions must hold when the assumptions hold."))
 (code:line (pretty-print (vc))  (code:comment "VC tracks the assumptions and the assertions."))]
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @section[#:tag "sec:queries"]{Solver-Aided Queries}
 
@@ -241,7 +241,7 @@ m
 (int32 (quotient (+ il ih) 2))
 (code:comment "So, check-mid fails on (bvmid cl ch):")
 (eval:error (check-mid bvmid cl ch))]
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 In our example, evaluating @racket[l] and @racket[h] with respect to @racket[cex] reveals that @racket[bvmid] fails to return the correct midpoint value, thus causing the first assertion in the @racket[check-mid] procedure to fail. The bug is due to overflow:  
 the expression @racket[(bvadd lo hi)] in @racket[bvmid] produces a negative value in
@@ -254,7 +254,7 @@ the 32-bit representation when the sum of
 (+ il ih)
 (- (expt 2 31) 1)]
              
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 A common  @hyperlink["https://en.wikipedia.org/wiki/Binary_search_algorithm#Implementation_issues"]{solution}
 to this problem is to calculate the midpoint as @tt{lo + ((hi - lo) / 2)}. It is easy to see that all intermediate values in this calculation are at most @racket[hi] when @racket[lo] and @racket[hi] are both non-negative, so no overflow can happen. We can also verify this with Rosette:
@@ -316,7 +316,7 @@ sol
 
 The synthesis query takes the form @racket[(synthesize #:forall #, @var[input] #:guarantee #, @var[expr])], where @var[input] lists the symbolic constants that represent inputs to a sketched program, and @var[expr] gives the correctness specification for the sketch. The solver searches for a binding from the hole (i.e., non-@var[input]) constants to values such that @var[expr] satisfies its assertions on all legal @var[input]s. Passing this binding to @racket[print-forms] converts it to a syntactic representation of the completed sketch.@footnote{@racket[print-forms] works only on sketches that have been saved to disk.} In our example, the synthesized program implements the midpoint calculation using the logical shift operation, i.e., the midpoint between @racket[lo] and @racket[hi] is calculated as @tt{(lo + hi) >>@subscript{u} 1}.
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @subsection[#:tag "sec:solve"]{Angelic Execution}
 
@@ -361,7 +361,7 @@ As a fun exercise that builds on this result, try using program synthesis to dis
           (equal? (bvand l h) (bvmid-fast l h)))))))
   (void))]
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @section[#:tag "sec:notes"]{Symbolic Reasoning}
 
@@ -442,7 +442,7 @@ In practice, it is usually best to leave @racket[current-bitwidth] at its defaul
 (code:line (time (verify (check-mid-slow bvmid l h))) (code:comment "Rejected."))
 (eval:error (time (verify (check-mid-slow bvmid l h)))))]
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 @(rosette-eval '(current-solver (z3)))
 
 @subsection{Symbolic Evaluation}
@@ -482,7 +482,7 @@ n]
 In general, recursion terminates under symbolic evaluation only when the stopping condition is reached with concrete values.
 
 We can force termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. The following code shows how to implement a @emph{sound} finitization policy. If a @racket[verify] query returns @racket[(unsat)] under a sound policy, we know that (1) the unrolling bound @var{k} is sufficient to execute all possible inputs to  @racket[bvsqrt], and (2) all of these executions satisfy the query. If we pick a bound that is too small, the query will generate a counterexample input that needs a larger bound to compute the result. In our example, the bound of 16 is sufficient to verify the correctness of @racket[sqrt] on all inputs: 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 @(rosette-eval '(require (only-in racket make-parameter parameterize)))
 @examples[#:eval rosette-eval #:label #f #:no-prompt
 (code:comment "Parameter that controls the number of unrollings (5 by default).")  
@@ -522,7 +522,7 @@ We can force termination by placing a concrete bound @var{k} on the number of ti
 (code:comment "Verification fails due to insufficient fuel.")
 (define cex (time (verify (check-sqrt bvsqrt l))))
 (eval:error (bvsqrt (evaluate l cex)))
-(clear-vc!)
+(vc-clear!)
 (code:comment "Verification succeeds with enough fuel.")
 (fuel 16)
 (time (verify (check-sqrt bvsqrt l)))]

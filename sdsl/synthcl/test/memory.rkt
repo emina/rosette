@@ -119,7 +119,7 @@
 (define-syntax-rule (check-exn e ...)
   (begin
     (rackunit/check-exn e ...)
-    (clear-vc!)))
+    (vc-clear!)))
 
 (define memory-tests
   (test-suite+ 

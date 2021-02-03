@@ -9,7 +9,7 @@
  and-&& or-|| instance-of? T*->boolean?
  ;; ---- VC generation ---- ;;       
  @assert @assume $assert $assume
- (rename-out [get-vc vc]) clear-vc! with-vc merge-vc!
+ (rename-out [get-vc vc]) vc-clear! with-vc merge-vc!
  spec? spec-assumes spec-asserts
  vc-true vc-true?)
 
@@ -316,7 +316,7 @@
 (define (get-vc) (vc))
 
 ; Clears the current vc by setting it to the true spec.
-(define (clear-vc!) (vc vc-true))
+(define (vc-clear!) (vc vc-true))
 
 ; Returns #t if x && (g => y) is equivalent to x according to the embedded
 ; rewrite rules. Otherwise returns #f.

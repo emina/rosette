@@ -24,19 +24,19 @@
     (solver-assert solver (asserts))
     (check-sat (solver-check solver))
     
-    (clear-vc!)
+    (vc-clear!)
     (assert (< xi 0)) ; in CPLEX, a variable is >= 0
     (solver-maximize solver (list xi))
     (solver-assert solver (asserts))
     (check-unsat (solver-check solver)) ; unsat
     
-    (clear-vc!)
+    (vc-clear!)
     (assert (< xi 10))
     (solver-maximize solver (list xi))
     (solver-assert solver (asserts))
     (check-sat (solver-check solver))
     
-    (clear-vc!)
+    (vc-clear!)
     (assert (< xi (+ xi yr)))
     (assert (= yr 2.5))
     (solver-minimize solver (list xi))
@@ -47,7 +47,7 @@
 
 (define mip-tests
   (test-suite+ "Solve MIP tests."
-    (clear-vc!)
+    (vc-clear!)
     (define obj (+ (* 2 xi) (* 3 yi)))
     (assert (<= (+ (* xi (/ 2 9)) (* yi (/ 1 4))) 1))
     (assert (<= (+ (* xi (/ 1 7)) (* yi (/ 1 3))) 1))
@@ -57,7 +57,7 @@
     (check-equal? (evaluate xi sol) 2)
     (check-equal? (evaluate yi sol) 2)
 
-    (clear-vc!)
+    (vc-clear!)
     (define obj2 (+ (* 18 xr) (* 3 yr) (* 9 zr)))
     (assert (<= (+ (* xr 2) (* yr 1) (* zr 7)) 160))
     (assert (<= xr 60))
@@ -73,7 +73,7 @@
 
 (define non-mip-tests
   (test-suite+ "Solve MIP tests."
-    (clear-vc!)
+    (vc-clear!)
     (define obj (+ (* 2 xi) (* 3 yi)))
     (assert (<= (* (* xi (/ 2 9)) (* yi (/ 1 4))) 1))
     (assert (<= (+ (* xi (/ 1 7)) (* yi (/ 1 3))) 1))
@@ -88,7 +88,7 @@
 
 (define multi-objectives-tests
   (test-suite+ "Solve MIP multi objectives."
-    (clear-vc!)
+    (vc-clear!)
     (define obj (+ (* 2 xi) (* 2 yi) (* 2 zi)))
     (assert (<= (+ xi yi zi) 1))
     (solver-maximize solver (list obj xi))
@@ -101,7 +101,7 @@
 
 (define multi-objectives-unsat-tests
   (test-suite+ "Solve MIP unsat multi objectives."
-    (clear-vc!)
+    (vc-clear!)
     (define obj (+ (* 2 xi) (* 2 yi) (* 2 zi)))
     (assert (<= (+ xi yi zi) 1))
     (assert (>= xi 1))
@@ -114,7 +114,7 @@
 
 (define distribution-tests
   (test-suite+ "Solve formula that requires the distribution rule."
-    (clear-vc!)
+    (vc-clear!)
     (define obj (* 2 (+ xi yi zi)))
     (assert (<= (* 3 (+ xi yi zi)) 3))
     (solver-maximize solver (list obj zi))
@@ -128,7 +128,7 @@
 
 (define mip-sol-start-tests
   (test-suite+ "Test mip-sol and mip-start options."
-    (clear-vc!)
+    (vc-clear!)
     (define obj (+ (* 2 xi) (* 2 yi) (* 2 zi)))
     (assert (<= (+ xi yi zi) 1))
     (solver-maximize solver (list obj))

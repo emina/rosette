@@ -75,25 +75,25 @@
   (check-true (subtype? (type-of p) @procedure?))
   (check-false (subtype? (type-of q) @procedure?))
   
-  (clear-vc!)
+  (vc-clear!)
   (define s* (merge a s *))
   (check-equal? (s*) 1)
   (check-pred vc-true? (vc))
   (check-equal? (s* 3 2) 6)
   (check-vc-eqv #t (! a))
-  (clear-vc!) 
+  (vc-clear!) 
   
   (define (kw #:kw y) (- y))
   (define f (merge b + 'f))
   (define g (merge c s* f))
   (check-equal? (g) (ite* (cons (&& b (! c)) 0) (cons (|| (&& c (! a)) (&& a c)) 1)))
   (check-vc-eqv #t (|| c (&& b (! c))))
-  (clear-vc!)
+  (vc-clear!)
 
   (define h (merge c kw f))
   (check-equal? (h #:kw 3) -3)
   (check-vc-eqv #t c)
-  (clear-vc!) )
+  (vc-clear!) )
  
   
   

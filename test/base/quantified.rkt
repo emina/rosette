@@ -21,7 +21,7 @@
   (check-exn-svm exn:fail:svm:assert:core? #px"primitive solvable types" (thunk (op (list b 1) #t))) ; not a constant
   (check-exn-svm exn:fail:svm:assert:core? #px"boolean\\?" (thunk (op (list) 1))) ; not boolean body
   (check-exn-svm exn:fail:svm:assert:core? #px"boolean\\?" (thunk (op (list b c) 1))) ; not boolean body
-  (clear-vc!) 
+  (vc-clear!) 
   (check-state (op (list a b c) #t) #t) ; constant body
   (check-state (op (list a b c) #f) #f) ; constant body
   (check-state (op (list) a) a) ; empty list of quantified variables

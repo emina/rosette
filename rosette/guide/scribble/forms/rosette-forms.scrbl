@@ -6,7 +6,7 @@
            rosette/base/core/term 
            (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/base
-                    assert assume vc spec-asserts spec-assumes clear-vc!
+                    assert assume vc spec-asserts spec-assumes vc-clear!
                     bv? forall)
            (only-in rosette/base/core/function function? ~>)
            (only-in rosette/base/core/reflect symbolics))
@@ -127,7 +127,7 @@ describes the corresponding syntactic constructs in detail.
  @racket[expr] evaluates to any other value, @racket[assert]
  has no effect. The contents of the VC can be examined using
  the @racket[(vc)] procedure, and they can be cleared using
- the @racket[clear-vc!] procedure.
+ the @racket[vc-clear!] procedure.
 
   @examples[#:eval rosette-eval
   (code:line (assert #t) (code:comment "No effect."))
@@ -138,7 +138,7 @@ describes the corresponding syntactic constructs in detail.
   (code:line (vc)        (code:comment "x is added to the VC's asserts."))  
   (eval:error (assert #f "bad value"))
   (vc) 
-  (code:line (clear-vc!) (code:comment "Clear the VC."))
+  (code:line (vc-clear!) (code:comment "Clear the VC."))
   (vc)]
 }
 
@@ -162,7 +162,7 @@ describes the corresponding syntactic constructs in detail.
   (code:line (vc)        (code:comment "x is added to the VC's assumes."))  
   (eval:error (assume #f "bad value"))
   (vc) 
-  (code:line (clear-vc!) (code:comment "Clear the VC."))
+  (code:line (vc-clear!) (code:comment "Clear the VC."))
   (vc)]
 }
 
@@ -213,12 +213,12 @@ describes the corresponding syntactic constructs in detail.
   (code:comment "This query has no solution because we assumed a above:")
   (verify (assert a))
   (code:comment "Clearing the VC gives the expected solution:")
-  (clear-vc!)
+  (vc-clear!)
   (vc)
   (verify (assert a))] 
 }
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @section{Synthesis}
 
@@ -297,7 +297,7 @@ describes the corresponding syntactic constructs in detail.
      (assume (even? x))
      (assert (odd? (+ x c)))))
   (code:comment "Clearing the VC gives the expected solution:")
-  (clear-vc!)
+  (vc-clear!)
   (vc)
   (synthesize
    #:forall (list x)
@@ -307,7 +307,7 @@ describes the corresponding syntactic constructs in detail.
      (assert (odd? (+ x c)))))]
 }
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @section{Angelic Execution}
 
@@ -345,12 +345,12 @@ describes the corresponding syntactic constructs in detail.
  (code:comment "This query has solution because we assumed (not x) above:")
  (solve (assert (not x)))
  (code:comment "Clearing the VC gives the expected solution:")
- (clear-vc!)
+ (vc-clear!)
  (vc)
  (solve (assert (not x)))]
 }
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @defproc[(solve+) procedure?]{
 Returns a stateful procedure that uses a fresh @racket[solver?] instance
@@ -382,7 +382,7 @@ subsequent calls to the procedure throw an exception.
 }
 
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 
 @section{Optimization}
 
@@ -439,7 +439,7 @@ subsequent calls to the procedure throw an exception.
      (assert (< (- y x) 1))))]
 }
 
-@(rosette-eval '(clear-vc!))
+@(rosette-eval '(vc-clear!))
 @(rosette-eval '(current-bitwidth 5))
 
 @section[#:tag "sec:reasoning-precision"]{Reasoning Precision}
