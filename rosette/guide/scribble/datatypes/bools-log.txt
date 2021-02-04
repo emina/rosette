@@ -16,12 +16,12 @@
   (c values c (0 (u . "(! b)"))))
  #""
  #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((! #f) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((! #t) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((! (if b #f 3)) ((3) 0 () 0 () () (q values #t)) #"" #"")
-((asserts)
+((vc)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -30,15 +30,15 @@
   0
   ()
   ()
-  (c values c (c (0 (u . "b")))))
+  (c values c (0 (u . "#(struct:vc #t b)"))))
  #""
  #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((&&) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((||) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((&& #f (begin (displayln "hello") #t))
  ((3) 0 () 0 () () (q values #f))
- #""
+ #"hello\n"
  #"")
 ((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((&& a (if b #t 1))
@@ -53,7 +53,7 @@
   (c values c (0 (u . "a"))))
  #""
  #"")
-((asserts)
+((vc)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -62,13 +62,13 @@
   0
   ()
   ()
-  (c values c (c (0 (u . "b")))))
+  (c values c (0 (u . "#(struct:vc #t b)"))))
  #""
  #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((=> #f (begin (displayln "hello") #f))
  ((3) 0 () 0 () () (q values #t))
- #""
+ #"hello\n"
  #"")
 ((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((<=> a (if b #t 1))
@@ -83,7 +83,7 @@
   (c values c (0 (u . "a"))))
  #""
  #"")
-((asserts)
+((vc)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -92,10 +92,10 @@
   0
   ()
   ()
-  (c values c (c (0 (u . "b")))))
+  (c values c (0 (u . "#(struct:vc #t b)"))))
  #""
  #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -111,8 +111,8 @@
   (c values c (0 (u . "(exists (x y) (= x y))"))))
  #""
  #"")
-((define-symbolic t boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((forall (list t x y) (= (+ (if t x 'x) 1) y))
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((forall (list b x y) (= (+ (if b x 'x) 1) y))
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -121,10 +121,10 @@
   0
   ()
   ()
-  (c values c (0 (u . "(forall (t x y) (= y (+ 1 x)))"))))
+  (c values c (0 (u . "(forall (b x y) (= y (+ 1 x)))"))))
  #""
  #"")
-((asserts)
+((vc)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -133,15 +133,15 @@
   0
   ()
   ()
-  (c values c (c (0 (u . "t")))))
+  (c values c (0 (u . "#(struct:vc #t b)"))))
  #""
  #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define-values (q-body q-asserts) (with-asserts (= (+ (if t x 'x) 1) y)))
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define out (with-vc (= (+ (if b x 'x) 1) y)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-(q-body
+(out
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -150,10 +150,20 @@
   0
   ()
   ()
-  (c values c (0 (u . "(= y (+ 1 x))"))))
+  (c values c (0 (u . "#(struct:ans (= y (+ 1 x)) #(struct:vc #t b))"))))
  #""
  #"")
-(q-asserts
+((define out-val (result-value out))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define out-vc (result-state out))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((forall
+  (list b x y)
+  (=> (&& (vc-assumes out-vc) (vc-asserts out-vc)) out-val))
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -162,10 +172,10 @@
   0
   ()
   ()
-  (c values c (c (0 (u . "t")))))
+  (c values c (0 (u . "(forall (b x y) (|| (! b) (= y (+ 1 x))))"))))
  #""
  #"")
-((forall (list t x y) (=> (apply && q-asserts) q-body))
+((vc)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -174,12 +184,11 @@
   0
   ()
   ()
-  (c values c (0 (u . "(forall (t x y) (|| (! t) (= y (+ 1 x))))"))))
+  (c values c (0 (u . "#(struct:vc #t #t)"))))
  #""
  #"")
-((asserts) ((3) 0 () 0 () () (q values ())) #"" #"")
-((define-symbolic a b integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define f (forall (list a) (exists (list b) (= a (+ a b)))))
+((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define f (forall (list x) (exists (list y) (= x (+ x y)))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -195,7 +204,7 @@
   (c values c (0 (u . "(model)"))))
  #""
  #"")
-((define g (forall (list a) (= a (+ a b))))
+((define g (forall (list x) (= x (+ x y))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -208,10 +217,10 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [b 0])"))))
+  (c values c (0 (u . "(model\n [y 0])"))))
  #""
  #"")
-((define h (exists (list a) (forall (list a) (= a (+ a a)))))
+((define h (exists (list x) (forall (list x) (= x (+ x x)))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")

@@ -2,7 +2,7 @@
 
 @(require (for-label rosette/base/form/define racket)
           (for-label (only-in rosette/base/base function? distinct? ~> bv))
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/examples racket/sandbox
           "../util/lifted.rkt")
 
 
