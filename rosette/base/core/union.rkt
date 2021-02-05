@@ -20,19 +20,18 @@
   [(define (get-type self) (union-type self))]
   #:methods gen:custom-write
   [(define (write-proc self port mode) 
-     (fprintf port "{")
+     (fprintf port "(union")
      (case mode
        [(#t #f) 
-        (fprintf port "~a:~a" (equal-hash-code self) (length (union-contents self)))]
+        (fprintf port " #:size ~a #:hash ~a" (length (union-contents self)) (equal-hash-code self))]
        [else
         (let ([vs (union-contents self)])
           (unless (null? vs)
             (parameterize ([error-print-width (max 4 (quotient (error-print-width) (* 2 (length vs))))])
-              (fprintf-entry port (car vs) mode)
-              (for ([v (cdr vs)])
+              (for ([v vs])
                 (fprintf port " ")
                 (fprintf-entry port v mode)))))])
-     (fprintf port "}"))])
+     (fprintf port ")"))])
 
 (define (fprintf-entry port p mode)
   (fprintf port "[")

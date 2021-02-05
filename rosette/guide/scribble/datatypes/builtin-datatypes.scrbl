@@ -30,7 +30,7 @@ as introduced by @seclink["sec:symbolic-constants"]{@code{define-symbolic[*]}}.
 @(table-of-contents)
 @include-section["equality.scrbl"]
 @include-section["bools+ints+reals.scrbl"]
-@;include-section["bitvectors.scrbl"]
+@include-section["bitvectors.scrbl"]
 @;include-section["uninterpreted.scrbl"]
 @;include-section["procedures.scrbl"]
 @;include-section["pairs.scrbl"]
