@@ -4,12 +4,11 @@
           (for-label  
            rosette/base/form/define
            (only-in rosette/base/base assert assume vc vc-asserts vc-assumes vc-clear!)
-           rosette/query/query  
+           rosette/query/query 
            (only-in rosette/base/base bv? bitvector
                     bvsdiv bvadd bvsle bvsub bvand
                     bvor bvxor bvshl bvlshr bvashr
                     bvnot bvneg)
-           rosette/query/eval
            rosette/lib/synthax))
 
 @(require racket/sandbox  racket/runtime-path  scribble/core scribble/racket
@@ -135,7 +134,7 @@ Assumptions behave analogously to assertions on both concrete and symbolic value
 (vc-assumes (vc))
 (assert (< (- i j) i))
 (code:line (vc-asserts (vc))    (code:comment "The assertions must hold when the assumptions hold."))
-(code:line (pretty-print (vc))  (code:comment "VC tracks the assumptions and the assertions."))]
+(code:line (vc)                 (code:comment "VC tracks the assumptions and the assertions."))]
 
 @(rosette-eval '(vc-clear!))
 

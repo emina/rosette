@@ -1,11 +1,11 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/form/define rosette/query/query rosette/query/eval  
+           rosette/base/form/define rosette/query/query 
            rosette/base/core/term  
-           (only-in rosette/base/core/safe assert) 
+           (only-in rosette/base/base assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
+          scribble/core scribble/html-properties scribble/examples racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 
@@ -27,7 +27,7 @@ which any symbolic procedure could @racket[evaluate] under any @racket[solution?
 @examples[#:eval rosette-eval
 (define-symbolic b boolean?)
 (define-symbolic x integer?)
-(code:line (define p (if b * -)) (code:comment "p is a symbolic procedure"))
+(code:line (define p (if b * -)) (code:comment "p is a symbolic procedure."))
 (define sol (synthesize #:forall (list x)
                         #:guarantee (assert (= x (p x 1)))))
 (evaluate p sol)

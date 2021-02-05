@@ -23,7 +23,7 @@
   0
   ()
   ()
-  (c values c (v! (0 (u . "b")) 1)))
+  (c values c (0 (u . "(vector b 1)"))))
  #""
  #"")
 ((not b)
@@ -128,9 +128,17 @@
   (c values c (0 (u . "(|| (! (< 0 j)) (< (+ i (- j)) i))"))))
  #""
  #"")
-((pretty-print (vc))
- ((3) 0 () 0 () () (c values c (void)))
- #"(vc (< 0 j) (|| (! (< 0 j)) (< (+ i (- j)) i)))\n"
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(vc (< 0 j) (|| (! (< 0 j)) (< (+ i (- j)) i)))"))))
+ #""
  #"")
 ((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define int32? (bitvector 32)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -215,10 +223,7 @@
   0
   ()
   ()
-  (c
-   values
-   c
-   (c (0 (u . "(bv #x394f0402 32)")) c (0 (u . "(bv #x529e7c00 32)")))))
+  (c values c (0 (u . "(list (bv #x394f0402 32) (bv #x529e7c00 32))"))))
  #""
  #"")
 ((define il (bitvector->integer cl))
@@ -229,7 +234,18 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((list il ih) ((3) 0 () 0 () () (q values (961479682 1386118144))) #"" #"")
+((list il ih)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'(961479682 1386118144)"))))
+ #""
+ #"")
 ((define m (bvmid cl ch)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 (m
  ((3)
@@ -422,7 +438,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
- #"cpu time: 2 real time: 38 gc time: 0\n"
+ #"cpu time: 2 real time: 39 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid l h)))
  ((3)
@@ -437,7 +453,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x2faef9a1 32)]\n [h (bv #x5eefb8dd 32)])"))))
- #"cpu time: 3 real time: 176 gc time: 0\n"
+ #"cpu time: 3 real time: 177 gc time: 0\n"
  #"")
 ((time (verify (check-mid bvmid-no-overflow l h)))
  ((3)
@@ -449,7 +465,7 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 1 real time: 157 gc time: 0\n"
+ #"cpu time: 1 real time: 159 gc time: 0\n"
  #"")
 ((error 'call-with-deep-time-limit "out of time")
  ((3) 0 () 0 () () (q exn "call-with-deep-time-limit: out of time"))
@@ -482,7 +498,7 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 1 real time: 158 gc time: 0\n"
+ #"cpu time: 1 real time: 156 gc time: 0\n"
  #"")
 ((current-bitwidth 32) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((time (verify (check-mid-slow bvmid l h)))
@@ -510,7 +526,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x71979fa3 32)]\n [h (bv #x76b91b88 32)])"))))
- #"cpu time: 2 real time: 149 gc time: 0\n"
+ #"cpu time: 1 real time: 149 gc time: 0\n"
  #"")
 ((current-bitwidth 512) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((time (verify (check-mid-slow bvmid l h)))
@@ -526,7 +542,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x70000006 32)]\n [h (bv #x73fffffa 32)])"))))
- #"cpu time: 1 real time: 384 gc time: 0\n"
+ #"cpu time: 1 real time: 379 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid-no-overflow l h)))
  ((3)
@@ -538,7 +554,7 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 1 real time: 433 gc time: 0\n"
+ #"cpu time: 0 real time: 430 gc time: 0\n"
  #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((require rosette/solver/smt/z3)
@@ -562,7 +578,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
- #"cpu time: 5 real time: 36 gc time: 0\n"
+ #"cpu time: 3 real time: 36 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid l h)))
  ((3)
@@ -749,7 +765,7 @@
  #"")
 ((define cex (time (verify (check-sqrt bvsqrt l))))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 7 real time: 1022 gc time: 0\n"
+ #"cpu time: 7 real time: 1019 gc time: 0\n"
  #"")
 ((bvsqrt (evaluate l cex))
  ((3) 0 () 0 () () (q exn "[assert] Out of fuel."))
@@ -767,5 +783,5 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 5 real time: 67962 gc time: 0\n"
+ #"cpu time: 4 real time: 69433 gc time: 0\n"
  #"")

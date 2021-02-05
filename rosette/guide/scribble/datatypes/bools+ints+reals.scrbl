@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
+           rosette/base/form/define rosette/query/form rosette/query/query rosette/solver/solution
            rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/base ! && || => <=> exists forall function? assert vc with-vc
                                       result-state result-value))

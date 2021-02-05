@@ -1,15 +1,13 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
+           rosette/base/form/define rosette/query/query rosette/solver/solution
            rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/union union?)
            (only-in rosette/base/core/function ~> function? fv?)
-           (only-in rosette/base/base bv bitvector)
-           (only-in rosette/base/core/safe assert) 
-           (only-in rosette/base/core/bool asserts))
+           (only-in rosette/base/base bv bitvector assert vc vc-clear!))
           (for-label racket) racket/runtime-path
-          scribble/core scribble/html-properties scribble/eval racket/sandbox
+          scribble/core scribble/html-properties scribble/examples racket/sandbox
           "../util/lifted.rkt")
 
 @(define-runtime-path root ".")
@@ -19,7 +17,7 @@
 
 @declare-exporting[rosette/base/base #:use-sources (rosette/base/core/function
                                                     rosette/query/finitize
-                                                    rosette/base/core/safe)]
+                                                    rosette/base/base)]
 
 In Rosette, functions are special kinds of @seclink["sec:proc"]{procedures} that are pure
 (have no side effects) and total (defined on every input value).
@@ -35,54 +33,60 @@ as the result of a @seclink["sec:queries"]{solver-aided query}.
 
 @examples[#:eval rosette-eval
 (current-bitwidth #f)
-(code:comment "an uninterpreted function from integers to booleans:")
+(code:comment "An uninterpreted function from integers to booleans:")
 (define-symbolic f (~> integer? boolean?))
-(code:line (f 1)     (code:comment "no built-in interpretation for 1"))
+(code:line (f 1)     (code:comment "No built-in interpretation for 1."))
 (define-symbolic x real?)
-(code:line (f x)     (code:comment "this typechecks when x is an integer"))
-(code:line (asserts) (code:comment "so Rosette emits the corresponding assertion"))
+(code:line (f x)     (code:comment "This typechecks when x is an integer,"))
+(code:line (vc)      (code:comment "so Rosette emits the corresponding assertion."))
 (define sol (solve (assert (not (equal? (f x) (f 1))))))
-(code:line (define g (evaluate f sol)) (code:comment "an interpretation of f"))
+(code:line (define g (evaluate f sol)) (code:comment "An interpretation of f."))
 g
 (evaluate x sol)
-(code:line (fv? f)   (code:comment "f is a function value"))
-(code:line (fv? g)   (code:comment "and so is g"))
-(code:line (g 2)     (code:comment "we can apply g to concrete values"))
-(code:line (g x)     (code:comment "and to symbolic values"))] 
+(code:line (fv? f)   (code:comment "f is a function value,"))
+(code:line (fv? g)   (code:comment "and so is g."))
+(code:line (g 2)     (code:comment "We can apply g to concrete values"))
+(code:line (g x)     (code:comment "and to symbolic values."))] 
 
 @defproc[(~> [d (and/c solvable? (not/c function?))] ...+
              [r (and/c solvable? (not/c function?))]) function?]{
+                                                                 
   Returns a type predicate for recognizing functions that take as input
   values of types @racket[d...+] and produce values of type @racket[r].
   The domain and range arguments must be concrete @racket[solvable?] types that are
   not themselves functions. Note that @racket[~>] expects at least one domain
   type to be given, disallowing zero-argument functions.
+  
   @examples[#:eval rosette-eval
   (define t (~> integer? real? boolean? (bitvector 4)))
   t
-  (~> t integer?)
+  (eval:error (~> t integer?))
   (define-symbolic b boolean?)
-  (~> integer? (if b boolean? real?))
-  (~> real?)]
+  (eval:error (~> integer? (if b boolean? real?)))
+  (eval:error (~> real?))]
 }
 
 @defproc[(function? [v any/c]) boolean?]{
+                                         
   Returns true if @racket[v] is a concrete type predicate that recognizes function values.
+                  
   @examples[#:eval rosette-eval
   (define t0? (~> integer? real? boolean? (bitvector 4)))
   (define t1? (~> integer? real?))
   (function? t0?)
   (function? t1?)
   (define-symbolic b boolean?)
-  (code:line (function? (if b t0? t1?)) (code:comment "not a concrete type"))
-  (code:line (function? integer?)       (code:comment "not a function type"))
-  (code:line (function? 3)              (code:comment "not a type"))]
+  (code:line (function? (if b t0? t1?)) (code:comment "Not a concrete type."))
+  (code:line (function? integer?)       (code:comment "Not a function type."))
+  (code:line (function? 3)              (code:comment "Not a type."))]
 }
 
-@(rosette-eval '(clear-asserts!))
+@(rosette-eval '(vc-clear!))
 
 @defproc[(fv? [v any/c]) boolean?]{
+                                   
   Returns true if @racket[v] is a concrete or symbolic function value.
+                  
   @examples[#:eval rosette-eval
   (define-symbolic f (~> boolean? boolean?))
   (fv? f)
@@ -95,9 +99,9 @@ g
        (assert (not (f #t)))
        (assert (f #f)))))
   (define g (evaluate f sol))
-  (code:line g (code:comment "g implements logical negation"))
+  (code:line g (code:comment "g implements logical negation."))
   (fv? g)
-  (code:comment "verify that g implements logical negation:")
+  (code:comment "Verify that g implements logical negation:")
   (verify (assert (equal? (g b) (not b))))]
 }
 

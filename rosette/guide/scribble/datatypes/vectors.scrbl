@@ -3,9 +3,9 @@
 @(require (for-label 
            rosette/base/form/define rosette/query/query 
            rosette/base/core/term  
-           (only-in rosette/base/core/safe assert) 
+           (only-in rosette/base/base assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
+          scribble/core scribble/html-properties scribble/examples racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 
@@ -46,8 +46,8 @@ if they have the same length and @racket[equal?] contents.
 
 @examples[#:eval rosette-eval
 (define-symbolic x y z n integer?)
-(code:line (define xs (take (list x y z) n))        (code:comment "xs is a symbolic list"))
-(code:line (define vs (list->vector xs))            (code:comment "vs is a symbolic vector"))
+(code:line (define xs (take (list x y z) n))        (code:comment "xs is a symbolic list."))
+(code:line (define vs (list->vector xs))            (code:comment "vs is a symbolic vector."))
 (define sol
   (solve
    (begin

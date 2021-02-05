@@ -29,7 +29,7 @@
   (c values c (0 (u . "(app f (real->integer x))"))))
  #""
  #"")
-((asserts)
+((vc)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -38,7 +38,7 @@
   0
   ()
   ()
-  (c values c (c (0 (u . "(int? x)")))))
+  (c values c (0 (u . "(vc #t (int? x))"))))
  #""
  #"")
 ((define sol (solve (assert (not (equal? (f x) (f 1))))))
@@ -71,13 +71,7 @@
   0
   ()
   ()
-  (c
-   values
-   c
-   (0
-    (u
-     .
-     "(ite (= 1 (real->integer x)) #t (ite (= 0 (real->integer x)) #f #t))"))))
+  (c values c (0 (u . "(ite (= 1 (real->integer x)) #f #t)"))))
  #""
  #"")
 ((define t (~> integer? real? boolean? (bitvector 4)))
@@ -118,7 +112,7 @@
   ()
   (q
    exn
-   "function: expected a primitive solvable type\n  range: {[b boolean?] [(! b) real?]}"))
+   "function: expected a primitive solvable type\n  range: (union [b boolean?] [(! b) real?])"))
  #""
  #"")
 ((~> real?)
@@ -147,7 +141,7 @@
 ((function? (if b t0? t1?)) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((function? integer?) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((function? 3) ((3) 0 () 0 () () (q values #f)) #"" #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic f (~> boolean? boolean?))
  ((3) 0 () 0 () () (c values c (void)))
  #""

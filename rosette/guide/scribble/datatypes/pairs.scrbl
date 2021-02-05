@@ -3,9 +3,9 @@
 @(require (for-label 
            rosette/base/form/define rosette/query/query  
            rosette/base/core/term  
-           (only-in rosette/base/core/safe assert) 
+           (only-in rosette/base/base assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
+          scribble/core scribble/html-properties scribble/examples racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 
@@ -34,10 +34,11 @@ and lists cannot be created
 via @seclink["sec:symbolic-constants"]{@code{define-symbolic[*]}}. 
 Instead, they are created by applying pair- or list-producing procedures to symbolic inputs, 
 or by controlling the application of such procedures with symbolic values.  This   
- pattern for creating non-primitive symbolic values generalizes to all unsolvable datatypes.
+pattern for creating non-primitive symbolic values generalizes to all unsolvable datatypes.
+
 @examples[#:eval rosette-eval
 (define-symbolic x y z n integer?)
-(code:line (define xs (take (list x y z) n))        (code:comment "(1) xs is a symbolic list"))
+(code:line (define xs (take (list x y z) n))        (code:comment "(1) xs is a symbolic list."))
 (define sol (solve (assert (null? xs))))
 (evaluate xs sol)
 (define sol 
@@ -49,7 +50,7 @@ or by controlling the application of such procedures with symbolic values.  This
 
 @examples[#:eval rosette-eval
 (define-symbolic b boolean?)
-(code:line (define p (if b (cons 1 2) (cons 4 #f))) (code:comment "(2) p is a symbolic pair"))
+(code:line (define p (if b (cons 1 2) (cons 4 #f))) (code:comment "(2) p is a symbolic pair."))
 (define sol (solve (assert (boolean? (cdr p)))))
 (evaluate p sol)
 (define sol (solve (assert (odd? (car p)))))

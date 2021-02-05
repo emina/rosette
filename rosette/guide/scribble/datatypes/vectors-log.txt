@@ -28,6 +28,39 @@
  #""
  #"")
 ((evaluate n sol) ((3) 0 () 0 () () (q values 1)) #"" #"")
-((evaluate (list x y z) sol) ((3) 0 () 0 () () (q values (4 0 0))) #"" #"")
-((evaluate vs sol) ((3) 0 () 0 () () (c values c (v! 4))) #"" #"")
-((evaluate xs sol) ((3) 0 () 0 () () (q values (4))) #"" #"")
+((evaluate (list x y z) sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'(4 0 0)"))))
+ #""
+ #"")
+((evaluate vs sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'#(4)"))))
+ #""
+ #"")
+((evaluate xs sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'(4)"))))
+ #""
+ #"")

@@ -16,71 +16,61 @@
    (apply elem 
           (add-between (map (lambda (id) (racket #,#`#,id)) 
                             (filter lifted? racket-ids)) ", ")))
+
 (define (showable v)
   (match v
     [(list '#%brackets rest ...)
-     `(\[ ,@(map showable rest) \])]
+     `(⟦ ,@(map showable rest) ⟧)]
     [(list '#%braces rest ...)
-     `(\{ ,@(map showable rest) \})]
+     `(⦃ ,@(map showable rest) ⦄)]
     [(list 'bv (? integer? x) (? integer? len))
      (bv x len)]
     [(? list?)
      (map showable v)]
     [_ v]))
 
-(define (show s [port (current-output-port)])
-  (define out (open-output-string))
-  (parameterize ([read-square-bracket-with-tag #t]
-                 [read-curly-brace-with-tag #t])
-    (pretty-write (showable (read (open-input-string s))) out))
-  (let* ([str (get-output-string out)]
-         [str (regexp-replace* #px"\\(\\|\\[\\|\\s*" str "[")]
-         [str (regexp-replace* #px"\\s*\\|\\]\\|\\)" str "]")]
-         [str (regexp-replace* #px"\\(\\|\\{\\|\\s*" str "{")]
-         [str (regexp-replace* #px"\\s*\\|\\}\\|\\)" str "}")])
-    (fprintf port str)))
-
-(define (rosette-printer v)
-  (cond
-    [(void? v) (void)]
-    [else
-     (define port (open-output-string))
-     (print v port 0)
-     (define str (get-output-string port))
-     (if (<= (string-length str) (pretty-print-columns))
-         (printf "~a" str)
-         (show str))])) 
-       
+(define (show v [port (current-output-port)])
+  (unless (void? v)
+    (define s (format "~v" v))
+    (cond
+      [(<= (string-length s) (pretty-print-columns))
+       (fprintf port "~a" s)]
+      [else 
+       (define out (open-output-string))
+       (parameterize ([read-square-bracket-with-tag #t]
+                      [read-curly-brace-with-tag #t])
+         (pretty-write (showable (read (open-input-string s))) out))
+       (let* ([str (get-output-string out)]
+              [str (regexp-replace* #px"\\(⟦\\s*" str "[")]
+              [str (regexp-replace* #px"\\s*⟧\\)" str "]")]
+              [str (regexp-replace* #px"\\(⦃\\s*" str "{")]
+              [str (regexp-replace* #px"\\s*⦄\\)" str "}")])
+         (fprintf port "~a" str))])))
+    
 (define (rosette-evaluator [eval-limits #f] [lang 'rosette/safe])
    (parameterize ([sandbox-output 'string]
                   [sandbox-error-output 'string]
                   [sandbox-path-permissions `((execute ,(byte-regexp #".*")))]
                   [sandbox-memory-limit #f]
                   [sandbox-eval-limits eval-limits]
-                  [current-print rosette-printer])
+                  [current-print show])
      (make-evaluator lang)))
 
 (define (logfile root [filename "log"])
   (build-path root (format "~a.txt" filename)))
 
-(define (serialize-for-logging v)
-  (match v
-    [(or (? boolean?) (? number?) (? string?) (? void?)) v]
-    [(? box?) (box (serialize-for-logging (unbox v)))]
-    [(? pair?) (cons (serialize-for-logging (car v)) (serialize-for-logging (cdr v)))]
-    [(? list?) (map serialize-for-logging v)]
-    [(? vector?) (list->vector (map serialize-for-logging (vector->list v)))]
-    [(? struct?)
-     (let ([out (open-output-string)])
-       (parameterize ([current-output-port out])
-         (rosette-printer v))
-       (opaque (get-output-string out)))]
-    [_ v]))
-
 (serializable-struct opaque (str)
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (fprintf port "~a" (opaque-str self)))])
+
+(define (serialize-for-logging v)
+  (match v
+    [(or (? boolean?) (? number?) (? string?) (? symbol?) (? void?)) v]
+    [_
+     (define out (open-output-string))
+     (show v out)
+     (opaque (get-output-string out))]))
 
 (define (serializing-evaluator evaluator)
   (lambda (expr)
@@ -88,6 +78,7 @@
     (printf "~a" (get-output evaluator))
     (eprintf "~a" (get-error-output evaluator))
     (serialize-for-logging v)))
+
 
 (define (rosette-log-evaluator logfile [eval-limits #f] [lang 'rosette/safe])  
   (if (file-exists? logfile)

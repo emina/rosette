@@ -11,7 +11,18 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate xs sol) ((3) 0 () 0 () () (q values ())) #"" #"")
+((evaluate xs sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'()"))))
+ #""
+ #"")
 ((define sol
    (solve
     (begin
@@ -21,7 +32,18 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate xs sol) ((3) 0 () 0 () () (q values (-1 0))) #"" #"")
+((evaluate xs sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'(-1 0)"))))
+ #""
+ #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define p (if b (cons 1 2) (cons 4 #f)))
  ((3) 0 () 0 () () (c values c (void)))
@@ -31,9 +53,31 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate p sol) ((3) 0 () 0 () () (q values (4 . #f))) #"" #"")
+((evaluate p sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'(4 . #f)"))))
+ #""
+ #"")
 ((define sol (solve (assert (odd? (car p)))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate p sol) ((3) 0 () 0 () () (q values (1 . 2))) #"" #"")
+((evaluate p sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'(1 . 2)"))))
+ #""
+ #"")

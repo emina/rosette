@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label 
-           rosette/base/form/define rosette/query/form rosette/query/eval rosette/solver/solution
+           rosette/base/form/define  
            rosette/base/core/term 
            (only-in rosette/base/core/union union?)
            (only-in rosette/base/base bv bv? bitvector bitvector? bitvector-size
