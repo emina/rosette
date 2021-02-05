@@ -2,12 +2,13 @@
 
 @(require (for-label 
            rosette/solver/solver rosette/solver/solution 
-           rosette/solver/smt/z3 rosette/solver/smt/cvc4 rosette/solver/smt/boolector rosette/solver/smt/yices rosette/solver/mip/cplex
-           rosette/base/form/define rosette/query/query rosette/query/core
+           rosette/solver/smt/z3 rosette/solver/smt/cvc4
+           rosette/solver/smt/boolector rosette/solver/smt/yices 
+           rosette/base/form/define rosette/query/query 
            rosette/base/core/term (only-in rosette/base/base bv?)
-           (only-in rosette/base/core/safe assert) 
+           (only-in rosette/base/base assert) 
            racket)
-          scribble/core scribble/html-properties scribble/eval racket/sandbox racket/runtime-path
+          scribble/core scribble/html-properties scribble/examples racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
 
 @(define-runtime-path root ".")
@@ -15,22 +16,19 @@
 
 @title[#:tag "sec:solvers-and-solutions"]{Solvers and Solutions}
 
-@declare-exporting[rosette/query/core
-                   rosette/query/eval
+@declare-exporting[rosette/query/query
                    rosette/solver/solver
                    rosette/solver/solution
                    rosette/solver/smt/z3
-                   rosette/solver/mip/cplex
                    rosette/solver/smt/cvc4
                    rosette/solver/smt/yices
                    rosette/solver/smt/boolector
                    #:use-sources 
                    (rosette/query/finitize
-                    rosette/query/eval
+                    rosette/query/query
                     rosette/solver/solver
                     rosette/solver/solution
                     rosette/solver/smt/z3
-                    rosette/solver/mip/cplex
                     rosette/solver/smt/cvc4
                     rosette/solver/smt/yices
                     rosette/solver/smt/boolector)]
@@ -188,7 +186,7 @@ Returns the options the given solver is configured with
 
 @section{Supported Solvers}
 
-Rosette supports several SMT solvers as well as the CPLEX mixed-integer programming solver.
+Rosette supports several SMT solvers.
 The @racket[current-solver] parameter controls the solver used for answering solver-aided queries.
 Each supported solver is contained in a separate module
 (e.g., @racketmodname[rosette/solver/smt/z3]),
@@ -203,6 +201,7 @@ to create a new solver instance.
                 [#:logic logic (or/c symbol? #f) #f]
                 [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(z3? [v any/c]) boolean?])]{
+                                        
 Returns a @racket[solver?] wrapper for the @hyperlink["https://github.com/Z3Prover/z3/"]{Z3} solver from Microsoft Research.
 Rosette automatically installs a version of Z3;
 the optional @racket[path] argument overrides this version with a path to a new Z3 binary.
@@ -227,6 +226,7 @@ will send the command @tt{(set-option :smt.relevancy 0)} to Z3 prior to solving.
                   [#:logic logic (or/c symbol? #f) #f]
                   [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(cvc4? [v any/c]) boolean?])]{
+                                          
 Returns a @racket[solver?] wrapper for the @hyperlink["http://cvc4.cs.stanford.edu/web/"]{CVC4} solver from NYU and UIowa.
 
 To use this solver, download and install CVC4 (version 1.8 or later),
@@ -258,6 +258,7 @@ without its optional @racket[path] argument.}
                        [#:logic logic (or/c symbol? #f) #f]
                        [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(boolector? [v any/c]) boolean?])]{
+                                               
 Returns a @racket[solver?] wrapper for the @hyperlink["http://fmv.jku.at/boolector/"]{Boolector} solver from JKU.
 
 To use this solver, download and install Boolector (version 2.4.1 or later),
@@ -289,6 +290,7 @@ without its optional @racket[path] argument.}
                    [#:logic logic symbol? 'ALL]
                    [#:options options (hash/c symbol? any/c) (hash)]) solver?]
            [(yices? [v any/c]) boolean?])]{
+                                           
 Returns a @racket[solver?] wrapper for the @hyperlink["http://yices.csl.sri.com/"]{Yices} solver from SRI.
 
 To use this solver, download and install Yices (version 2.6.0 or later),
@@ -309,51 +311,6 @@ will send the command @tt{(set-option :random-seed 5)} to Yices prior to solving
 Returns true if the Yices solver is available for use (i.e., Rosette can locate a @tt{yices-smt2} binary).
 If this returns @racket[#f], @racket[(yices)] will not succeed
 without its optional @racket[path] argument.}
-
-
-@subsection{CPLEX}
-
-@defmodule[rosette/solver/mip/cplex #:no-declare]
-
-@defproc*[([(cplex [#:path path (or/c path-string? #f) #f]
-                   [#:options options (hash/c symbol? any/c) (hash)]) solver?]
-           [(cplex? [v any/c]) boolean?])]{
-Returns a @racket[solver?] wrapper for the
-@hyperlink["https://www.ibm.com/developerworks/community/blogs/jfp/entry/CPLEX_Is_Free_For_Students?lang=en"]{CPLEX} solver from IBM.
-
-To use this solver, download and install CPLEX,
-and locate the CPLEX interactive executable,
-which is likely to be at @tt{CPLEX_Studio*/cplex/bin/x86-64*/cplex}.
-Either add this directory to your @tt{PATH},
-or pass the path to the executable as the @racket[path] argument.
-
-The @racket[options] argument provides additional options for configuring CPLEX.
-Setting the key @racket['timeout] in @racket[options] to an integer controls the solving timeout in seconds.
-Setting the key @racket['verbose] in @racket[options] to @racket[#t] displays detailed output from the CPLEX solver.
-
-The assertions given to @racket[solver-assert] must be linear in order to use the CPLEX solver. Otherwise, an @racket[exn:fail] exception is raised. 
-}
-
-@defproc[(cplex-available?) boolean?]{
-Returns true if the CPLEX solver is available for use (i.e., Rosette can locate a @tt{cplex} binary).
-If this returns @racket[#f], @racket[(cplex)] will not succeed
-without its optional @racket[path] argument.}
-
-@defproc[(solver-check-with-init 
-          [solver cplex?]
-          [#:mip-sol final-solution-file (or/c path-string? #f) #f]
-          [#:mip-start initial-solution-file (or/c path-string? #f) #f])
-         solution?]{
-Like @racket[solver-check], but accepts only a CPLEX solver,
-and takes optional arguments @racket[final-solution-file] and/or @racket[initial-solution-file].
-When @racket[final-solution-file] is a @racket[path-string?],
-the solver will save the solution to the given file in
-@hyperlink["https://www.ibm.com/support/knowledgecenter/bs/SSSA5P_12.6.2/ilog.odms.cplex.help/CPLEX/FileFormats/topics/MST.html"]{MST format}
-if a solution exists.
-This file can be used as the @racket[initial-solution-file] in a later call to @racket[solver-check-with-init]
-to provide starting values for variables.
-Note that @racket[initial-solution-file] does not have to be a satisfiable solution, but it must be in MST format.
-}
 
 @section{Solutions}
 
@@ -414,6 +371,7 @@ are collectively unsatisfiable.  Otherwise, the result is @racket[#f].
 Given a Rosette value and a satisfiable solution, @racket[evaluate] produces a 
 new value obtained by replacing every symbolic constant @var[c] in @racket[v] 
 with @racket[(solution #, @var[c])] and simplifying the result.
+
 @examples[#:eval rosette-eval                
 (define-symbolic a b boolean?)
 (define-symbolic x y integer?)
@@ -425,22 +383,26 @@ with @racket[(solution #, @var[c])] and simplifying the result.
 (evaluate (list 4 5 x) sol)
 (define vec (vector a))
 (evaluate vec sol)
-(code:line (eq? vec (evaluate vec sol)) (code:comment "evaluation produces a new vector"))
+(code:line (eq? vec (evaluate vec sol)) (code:comment "Evaluation produces a new vector."))
 (evaluate (+ x y) sol)
 (evaluate (and a b) sol) 
 ]}
 
-@defproc[(complete-solution [sol solution?] [consts (listof constant?)]) solution?]{
-Given a solution @racket[sol] and a list of symbolic constants @racket[consts],
+@defproc[(complete-solution [solution solution?] [consts (listof constant?)]) solution?]{
+                                                                                    
+Given a @racket[solution] and a list of symbolic constants @racket[consts],
 returns a solution that is complete with respect to the given list.
-In particular, if @racket[sol] is satisfiable, the returned solution is also satisfiable, and
-it extends the @racket[sol] model with default bindings for all constants in @racket[consts]
-that are not bound by @racket[sol]. Otherwise, @racket[sol] itself is returned.
+In particular, if the input @racket[solution] is satisfiable, the returned
+solution is also satisfiable, and
+it extends the @racket[solution] model with default bindings for all constants in
+@racket[consts] that are not bound by @racket[solution].
+Otherwise, @racket[solution] itself is returned.
+
 @examples[#:eval rosette-eval                
 (define-symbolic a boolean?)
 (define-symbolic x integer?)
 (define sol (solve (assert a)))
-(code:line sol (code:comment "no binding for x"))
+(code:line sol (code:comment "No binding for x."))
 (complete-solution sol (list a x))
 (complete-solution (solve (assert #f)) (list a x))
 ]}
