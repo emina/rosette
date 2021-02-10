@@ -11,4 +11,4 @@ Chapters @seclink["ch:getting-started"]{1}-@seclink["ch:programmer-defined-datat
 
 @include-section["racket-libs.scrbl"]
 @include-section["rosette-libs.scrbl"]
-@;include-section["utility-libs.scrbl"]
+@include-section["utility-libs.scrbl"]
