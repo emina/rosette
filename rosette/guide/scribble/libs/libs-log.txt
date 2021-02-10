@@ -1,86 +1,14 @@
 ;; This file was created by make-log-based-eval
 ((require rosette/lib/synthax) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define (div2 x)
-   ((choose bvshl bvashr bvlshr bvadd bvsub bvmul) x (?? (bitvector 8))))
+((require (only-in rosette/guide/scribble/util/demo print-forms-alt))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define-symbolic i (bitvector 8))
+((require (only-in rosette/guide/scribble/libs/bvmul2 bvmul2_??))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-('(define (div2 x) (bvlshr x (bv 1 8)))
- ((3) 0 () 0 () () (q values (define (div2 x) (bvlshr x (bv 1 8)))))
- #""
- #"")
-((code:comment "Defines a grammar for boolean expressions")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((code:comment "in negation normal form (NNF).")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((define-synthax
-  (nnf x y depth)
-  #:base
-  (choose x (! x) y (! y))
-  #:else
-  (choose
-   x
-   (! x)
-   y
-   (! y)
-   ((choose && ||) (nnf x y (- depth 1)) (nnf x y (- depth 1)))))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((code:comment "The body of nnf=> is a hole to be filled with an")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((code:comment "expression of depth (up to) 1 from the NNF grammar.")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((define (nnf=> x y) (nnf x y 1))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-(`(define (nnf=> x y) (,|| (! x) y))
+((bvmul2_?? (bv 1 8))
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -89,71 +17,44 @@
   0
   ()
   ()
-  (c values c (c define c (q nnf=> x y) c (c (0 (u . "||")) q (! x) y))))
+  (c values c (0 (u . "(bvshl (bv #x01 8) ??:bvmul2:9:12)"))))
  #""
  #"")
-((code:comment "A grammar for linear arithmetic.")
+((bvmul2_?? (bv 3 8))
  ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
   0
   ()
-  0
   ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+  (c values c (0 (u . "(bvshl (bv #x03 8) ??:bvmul2:9:12)"))))
  #""
  #"")
-((define-synthax LA (((_ e ...) (+ (* e (??)) ...))))
+((define-symbolic x (bitvector 8))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((code:comment "The following query has no solution because (??) in")
+((bvmul2_?? x)
  ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
   0
   ()
-  0
   ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
+  (c values c (0 (u . "(bvshl x ??:bvmul2:9:12)"))))
  #""
  #"")
-((code:comment "(LA e ...) generates a single integer hole that is")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((code:comment "shared by all e passed to LA, in this case x and y.")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((define-symbolic* x y integer?)
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
+((equal? (bvmul2_?? x) (bvmul2_?? x)) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((define sol
    (synthesize
     #:forall
-    (list x y)
+    (list x)
     #:guarantee
-    (assert (= (LA x y) (+ (* 2 x) y)))))
+    (assert (equal? (bvmul2_?? x) (bvmul x (bv 2 8))))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -166,135 +67,22 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(model\n [??:bvmul2:9:12 (bv #x01 8)])"))))
  #""
  #"")
-((code:comment "The following query has a solution because the second")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
+((print-forms-alt sol)
+ ((3) 0 () 0 () () (c values c (void)))
+ #"(define (bvmul2_?? x) (bvshl x (bv #x01 8)))\n"
  #"")
-((code:comment "clause of LA2 creates two independent (??) holes.")
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   exn
-   "code:comment: undefined;\n cannot reference an identifier before its definition\n  in module: 'program"))
- #""
- #"")
-((define-synthax
-  LA2
-  (((_ e) (* e (??))) ((_ e1 e2) (+ (* e1 (??)) (* e2 (??))))))
+((require (only-in rosette/guide/scribble/libs/bvmul2 bvmul2_choose))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define sol2
-   (synthesize
-    #:forall
-    (list x y)
-    #:guarantee
-    (assert (= (LA2 x y) (+ (* 2 x) y)))))
+((define-symbolic x (bitvector 8))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-('(define sol
-    (synthesize
-     #:forall
-     (list x y)
-     #:guarantee
-     (assert (= (+ (* x 2) (* y 1)) (+ (* 2 x) y)))))
- ((3)
-  0
-  ()
-  0
-  ()
-  ()
-  (q
-   values
-   (define sol
-     (synthesize
-      #:forall
-      (list x y)
-      #:guarantee
-      (assert (= (+ (* x 2) (* y 1)) (+ (* 2 x) y)))))))
- #""
- #"")
-((require rosette/lib/angelic) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define (static) (choose 1 2 3))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((define (dynamic) (choose* 1 2 3))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((static)
- ((3)
-  1
-  (((lib "rosette/guide/scribble/util/lifted.rkt")
-    .
-    deserialize-info:opaque-v0))
-  0
-  ()
-  ()
-  (c
-   values
-   c
-   (0 (u . "(ite 0$choose:eval:27:0 1 (ite 1$choose:eval:27:0 2 3))"))))
- #""
- #"")
-((static)
- ((3)
-  1
-  (((lib "rosette/guide/scribble/util/lifted.rkt")
-    .
-    deserialize-info:opaque-v0))
-  0
-  ()
-  ()
-  (c
-   values
-   c
-   (0 (u . "(ite 0$choose:eval:27:0 1 (ite 1$choose:eval:27:0 2 3))"))))
- #""
- #"")
-((dynamic)
- ((3)
-  1
-  (((lib "rosette/guide/scribble/util/lifted.rkt")
-    .
-    deserialize-info:opaque-v0))
-  0
-  ()
-  ()
-  (c values c (0 (u . "(ite xi?$0 1 (ite xi?$1 2 3))"))))
- #""
- #"")
-((dynamic)
- ((3)
-  1
-  (((lib "rosette/guide/scribble/util/lifted.rkt")
-    .
-    deserialize-info:opaque-v0))
-  0
-  ()
-  ()
-  (c values c (0 (u . "(ite xi?$2 1 (ite xi?$3 2 3))"))))
- #""
- #"")
-((equal? (static) (static)) ((3) 0 () 0 () () (q values #t)) #"" #"")
-((equal? (dynamic) (dynamic))
+((bvmul2_choose x)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -307,6 +95,250 @@
    values
    c
    (0
-    (u . "(= (ite xi?$4 1 (ite xi?$5 2 3)) (ite xi?$6 1 (ite xi?$7 2 3)))"))))
+    (u
+     .
+     "(ite*\n (⊢ 0$choose:bvmul2:12:4 (bvshl x ??:bvmul2:12:35))\n (⊢\n  (&& 1$choose:bvmul2:12:4 (! 0$choose:bvmul2:12:4))\n  (bvashr x ??:bvmul2:12:35))\n (⊢\n  (&& (! 0$choose:bvmul2:12:4) (! 1$choose:bvmul2:12:4))\n  (bvlshr x ??:bvmul2:12:35)))\n"))))
+ #""
+ #"")
+((equal? (bvmul2_choose x) (bvmul2_choose x))
+ ((3) 0 () 0 () () (q values #t))
+ #""
+ #"")
+((define sol
+   (synthesize
+    #:forall
+    (list x)
+    #:guarantee
+    (assert (equal? (bvmul2_choose x) (bvmul x (bv 2 8))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(sol
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(model\n [0$choose:bvmul2:12:4 #t]\n [1$choose:bvmul2:12:4 #f]\n [??:bvmul2:12:35 (bv #x01 8)])\n"))))
+ #""
+ #"")
+((print-forms-alt sol)
+ ((3) 0 () 0 () () (c values c (void)))
+ #"(define (bvmul2_choose x) (bvshl x (bv #x01 8)))\n"
+ #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-grammar
+  (bitfast y)
+  (expr (choose y (?? (bitvector 8)) ((bop) (expr) (expr))))
+  (bop (choose bvshl bvashr bvlshr bvand bvor bvxor bvadd bvsub)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((require (only-in rosette/guide/scribble/libs/bvmul2 bvmul2_bitfast))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic x (bitvector 8))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((begin0 (equal? (bvmul2_bitfast x) (bvmul2_bitfast x)) (vc-clear!))
+ ((3) 0 () 0 () () (q values #t))
+ #""
+ #"")
+((define sol
+   (synthesize
+    #:forall
+    (list x)
+    #:guarantee
+    (assert (equal? (bvmul2_bitfast x) (bvmul x (bv 2 8))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((print-forms-alt sol)
+ ((3) 0 () 0 () () (c values c (void)))
+ #"(define (bvmul2_bitfast x) (bvshl x (bv #x01 8)))\n"
+ #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-grammar
+  (bitcmp y)
+  (cmp (choose ((op) (bitfast y) (bitfast y)) (and (cmp) (cmp))))
+  (op (choose bvult bvule bvslt bvsle)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((require (only-in rosette/guide/scribble/libs/bvmul2 bvsdiv2_bitcmp))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic x (bitvector 8))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((current-grammar-depth 2) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define sol
+   (synthesize
+    #:forall
+    (list x)
+    #:guarantee
+    (assert (equal? (bvsdiv2_bitcmp x) (bvsdiv x (bv 2 8))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((print-forms-alt sol)
+ ((3) 0 () 0 () () (c values c (void)))
+ #"(define (bvsdiv2_bitcmp x)\n  (if (and (bvult x (bv #x81 8)) (bvsle (bv #x23 8) (bv #x72 8)))\n    (bvashr x (bv #x01 8))\n    (bvadd (bvashr x (bv #x01 8)) (bvand (bv #x01 8) x))))\n"
+ #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-grammar
+  (bvcmp xs)
+  (cmp (choose ((op) xs xs) (and (cmp) (cmp))))
+  (op (choose bvult bvule bvslt bvsle)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((require (only-in rosette/guide/scribble/libs/bvmul2 bvsdiv2_bvcmp))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic x (bitvector 8))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((current-grammar-depth 2) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((synthesize
+  #:forall
+  (list x)
+  #:guarantee
+  (assert (equal? (bvsdiv2_bvcmp x) (bvsdiv x (bv 2 8)))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(unsat)"))))
+ #""
+ #"")
+((define-grammar
+  (bvcmp* xs)
+  (cmp (choose ((op) (arg) (arg)) (and (cmp) (cmp))))
+  (op (choose bvult bvule bvslt bvsle))
+  (arg xs))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((require (only-in rosette/guide/scribble/libs/bvmul2 bvsdiv2_bvcmp*))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic x (bitvector 8))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((current-grammar-depth 2) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define sol
+   (synthesize
+    #:forall
+    (list x)
+    #:guarantee
+    (assert (equal? (bvsdiv2_bvcmp* x) (bvsdiv x (bv 2 8))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((print-forms-alt sol)
+ ((3) 0 () 0 () () (c values c (void)))
+ #"(define (bvsdiv2_bvcmp* x)\n  (if (bvult x (bv #x81 8))\n    (bvashr (bvashr x (bv #x01 8)) (bv #x00 8))\n    (bvashr (bvadd x (bv #x01 8)) (bvsub (bv #x49 8) (bv #x48 8)))))\n"
+ #"")
+((require rosette/lib/angelic rosette/lib/destruct)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define BV (bitvector 8)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((struct Add (arg) #:transparent)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((struct Mul (arg) #:transparent)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((struct Sqr () #:transparent) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define (interpret prog (acc (bv 0 BV)))
+   (if (null? prog)
+     acc
+     (interpret
+      (cdr prog)
+      (destruct
+       (car prog)
+       ((Add v) (bvadd acc v))
+       ((Mul v) (bvmul acc v))
+       ((Sqr) (bvmul acc acc))
+       (_ acc)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (inst*) (define-symbolic* arg BV) (choose* (Add arg) (Mul arg) (Sqr)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define (prog* n) (if (<= n 0) (list) (cons (inst*) (prog* (- n 1)))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define-symbolic acc BV) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define prog (prog* 3)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(prog
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "'((union\n   [xi?$0 #(struct:Add arg$0)]\n   [(&& xi?$1 (! xi?$0)) #(struct:Mul arg$0)]\n   [(&& (! xi?$0) (! xi?$1)) #(struct:Sqr)])\n  (union\n   [xi?$2 #(struct:Add arg$1)]\n   [(&& xi?$3 (! xi?$2)) #(struct:Mul arg$1)]\n   [(&& (! xi?$2) (! xi?$3)) #(struct:Sqr)])\n  (union\n   [xi?$4 #(struct:Add arg$2)]\n   [(&& xi?$5 (! xi?$4)) #(struct:Mul arg$2)]\n   [(&& (! xi?$4) (! xi?$5)) #(struct:Sqr)]))\n"))))
+ #""
+ #"")
+((define sol
+   (synthesize
+    #:forall
+    (list acc)
+    #:guarantee
+    (assert
+     (equal?
+      (interpret prog acc)
+      (bvsub (bvmul (bv 3 BV) acc acc) (bv 1 BV))))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((evaluate prog sol)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(list (Sqr) (Add (bv #x55 8)) (Mul (bv #x03 8)))"))))
  #""
  #"")

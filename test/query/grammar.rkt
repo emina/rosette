@@ -12,7 +12,7 @@
 (define-grammar (rec x)
   [s (choose x (??) (+ x (s)))])
 
-(define-sketch (srec x)
+(define-simple-grammar (srec x)
   (choose x (??) (+ x (srec))))
 
 (define (hrec x d) (rec x #:depth d))

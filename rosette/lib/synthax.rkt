@@ -7,7 +7,7 @@
          (only-in rosette constant model term-cache term?
                   [boolean? @boolean?] [integer? @integer?] [if @if] [assert @assert]))
 
-(provide ?? choose define-synthax define-grammar define-sketch generate-forms print-forms
+(provide ?? choose define-synthax define-grammar define-simple-grammar generate-forms print-forms
          (rename-out [depth current-grammar-depth])
          (for-syntax save-properties) restore-properties)
 
@@ -220,7 +220,7 @@
                [(_ (... ...) #:start s) #`(#,(car (member #'s (syntax->list #'(cid ...)) free-label-identifier=?)))]
                [_ #'(c0)]))))]))
 
-(define-syntax (define-sketch stx)
+(define-syntax (define-simple-grammar stx)
   (syntax-parse stx
     [(_ (id:id param:id ...) body)
      #'(define-grammar (id param ...)
@@ -274,11 +274,12 @@
                (let ([gf ((cdr (free-id-table-ref (codegen) id)) form sol)])
                  (cond [(equal? gf form) form]
                        [else (generate gf)])))
-             (let* ([es (syntax->list form)]
-                    [gs (map generate es)])
-               (with-syntax ([(g ...) gs])
-                 (cond [(equal? es gs) form]
-                       [else (quasisyntax/loc form (g ...))])))))]
+             (with-handlers ([exn:fail? (lambda (ex) (quasisyntax/loc form (assert #f)))])
+               (let* ([es (syntax->list form)]
+                      [gs (map generate es)])
+                 (with-syntax ([(g ...) gs])
+                   (cond [(equal? es gs) form]
+                         [else (quasisyntax/loc form (g ...))]))))))]
       [_ form]))
   
     (apply 
