@@ -19,5 +19,28 @@ u
   (list v u))
 
 (test)
-
 (union-contents u)
+
+(require rosette/lib/angelic)
+
+(define (vector-update! v idx proc)
+  (vector-set! v idx (proc (vector-ref v idx))))
+
+(define (vector-update!! v idx proc)
+  (for/all ([idx idx #:exhaustive])
+    (vector-update! v idx proc)))
+
+(define limit 10000)
+
+(define slow (list->vector (build-list limit identity)))
+(define fast (list->vector (build-list limit identity)))
+
+(define idx (choose* 0 5 10))
+
+(time (vector-update! slow idx add1))
+(vector-ref slow 0)
+(vector-ref slow 1)
+
+(time (vector-update!! fast idx add1))
+(vector-ref fast 0)
+(vector-ref fast 1)

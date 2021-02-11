@@ -10,8 +10,7 @@
            (only-in racket/gui snip%)
            rosette/base/form/define
            rosette/base/core/term
-           (only-in rosette/base/base bv bitvector ~>)
-           (only-in rosette/base/core/safe assert)
+           (only-in rosette/base/base bv bitvector ~> assert)
            racket)
           scribble/core scribble/html-properties racket/runtime-path)
 

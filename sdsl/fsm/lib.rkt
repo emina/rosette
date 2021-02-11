@@ -6,11 +6,24 @@
 
 (provide (all-defined-out))
 
-(define-lift symbol->string 
-  [(symbol?) racket/symbol->string])
+(define (symbol->string s)
+  (for/all ([s s])
+    (racket/symbol->string s)))
 
-(define-lift regexp-match?  
-  [(pregexp? string?) racket/regexp-match?])
+(define (regexp-match? px str)
+  (for*/all ([px px][str str])
+     (racket/regexp-match? px str)))
 
-(define-lift string-append  
-  [string? (compose1 string->immutable-string racket/string-append)])
+(define string-append
+  (case-lambda
+    [()
+     (racket/string-append)]
+    [(str)
+     (for/all ([str str])
+       (racket/string-append str))]
+    [(str1 str2)
+     (for*/all ([str1 str1][str2 str2])
+       (racket/string-append str1 str2))]
+    [strs
+     (string-append (car strs) (apply string-append (cdr strs)))]))
+

@@ -5,7 +5,7 @@
 
 @title[#:tag "ch:symbolic-reflection" #:style 'toc]{Symbolic Reflection}
 
-This chapter describes @deftech{symbolic reflection}, a convenient 
+This chapter describes @deftech{symbolic reflection}, a  
 mechanism for manipulating the representation of symbolic values 
 (Section @seclink["sec:value-reflection"]{7.1}) and 
 the state of the symbolic evaluation from within a Rosette program 
@@ -18,4 +18,4 @@ better performance; and (3) implementing advanced solver-aided functionality.
 
 @[table-of-contents]
 @include-section["value-reflection.scrbl"]
-@include-section["state-reflection.scrbl"]
+@;include-section["state-reflection.scrbl"]
