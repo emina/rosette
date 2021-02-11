@@ -4,7 +4,7 @@
            rosette/solver/solver rosette/solver/solution rosette/query/query
            rosette/base/form/define  
            rosette/base/core/term rosette/base/core/type rosette/base/core/union
-           (only-in rosette/base/base vc  bitvector ~>)
+           (only-in rosette/base/base vc vc-clear! bitvector ~>)
            (only-in rosette/base/core/reflect symbolics)
            rosette/base/core/forall racket)
           scribble/core scribble/html-properties scribble/example racket/sandbox
