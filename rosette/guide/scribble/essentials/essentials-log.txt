@@ -438,7 +438,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
- #"cpu time: 2 real time: 39 gc time: 0\n"
+ #"cpu time: 1 real time: 39 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid l h)))
  ((3)
@@ -453,7 +453,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x2faef9a1 32)]\n [h (bv #x5eefb8dd 32)])"))))
- #"cpu time: 2 real time: 166 gc time: 0\n"
+ #"cpu time: 4 real time: 175 gc time: 0\n"
  #"")
 ((time (verify (check-mid bvmid-no-overflow l h)))
  ((3)
@@ -465,7 +465,7 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 0 real time: 158 gc time: 0\n"
+ #"cpu time: 1 real time: 156 gc time: 0\n"
  #"")
 ((error 'call-with-deep-time-limit "out of time")
  ((3) 0 () 0 () () (q exn "call-with-deep-time-limit: out of time"))
@@ -498,7 +498,7 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 1 real time: 156 gc time: 0\n"
+ #"cpu time: 1 real time: 157 gc time: 0\n"
  #"")
 ((current-bitwidth 32) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((time (verify (check-mid-slow bvmid l h)))
@@ -526,7 +526,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x71979fa3 32)]\n [h (bv #x76b91b88 32)])"))))
- #"cpu time: 2 real time: 149 gc time: 0\n"
+ #"cpu time: 1 real time: 149 gc time: 0\n"
  #"")
 ((current-bitwidth 512) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((time (verify (check-mid-slow bvmid l h)))
@@ -542,7 +542,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x70000006 32)]\n [h (bv #x73fffffa 32)])"))))
- #"cpu time: 1 real time: 376 gc time: 0\n"
+ #"cpu time: 2 real time: 380 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid-no-overflow l h)))
  ((3)
@@ -554,7 +554,7 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 7 real time: 428 gc time: 5\n"
+ #"cpu time: 1 real time: 430 gc time: 0\n"
  #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((require rosette/solver/smt/z3)
@@ -578,7 +578,7 @@
    values
    c
    (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
- #"cpu time: 4 real time: 33 gc time: 0\n"
+ #"cpu time: 4 real time: 34 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid l h)))
  ((3)
@@ -765,7 +765,7 @@
  #"")
 ((define cex (time (verify (check-sqrt bvsqrt l))))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 7 real time: 1014 gc time: 0\n"
+ #"cpu time: 6 real time: 1047 gc time: 0\n"
  #"")
 ((bvsqrt (evaluate l cex))
  ((3) 0 () 0 () () (q exn "[assert] Out of fuel."))
@@ -783,5 +783,5 @@
   ()
   ()
   (c values c (0 (u . "(unsat)"))))
- #"cpu time: 4 real time: 68884 gc time: 0\n"
+ #"cpu time: 4 real time: 68595 gc time: 0\n"
  #"")

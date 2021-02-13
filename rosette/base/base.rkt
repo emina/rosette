@@ -6,7 +6,7 @@
   racket/provide
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" "core/bvlib.rkt"
   "core/function.rkt"
-  "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt" "core/result.rkt"
+  "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt"  
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
   "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
@@ -49,11 +49,10 @@
      symbolics type? solvable? @any/c type-of type-cast for/all for*/all
      term? constant? expression? 
      term expression constant term-type
-     term=? term->datum clear-terms! term-cache
+     term=? term->datum clear-terms! term-cache weak-term-cache
      union? union union-contents union-guards union-values
      union-filter in-union in-union* in-union-guards in-union-values
-     ; core/result.rkt
-     result? result-value result-state ans? halt?
+     result? result-value result-state ans ans? halt halt?
      ; adt/box.rkt
      @box @box-immutable @box? @unbox @set-box!
      ; adt/list.rkt : Pair Constructors and Selectors

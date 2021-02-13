@@ -18,4 +18,4 @@ better performance; and (3) implementing advanced solver-aided functionality.
 
 @[table-of-contents]
 @include-section["value-reflection.scrbl"]
-@;include-section["state-reflection.scrbl"]
+@include-section["state-reflection.scrbl"]

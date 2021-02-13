@@ -17,36 +17,6 @@
           (add-between (map (lambda (id) (racket #,#`#,id)) 
                             (filter lifted? racket-ids)) ", ")))
 
-(define (showable v)
-  (match v
-    [(list '#%brackets rest ...)
-     `(⟦ ,@(map showable rest) ⟧)]
-    [(list '#%braces rest ...)
-     `(⦃ ,@(map showable rest) ⦄)]
-    [(list 'bv (? integer? x) (? integer? len))
-     (bv x len)]
-    [(? list?)
-     (map showable v)]
-    [_ v]))
-
-(define (show v [port (current-output-port)])
-  (unless (void? v)
-    (define s (format "~v" v))
-    (cond
-      [(<= (string-length s) (pretty-print-columns))
-       (fprintf port "~a" s)]
-      [else 
-       (define out (open-output-string))
-       (parameterize ([read-square-bracket-with-tag #t]
-                      [read-curly-brace-with-tag #t])
-         (pretty-write (showable (read (open-input-string s))) out))
-       (let* ([str (get-output-string out)]
-              [str (regexp-replace* #px"\\(⟦\\s*" str "[")]
-              [str (regexp-replace* #px"\\s*⟧\\)" str "]")]
-              [str (regexp-replace* #px"\\(⦃\\s*" str "{")]
-              [str (regexp-replace* #px"\\s*⦄\\)" str "}")])
-         (fprintf port "~a" str))])))
-    
 (define (rosette-evaluator [eval-limits #f] [lang 'rosette/safe])
    (parameterize ([sandbox-output 'string]
                   [sandbox-error-output 'string]
@@ -86,3 +56,86 @@
       (parameterize ([current-eval (serializing-evaluator (rosette-evaluator eval-limits lang))])
         (make-log-based-eval logfile 'record))))
 
+
+(define (show v [port (current-output-port)])
+  (unless (void? v)
+    (define s (format "~v" v))
+    (cond
+      [(<= (string-length s) (pretty-print-columns))
+       (fprintf port "~a" s)]
+      [else 
+       (define out (open-output-string))
+       (parameterize ([read-square-bracket-with-tag #t]
+                      [read-curly-brace-with-tag #t]
+                      [current-readtable tuple-readtable])
+         (pretty-write (showable (read (open-input-string s))) out))
+       (let* ([str (get-output-string out)]
+              [str (regexp-replace* #px"\\(⟦\\s*" str "[")]
+              [str (regexp-replace* #px"\\s*⟧\\)" str "]")]
+              [str (regexp-replace* #px"\\(⦃\\s*" str "{")]
+              [str (regexp-replace* #px"\\s*⦄\\)" str "}")])
+         (fprintf port "~a" str))])))
+
+(define (showable v)
+  (match v
+    [(list '#%brackets rest ...)
+     `(⟦ ,@(map showable rest) ⟧)]
+    [(list '#%braces rest ...)
+     `(⦃ ,@(map showable rest) ⦄)]
+    [(list 'bv (? integer? x) (? integer? len))
+     (bv x len)]
+    [(? list?)
+     (map showable v)]
+    [_ v]))
+
+; Adapted from https://docs.racket-lang.org/reference/readtables.html
+
+(define (parse-nonempty port read-one src)
+    (let ([ch (peek-char port)])
+      (if (eof-object? ch)
+          null
+          (case ch
+            [(#\>) (read-char port)
+                   null]
+            [else
+             (cons (read-one)
+                   (parse-nonempty port read-one src))]))))
+
+(define (parse port read-one src)
+  (if (eq? #\> (peek-char port))
+      null
+      (cons (read-one)
+            (parse-nonempty port read-one src))))
+
+(define (wrap l)
+  (define out (open-output-string))
+  (fprintf out "#<")
+  (for ([v l])
+    (match v
+      [(list 'unquote w)
+       (fprintf out ", ~a" w)]
+      [_  (fprintf out "~a" v)]))
+  (fprintf out ">")
+  (opaque (get-output-string out)))
+
+
+(define parse-open-tuple
+    (case-lambda
+     [(ch port)
+      (wrap (parse port
+                   (lambda ()
+                     (read/recursive port #f ))
+                   (object-name port)))]
+     [(ch port src line col pos)
+      (datum->syntax
+       #f
+       (wrap (parse port
+                    (lambda ()
+                      (read-syntax/recursive src port #f))
+                    src))
+       (let-values ([(l c p) (port-next-location port)])
+         (list src line col pos (and pos (- p pos)))))]))
+
+(define tuple-readtable
+    (make-readtable #f #\< 'dispatch-macro parse-open-tuple
+                       #\> 'terminating-macro (lambda _ null)))

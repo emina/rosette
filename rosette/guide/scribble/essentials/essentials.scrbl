@@ -107,7 +107,7 @@ Like many languages, Rosette provides a construct for expressing @emph{assertion
 (assert #t) 
 (eval:error (assert #f))]
 
-When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, the value is accumulated in the current @tech[#:key "vc"]{verification condition} (VC), and the assertion's effect (whether it passes or fails) is eventually determined by the solver.
+When given a symbolic boolean value, however, a Rosette assertion has no immediate effect.  Instead, the value is accumulated in the current @tech{verification condition} (VC), and the assertion's effect (whether it passes or fails) is eventually determined by the solver.
 
 @examples[#:eval rosette-eval #:label #f
 (code:line (vc-asserts (vc)) (code:comment "We asserted #f above, so the current VC reflects that."))

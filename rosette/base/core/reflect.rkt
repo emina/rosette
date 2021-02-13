@@ -1,15 +1,16 @@
 #lang racket
 
 (require (only-in "forall.rkt" for/all for*/all) 
-         "term.rkt" "union.rkt")
+         "term.rkt" "union.rkt" "result.rkt")
 
 (provide type? solvable? @any/c type-of type-cast for/all for*/all
          term? constant? expression? 
          term expression constant
          term-type term=? 
-         term->datum clear-terms! term-cache
+         term->datum clear-terms! term-cache weak-term-cache
          union? union union-contents union-guards union-values
          union-filter in-union in-union* in-union-guards in-union-values
+         (struct-out ans) (struct-out halt) result? result-value result-state
          symbolics)
 
 (define (term=? s0 s1)

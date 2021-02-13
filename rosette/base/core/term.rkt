@@ -4,7 +4,7 @@
          "type.rkt" "reporter.rkt")
 
 (provide
- term-cache clear-terms!
+ term-cache clear-terms! weak-term-cache
  term? constant? expression? 
  (rename-out [a-term term] [an-expression expression] [a-constant constant] [term-ord term-id]) 
  term-type term<? sublist? @app
@@ -39,6 +39,24 @@
               (hash-remove! cache (term-val t))
               (set-add! evicted t))
             (loop))))))
+
+; Returns a garbage-collected (weak) hash that can be used as a term-cache.
+; The returned cache is populated with the contents of (term-cache).
+(define (weak-term-cache)
+  (define cache
+    (impersonate-hash
+     (make-weak-hash)
+     (lambda (h k)
+       (values k (lambda (h k e) (ephemeron-value e #f))))
+     (lambda (h k v)
+       (values k (make-ephemeron k v)))
+     (lambda (h k) k)
+     (lambda (h k) k)
+     hash-clear!))
+  (for ([(k v) (term-cache)])
+    (hash-set! cache k v))
+  cache)
+    
 
 #|-----------------------------------------------------------------------------------|#
 ; The term structure defines a symbolic value, which can be a variable or an expression.
