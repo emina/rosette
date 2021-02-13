@@ -23,7 +23,7 @@
 
 (define-syntax-rule (check-cast (type val) (accepted? out))
     (match (with-vc (type-cast type val))
-      [(and r (or (ans v sp) (halt v sp)))
+      [(and r (or (ans v sp) (failed v sp)))
        (when (ans? r) (check-equal? v out))
        (check-equal? (vc-assumes sp) #t)
        (check-equal? (vc-asserts sp) accepted?)]))
@@ -85,14 +85,14 @@
   (syntax-rules ()
     [(_ expr)
      (match (with-vc expr)
-       [(halt e _) (check-pred exn:fail? e)]
-       [r (check-pred halt? r)])]
+       [(failed e _) (check-pred exn:fail? e)]
+       [r (check-pred failed? r)])]
     [(_ rx expr)
      (match (with-vc expr)
-       [(halt e _)
+       [(failed e _)
         (check-pred exn:fail? e)
         (check-true (regexp-match? rx (exn-message e)))]
-       [r (check-pred halt? r)])]))
+       [r (check-pred failed? r)])]))
 
 (define-syntax-rule (check-state actual expected-value expected-asserts)
   (let ([r (with-vc actual)])

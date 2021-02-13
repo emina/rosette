@@ -34,10 +34,10 @@
     [(_ expr) (check-bv-exn #px"expected bitvectors of same length" expr)]
     [(_ rx expr)
      (match (with-vc expr)
-       [(halt e _)
+       [(failed e _)
         (check-pred exn:fail? e)
         (check-true (regexp-match? rx (exn-message e)))]
-       [r (check-pred halt? r)])]))
+       [r (check-pred failed? r)])]))
 
 (define (check-unary op1 op c)
   (check≡ (op1 x) (op x (bv c 4)))

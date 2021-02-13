@@ -7,7 +7,7 @@
                     vc vc? vc-assumes vc-asserts
                     clear-vc! with-vc vc-true vc-true?
                     result? result-value result-state
-                    ans ans? halt halt? clear-terms! term-cache weak-term-cache)
+                    ans ans? failed failed? clear-terms! term-cache weak-term-cache)
            racket)
           scribble/core scribble/html-properties scribble/example racket/sandbox
           racket/runtime-path 
@@ -152,7 +152,7 @@ See @racket[vc] for details.
  then the result is @racket[ans?], and its
  @racket[result-value] contains the value computed by
  @racket[expr]. If @racket[expr] fails, the result is
- @racket[halt?], and its @racket[result-value] contains an
+ @racket[failed?], and its @racket[result-value] contains an
  @racket[exn:fail?] exception that represents the cause of
  the abnormal termination. In either case,
  @racket[result-state] holds the final verification condition
@@ -193,14 +193,14 @@ See @racket[vc] for details.
               @defproc[(result-value [v result?]) any/c]
               @defproc[(result-state [v result?]) any/c] 
               @defproc[(ans?  [v any/c]) boolean?]
-              @defproc[(halt? [v any/c]) boolean?])]{
+              @defproc[(failed? [v any/c]) boolean?])]{
 
  A @racket[result?] value represents the result of symbolic
  evaluation, which includes an output value,
  @racket[(result-value v)], and a part of the output state,
  @racket[(result-state v)]. Every result is either
  @racket[ans?], if the evaluation terminated normally, or
- @racket[halt?] otherwise.
+ @racket[failed?] otherwise.
 
  See also @racket[with-vc].
  

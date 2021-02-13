@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out ans) (struct-out halt)
+(provide (struct-out ans) (struct-out failed)
          result? result-value result-state)
 
 ; Represents the result of symbolic evaluation,
@@ -14,4 +14,4 @@
 ; Represents the result of an evaluation that resulted in
 ; an exn:fail? exception being raised. In this case,
 ; the result-value field stores the exception that was raised.
-(struct halt result () #:transparent)
+(struct failed result () #:transparent)

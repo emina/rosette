@@ -16,7 +16,7 @@
 ; and vc* captures the verification condition generated during the
 ; evaluation, starting from the current vc.
 ;
-; If the thunk terminates abnormally, the result is (halt ex vc*),
+; If the thunk terminates abnormally, the result is (failed ex vc*),
 ; where ex is an exn:fail:svm? exception that represents the cause
 ; of the abnormal termination, and vc* captures the verification
 ; condition generated during the evaluation, starting from the current vc.

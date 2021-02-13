@@ -52,7 +52,7 @@
      term=? term->datum clear-terms! term-cache weak-term-cache
      union? union union-contents union-guards union-values
      union-filter in-union in-union* in-union-guards in-union-values
-     result? result-value result-state ans ans? halt halt?
+     result? result-value result-state ans ans? failed failed?
      ; adt/box.rkt
      @box @box-immutable @box? @unbox @set-box!
      ; adt/list.rkt : Pair Constructors and Selectors

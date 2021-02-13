@@ -52,7 +52,7 @@
 (define-syntax-rule (with-ans-or-fail expr)
   (match (with-vc expr)
     [(ans v _)    v]
-    [(halt ex _)  (raise ex)]))
+    [(failed ex _)  (raise ex)]))
     
 
 ; Makes sure that a test suite clears all Rosette state after it terminates.

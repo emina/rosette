@@ -444,13 +444,13 @@
     [(_ val msg) (syntax/loc stx ($assume val msg raise-exn:fail:svm:assume:user))]))
 
 (define (halt-svm ex)
-  (define result (halt ex (current-vc)))
+  (define result (failed ex (current-vc)))
   ((current-reporter) 'exception result)
   result)
 
 (define (halt-err ex) ; Treat an exn:fail? error as an assertion failure.
   (define result
-    (halt (make-exn:fail:svm:assert:err (exn-message ex) (exn-continuation-marks ex))
+    (failed (make-exn:fail:svm:assert:err (exn-message ex) (exn-continuation-marks ex))
           (asserting (current-vc) #f)))
   ((current-reporter) 'exception result)
   result)
@@ -466,7 +466,7 @@
 ; with vc0 as the initial vc. 
 ;
 ; If the evaluation of the body terminates abnormally with an exn:fail? exception,
-; (with-vc vc0 body) outputs (halt v vc*) where v is an exn:fail:svm? exception
+; (with-vc vc0 body) outputs (failed v vc*) where v is an exn:fail:svm? exception
 ; that represents the cause of the abnormal termination, and vc* is the vc
 ; generated during the evaluation, with vc0 as the initial vc.
 (define-syntax (with-vc stx)

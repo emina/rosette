@@ -29,9 +29,9 @@
     (check-store st e-store)
     (check-true (vc-eqv? sp e-assumes e-asserts))))
 
-(define-syntax-rule (check-halt actual e-exn? e-assumes e-asserts)
+(define-syntax-rule (check-failed actual e-exn? e-assumes e-asserts)
   (begin
-    (match-define (halt ex sp) actual)
+    (match-define (failed ex sp) actual)
     (check-pred e-exn? ex) 
     (check-true (vc-eqv? sp e-assumes e-asserts))))
 
@@ -50,17 +50,17 @@
   (check-ans (eval-assuming g (lambda () (@set-box! x 5) (@assert a) (@assume b)))
              (void) `((,x 0 5)) (&& g (=> a b)) (=> g a))
   ;---------------------------;
-  (check-halt (eval-assuming #f (const 1))
+  (check-failed (eval-assuming #f (const 1))
               exn:fail:svm:assume:core? #f #t)
-  (check-halt (eval-assuming g (lambda () (@set-box! x 2) (@assume (! g))))
+  (check-failed (eval-assuming g (lambda () (@set-box! x 2) (@assume (! g))))
               exn:fail:svm:assume:user? #f #t)
-  (check-halt (eval-assuming g (lambda () (@set-box! x 4) ($assume (! g))))
+  (check-failed (eval-assuming g (lambda () (@set-box! x 4) ($assume (! g))))
               exn:fail:svm:assume:core? #f #t)
-  (check-halt (eval-assuming g (lambda () (@set-box! x 5) (@assert #f)))
+  (check-failed (eval-assuming g (lambda () (@set-box! x 5) (@assert #f)))
               exn:fail:svm:assert:user? g (! g))
-  (check-halt (eval-assuming g (lambda () (@set-box! x 6) ($assert #f)))
+  (check-failed (eval-assuming g (lambda () (@set-box! x 6) ($assert #f)))
               exn:fail:svm:assert:core? g (! g))
-  (check-halt (eval-assuming g (lambda () (@set-box! x 7) (1)))
+  (check-failed (eval-assuming g (lambda () (@set-box! x 7) (1)))
               exn:fail:svm:assert:err? g (! g))
   ;---------------------------;
   (check-equal? (@unbox x) 3)

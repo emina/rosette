@@ -415,12 +415,12 @@
     [(_ expr) (check-bv-exn #px"expected bitvectors of same length" expr)]
     [(_ p expr)
      (match (with-vc expr)
-       [(halt e _)
+       [(failed e _)
         (define rx p)
         (cond [(procedure? p) (check-pred p e)]
               [else (check-pred exn:fail? e)
                     (check-true (regexp-match? rx (exn-message e)))])]
-       [r (check-pred halt? r)])]))
+       [r (check-pred failed? r)])]))
          
 (define-tests (check-lifted-unary)
   (define-symbolic* n @integer?)

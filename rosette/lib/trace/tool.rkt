@@ -63,7 +63,7 @@
 
 (define reporter
   (match-lambda*
-    [(list 'exception (halt e s))
+    [(list 'exception (failed e s))
      (define assumes (vc-assumes s))
      (define asserts (vc-asserts s))
      (define skip?

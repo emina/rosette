@@ -229,7 +229,7 @@
    (0
     (u
      .
-     "(halt\n (exn:fail:svm:merge \"[merge] failed\" #<continuation-mark-set>)\n (vc (! b) b))\n"))))
+     "(failed\n (exn:fail:svm:merge \"[merge] failed\" #<continuation-mark-set>)\n (vc (! b) b))\n"))))
  #""
  #"")
 ((vc)
