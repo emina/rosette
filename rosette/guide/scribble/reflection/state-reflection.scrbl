@@ -105,8 +105,7 @@ best to use them sparingly.
 }
 
                                                    
-@deftogether[(@defproc[(vc) vc?]
-              @defproc[(clear-vc!) void?])]{
+@defproc[(vc) vc?]{
                                                    
  The current @tech{verification condition}, @racket[(vc)],
  is a value of type @racket[vc?]. At the start of evaluation,
@@ -130,6 +129,11 @@ best to use them sparingly.
 (vc)
 (clear-vc!)
 (vc)]
+}
+
+@defproc[(clear-vc!) void?]{
+Clears the current verification condition by setting it to @racket[vc-true].
+See @racket[vc] for details.               
 }
 
 @defform*[((with-vc expr)
