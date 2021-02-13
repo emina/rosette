@@ -13,7 +13,7 @@
 (define-syntax-rule (check-exn e ...)
   (begin
     (rackunit/check-exn e ...)
-    (vc-clear!)))
+    (clear-vc!)))
 
 (define-syntax-rule (check≡ actual expected)
   (let ([ra (with-vc actual)]

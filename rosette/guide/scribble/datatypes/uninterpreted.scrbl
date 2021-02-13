@@ -5,7 +5,7 @@
            rosette/base/core/term (only-in rosette/query/finitize current-bitwidth)
            (only-in rosette/base/core/union union?)
            (only-in rosette/base/core/function ~> function? fv?)
-           (only-in rosette/base/base bv bitvector assert vc vc-clear!))
+           (only-in rosette/base/base bv bitvector assert vc clear-vc!))
           (for-label racket) racket/runtime-path
           scribble/core scribble/html-properties scribble/examples racket/sandbox
           "../util/lifted.rkt")
@@ -81,7 +81,7 @@ g
   (code:line (function? 3)              (code:comment "Not a type."))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc[(fv? [v any/c]) boolean?]{
                                    

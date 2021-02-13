@@ -30,14 +30,14 @@
 (define-syntax-rule (check-exn e ...)
   (begin
     (rackunit/check-exn e ...)
-    (vc-clear!)))
+    (clear-vc!)))
 
 (define-syntax-rule (define-tests (name arg ...) body ...)
   (define (name arg ...)
     (begin
-     (vc-clear!)
+     (clear-vc!)
      body ...
-     (vc-clear!))))
+     (clear-vc!))))
 
 (define-tests (check-nary op id x y z)
   (check-equal? (op id id) id)

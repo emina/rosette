@@ -9,7 +9,7 @@
          (only-in rosette/base/form/define define-symbolic)
          (only-in rosette/base/core/bool
                   @boolean? @true? && || ! => <=>
-                  vc vc-clear! with-vc vc-merge!
+                  vc clear-vc! with-vc vc-merge!
                   $assume $assert @assume @assert
                   vc-true vc-true?
                   vc-assumes vc-asserts)
@@ -70,7 +70,7 @@
   (begin
     (check-vc-eqv e-assumes e-asserts)
     (check-true (int-eqv? (@unbox cell) e-cell-val))
-    (vc-clear!)
+    (clear-vc!)
     (@set-box! cell 1)))
 
 (define (check-eval-guarded-0)

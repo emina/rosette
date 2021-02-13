@@ -141,7 +141,7 @@
 ((function? (if b t0? t1?)) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((function? integer?) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((function? 3) ((3) 0 () 0 () () (q values #f)) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic f (~> boolean? boolean?))
  ((3) 0 () 0 () () (c values c (void)))
  #""

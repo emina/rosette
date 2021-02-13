@@ -80,7 +80,7 @@
 ((assert #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((assert #f) ((3) 0 () 0 () () (q exn "[assert] failed")) #"" #"")
 ((vc-asserts (vc)) ((3) 0 () 0 () () (q values #f)) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((vc-asserts (vc)) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((assert (not b)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((vc-asserts (vc))
@@ -95,12 +95,12 @@
   (c values c (0 (u . "(! b)"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((assume #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((vc-assumes (vc)) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((assume #f) ((3) 0 () 0 () () (q exn "[assume] failed")) #"" #"")
 ((vc-assumes (vc)) ((3) 0 () 0 () () (q values #f)) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic i j integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((assume (> j 0)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((vc-assumes (vc))
@@ -140,7 +140,7 @@
   (c values c (0 (u . "(vc (< 0 j) (|| (! (< 0 j)) (< (+ i (- j)) i)))"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define int32? (bitvector 32)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define (int32 i) (bv i int32?))
  ((3) 0 () 0 () () (c values c (void)))
@@ -274,7 +274,7 @@
  #""
  #"")
 ((check-mid bvmid cl ch) ((3) 0 () 0 () () (q exn "[assert] failed")) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((bvadd cl ch)
  ((3)
   1
@@ -293,7 +293,7 @@
  #"")
 ((+ il ih) ((3) 0 () 0 () () (q values 2347597826)) #"" #"")
 ((- (expt 2 31) 1) ((3) 0 () 0 () () (q values 2147483647)) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define (bvmid-no-overflow lo hi) (bvadd lo (bvsdiv (bvsub hi lo) (int32 2))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -354,7 +354,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #"(define (bvmid-fast lo hi) (bvlshr (bvadd hi lo) (bv #x00000001 32)))\n"
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define (bvmid-fast lo hi) (bvlshr (bvadd hi lo) (bv 1 32)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -410,7 +410,7 @@
  #"")
 ((define (bvmid-and? lo hi) #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((void) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define (check-mid-slow impl lo hi)
    (assume (bvsle (int32 0) lo))
    (assume (bvsle lo hi))
@@ -592,7 +592,7 @@
    "read-solution: unrecognized solver output: (error line 68 column 19: Invalid function definition: unknown sort 'Int')"))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-solver (z3)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define (bvsqrt n)
    (cond
@@ -726,7 +726,7 @@
      "(bvlshr\n (bvlshr (bvlshr l (bv #x00000002 32)) (bv #x00000002 32))\n (bv #x00000002 32))\n"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((require (only-in racket make-parameter parameterize))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -771,7 +771,7 @@
  ((3) 0 () 0 () () (q exn "[assert] Out of fuel."))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((fuel 16) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((time (verify (check-sqrt bvsqrt l)))
  ((3)

@@ -61,7 +61,7 @@ comparisons.  But when applied to symbolic values of a primitive
 @tech[#:key "solvable type"]{solvable} type, @racket[distinct?] will produce a compact
 symbolic value that can be directly solved by the underlying solver.
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 @defproc[(distinct? [v any/c] ...) boolean?]{
   Returns true iff all of the given values @racket[v] are distinct---i.e., pairwise un-@racket[equal?]
   to each other.  If all values @racket[v] are of the same primitive (non-@racket[function?])

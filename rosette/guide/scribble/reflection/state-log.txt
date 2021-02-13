@@ -94,7 +94,7 @@
      "(list\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n b\n (&& a b)\n (&& a (! b))\n (! b)\n ...)\n"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 (vc-true
  ((3)
   1
@@ -163,7 +163,7 @@
   (c values c (0 (u . "(vc a (|| b (! a)))"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((vc)
  ((3)
   1
@@ -245,7 +245,7 @@
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((hash-values (term-cache))
  ((3)
   1

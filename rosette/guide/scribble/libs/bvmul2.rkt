@@ -108,7 +108,7 @@
 
   (demo (bvmul2_choose x))
   (demo (equal? (bvmul2_choose x) (bvmul2_choose x)))
-  (vc-clear!)
+  (clear-vc!)
 
   (define sol
     (synthesize
@@ -123,7 +123,7 @@
   
   (demo (bvmul2_bitfast x))
   (demo (equal? (bvmul2_bitfast x) (bvmul2_bitfast x)))
-  (vc-clear!)
+  (clear-vc!)
   
   (define sol
     (synthesize
@@ -136,7 +136,7 @@
 
 (define-demo grammar-with-grammar-hole-demo
   
-  (vc-clear!)
+  (clear-vc!)
 
   (current-grammar-depth 2)
   (define sol
@@ -149,7 +149,7 @@
 
 (define-demo grammar-with-argument-choose-hole-demo
   
-  (vc-clear!)
+  (clear-vc!)
 
   (define-symbolic x y (bitvector 8))
 
@@ -170,7 +170,7 @@
 
 (define-demo grammar-with-argument-bitfast-hole-demo
   
-  (vc-clear!)
+  (clear-vc!)
 
   (current-grammar-depth 2)
   

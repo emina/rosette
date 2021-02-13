@@ -61,7 +61,7 @@ logical meaning; e.g., unlike Racket's shortcircuiting
 evaluates all of its arguments before taking their
 conjunction.
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc[(! [v boolean?]) boolean?]{
   Returns the negation of the given boolean value.
@@ -73,7 +73,7 @@ conjunction.
    (code:line (vc)            (code:comment "so Rosette emits a corresponding assertion."))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(&& [v boolean?] ...) boolean?]
            [(|| [v boolean?] ...) boolean?])]{
@@ -87,7 +87,7 @@ Returns the logical conjunction or disjunction of zero or more boolean values.
  (code:line (vc)               (code:comment "so Rosette emits a corresponding assertion."))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(=>  [x boolean?] [y boolean?]) boolean?]
            [(<=> [x boolean?] [y boolean?]) boolean?])]{
@@ -109,7 +109,7 @@ body may have side effects (e.g., generate assertions). When
 there are no side effects, however, these constructs have
 their usual logical meaning.
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 @(rosette-eval '(current-bitwidth #f))
 @defproc*[([(forall [vs (listof constant?)] [body boolean?]) boolean?]
            [(exists [vs (listof constant?)] [body boolean?]) boolean?])]{
@@ -135,7 +135,7 @@ with pure bodies, as shown below.
   (forall (list b x y)
     (= (+ (if b x 'x) 1) y))    (code:comment "Body emits a type assertion."))
  (vc)
- (vc-clear!)
+ (clear-vc!)
  (code:comment "To avoid surprises, capture assertions and assumptions using with-vc,")
  (code:comment "and handle as desired, e.g.:")
  (define out (with-vc (= (+ (if b x 'x) 1) y)))

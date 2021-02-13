@@ -16,7 +16,7 @@
   (filtered-out drop@ 
     (combine-out
      ; core/bool.rkt
-     vc with-vc vc-clear! vc? vc-true? vc-true vc-assumes vc-asserts
+     vc with-vc clear-vc! vc? vc-true? vc-true vc-assumes vc-asserts
      @assert @assume
      @boolean? @false? @! @&& @=> @<=> @forall @exists
      ; core/real.rkt

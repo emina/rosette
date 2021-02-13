@@ -16,7 +16,7 @@
   (c values c (0 (u . "(! b)"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((! #f) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((! #t) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -33,7 +33,7 @@
   (c values c (0 (u . "(vc #t b)"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((&&) ((3) 0 () 0 () () (q values #t)) #"" #"")
 ((||) ((3) 0 () 0 () () (q values #f)) #"" #"")
 ((&& #f (begin (displayln "hello") #t))
@@ -65,7 +65,7 @@
   (c values c (0 (u . "(vc #t b)"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((=> #f (begin (displayln "hello") #f))
  ((3) 0 () 0 () () (q values #t))
  #"hello\n"
@@ -95,7 +95,7 @@
   (c values c (0 (u . "(vc #t b)"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -136,7 +136,7 @@
   (c values c (0 (u . "(vc #t b)"))))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define out (with-vc (= (+ (if b x 'x) 1) y)))
  ((3) 0 () 0 () () (c values c (void)))
  #""

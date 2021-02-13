@@ -4,7 +4,7 @@
            rosette/solver/solver rosette/solver/solution rosette/query/query
            rosette/base/form/define  
            rosette/base/core/term rosette/base/core/type rosette/base/core/union
-           (only-in rosette/base/base vc vc-clear! bitvector ~>)
+           (only-in rosette/base/base vc clear-vc! bitvector ~>)
            (only-in rosette/base/core/reflect symbolics)
            rosette/base/core/forall racket)
           scribble/core scribble/html-properties scribble/example racket/sandbox
@@ -296,14 +296,14 @@ evaluation.
  (code:comment "The path guarded by a leads to failure,")
  (code:comment "as reflected in the resulting vc.")
  (vc)
- (vc-clear!)
+ (clear-vc!)
  (code:comment "The above for/all expression outputs a term")
  (code:comment "that is syntactically different from but")
  (code:comment "semantically equivalent to the output of (add1 u),")
  (code:comment "with the same effect on the vc.")
  (add1 u)
  (vc)
- (vc-clear!)]
+ (clear-vc!)]
 
  Programs can use @racket[for/all] to lift pure Racket
  procedures to work on symbolic values and to control the performance
@@ -333,7 +333,7 @@ evaluation.
   (vc)
   (string-length (if b "a" 3))
   (vc)
-  (vc-clear!)]
+  (clear-vc!)]
 
  Here is also an example of using @racket[for/all] for
  performance tuning. Note that adding @racket[for/all]s in

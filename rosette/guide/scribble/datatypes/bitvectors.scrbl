@@ -89,7 +89,7 @@ into a programming language.
    (bv? (if b (bv 3 6) #t))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @section{Comparison Operators}
 
@@ -118,7 +118,7 @@ equality (@racket[bveq]) and signed / unsigned versions of
 (code:line (vc)                        (code:comment "so Rosette emits a corresponding assertion."))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @section{Bitwise Operators}
 
@@ -134,7 +134,7 @@ equality (@racket[bveq]) and signed / unsigned versions of
  (code:line (vc)                      (code:comment "so Rosette emits a corresponding assertion."))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(bvand [x (bitvector n)] ...+) (bitvector n)]
            [(bvor  [x (bitvector n)] ...+) (bitvector n)]
@@ -155,7 +155,7 @@ Returns the bitwise "and", "or", "xor" of one or more bitvector values of the sa
 }
 
   
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 @defproc*[([(bvshl  [x (bitvector n)] [y (bitvector n)]) (bitvector n)]
            [(bvlshr [x (bitvector n)] [y (bitvector n)]) (bitvector n)]
            [(bvashr [x (bitvector n)] [y (bitvector n)]) (bitvector n)])]{
@@ -186,7 +186,7 @@ Returns the left, logical right, or arithmetic right shift of @racket[x]  by
  (bvneg z)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 @(rosette-eval '(clear-terms!))
 
 @defproc*[([(bvadd [x (bitvector n)] ...+) (bitvector n)]
@@ -204,7 +204,7 @@ Returns the sum, difference, or product of one or more bitvector values of the s
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(bvsdiv [x (bitvector n)] [y (bitvector n)]) (bitvector n)]
            [(bvudiv [x (bitvector n)] [y (bitvector n)]) (bitvector n)]
@@ -224,7 +224,7 @@ All five operations are defined even when the second argument is zero.
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @section{Conversion Operators}
 
@@ -251,7 +251,7 @@ All five operations are defined even when the second argument is zero.
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(sign-extend [x bv?] [t (or/c bitvector? union?)]) bv?]
            [(zero-extend [x bv?] [t (or/c bitvector? union?)]) bv?])]{
@@ -272,7 +272,7 @@ must not be smaller than the size of @racket[x]'s type.
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(bitvector->integer [x bv?]) integer?]
            [(bitvector->natural [x bv?]) integer?])]{
@@ -288,7 +288,7 @@ Returns the (un)signed integer value of the given bitvector.
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(integer->bitvector [i integer?] [t (or/c bitvector? union?)]) bv?])]{
                                                                                   
@@ -306,7 +306,7 @@ Note that both @racket[i] and @racket[t] may be symbolic.
 
 @section{Additional Operators}
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc[(bit [i integer?] [x (bitvector n)]) (bitvector 1)]{
                                                              
@@ -322,7 +322,7 @@ Note that both @racket[i] and @racket[t] may be symbolic.
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(lsb [x (bitvector n)]) (bitvector 1)]
            [(msb [x (bitvector n)]) (bitvector 1)])]{
@@ -339,7 +339,7 @@ Note that both @racket[i] and @racket[t] may be symbolic.
   ]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc[(bvzero? [x (bitvector n)]) boolean?]{
                                                
@@ -355,7 +355,7 @@ Returns @racket[(bveq x (bv 0 n))].
  ]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(bvadd1 [x (bitvector n)]) (bitvector n)]
            [(bvsub1 [x (bitvector n)]) (bitvector n)])]{
@@ -374,7 +374,7 @@ Returns @racket[(bveq x (bv 0 n))].
 }
 
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(bvsmin [x (bitvector n)] ...+) (bitvector n)]
            [(bvumin [x (bitvector n)] ...+) (bitvector n)]
@@ -393,7 +393,7 @@ Returns the (un)signed minimum or maximum of one or more bitvector values of the
  (vc)]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(bvrol [x (bitvector n)] [y (bitvector n)]) (bitvector n)]
            [(bvror [x (bitvector n)] [y (bitvector n)]) (bitvector n)])]{
@@ -412,7 +412,7 @@ Returns the left or right rotation of @racket[x] by @racket[(bvurem y n)] bits, 
   (vc)                      (code:comment "so Rosette emits a corresponding assertion."))]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc*[([(rotate-left  [i integer?] [x (bitvector n)]) (bitvector n)]
            [(rotate-right [i integer?] [x (bitvector n)]) (bitvector n)])]{
@@ -432,7 +432,7 @@ leads to faster solving times.
  ]
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc[(bitvector->bits [x (bitvector n)]) (listof (bitvector n))]{
                                                                      
@@ -450,7 +450,7 @@ Returns the bits of @racket[x] as a list, i.e., @racket[(list (bit 0 x) ... (bit
 Returns @racket[(not (bvzero? x))].
 }
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 
 @defproc[(bool->bitvector [b any/c] [t (or/c positive-integer? (bitvector n)) (bitvector 1)]) bv?]{
                                                                                                    

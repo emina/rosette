@@ -152,7 +152,7 @@ sol
  For example, the following definition specifies a
  grammar of fast bitvector expressions over one input:
 
- @(rosette-eval '(vc-clear!))
+ @(rosette-eval '(clear-vc!))
  @examples[#:eval rosette-eval #:label #f #:no-prompt
  (code:line
   (define-grammar (bitfast y)         
@@ -198,7 +198,7 @@ sol
   (equal? (bvmul2_bitfast x) (bvmul2_bitfast x))
   (begin0
     (equal? (bvmul2_bitfast x) (bvmul2_bitfast x))
-    (vc-clear!)))
+    (clear-vc!)))
     
 
  (define sol
@@ -215,7 +215,7 @@ sol
  filled with different expressions in different applications
  of the enclosing rule.
 
- @(rosette-eval '(vc-clear!))
+ @(rosette-eval '(clear-vc!))
  @examples[#:eval rosette-eval #:label #f #:no-prompt
  (code:comment "Specifies a grammar of signed and unsigned")
  (code:comment "comparisons of bitfast expressions.")
@@ -266,7 +266,7 @@ sol
  the difference and show how to structure grammars to avoid
  unwanted sharing of argument holes.
 
- @(rosette-eval '(vc-clear!))
+ @(rosette-eval '(clear-vc!))
  @examples[#:eval rosette-eval #:label #f #:no-prompt
  (code:comment "This grammar is intended to take a hole xs")
  (code:comment "as an argument and use it to define the space")
@@ -325,7 +325,7 @@ sol
          (bitfast x)
          (bitfast x)))
    (require (only-in rosette/guide/scribble/libs/bvmul2 bvsdiv2_bvcmp*)))]
-  @(rosette-eval '(vc-clear!))
+  @(rosette-eval '(clear-vc!))
   @examples[#:eval rosette-eval #:label #f
   (define-symbolic x (bitvector 8))
   (current-grammar-depth 2)

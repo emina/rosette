@@ -7,7 +7,7 @@
     (printf "> ~a\n" 'form)
     (with-handlers ([exn:fail? (lambda (e)
                                  (eprintf "~a\n" (exn-message e))
-                                 (vc-clear!)
+                                 (clear-vc!)
                                  (solver-shutdown (current-solver)))])
       (let ([v form])
         (unless (void? v)

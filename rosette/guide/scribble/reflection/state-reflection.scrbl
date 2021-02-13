@@ -5,7 +5,7 @@
            (only-in rosette/base/base
                     assert assume
                     vc vc? vc-assumes vc-asserts
-                    vc-clear! with-vc vc-true vc-true?
+                    clear-vc! with-vc vc-true vc-true?
                     result? result-value result-state
                     ans ans? halt halt? clear-terms! term-cache weak-term-cache)
            racket)
@@ -73,7 +73,7 @@ best to use them sparingly.
                    #:use-sources
                    (rosette/base/base)]
 
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 @section[#:tag "sec:vc"]{Verification Conditions}
 
 @deftogether[(@defproc[(vc? [v any/c]) boolean?]
@@ -106,7 +106,7 @@ best to use them sparingly.
 
                                                    
 @deftogether[(@defproc[(vc) vc?]
-              @defproc[(vc-clear!) void?])]{
+              @defproc[(clear-vc!) void?])]{
                                                    
  The current @tech{verification condition}, @racket[(vc)],
  is a value of type @racket[vc?]. At the start of evaluation,
@@ -116,7 +116,7 @@ best to use them sparingly.
  issued on these paths.
 
  The current @racket[(vc)] state can be cleared using
- @racket[vc-clear!]. This resets @racket[(vc)] to its
+ @racket[clear-vc!]. This resets @racket[(vc)] to its
  starting value, @racket[vc-true]. 
 
 
@@ -128,7 +128,7 @@ best to use them sparingly.
 (vc)
 (assert b)
 (vc)
-(vc-clear!)
+(clear-vc!)
 (vc)]
 }
 
@@ -206,7 +206,7 @@ best to use them sparingly.
 
 
 @(rosette-eval '(clear-terms!))
-@(rosette-eval '(vc-clear!))
+@(rosette-eval '(clear-vc!))
 @defparam[term-cache h hash?]{
                               
  A parameter that holds the cache of all

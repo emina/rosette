@@ -135,7 +135,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #"(define (bvmul2_choose x) (bvshl x (bv #x01 8)))\n"
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-grammar
   (bitfast y)
   (expr (choose y (?? (bitvector 8)) ((bop) (expr) (expr))))
@@ -151,7 +151,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((begin0 (equal? (bvmul2_bitfast x) (bvmul2_bitfast x)) (vc-clear!))
+((begin0 (equal? (bvmul2_bitfast x) (bvmul2_bitfast x)) (clear-vc!))
  ((3) 0 () 0 () () (q values #t))
  #""
  #"")
@@ -168,7 +168,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #"(define (bvmul2_bitfast x) (bvshl x (bv #x01 8)))\n"
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-grammar
   (bitcmp y)
   (cmp (choose ((op) (bitfast y) (bitfast y)) (and (cmp) (cmp))))
@@ -198,7 +198,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #"(define (bvsdiv2_bitcmp x)\n  (if (and (bvult x (bv #x81 8)) (bvsle (bv #x23 8) (bv #x72 8)))\n    (bvashr x (bv #x01 8))\n    (bvadd (bvashr x (bv #x01 8)) (bvand (bv #x01 8) x))))\n"
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-grammar
   (bvcmp xs)
   (cmp (choose ((op) xs xs) (and (cmp) (cmp))))
@@ -243,7 +243,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((vc-clear!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x (bitvector 8))
  ((3) 0 () 0 () () (c values c (void)))
  #""

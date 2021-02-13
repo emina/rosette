@@ -23,7 +23,7 @@
 (define (clear-state!)
   (current-bitwidth #f)
   (current-oracle (oracle))
-  (vc-clear!)
+  (clear-vc!)
   (clear-terms!)
   (current-solver (z3)))
 
