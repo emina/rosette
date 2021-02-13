@@ -6,7 +6,7 @@
 (require (only-in rosette/base/form/define define-symbolic)
          (only-in rosette/base/core/bool
                   @boolean? @true? && ! => <=>
-                  vc clear-vc! with-vc vc-merge!
+                  vc clear-vc! with-vc merge-vc!
                   $assume $assert @assume @assert
                   vc-true vc-true?
                   vc-assumes vc-asserts)
@@ -167,92 +167,92 @@
 (define (check-vc-merge-0)
   (define-symbolic a b c @boolean?)
   ;---------------------------;
-  (vc-merge! null null)
+  (merge-vc! null null)
   (check-pred vc-true? (vc))
   ;---------------------------;
   (match-define (ans _ vc0) (with-vc (begin (@assume a) (@assert b))))
-  (vc-merge! (list #t) (list vc0))
+  (merge-vc! (list #t) (list vc0))
   (check-match (vc) (app vc->pair (cons (== a) (== (=> a b)))))
   (clear-vc!)
-  (vc-merge! (list c) (list vc0))
+  (merge-vc! (list c) (list vc0))
   (check-match (vc) (app vc->pair (cons (== (=> c a)) (== (=> c (=> a b))))))
   (clear-vc!)
-  (vc-merge! (list #f) (list vc0))
+  (merge-vc! (list #f) (list vc0))
   (check-pred vc-true? (vc))
   ;---------------------------;
   (match-define (halt _ vc1) (with-vc (@assume #f)))
-  (vc-merge! (list #f) (list vc1))
+  (merge-vc! (list #f) (list vc1))
   (check-pred vc-true? (vc))
-  (vc-merge! (list c) (list vc1))
+  (merge-vc! (list c) (list vc1))
   (check-match (vc) (app vc->pair (cons (== (=> c #f)) #t)))
-  (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction" (thunk (vc-merge! (list #t) (list vc1))))
+  (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc1))))
   (clear-vc!)
   ;---------------------------;
   (match-define (halt _ vc2) (with-vc (@assert #f)))
-  (vc-merge! (list #f) (list vc2))
+  (merge-vc! (list #f) (list vc2))
   (check-pred vc-true? (vc))
-  (vc-merge! (list c) (list vc2))
+  (merge-vc! (list c) (list vc2))
   (check-match (vc) (app vc->pair (cons #t (==  (=> c #f)))))
-  (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction" (thunk (vc-merge! (list #t) (list vc2))))
+  (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc2))))
   (clear-vc!)
   ;---------------------------;
   (@assume a)
   (match-define (ans _ vc3) (with-vc vc-true (@assume (! a))))
-  (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction" (thunk (vc-merge! (list #t) (list vc3))))
+  (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc3))))
   (check-match (vc) (app vc->pair (cons #f #t)))
   (clear-vc!)
   ;---------------------------;
   (@assert a)
   (match-define (ans _ vc4) (with-vc vc-true (@assert (! a))))
-  (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction" (thunk (vc-merge! (list #t) (list vc4))))
+  (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction" (thunk (merge-vc! (list #t) (list vc4))))
   (check-match (vc) (app vc->pair (cons #t #f)))
   (clear-vc!))
 
 (define (check-vc-merge-1)
   (define-symbolic a b c d e @boolean?)
   (define not-a (! a))
-  (vc-merge! (list a not-a) (list vc-true vc-true))
+  (merge-vc! (list a not-a) (list vc-true vc-true))
   (check-pred vc-true? (vc))
   ;---------------------------;
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assume c)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assume c)))))
   (check-match (vc) (app vc->pair (cons (== (&& (=> a b) (=> not-a c))) #t)))
   (clear-vc!)
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assert b))) (result-state (with-vc (@assert c)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assert b))) (result-state (with-vc (@assert c)))))
   (check-match (vc) (app vc->pair (cons #t (== (&& (=> a b) (=> not-a c))))))
   (clear-vc!)
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assert c)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assert c)))))
   (check-match (vc) (app vc->pair (cons (== (=> a b)) (== (=> not-a c)))))
   (clear-vc!)
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assert b))) (result-state (with-vc (@assume c)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assert b))) (result-state (with-vc (@assume c)))))
   (check-match (vc) (app vc->pair (cons (== (=> not-a c)) (== (=> a b)))))
   (clear-vc!)
   (@assume d)
   (@assert e)
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assert c)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assert c)))))
   (check-vc-eqv (&& d (=> a (=> e b))) (&& (=> d e) (=> not-a (=> d c))))
   (clear-vc!)
   ;---------------------------;
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assume #f))) (result-state (with-vc (@assert c)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assume #f))) (result-state (with-vc (@assert c)))))
   (check-vc-eqv (! a) (=> not-a c))
   (clear-vc!)
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assert #f)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assume b))) (result-state (with-vc (@assert #f)))))
   (check-vc-eqv (=> a b) (! not-a))
   (clear-vc!)
   (check-exn-svm exn:fail:svm:assume:core? #rx"contradiction"
-                 (thunk (vc-merge! (list a not-a)
+                 (thunk (merge-vc! (list a not-a)
                                    (list (result-state (with-vc (@assume #f)))
                                          (result-state (with-vc (@assume #f)))))))
   (check-match (vc) (app vc->pair (cons #f #t)))
   (clear-vc!)
   (check-exn-svm exn:fail:svm:assert:core? #rx"contradiction"
-                 (thunk (vc-merge! (list a not-a)
+                 (thunk (merge-vc! (list a not-a)
                                    (list (result-state (with-vc (@assert #f)))
                                          (result-state (with-vc (@assert #f)))))))
   (check-match (vc) (app vc->pair (cons #t #f)))
   (clear-vc!)
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assume #f))) (result-state (with-vc (@assert #f)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assume #f))) (result-state (with-vc (@assert #f)))))
   (check-match (vc) (app vc->pair (cons (== not-a) (== a))))
-  (vc-merge! (list a not-a) (list (result-state (with-vc (@assert #f))) (result-state (with-vc (@assume #f)))))
+  (merge-vc! (list a not-a) (list (result-state (with-vc (@assert #f))) (result-state (with-vc (@assume #f)))))
   (check-match (vc) (app vc->pair (cons (== not-a) (== a))))
   (clear-vc!))
 
@@ -274,7 +274,7 @@
 
 (define vc-merge-tests
   (test-suite+
-   "Tests for vc-merge! in rosette/base/core/vc.rkt"
+   "Tests for merge-vc! in rosette/base/core/vc.rkt"
    (check-vc-merge-0)
    (check-vc-merge-1)))
 
