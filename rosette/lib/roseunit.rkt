@@ -49,9 +49,9 @@
              (clear-state!)) ...
            (require 'id) ...))))))
 
-(define-syntax-rule (with-ans-or-fail expr)
+(define-syntax-rule (with-normal-or-fail expr)
   (match (with-vc expr)
-    [(ans v _)    v]
+    [(normal v _)    v]
     [(failed ex _)  (raise ex)]))
     
 
@@ -70,7 +70,7 @@
                     name
                     #:before (thunk (printf "~a\n" name) (before))
                     #:after after
-                    (with-ans-or-fail
+                    (with-normal-or-fail
                       (parameterize ([current-bitwidth (current-bitwidth)]
                                      [term-cache (hash-copy (term-cache))]
                                      [current-oracle (oracle (current-oracle))])

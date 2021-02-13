@@ -199,7 +199,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(ans 1 (vc a (|| (! b) (! (&& a b)))))"))))
+  (c values c (0 (u . "(normal 1 (vc a (|| (! b) (! (&& a b)))))"))))
  #""
  #"")
 ((vc)

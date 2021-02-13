@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out ans) (struct-out failed)
+(provide (struct-out normal) (struct-out failed)
          result? result-value result-state)
 
 ; Represents the result of symbolic evaluation,
@@ -9,7 +9,7 @@
 (struct result (value state) #:transparent)
 
 ; Represents the result of a normally terminated evaluation.
-(struct ans result () #:transparent)
+(struct normal result () #:transparent)
 
 ; Represents the result of an evaluation that resulted in
 ; an exn:fail? exception being raised. In this case,

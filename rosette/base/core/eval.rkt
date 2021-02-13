@@ -11,7 +11,7 @@
 ; and returns the result. This result takes one of two forms.
 ;
 ; If the evaluation of the thunk terminates normally, the result
-; is (ans (ans v st) vc*) where v is the value computed by the
+; is (normal (normal v st) vc*) where v is the value computed by the
 ; thunk, st captures all stores mutations performed during evaluation,
 ; and vc* captures the verification condition generated during the
 ; evaluation, starting from the current vc.
@@ -48,7 +48,7 @@
   (define results (map eval-assuming guards thunks))
   (merge-vc! guards (map result-state results))
   (define-values (gs rs)
-    (for/lists (gs rs) ([g guards][r results] #:when (ans? r))
+    (for/lists (gs rs) ([g guards][r results] #:when (normal? r))
       (values g (result-value r))))
   (if (null? rs)
       (raise-exn:fail:svm:merge)

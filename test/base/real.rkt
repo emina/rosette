@@ -23,8 +23,8 @@
 
 (define-syntax-rule (check-cast (type val) (accepted? out))
     (match (with-vc (type-cast type val))
-      [(and r (or (ans v sp) (failed v sp)))
-       (when (ans? r) (check-equal? v out))
+      [(and r (or (normal v sp) (failed v sp)))
+       (when (normal? r) (check-equal? v out))
        (check-equal? (vc-assumes sp) #t)
        (check-equal? (vc-asserts sp) accepted?)]))
 

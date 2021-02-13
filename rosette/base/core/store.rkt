@@ -129,7 +129,7 @@
 ; (i.e., the value it held before the call to with-store).
 ; 
 ; If the evaluation of the body terminates normally, (with-store body)
-; outputs a result (ans v s) where v is the value computed by the body,
+; outputs a result (normal v s) where v is the value computed by the body,
 ; and s is an association list that maps each mutated location? to its
 ; post-state (i.e., the value it held after the evaluation of the body).
 ; In essence, evaluating the body in the current environment has the
@@ -143,7 +143,7 @@
   (parameterize ([current-store (make-store)])
     (with-handlers ([exn:fail? rollback-exn!])
       (let ([out body])  
-        (ans out (rollback-capture!))))))
+        (normal out (rollback-capture!))))))
 
 ; Takes as input a list of n guards and a list of n stores, where
 ; each store is a list of location/value pairs. For each location l

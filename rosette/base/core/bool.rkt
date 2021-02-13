@@ -461,7 +461,7 @@
 ; to the value it held before the call to with-vc.
 ;
 ; If the evaluation of the body terminates normally, (with-vc vc0 body)
-; outputs (ans v vc*) where v is the value computed by the body, and vc* is 
+; outputs (normal v vc*) where v is the value computed by the body, and vc* is 
 ; the vc (i.e., assumes and asserts) generated during the evaluation,
 ; with vc0 as the initial vc. 
 ;
@@ -477,4 +477,4 @@
        (parameterize ([current-vc vc0])
          (with-handlers ([exn:fail:svm? halt-svm]
                          [exn:fail?     halt-err])
-           (ans body (current-vc)))))]))
+           (normal body (current-vc)))))]))

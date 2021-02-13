@@ -22,9 +22,9 @@
 (define (int-eqv? actual expected)
   (unsat? (solve (! (@= actual expected)))))
 
-(define-syntax-rule (check-ans actual e-val e-store e-assumes e-asserts)
+(define-syntax-rule (check-normal actual e-val e-store e-assumes e-asserts)
   (begin
-    (match-define (ans (ans v st) sp) actual)
+    (match-define (normal (normal v st) sp) actual)
     (check-equal? v e-val)
     (check-store st e-store)
     (check-true (vc-eqv? sp e-assumes e-asserts))))
@@ -39,15 +39,15 @@
   (define-symbolic g a b @boolean?)
   (define x (@box 3))
   ;---------------------------;
-  (check-ans (eval-assuming #t (const 1))
+  (check-normal (eval-assuming #t (const 1))
              1 null #t #t)
-  (check-ans (eval-assuming g (const 1))
+  (check-normal (eval-assuming g (const 1))
              1 null g #t)
-  (check-ans (eval-assuming g (lambda () (@set-box! x 2)))
+  (check-normal (eval-assuming g (lambda () (@set-box! x 2)))
              (void) `((,x 0 2)) g #t)
-  (check-ans (eval-assuming g (lambda () (@set-box! x 4) (@assert a)))
+  (check-normal (eval-assuming g (lambda () (@set-box! x 4) (@assert a)))
              (void) `((,x 0 4)) g (=> g a))
-  (check-ans (eval-assuming g (lambda () (@set-box! x 5) (@assert a) (@assume b)))
+  (check-normal (eval-assuming g (lambda () (@set-box! x 5) (@assert a) (@assume b)))
              (void) `((,x 0 5)) (&& g (=> a b)) (=> g a))
   ;---------------------------;
   (check-failed (eval-assuming #f (const 1))

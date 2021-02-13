@@ -7,7 +7,7 @@
                     vc vc? vc-assumes vc-asserts
                     clear-vc! with-vc vc-true vc-true?
                     result? result-value result-state
-                    ans ans? failed failed? clear-terms! term-cache weak-term-cache)
+                    normal normal? failed failed? clear-terms! term-cache weak-term-cache)
            racket)
           scribble/core scribble/html-properties scribble/example racket/sandbox
           racket/runtime-path 
@@ -149,7 +149,7 @@ See @racket[vc] for details.
 
  The result of a @racket[with-vc] expression is a value of
  type @racket[result?]. If @racket[expr] terminates normally,
- then the result is @racket[ans?], and its
+ then the result is @racket[normal?], and its
  @racket[result-value] contains the value computed by
  @racket[expr]. If @racket[expr] fails, the result is
  @racket[failed?], and its @racket[result-value] contains an
@@ -192,14 +192,14 @@ See @racket[vc] for details.
 @deftogether[(@defproc[(result? [v any/c]) boolean?]
               @defproc[(result-value [v result?]) any/c]
               @defproc[(result-state [v result?]) any/c] 
-              @defproc[(ans?  [v any/c]) boolean?]
+              @defproc[(normal?  [v any/c]) boolean?]
               @defproc[(failed? [v any/c]) boolean?])]{
 
  A @racket[result?] value represents the result of symbolic
  evaluation, which includes an output value,
  @racket[(result-value v)], and a part of the output state,
  @racket[(result-state v)]. Every result is either
- @racket[ans?], if the evaluation terminated normally, or
+ @racket[normal?], if the evaluation terminated normally, or
  @racket[failed?] otherwise.
 
  See also @racket[with-vc].

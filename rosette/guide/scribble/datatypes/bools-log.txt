@@ -150,7 +150,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(ans (= y (+ 1 x)) (vc #t b))"))))
+  (c values c (0 (u . "(normal (= y (+ 1 x)) (vc #t b))"))))
  #""
  #"")
 ((define out-val (result-value out))
