@@ -27,7 +27,7 @@
   (check-exn exn:fail? (thunk (gen 'shutdown)))
   ; Check that term cache is not polluted with finitizaton values -- no
   ; fresh constants should be left in the term cache
-  (check subset? (apply set (symbolics (hash-values (term-cache)))) consts))
+  (check subset? (apply set (symbolics (terms))) consts))
 
 (define basic-tests
   (test-suite+ "Solve+ tests with no (effective) finitization."

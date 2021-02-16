@@ -477,4 +477,4 @@
        (parameterize ([current-vc vc0])
          (with-handlers ([exn:fail:svm? halt-svm]
                          [exn:fail?     halt-err])
-           (normal body (current-vc)))))]))
+           (normal (let () body) (current-vc)))))]))

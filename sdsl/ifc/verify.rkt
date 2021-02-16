@@ -39,47 +39,36 @@
 ;     [(or/c integer? #f)]
 ;     (or/c EENI-witness? #t))
 (define (verify-EENI* start end ≈ prog [k #f] [verbose? #f])
-  (parameterize ([current-bitwidth 5]
-                 [current-oracle (oracle)]
-                 [term-cache (hash-copy (term-cache))])
+  (with-terms
+    (parameterize ([current-bitwidth 5]
+                   [current-oracle (oracle)])
     
-    (define p (prog))
+      (define p (prog))
     
-    (unless k 
-      (set! k (length p)))
+      (unless k 
+        (set! k (length p)))
     
-    (when verbose?
-      (printf "\n-------Verify EENI[~a, ~a, ~a] for ~a steps of ~s-------\n"
-              (object-name start) (object-name end) (object-name ≈) k (format-program p)))
+      (when verbose?
+        (printf "\n-------Verify EENI[~a, ~a, ~a] for ~a steps of ~s-------\n"
+                (object-name start) (object-name end) (object-name ≈) k (format-program p)))
 
-    (define m0 (start p))
-    (define m1 (start (map instruction (map procedure p)))) ; Use a fresh program (same procedures, fresh args).
+      (define m0 (start p))
+      (define m1 (start (map instruction (map procedure p)))) ; Use a fresh program (same procedures, fresh args).
     
-    (define cex
-      (result-value
-       (with-vc
-         (let* ([m0k (step m0 k)]
-                [m1k (step m1 k)])
-           (verify
-            (begin
-              (assume (≈ m0 m1))
-              (assume (end m0k))
-              (assume (end m1k))
-              (assert (≈ m0k m1k))))))))
-        
-;    (define cex
-;      (let ([m0 m0]
-;            [m1 m1])
-;        (verify 
-;         #:assume  (begin 
-;                     (assert (≈ m0 m1))     
-;                     (set! m0 (step m0 k))  
-;                     (set! m1 (step m1 k)) 
-;                     (assert (end m0))
-;                     (assert (end m1)))
-;         #:guarantee (assert (≈ m0 m1)))))
+      (define cex
+        (result-value
+         (with-vc
+             (let* ([m0k (step m0 k)]
+                    [m1k (step m1 k)])
+               (verify
+                (begin
+                  (assume (≈ m0 m1))
+                  (assume (end m0k))
+                  (assume (end m1k))
+                  (assert (≈ m0k m1k))))))))
+       
     
-    (if (sat? cex) (EENI-witness (evaluate m0 cex) (evaluate m1 cex) k ≈) #t)))
+      (if (sat? cex) (EENI-witness (evaluate m0 cex) (evaluate m1 cex) k ≈) #t))))
 
 (struct EENI-witness (m0 m1 k ≈)
   #:transparent 

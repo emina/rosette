@@ -1,10 +1,11 @@
 #lang racket
 
-(require racket/syntax (for-syntax racket racket/syntax) racket/generic
+(require racket/syntax (for-syntax racket racket/syntax syntax/parse)
+         racket/generic syntax/parse 
          "type.rkt" "reporter.rkt")
 
 (provide
- term-cache clear-terms! weak-term-cache
+ terms terms-count terms-ref with-terms clear-terms! gc-terms! term-cache
  term? constant? expression? 
  (rename-out [a-term term] [an-expression expression] [a-constant constant] [term-ord term-id]) 
  term-type term<? sublist? @app
@@ -40,22 +41,55 @@
               (set-add! evicted t))
             (loop))))))
 
-; Returns a garbage-collected (weak) hash that can be used as a term-cache.
-; The returned cache is populated with the contents of (term-cache).
-(define (weak-term-cache)
-  (define cache
-    (impersonate-hash
-     (make-weak-hash)
-     (lambda (h k)
-       (values k (lambda (h k e) (ephemeron-value e #f))))
-     (lambda (h k v)
-       (values k (make-ephemeron k v)))
-     (lambda (h k) k)
-     (lambda (h k) k)
-     hash-clear!))
-  (for ([(k v) (term-cache)])
-    (hash-set! cache k v))
-  cache)
+; Sets the current term-cache to a garbage-collected (weak) hash.
+; The setting preserves all reachable terms from (term-cache).
+(define (gc-terms!)
+  (unless (hash-weak? (term-cache)) ; Already a weak hash.
+    (define cache
+      (impersonate-hash
+       (make-weak-hash)
+       (lambda (h k)
+         (values k (lambda (h k e) (ephemeron-value e #f))))
+       (lambda (h k v)
+         (values k (make-ephemeron k v)))
+       (lambda (h k) k)
+       (lambda (h k) k)
+       hash-clear!))
+    (for ([(k v) (term-cache)])
+      (hash-set! cache k v))
+    (term-cache cache)))
+
+; Returns the term in the given term cache that has the given contents. If
+; no such term exists, failure-result is returned, unless it is a procedure.
+; If failure-result is a procedure, it is called and its result is returned instead.
+(define (terms-ref contents [failure-result (lambda () (error 'terms-ref "no term for ~a" contents))])
+  (hash-ref (term-cache) contents failure-result))
+
+; Returns a list of all terms in the current term cache, in an unspecified order.
+(define (terms)
+  (hash-values (term-cache)))
+
+; Returns the size of the current term cache.
+(define (terms-count)
+  (hash-count (term-cache)))
+
+; Evaluates expr with (terms) set to terms-expr, returns the result, and
+; restores (terms) to its old value. If terms-expr is not given, it defaults to
+; (terms), so (with-terms expr) is equivalent to (with-terms (terms) expr).
+(define-syntax (with-terms stx)
+  (syntax-parse stx
+    [(_ expr)
+     #'(parameterize ([term-cache (hash-copy (term-cache))])
+         expr)]
+    [(_ terms-expr expr)
+     #'(parameterize ([term-cache (hash-copy-clear (term-cache))])
+         (let ([ts terms-expr]
+               [cache (term-cache)])
+           (for ([t ts])
+             (hash-set! cache (term-val t) t))
+           expr))]))
+           
+         
     
 
 #|-----------------------------------------------------------------------------------|#

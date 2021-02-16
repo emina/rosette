@@ -3,11 +3,12 @@
 @(require (for-label 
            rosette/query/query rosette/base/form/define
            (only-in rosette/base/base
-                    assert assume
+                    assert assume term?
                     vc vc? vc-assumes vc-asserts
                     clear-vc! with-vc vc-true vc-true?
                     result? result-value result-state
-                    normal normal? failed failed? clear-terms! term-cache weak-term-cache)
+                    normal normal? failed failed?
+                    terms with-terms clear-terms! gc-terms!)
            racket)
           scribble/core scribble/html-properties scribble/example racket/sandbox
           racket/runtime-path 
@@ -38,13 +39,12 @@ depends on a symbolic value. The symbolic heap and the
 verification condition reflect the current state of this
 all-path evaluation.
 
-@(rosette-eval '(require (only-in racket hash-values)))
 @(rosette-eval '(require (only-in rosette/guide/scribble/util/lifted opaque)))
 @examples[#:eval rosette-eval #:label #f #:no-prompt
 (define-symbolic a b c d boolean?)
-(code:line (hash-values (term-cache)) (code:comment "Symbolic heap."))
+(code:line (terms) (code:comment "Symbolic heap."))
 (assume a)
-(code:line (vc) (code:comment "Verification condition."))
+(code:line (vc)    (code:comment "Verification condition."))
 (if b
     (begin
       (printf "Then branch:\n ~a\n" (vc))
@@ -58,8 +58,8 @@ all-path evaluation.
       2))
 (vc)
 (eval:alts
- (hash-values (term-cache))
- (append (take (hash-values (term-cache)) 5) (list (opaque "..."))))]
+ (terms)
+ (append (take (terms) 5) (list (opaque "..."))))]
 
 This section describes the built-in facilities for accessing
 and modifying various aspects of the symbolic state from
@@ -211,82 +211,81 @@ See @racket[vc] for details.
 
 @(rosette-eval '(clear-terms!))
 @(rosette-eval '(clear-vc!))
-@defparam[term-cache h hash?]{
+
+
+@defproc[(terms) (listof term?)]{
                               
- A parameter that holds the cache of all
- @seclink["sec:symbolic-terms"]{symbolic terms} generated
- during symbolic evaluation. These terms form the current
- @tech{symbolic heap}. Rosette uses the cache to ensure that
- no syntactically identical terms are created.  
+ Returns a list of all @seclink["sec:symbolic-terms"]{symbolic terms}
+ generated during symbolic evaluation. These
+ terms form the contents of the current @tech{symbolic heap}.
+ Rosette uses the symbolic heap to ensure that no
+ syntactically identical terms are created. 
 
- Programs @emph{should not modify} the term cache, since
- doing so can lead to incorrect behavior.
-
- The cache is not garbage collected, which means that long
- running applications may experience memory pressure. There
- are two ways to solve this issue, depending on the
- application's behavior.
+ The symbolic heap is not garbage collected, which means
+ that long running applications may experience memory
+ pressure. There are two ways to solve this issue, depending
+ on the application's behavior.
 
  If the application is performing many independent queries
  that do @emph{not} share @emph{any} symbolic constants, then
- the application may safely clear the term cache between
+ the application may safely clear the heap between
  query invocations using @racket[clear-terms!]. This is the
  most common scenario.
   
  If the application is solving a series of related queries,
  using @racket[clear-terms!] can lead to incorrect behavior.
- In this case, the safe solution is to use a
- garbage-collected cache by setting @racket[term-cache] to
- @racket[(weak-term-cache)]. This setting adds
- runtime overhead, so it is best saved for when the default
- cache consumes too much memory.
- 
+ In this scenario, the safe solution is to use a
+ garbage-collected heap by invoking @racket[(gc-terms!)].
+ This has the effect of changing the internal representation
+ of the heap to use a more expensive data structure that
+ cooperates with Racket's garbage collector. Because of the
+ added runtime overhead, this setting is best saved for when
+ the default heap consumes too much memory.
 
 @examples[#:eval rosette-eval
-(hash-values (term-cache))
+(terms)
 (define (get-a)
   (define-symbolic a integer?)
   a)
 (define a0 (get-a))
 (+ a0 3)
-(hash-values (term-cache))
+(terms)
 (code:comment "In the following scenario, using clear-terms! leads to")
 (code:comment "incorrect behavior: (query-a a0) should always return")
 (code:comment "unsat? according to the semantics of define-symbolic.")
-(code:comment "But if the cache is cleared, it returns sat? because a0")
-(code:comment "is bound to a constant that no longer exists in the cache.")
+(code:comment "But if the heap is cleared, it returns sat? because a0")
+(code:comment "is bound to a constant that no longer exists in the heap.")
 (define (query-a a)
   (verify
    (assert (= a (get-a)))))
 (query-a a0)
-(hash-values (term-cache))
+(terms)
 (clear-terms!)
-(hash-values (term-cache))
+(terms)
 (code:line (query-a a0) (code:comment "Wrong result."))
-(hash-values (term-cache))]
+(terms)]
 }                              
 
 
-@defproc[(clear-terms! [terms (or/c #f (listof term?)) #f]) void?]{
-                                                                   
- Clears the entire term-cache if invoked with @racket[#f]
- (default), or it evicts all of the given @racket[terms] as
- well as any expressions that transitively contain them.
- Clearing the term cache is @emph{not} safe in general; see
- @racket[term-cache] for details and examples.
-}
+@defproc[(clear-terms! [ts (or/c #f (listof term?)) #f]) void?]{
+
+ Clears the symbolic heap of all terms if @racket[ts] is
+ false; otherwise, clears all the terms in @racket[ts] and
+ any expressions that transitively contain them. Clearing the
+ heap is @emph{not} safe in general; see @racket[terms] for
+ details and examples. }
 
 @(rosette-eval '(clear-terms!))
-@(rosette-eval '(require (only-in racket collect-garbage hash-count)))
-@defproc[(weak-term-cache) hash?]{
+@(rosette-eval '(require (only-in racket collect-garbage)))
+@defproc[(gc-terms!) void?]{
 
- Returns a term cache that cooperates with Racket's garbage
- collector. The resulting cache is initialized with the
- reachable bindings from @racket[(term-cache)]. Setting the
- @racket[term-cache] parameter to a cache returned by
- @racket[(weak-term-cache)] ensures that unused terms are
+ Changes the internal representation of the symbolic heap to
+ a data structure that cooperates with Racket's garbage
+ collector. The resulting heap is initialized with the
+ reachable terms from the current symbolic heap, as given by
+ @racket[(terms)]. This setting ensures that unused terms are
  garbage-collected throughout symbolic evaluation.
-
+ 
  @examples[#:eval rosette-eval
  (code:comment "Creates n unreachable terms of the form (+ a (+ a ...)).")
  (define (unused-terms! n)
@@ -296,23 +295,59 @@ See @racket[vc] for details.
         a
         (+ a (loop (- n 1)))))
   (void))
- (code:line (hash-count (term-cache))      (code:comment "Empty term cache."))
+ (code:line (length (terms))   (code:comment "Empty heap."))
  (time (unused-terms! 50000))
- (hash-count (term-cache))
+ (length (terms))
  (collect-garbage)
- (code:line (hash-count (term-cache))      (code:comment "GC has no effect on the default cache."))
+ (code:line (length (terms))   (code:comment "GC has no effect on the default heap."))
  (clear-terms!)
  (collect-garbage)
- (code:line (term-cache (weak-term-cache)) (code:comment "Use a weak-term-cache."))
- (hash-count (term-cache))
+ (code:line (gc-terms!)        (code:comment "Use gc-terms! to change the representation."))
+ (length (terms))
  (time (unused-terms! 50000))
- (eval:alts (hash-count (term-cache)) 50000)
+ (eval:alts (length (terms)) 50000)
  (collect-garbage)
- (code:line (hash-count (term-cache))      (code:comment "A weak-term-cache cooperates with GC."))
+ (code:line (length (terms))   (code:comment "The heap now cooperates with GC."))
 ]
                                   
 }
 
+
+@defform*[((with-terms expr)
+           (with-terms terms-expr expr))
+          #:contracts ([terms-expr (listof term?)])]{
+
+ Evaluates @racket[expr] with @racket[(terms)] set to
+ @racket[terms-expr], returns the result, and restores
+ @racket[(terms)] to the value it held before the evaluation
+ of @racket[expr]. If @racket[terms-expr] is not given, it
+ defaults to @racket[(terms)], so @racket[(with-terms expr)]
+ is equivalent to @racket[(with-terms (terms) expr)].
+
+ The result of a @racket[with-terms] expression is the output 
+ of @racket[expr].
+ 
+ Note that none of the terms created during the evaluation
+ of @racket[expr] are preserved in the heap, and having those
+ terms escape the dynamic extent of @racket[expr] is usually
+ a sign of a programming error. It can lead to incorrect
+ behavior, similarly to using @racket[clear-terms!].
+
+ @examples[#:eval rosette-eval
+ (define-symbolic a b integer?)
+ (terms)
+ (with-terms
+   (begin0
+     (verify (assert (= (+ a b) 0)))
+     (println (terms))))
+ (terms)
+ (with-terms (list) ; Empty heap
+   (begin
+     (println (terms))
+     (define-symbolic c integer?)
+     (println (terms))))
+ (terms)]
+}
 
 @(kill-evaluator rosette-eval)
 

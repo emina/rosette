@@ -24,21 +24,21 @@
           (test-pred
            #,(format "~a" #'verify)
            (expected?)
-           (parameterize ([current-bitwidth 32]
-                          [current-oracle (oracle (current-oracle))]
-                          [current-output-port (query-output-port)]
-                          [term-cache (hash-copy (term-cache))])
-             (printf "Verifying ~a\n" (source-of #'verify))
-             (time 
-              (or  
-               (for*/or ([id seq] ...)
-                 (let ([cex (@verify expr)])
-                   (and (sat? cex)                      
-                        (print-cex cex (cons 'id id) ...)
-                        cex)))
-               (begin 
-                 (printf "No counterexample found.\n")
-                 (unsat)))))))))]))
+           (with-terms 
+             (parameterize ([current-bitwidth 32]
+                            [current-oracle (oracle (current-oracle))]
+                            [current-output-port (query-output-port)])
+               (printf "Verifying ~a\n" (source-of #'verify))
+               (time 
+                (or  
+                 (for*/or ([id seq] ...)
+                   (let ([cex (@verify expr)])
+                     (and (sat? cex)                      
+                          (print-cex cex (cons 'id id) ...)
+                          cex)))
+                 (begin 
+                   (printf "No counterexample found.\n")
+                   (unsat))))))))))]))
 
 (define (inline-let f [env (hash)])
   (syntax-case f (let)
@@ -67,21 +67,21 @@
           (test-pred
            #,(format "~a" #'synthesize)
            (expected?)
-           (parameterize ([current-bitwidth bw]
-                          [current-oracle (oracle (current-oracle))]
-                          [current-output-port (query-output-port)]
-                          [term-cache (hash-copy (term-cache))])
-             (printf "Synthesizing ~a\n" (source-of #'synthesize))
-             (define-values (id ...)
-               (for*/lists (tmp ...) ([id seq] ...) (values id ...)))
-             (time
-              (let ([m (@synthesize
-                        #:forall    (append id ...)
-                        #:guarantee (for ([id id] ...) expr))])
-                (if (sat? m) 
-                    (print-forms m)
-                    (printf "No solution found.\n"))
-                m)))))))] 
+           (with-terms 
+             (parameterize ([current-bitwidth bw]
+                            [current-oracle (oracle (current-oracle))]
+                            [current-output-port (query-output-port)])
+               (printf "Synthesizing ~a\n" (source-of #'synthesize))
+               (define-values (id ...)
+                 (for*/lists (tmp ...) ([id seq] ...) (values id ...)))
+               (time
+                (let ([m (@synthesize
+                          #:forall    (append id ...)
+                          #:guarantee (for ([id id] ...) expr))])
+                  (if (sat? m) 
+                      (print-forms m)
+                      (printf "No solution found.\n"))
+                  m))))))))] 
     [(synthesize #:forall ds #:ensure e) 
      (syntax/loc stx (synthesize #:forall ds #:bitwidth 8 #:ensure e))]))
 

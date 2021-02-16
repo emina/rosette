@@ -5,7 +5,7 @@
          (only-in "store.rkt" check-store))
 (require rosette/base/core/eval rosette/base/core/store rosette/base/core/exn rosette/base/core/result)
 (require rosette/base/adt/box)
-(require (only-in rosette unsat? term-cache)
+(require (only-in rosette unsat?)
          (only-in rosette/base/form/define define-symbolic)
          (only-in rosette/base/core/bool
                   @boolean? @true? && || ! => <=>

@@ -5,7 +5,7 @@
          "../solver.rkt" "../solution.rkt"
          (prefix-in base/ "base-solver.rkt")
          (only-in "smtlib2.rkt" get-model)
-         (only-in "../../base/core/term.rkt" term term? term-type constant? expression constant term-cache)
+         (only-in "../../base/core/term.rkt" term term? term-type constant? expression constant with-terms)
          (only-in "../../base/core/bool.rkt" @boolean? @forall @exists)
          (only-in "../../base/core/bitvector.rkt" bitvector bitvector? bv? bv bv-value @extract @sign-extend @zero-extend @bveq)
          (only-in "../../base/core/function.rkt" function-domain function-range function? function fv)
@@ -193,7 +193,7 @@
 ; Rewrite an env to replace all constant declarations of type function?
 ; to equivalent fake-function?s that replace booleans with 1-bit bitvectors.
 (define (fake-env-types env)
-  (parameterize ([term-cache (hash-copy (term-cache))])  ; don't pollute the cache with fake constants
+  (with-terms  ; don't pollute the cache with fake constants
     (for/hash ([(decl id) (in-dict env)])
       (values
        (match decl

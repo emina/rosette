@@ -72,14 +72,14 @@
   (times-inc-or-dec* x #:depth d))
 
 (define-syntax-rule (check-synth vars expr expected)
-  (parameterize ([term-cache (hash-copy (term-cache))])
+  (with-terms
     (let ([sol (synthesize #:forall vars #:guarantee (assert expr))])
       (check-sat sol)
       (check-equal? (list->set (map syntax->datum (generate-forms sol)))
                     (list->set expected)))))
 
 (define-syntax-rule (check-unsynth vars expr)
-  (parameterize ([term-cache (hash-copy (term-cache))])
+  (with-terms
     (check-unsat (synthesize #:forall vars #:guarantee (assert expr)))))
   
 

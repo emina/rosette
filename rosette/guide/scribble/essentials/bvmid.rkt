@@ -141,7 +141,7 @@
   (demo (bvsqrt (int32 4)))
   (demo (bvsqrt (int32 15)))
   (demo (bvsqrt (int32 16)))
-  (demo (parameterize ([term-cache (hash-copy (term-cache))])
+  (demo (with-terms
           (with-deep-time-limit 10 (bvsqrt l)))))
 
 (define-demo sound-finitization-demo

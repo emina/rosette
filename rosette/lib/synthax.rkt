@@ -4,7 +4,7 @@
          (for-syntax "util/syntax-properties.rkt" racket/stxparam syntax/parse)  
          "util/syntax-properties.rkt"
          (only-in rosette/lib/util/syntax read-module)
-         (only-in rosette constant model term-cache term?
+         (only-in rosette constant model terms-ref term?
                   [boolean? @boolean?] [integer? @integer?] [if @if] [assert @assert]))
 
 (provide ?? choose define-synthax define-grammar define-simple-grammar generate-forms print-forms
@@ -87,11 +87,11 @@
     [(sol n) (define path (context))
              (for/list ([i n]) (sol (context->constant (cons i path))))]))
 
-; Returns the constant in the current term-cache with the given
+; Returns the constant in the current (terms) with the given
 ; identifier, or throws an error if no such constant exists.
 (define (context->constant ctx)
-  (hash-ref (term-cache) ctx 
-            (thunk (error 'context->constant "unknown constant identifier: ~a" ctx))))
+  (terms-ref ctx 
+             (thunk (error 'context->constant "unknown constant identifier: ~a" ctx))))
 
 
 ; Maps synthax identfiers to pairs, where each pair

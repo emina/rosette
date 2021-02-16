@@ -5,8 +5,8 @@
 (require rosette/base/core/result
          (only-in rosette 
                   clear-state!
-                  current-bitwidth term-cache current-oracle oracle
-                  with-vc 
+                  current-bitwidth current-oracle oracle
+                  with-vc with-terms terms
                   solution? sat? unsat?))
 (require (for-syntax syntax/parse))
 
@@ -71,11 +71,11 @@
                     #:before (thunk (printf "~a\n" name) (before))
                     #:after after
                     (with-normal-or-fail
-                      (parameterize ([current-bitwidth (current-bitwidth)]
-                                     [term-cache (hash-copy (term-cache))]
-                                     [current-oracle (oracle (current-oracle))])
-                        test ...)))])
-           (let ([rts (rosette-test-suite features ts (hash-copy (term-cache)) (current-bitwidth) (oracle (current-oracle)))])
+                      (with-terms 
+                        (parameterize ([current-bitwidth (current-bitwidth)]
+                                       [current-oracle (oracle (current-oracle))])
+                          test ...))))])
+           (let ([rts (rosette-test-suite features ts (terms) (current-bitwidth) (oracle (current-oracle)))])
              (set-box! discovered-tests (append (unbox discovered-tests) (list rts)))
              ts)))]))
 
@@ -85,32 +85,32 @@
 ; A test should only be run if the current-solver satisfies the test's feature list.
 (define discovered-tests (box '()))
 (define executed-tests (mutable-seteq))
-(struct rosette-test-suite (features ts term-cache bitwidth oracle) #:transparent)
+(struct rosette-test-suite (features ts terms bitwidth oracle) #:transparent)
 
 
 ; Run all discovered tests that the given list of features satisfies.
 ; Only tests that actually require features are run.
 (define (run-solver-specific-tests [features '()])
   (for ([rts (in-list (unbox discovered-tests))])
-    (match-define (rosette-test-suite feats ts tc bw o) rts)
+    (match-define (rosette-test-suite feats ts trms bw o) rts)
     (when (and (not (null? feats)) (for/and ([f feats]) (member f features)))
-      (parameterize ([term-cache (hash-copy tc)]
-                     [current-bitwidth bw]
-                     [current-oracle (oracle o)])
-        (set-add! executed-tests rts)
-        (time (run-tests ts))))))
+      (with-terms trms
+        (parameterize ([current-bitwidth bw]
+                       [current-oracle (oracle o)])
+          (set-add! executed-tests rts)
+          (time (run-tests ts)))))))
 
 ; The same as run-all-discovered-tests, but only for tests
 ; that require no features.
 (define (run-generic-tests)
   (for ([rts (in-list (unbox discovered-tests))])
-    (match-define (rosette-test-suite feats ts tc bw o) rts)
+    (match-define (rosette-test-suite feats ts trms bw o) rts)
     (when (null? feats)
-      (parameterize ([term-cache (hash-copy tc)]
-                     [current-bitwidth bw]
-                     [current-oracle (oracle o)])
-        (set-add! executed-tests rts)
-        (time (run-tests ts))))))
+      (with-terms trms
+        (parameterize ([current-bitwidth bw]
+                       [current-oracle (oracle o)])
+          (set-add! executed-tests rts)
+          (time (run-tests ts)))))))
 
 
 ; Check that every discovered test was executed at least once

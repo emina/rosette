@@ -4,7 +4,7 @@
   (only-in "bvops.rkt" BV bv* bv)
   (only-in "program.rkt" trace* trace-args trace-out well-formed-program well-formed-trace)
   rosette/query/eval "log.rkt"
-  (only-in rosette/base/core/term term? constant? get-type term-cache term<?)
+  (only-in rosette/base/core/term term? constant? get-type with-terms term<?)
   (only-in rosette/base/core/bool ! || && => with-vc vc-assumes vc-asserts)
   (only-in rosette/base/core/result result-state)
   (only-in rosette/base/core/real @integer?)
@@ -32,16 +32,16 @@
       (define maxbw (bitvector-size (BV)))
       (define (correct? sol)
         (and (sat? sol)
-             (parameterize ([term-cache (hash-copy (term-cache))]
-                            [BV (bitvector maxbw)])
-               (solver-clear checker)
-               (solver-assert checker (φ_verify (evaluate (trace* impl) sol) spec))
-               (unsat? (solver-check checker)))))
+             (with-terms 
+               (parameterize ([BV (bitvector maxbw)])
+                 (solver-clear checker)
+                 (solver-assert checker (φ_verify (evaluate (trace* impl) sol) spec))
+                 (unsat? (solver-check checker))))))
       (let loop ([bw (min (max 1 minbw) maxbw)])
-        (define candidate 
-          (parameterize ([term-cache (hash-copy (term-cache))]
-                         [BV (bitvector bw)])
-            (∃∀-solve* impl spec guesser checker)))
+        (define candidate
+          (with-terms
+            (parameterize ([BV (bitvector bw)])
+              (∃∀-solve* impl spec guesser checker))))
         (cond [(or (= bw maxbw) (correct? candidate))
                (custodian-shutdown-all (current-custodian))
                candidate]

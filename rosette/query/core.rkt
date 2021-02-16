@@ -2,7 +2,7 @@
 
 (require 
   "eval.rkt" "finitize.rkt"
-  (only-in "../base/core/term.rkt" constant? term-type get-type term? term-cache clear-terms! term<? solvable-default)
+  (only-in "../base/core/term.rkt" constant? term-type get-type term? with-terms clear-terms! term<? solvable-default)
   (only-in "../base/core/bool.rkt" ! || && => @boolean?)
   "../solver/solver.rkt"
   (only-in "../solver/solution.rkt" model core sat unsat sat? unsat?)
@@ -34,12 +34,12 @@
     (with-handlers ([exn? (lambda (e) (solver-shutdown solver) (raise e))])
       (cond 
         [bw 
-         (parameterize ([term-cache (hash-copy (term-cache))])
-           (define fmap (finitize (append φs mins maxs) bw))
-           (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
-           (solver-minimize solver (for/list ([m mins]) (hash-ref fmap m)))
-           (solver-maximize solver (for/list ([m maxs]) (hash-ref fmap m)))
-           (unfinitize (solver-check solver) fmap))]
+         (with-terms
+           (let ([fmap (finitize (append φs mins maxs) bw)])
+             (solver-assert solver (for/list ([φ φs]) (hash-ref fmap φ)))
+             (solver-minimize solver (for/list ([m mins]) (hash-ref fmap m)))
+             (solver-maximize solver (for/list ([m maxs]) (hash-ref fmap m)))
+             (unfinitize (solver-check solver) fmap)))]
         [else 
          (solver-assert solver φs)
          (solver-minimize solver mins)
@@ -124,21 +124,21 @@
 (define (∃∀-solve inputs assumes asserts #:solver [solver #f] #:bitwidth [bw (current-bitwidth)])
   (define solver-type (if (false? solver) (solver-constructor (current-solver)) solver))
   (parameterize ([current-custodian (make-custodian)]
-                 [current-subprocess-custodian-mode 'kill]
-                 [term-cache (hash-copy (term-cache))])
-    (with-handlers ([exn? (lambda (e) (custodian-shutdown-all (current-custodian)) (raise e))])
-      (begin0 
-        (cond 
-          [bw
-           (define fmap (finitize (append inputs assumes asserts) bw))
-           (define fsol (cegis (for/list ([i inputs])  (hash-ref fmap i))
-                               (for/list ([φ assumes]) (hash-ref fmap φ))
-                               (for/list ([φ asserts]) (hash-ref fmap φ))
-                               (solver-type) (solver-type)))
-           (unfinitize fsol fmap)]
-          [else 
-           (cegis inputs assumes asserts (solver-type) (solver-type))])
-        (custodian-shutdown-all (current-custodian))))))
+                 [current-subprocess-custodian-mode 'kill])
+    (with-terms
+      (with-handlers ([exn? (lambda (e) (custodian-shutdown-all (current-custodian)) (raise e))])
+        (begin0 
+          (cond 
+            [bw
+             (define fmap (finitize (append inputs assumes asserts) bw))
+             (define fsol (cegis (for/list ([i inputs])  (hash-ref fmap i))
+                                 (for/list ([φ assumes]) (hash-ref fmap φ))
+                                 (for/list ([φ asserts]) (hash-ref fmap φ))
+                                 (solver-type) (solver-type)))
+             (unfinitize fsol fmap)]
+            [else 
+             (cegis inputs assumes asserts (solver-type) (solver-type))])
+          (custodian-shutdown-all (current-custodian)))))))
          
 
 ; Uses the given solvers to solve the exists-forall problem 

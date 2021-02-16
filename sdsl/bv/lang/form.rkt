@@ -4,7 +4,7 @@
          rosette/query/eval
          rosette/base/form/state
          rosette/solver/solution
-         (only-in rosette/base/core/term term-cache)
+         (only-in rosette/base/core/term with-terms)
          (for-syntax racket/syntax))
 
 (provide define-fragment synthesize-fragment bvlib verbose?)
@@ -28,20 +28,20 @@
     [(_ (id param ...) #:implements spec #:library lib-expr)
      #'(synthesize-fragment (id param ...) #:implements spec #:library lib-expr #:minbv 4)]
     [(_ (id param ...) #:implements spec #:library lib-expr #:minbv minbv)
-     #`(parameterize ([current-oracle (oracle)]
-                      [term-cache (hash-copy (term-cache))])
-         (bv-info "synthesizing ~a" #'id)
-         (define impl (prog* #,(length (syntax->list #'(param ...))) lib-expr))
-         (define-values (val cpu real gc) (time-apply ∃∀-solve (list impl spec minbv)))     
-         (match (car val)
-           [(? sat? sol) 
-            (bv-info "synthesized ~a (ms): cpu = ~a, real = ~a, gc = ~a" #'id cpu real gc)
-            (define impl-stx (fragment->syntax (list (quote-syntax param) ...) impl sol))
-            (values (procedure-rename (eval impl-stx) 'id) impl-stx)]
-           [_ 
-            (error 'synthesize-fragment 
-                   "unable to synthesize ~a (ms): cpu = ~a, real = ~a, gc = ~a"
-                   #'id cpu real gc)]))]))
+     #`(with-terms
+         (parameterize ([current-oracle (oracle)])
+           (bv-info "synthesizing ~a" #'id)
+           (define impl (prog* #,(length (syntax->list #'(param ...))) lib-expr))
+           (define-values (val cpu real gc) (time-apply ∃∀-solve (list impl spec minbv)))     
+           (match (car val)
+             [(? sat? sol) 
+              (bv-info "synthesized ~a (ms): cpu = ~a, real = ~a, gc = ~a" #'id cpu real gc)
+              (define impl-stx (fragment->syntax (list (quote-syntax param) ...) impl sol))
+              (values (procedure-rename (eval impl-stx) 'id) impl-stx)]
+             [_ 
+              (error 'synthesize-fragment 
+                     "unable to synthesize ~a (ms): cpu = ~a, real = ~a, gc = ~a"
+                     #'id cpu real gc)])))]))
 
 (define-syntax-rule (bvlib [{id ...} n] ...)
   (flatten

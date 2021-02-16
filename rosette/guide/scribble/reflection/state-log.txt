@@ -1,8 +1,4 @@
 ;; This file was created by make-log-based-eval
-((require (only-in racket hash-values))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
 ((require (only-in rosette/guide/scribble/util/lifted opaque))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -11,7 +7,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((hash-values (term-cache))
+((terms)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -20,7 +16,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list d b c a)"))))
+  (c values c (0 (u . "(list a d b c)"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -76,7 +72,7 @@
      "(vc a (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b)))))))"))))
  #""
  #"")
-((append (take (hash-values (term-cache)) 5) (list (opaque "...")))
+((append (take (terms) 5) (list (opaque "...")))
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -91,7 +87,7 @@
    (0
     (u
      .
-     "(list\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n b\n (&& a b)\n (&& a (! b))\n (! b)\n ...)\n"))))
+     "(list\n (|| d (! (&& a (! b))))\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n (! d)\n (|| (! b) (|| c (! (&& a b))))\n (! a)\n ...)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -246,7 +242,7 @@
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((hash-values (term-cache))
+((terms)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -275,7 +271,7 @@
   (c values c (0 (u . "(+ 3 a)"))))
  #""
  #"")
-((hash-values (term-cache))
+((terms)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -303,7 +299,7 @@
   (c values c (0 (u . "(unsat)"))))
  #""
  #"")
-((hash-values (term-cache))
+((terms)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -316,7 +312,7 @@
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((hash-values (term-cache))
+((terms)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -340,7 +336,7 @@
   (c values c (0 (u . "(model\n [a 1]\n [a 0])"))))
  #""
  #"")
-((hash-values (term-cache))
+((terms)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -349,11 +345,11 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (= a a) a (! (= a a)))"))))
+  (c values c (0 (u . "(list (! (= a a)) (= a a) a)"))))
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((require (only-in racket collect-garbage hash-count))
+((require (only-in racket collect-garbage))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
@@ -364,22 +360,77 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((hash-count (term-cache)) ((3) 0 () 0 () () (q values 0)) #"" #"")
+((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 245 real time: 246 gc time: 11\n"
+ #"cpu time: 240 real time: 240 gc time: 20\n"
  #"")
-((hash-count (term-cache)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
+((length (terms)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((hash-count (term-cache)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
+((length (terms)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((term-cache (weak-term-cache)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((hash-count (term-cache)) ((3) 0 () 0 () () (q values 0)) #"" #"")
+((gc-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 329 real time: 330 gc time: 29\n"
+ #"cpu time: 321 real time: 321 gc time: 27\n"
  #"")
 (50000 ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((hash-count (term-cache)) ((3) 0 () 0 () () (q values 0)) #"" #"")
+((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
+((define-symbolic a b integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((terms)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(list b a)"))))
+ #""
+ #"")
+((with-terms (begin0 (verify (assert (= (+ a b) 0))) (println (terms))))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(model\n [a 1]\n [b 0])"))))
+ #"(list (= 0 (+ a b)) b (! (= 0 (+ a b))) a (+ a b))\n"
+ #"")
+((terms)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(list b a)"))))
+ #""
+ #"")
+((with-terms
+  (list)
+  (begin (println (terms)) (define-symbolic c integer?) (println (terms))))
+ ((3) 0 () 0 () () (c values c (void)))
+ #"'()\n(list c)\n"
+ #"")
+((terms)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(list b a)"))))
+ #""
+ #"")

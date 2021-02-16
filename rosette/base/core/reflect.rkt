@@ -6,8 +6,8 @@
 (provide type? solvable? @any/c type-of type-cast for/all for*/all
          term? constant? expression? 
          term expression constant
-         term-type term=? 
-         term->datum clear-terms! term-cache weak-term-cache
+         term-type term=? term->datum
+         terms terms-count terms-ref with-terms clear-terms! gc-terms!
          union? union union-contents union-guards union-values
          union-filter in-union in-union* in-union-guards in-union-values
          (struct-out normal) (struct-out failed) result? result-value result-state
