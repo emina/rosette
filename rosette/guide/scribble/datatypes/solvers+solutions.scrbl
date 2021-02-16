@@ -324,17 +324,17 @@ the given constraints are satisfiable or not.
 
 A solution supports the following operations:
 
-@defproc[(solution? [value any/c]) boolean?]{
-Returns true if the given @racket[value] is a solution.}
+@defproc[(solution? [v any/c]) boolean?]{
+Returns true if @racket[v] is a solution.}
 
-@defproc[(sat? [value any/c]) boolean?]{
-Returns true if the given @racket[value] is a satisfiable solution.}
+@defproc[(sat? [v any/c]) boolean?]{
+Returns true if @racket[v] is a satisfiable solution.}
 
-@defproc[(unsat? [value any/c]) boolean?]{
-Returns true if the given @racket[value] is an unsatisfiable solution.}
+@defproc[(unsat? [v any/c]) boolean?]{
+Returns true if @racket[v] is an unsatisfiable solution.}
 
-@defproc[(unknown? [value any/c]) boolean?]{
-Returns true if the given @racket[value] is an unknown solution.}
+@defproc[(unknown? [v any/c]) boolean?]{
+Returns true if @racket[v] is an unknown solution.}
 
 @defproc*[([(sat) sat?]
            [(sat [binding (hash/c constant? any/c #:immutable #t)]) sat?])]{
@@ -351,26 +351,26 @@ are provided, applying @racket[core] to the resulting solution produces @racket[
 indicating that there is no satisfying solution but
 core extraction was not performed.  (Core extraction is an expensive 
 operation that is not supported by all solvers; those that do support it 
-usually don't compute a core unless explicitly asked for one via @racket[solver-debug].)}
+do not compute a core unless explicitly asked for one via @racket[solver-debug].)}
 
 @defproc[(unknown) unknown?]{
 Returns an unknown solution.}
 
-@defproc[(model [solution sat?]) (hash/c constant? any/c #:immutable #t)]{
+@defproc[(model [sol sat?]) (hash/c constant? any/c #:immutable #t)]{
 Returns the binding stored in the given satisfiable solution.  The binding is an immutable
 hashmap from symbolic constants to values.  
 }
 
-@defproc[(core [solution unsat?]) (or/c (listof (and/c constant? boolean?)) #f)]{
+@defproc[(core [sol unsat?]) (or/c (listof (and/c constant? boolean?)) #f)]{
 Returns the unsatisfiable core stored in the given satisfiable solution.  If the solution is 
 @racket[unsat?] and a core was computed, the result is a list of boolean values that 
 are collectively unsatisfiable.  Otherwise, the result is @racket[#f]. 
 }
 
-@defproc[(evaluate [v any/c] [solution sat?]) any/c]{
+@defproc[(evaluate [v any/c] [sol sat?]) any/c]{
 Given a Rosette value and a satisfiable solution, @racket[evaluate] produces a 
 new value obtained by replacing every symbolic constant @var[c] in @racket[v] 
-with @racket[(solution #, @var[c])] and simplifying the result.
+with @racket[(sol #, @var[c])] and simplifying the result.
 
 @examples[#:eval rosette-eval                
 (define-symbolic a b boolean?)
@@ -388,15 +388,16 @@ with @racket[(solution #, @var[c])] and simplifying the result.
 (evaluate (and a b) sol) 
 ]}
 
-@defproc[(complete-solution [solution solution?] [consts (listof constant?)]) solution?]{
+@defproc[(complete-solution [sol solution?] [consts (listof constant?)]) solution?]{
                                                                                     
-Given a @racket[solution] and a list of symbolic constants @racket[consts],
-returns a solution that is complete with respect to the given list.
-In particular, if the input @racket[solution] is satisfiable, the returned
-solution is also satisfiable, and
-it extends the @racket[solution] model with default bindings for all constants in
-@racket[consts] that are not bound by @racket[solution].
-Otherwise, @racket[solution] itself is returned.
+ Given a solution @racket[sol] and a list of symbolic
+ constants @racket[consts], returns a solution that is
+ complete with respect to the given list. In particular, if
+ @racket[sol] is satisfiable, the returned solution is also
+ satisfiable, and it extends the @racket[sol] model with
+ default bindings for all constants in @racket[consts] that
+ are not bound by @racket[sol]. Otherwise, @racket[sol]
+ itself is returned.
 
 @examples[#:eval rosette-eval                
 (define-symbolic a boolean?)
