@@ -1,6 +1,6 @@
 #lang racket
 
-(provide select rosette-evaluator rosette-log-evaluator logfile opaque)
+(provide select rosette-evaluator rosette-log-evaluator logfile opaque format-opaque)
 
 (require 
   (for-label racket racket/generic)
@@ -33,6 +33,9 @@
   #:methods gen:custom-write
   [(define (write-proc self port mode)
      (fprintf port "~a" (opaque-str self)))])
+
+(define (format-opaque format-str . args)
+  (opaque (apply format format-str args)))
 
 (define (serialize-for-logging v)
   (match v

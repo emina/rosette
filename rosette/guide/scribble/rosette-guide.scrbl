@@ -34,7 +34,7 @@ Chapters @seclink["ch:syntactic-forms"]{3}-@seclink["ch:libraries"]{6} define th
 @include-section["libs/libraries.scrbl"]
 @include-section["reflection/symbolic-reflection.scrbl"]
 @include-section["unsafe/unsafe.scrbl"]
-@;include-section["performance/performance.scrbl"]
+@include-section["performance/performance.scrbl"]
 @;include-section["error-tracing/error-tracing.scrbl"]
 
 @(require (only-in "refs.scrbl" generate-bibliography))

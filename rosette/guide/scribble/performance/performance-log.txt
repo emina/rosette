@@ -1,4 +1,8 @@
 ;; This file was created by make-log-based-eval
+((require (only-in rosette/guide/scribble/util/lifted format-opaque))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
 ((current-bitwidth 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic x integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((solve (assert (> x 15)))
@@ -19,16 +23,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((list-set '(a b c) 1 'd) ((3) 0 () 0 () () (q values (a d c))) #"" #"")
-((define-symbolic* idx len integer?)
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((define lst (take '(a b c) len))
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
-((list-set lst idx 'd)
+((list-set '(a b c) 1 'd)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -37,7 +32,27 @@
   0
   ()
   ()
-  (c values c (0 (u . "{3340589848165897971:6}"))))
+  (c values c (0 (u . "'(a d c)"))))
+ #""
+ #"")
+((define-symbolic idx len integer?)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define lst (take '(a b c) len))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((format-opaque "~a" (list-set lst idx 'd))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(union #:size 6 #:hash 2883417510948978588)"))))
  #""
  #"")
 ((define (list-set* lst idx val)
@@ -50,8 +65,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((list-set* '(a b c) 1 'd) ((3) 0 () 0 () () (q values (a d c))) #"" #"")
-((list-set* lst idx 'd)
+((list-set* '(a b c) 1 'd)
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -60,17 +74,26 @@
   0
   ()
   ()
-  (c values c (0 (u . "{1844165362669051823:4}"))))
+  (c values c (0 (u . "'(a d c)"))))
+ #""
+ #"")
+((format-opaque "~a" (list-set* lst idx 'd))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(union #:size 4 #:hash 3537189751407371886)"))))
  #""
  #"")
 ((define-values (width height) (values 5 5))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define-symbolic* x y integer?)
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
+((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define grid/2d (for/vector ((_ height)) (make-vector width #f)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -91,10 +114,7 @@
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((define-symbolic* idx integer?)
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
+((define-symbolic idx integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((maybe-ref '(5 6 7) idx)
  ((3)
   1
@@ -110,7 +130,7 @@
    (0
     (u
      .
-     "(ite (&& (<= 0 idx$0) (<= idx$0 1)) (ite* (⊢ (= 0 idx$0) 5) (⊢ (= 1 idx$0) 6) (⊢ (= 2 idx$0) 7)) -1)"))))
+     "(ite\n (&& (<= 0 idx) (<= idx 1))\n (ite* (⊢ (= 0 idx) 5) (⊢ (= 1 idx) 6) (⊢ (= 2 idx) 7))\n -1)\n"))))
  #""
  #"")
 ((define (maybe-ref* lst idx)
@@ -127,7 +147,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(ite (= 0 idx$0) 5 (ite (= 1 idx$0) 6 -1))"))))
+  (c values c (0 (u . "(ite (= 0 idx) 5 (ite (= 1 idx) 6 -1))"))))
  #""
  #"")
 ((define-values (Add Sub Sqr Nop) (values (bv 0 2) (bv 1 2) (bv 2 2) (bv 3 2)))
@@ -193,12 +213,9 @@
   (c values c (0 (u . "(unsat)"))))
  #""
  #"")
-((clear-asserts!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-((define-symbolic* idx integer?)
- ((3) 0 () 0 () () (c values c (void)))
- #""
- #"")
+((define-symbolic idx integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((list-set '(1 2 3) idx 4)
  ((3)
   1
@@ -211,15 +228,10 @@
   (c
    values
    c
-   (c
-    (0 (u . "(ite (= 0 idx$0) 4 1)"))
-    c
-    (0 (u . "(ite (= 0 idx$0) 2 (ite (= 0 (+ -1 idx$0)) 4 2))"))
-    c
-    (0
-     (u
-      .
-      "(ite (= 0 idx$0) 3 (ite (= 0 (+ -1 idx$0)) 3 (ite (= 0 (+ -2 idx$0)) 4 3)))")))))
+   (0
+    (u
+     .
+     "(list\n (ite (= 0 idx) 4 1)\n (ite (= 0 idx) 2 (ite (= 0 (+ -1 idx)) 4 2))\n (ite (= 0 idx) 3 (ite (= 0 (+ -1 idx)) 3 (ite (= 0 (+ -2 idx)) 4 3))))\n"))))
  #""
  #"")
 ((define (list-set* lst idx val)
@@ -242,11 +254,9 @@
   (c
    values
    c
-   (c
-    (0 (u . "(ite (= 0 idx$0) 4 1)"))
-    c
-    (0 (u . "(ite (= 0 (+ -1 idx$0)) 4 2)"))
-    c
-    (0 (u . "(ite (= 0 (+ -2 idx$0)) 4 3)")))))
+   (0
+    (u
+     .
+     "(list\n (ite (= 0 idx) 4 1)\n (ite (= 0 (+ -1 idx)) 4 2)\n (ite (= 0 (+ -2 idx)) 4 3))\n"))))
  #""
  #"")
