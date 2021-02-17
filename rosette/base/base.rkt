@@ -9,7 +9,7 @@
   "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt"  
   "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
   "struct/struct.rkt" "struct/generics.rkt"
-  "form/state.rkt" "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
+  "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
 
 (provide
   (rename-out [@|| ||]) ; The character sequence || does not play nicely with the filtered-out form.
@@ -92,8 +92,6 @@
      struct struct-field-index define/generic define-struct
      ; struct/generics.rkt
      @define-generics @make-struct-type-property
-     ; form/state.rkt
-     current-oracle oracle oracle? 
      ; form/define.rkt
      define-symbolic define-symbolic*
      ; form/control.rkt

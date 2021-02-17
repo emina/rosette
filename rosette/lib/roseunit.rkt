@@ -5,7 +5,7 @@
 (require rosette/base/core/result
          (only-in rosette 
                   clear-state!
-                  current-bitwidth current-oracle oracle
+                  current-bitwidth
                   with-vc with-terms terms
                   solution? sat? unsat?))
 (require (for-syntax syntax/parse))
@@ -72,10 +72,9 @@
                     #:after after
                     (with-normal-or-fail
                       (with-terms 
-                        (parameterize ([current-bitwidth (current-bitwidth)]
-                                       [current-oracle (oracle (current-oracle))])
+                        (parameterize ([current-bitwidth (current-bitwidth)])
                           test ...))))])
-           (let ([rts (rosette-test-suite features ts (terms) (current-bitwidth) (oracle (current-oracle)))])
+           (let ([rts (rosette-test-suite features ts (terms) (current-bitwidth))])
              (set-box! discovered-tests (append (unbox discovered-tests) (list rts)))
              ts)))]))
 
@@ -85,18 +84,17 @@
 ; A test should only be run if the current-solver satisfies the test's feature list.
 (define discovered-tests (box '()))
 (define executed-tests (mutable-seteq))
-(struct rosette-test-suite (features ts terms bitwidth oracle) #:transparent)
+(struct rosette-test-suite (features ts terms bitwidth) #:transparent)
 
 
 ; Run all discovered tests that the given list of features satisfies.
 ; Only tests that actually require features are run.
 (define (run-solver-specific-tests [features '()])
   (for ([rts (in-list (unbox discovered-tests))])
-    (match-define (rosette-test-suite feats ts trms bw o) rts)
+    (match-define (rosette-test-suite feats ts trms bw) rts)
     (when (and (not (null? feats)) (for/and ([f feats]) (member f features)))
       (with-terms trms
-        (parameterize ([current-bitwidth bw]
-                       [current-oracle (oracle o)])
+        (parameterize ([current-bitwidth bw])
           (set-add! executed-tests rts)
           (time (run-tests ts)))))))
 
@@ -104,11 +102,10 @@
 ; that require no features.
 (define (run-generic-tests)
   (for ([rts (in-list (unbox discovered-tests))])
-    (match-define (rosette-test-suite feats ts trms bw o) rts)
+    (match-define (rosette-test-suite feats ts trms bw) rts)
     (when (null? feats)
       (with-terms trms
-        (parameterize ([current-bitwidth bw]
-                       [current-oracle (oracle o)])
+        (parameterize ([current-bitwidth bw])
           (set-add! executed-tests rts)
           (time (run-tests ts)))))))
 

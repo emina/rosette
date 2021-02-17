@@ -26,7 +26,6 @@
            (expected?)
            (with-terms 
              (parameterize ([current-bitwidth 32]
-                            [current-oracle (oracle (current-oracle))]
                             [current-output-port (query-output-port)])
                (printf "Verifying ~a\n" (source-of #'verify))
                (time 
@@ -69,7 +68,6 @@
            (expected?)
            (with-terms 
              (parameterize ([current-bitwidth bw]
-                            [current-oracle (oracle (current-oracle))]
                             [current-output-port (query-output-port)])
                (printf "Synthesizing ~a\n" (source-of #'synthesize))
                (define-values (id ...)

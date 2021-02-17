@@ -40,8 +40,7 @@
 ;     (or/c EENI-witness? #t))
 (define (verify-EENI* start end ≈ prog [k #f] [verbose? #f])
   (with-terms
-    (parameterize ([current-bitwidth 5]
-                   [current-oracle (oracle)])
+    (parameterize ([current-bitwidth 5])
     
       (define p (prog))
     

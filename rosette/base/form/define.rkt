@@ -1,7 +1,7 @@
 #lang racket
  
 (require syntax/parse (for-syntax syntax/parse racket)
-         "../core/term.rkt" "state.rkt")
+         "../core/term.rkt")
 
 (provide define-symbolic define-symbolic*)
 
@@ -27,12 +27,17 @@
     [(_ var:id ...+ type)
      #'(begin (define-symbolic var type) ...)]))
 
+(define current-index (make-parameter 0))
+
+(define (index!)
+  (define idx (current-index))
+  (current-index (add1 idx))
+  idx)
+
 (define-syntax (define-symbolic* stx)
   (syntax-parse stx
-    [(_ [var:id oracle] type)
-     #'(define var (constant (list #'var (oracle #'var)) type))]
     [(_ var:id type)
-     #'(define-symbolic* [var (current-oracle)] type)]
+     #'(define var (constant (list #'var (index!)) type))]
     [(_ var:id type #:length k)
      #:declare k (expr/c #'natural? #:name "length argument")
      #'(define var

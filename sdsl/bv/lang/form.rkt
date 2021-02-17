@@ -2,7 +2,6 @@
 
 (require "program.rkt" "core.rkt" "fragment.rkt" "log.rkt"
          rosette/query/eval
-         rosette/base/form/state
          rosette/solver/solution
          (only-in rosette/base/core/term with-terms)
          (for-syntax racket/syntax))
@@ -29,7 +28,7 @@
      #'(synthesize-fragment (id param ...) #:implements spec #:library lib-expr #:minbv 4)]
     [(_ (id param ...) #:implements spec #:library lib-expr #:minbv minbv)
      #`(with-terms
-         (parameterize ([current-oracle (oracle)])
+         (begin
            (bv-info "synthesizing ~a" #'id)
            (define impl (prog* #,(length (syntax->list #'(param ...))) lib-expr))
            (define-values (val cpu real gc) (time-apply ∃∀-solve (list impl spec minbv)))     
