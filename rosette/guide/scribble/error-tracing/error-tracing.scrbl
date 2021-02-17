@@ -1,17 +1,14 @@
 #lang scribble/manual
 
 @(require scribble/core scribble/html-properties
-          scribble/bnf scribble/example scriblib/footnote
+          scribble/bnf scribble/example 
           (for-label (except-in racket list-set) errortrace
                      rosette/base/core/term
                      rosette/base/form/define
                      rosette/query/form
                      rosette/base/core/union
-                     (only-in rosette unsat model evaluate sat? unsat? clear-asserts!)
-                     (only-in rosette/query/finitize current-bitwidth)
-                     (only-in rosette/base/base bitvector)
-                     (only-in rosette/base/core/safe assert)
-                     (only-in rosette/base/core/forall for/all)
+                     (only-in rosette unsat model evaluate sat? unsat? clear-vc! current-bitwidth)
+                     (only-in rosette/base/base assume assert vc clear-vc!)
                      rackunit)
           racket/runtime-path
           "../util/lifted.rkt")
@@ -22,6 +19,8 @@
 @(define-runtime-path interface.png "interface.png")
 @(define-runtime-path quickselect.png "quickselect.png")
 
+@(rosette-eval '(require (only-in rosette/guide/scribble/util/lifted format-opaque)))
+
 @title[#:tag "ch:error-tracing"]{Debugging}
 
 Bugs in Rosette programs often manifest as runtime
@@ -29,15 +28,14 @@ exceptions. For example, calling a procedure with too few
 arguments will cause a runtime exception in Rosette, just as
 it would in Racket. But unlike Racket, Rosette treats
 exceptions as assertion failures: it catches the exception,
-adds the (path) condition under which the exception is
-thrown to the @tech{assertion store}, and proceeds with
-symbolic evaluation. This treatment of exceptions
-ensures that the program's
-@seclink["ch:syntactic-forms:rosette"]{solver-aided queries}
-correctly return a @racket[sat?] or @racket[unsat?]
+updates the @tech{verification condition} to reflect the
+failure, and proceeds with symbolic evaluation. This
+treatment of exceptions ensures that the program's
+@seclink["ch:syntactic-forms:rosette"]{ solver-aided
+ queries} correctly return a @racket[sat?] or @racket[unsat?]
 solution, but it can also make solver-aided code tricky to
-debug. This chapter describes common problems that are due to
-intercepted exceptions, how to test for them, and how to
+debug. This chapter describes common problems that are due
+to intercepted exceptions, how to test for them, and how to
 find them with the @code{symtrace} tool for error tracing.
 
 
@@ -61,8 +59,8 @@ As an example, consider the following verification query,
 which tries to prove that the sum of a list of integers
 remains the same when all zeros are removed from the list:
 
-@examples[#:label #f #:eval rosette-eval
-(define-symbolic xs integer? [4])
+@examples[#:eval rosette-eval #:label #f 
+(define-symbolic xs integer? #:length 4)
 (code:line (define (sum xs) (foldl + xs)) (code:comment "bug: missing 0 after +"))
 (verify (assert (= (sum xs) (sum (filter-not zero? xs)))))
 ]
@@ -77,7 +75,7 @@ arguments. This omission will cause every call to
 @racket[sum] to raise an exception, including 
 @racket[(sum xs)] in the body of our query. Rosette
 intercepts this exception and adds @racket[#f] to the
-query's @tech{assertion store} because the exception
+query's @tech{verification condition} because the exception
 happens unconditionally (on all paths).
 This false assertion then causes the query to return a
 trivial counterexample, @racket[(model)], indicating that
@@ -87,7 +85,7 @@ to an error.
 As another example, consider the following synthesis query
 involving @racket[sum]:
 
-@examples[#:label #f #:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (define-symbolic opt boolean?)
 (synthesize
  #:forall xs
@@ -98,62 +96,33 @@ Here, the expected result is a model that binds @racket[opt]
 to the value @racket[#t], and this is the outcome we see
 once we fix the bug in @racket[sum]. The bug, however,
 causes the @racket[#:guarantee] expression to fail
-unconditionally. The query then intercepts the exception and
+unconditionally. Rosette then intercepts the exception and
 returns @racket[(unsat)] to indicate that no choice of
 @racket[opt] can satisfy the specification.
 
-In addition to unexpected results, exceptions intercepted in
-queries can also lead to more subtle errors, with no obvious
-manifestation. For example, consider the following query
-that verifies another simple property of @racket[sum]---if
-@racket[sum] returns a positive integer, then at least one
-of its arguments must have been positive.
+Bugs of this kind can be found through testing. A good test
+suite should check that queries produce expected results on
+small inputs, and that query parts do not throw exceptions.
+When possible, it is also good practice to test all
+solver-aided code against concrete inputs and outputs. Here
+is an example test suite for our first query that includes
+all of these checks:
 
-@examples[#:label #f #:eval rosette-eval
-(verify
- #:assume (assert (positive? (sum xs)))
- #:guarantee (assert (ormap positive? xs)))
-]
-
-This query returns @racket[(unsat)], as expected, despite the
-bug in @racket[sum]. To see why, recall that the verifier
-returns a counterexample when it can find an input that
-satisfies the @racket[#:assume]d assertions and violates the
-@racket[#:guarantee]d assertions. But there is no input that
-satisfies the assumptions in our query: as before, the call
-to @racket[(sum xs)] throws an unconditional exception that
-is intercepted and treated as @racket[(assert #f)]. This
-false assumption leads to a vacuous proof of correctness,
-and the verifier returns @racket[(unsat)].
-
-The bugs due to query exceptions can generally be found
-through testing. To guard against such bugs, a test suite
-should check that queries produce expected results on small
-inputs, and it should also check for unexpected exceptions
-in all parts of the query's body. When possible, it is also
-good practice to test all solver-aided code against concrete
-inputs and outputs. Here is an example test suite for our
-last query that includes all of these checks:
-
-@examples[#:label #f #:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (eval:no-prompt
 (require rackunit)
 
-(define (assumed xs)
-  (assert (positive? (sum xs))))
-
-(define (guaranteed xs)
-  (assert (ormap positive? xs)))
+(define (post xs)
+  (assert (= (sum xs) (sum (filter-not zero? xs)))))
 
 (define (query xs)
-  (verify #:assume (assumed xs)
-          #:guarantee (guaranteed xs)))
-  
+  (verify (post xs)))
+   
 (define example-tests 
   (test-suite
    "An example suite for a sum query."
-   #:before clear-asserts!
-   #:after  clear-asserts!
+   #:before clear-vc!
+   #:after  clear-vc!
 
    (test-case
     "Test sum with concrete values."
@@ -163,19 +132,23 @@ last query that includes all of these checks:
     (check = (sum '(-1 0 3)) 2))
      
    (test-case
-    "Test query parts for exceptions."
-    (check-not-exn (thunk (assumed xs)))
-    (check-not-exn (thunk (guaranteed xs))))
+    "Test query post for exceptions."
+    (before
+     (clear-vc!)
+     (check-not-exn (thunk (post xs)))))
   
    (test-case
     "Test query outcome."
-    (check-pred unsat? (query xs))
-    ))))
+    (before
+     (clear-vc!)
+     (check-pred unsat? (query xs)))))))
 
-(eval:alts (run-test example-tests) '(\#<test-error> \#<test-failure> \#<test-success>))
+(eval:alts
+ (run-test example-tests)
+ (format-opaque "~a" (run-test example-tests)))
 ]
 
-All but the last test in this suite fail when invoked on the
+All tests in this suite fail when invoked on the
 buggy @racket[sum], and they all pass once the bug is fixed.
 
 
@@ -191,45 +164,115 @@ trickier, in both concrete and solver-aided code, as our next
 example shows.
 
 Consider the following buggy version of @racket[sum]:
-@examples[#:label #f #:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (define (sum xs)
   (cond
     [(null? xs) 0]
     [(null? (cdr xs)) (car xs)] 
     [(andmap (curry = (car xs)) (cdr xs))  
-     (* (length xs) (cdr xs))] (code:comment "bug: cdr should be car")
+     (* (length xs) (cdr xs))] (code:comment "Bug: cdr should be car.")
     [else (apply + xs)]))
 ]
 
 This version of @racket[sum] implements three simple
-optimizations. It returns 0 when given an empty list; @code{
- xs[0]} when given a list of length 1; and @code{|xs| * xs[0]}
-when given a list of identical elements. This last
-optimization is buggy (it uses @racket[cdr] when it should
-have used @racket[car]), and any execution path that goes
-through it will end with an exception.
+optimizations. It returns 0 when given an empty list;
+@code{xs[0]} when given a list of length 1; and
+@code{|xs| * xs[0]} when given a list of identical elements.
+This last optimization is buggy (it uses @racket[cdr] when
+it should have used @racket[car]), and any execution path
+that goes through it will end with an exception.
 
-Our test suite from the
-@seclink["sec:errors-under-queries"]{previous section} will
+Suppose that we want to verify another simple property of
+@racket[sum]: if it returns a positive integer, then at least
+one element in the argument list must have been positive.
+
+@examples[#:eval rosette-eval #:label #f 
+(assume (positive? (sum xs)))
+(verify
+ (assert (ormap positive? xs)))]
+
+This query returns @racket[(unsat)], as expected, despite
+the bug in @racket[sum]. To see why, recall that
+@racket[(verify #, @var{expr})] searches for an input that
+violates an assertion in @var{expr}, while satisfying all
+the assumptions and assertions accumulated in the
+verification condition @racket[(vc)] before the call to
+@racket[verify]. So, our query is @racket[unsat?] because
+@racket[(ormap positive? xs)] holds whenever
+@racket[(sum xs)] successfully computes a positive value.
+
+A basic test suite, adapted from the
+@seclink["sec:errors-under-queries"]{previous section}, will
 not uncover this bug. If we run the tests against the new
 @racket[sum], all the checks pass:
 
-@examples[#:label #f #:eval rosette-eval
-(eval:alts (run-test example-tests)
-           '(\#<test-success> \#<test-success> \#<test-success>))
-]
+@examples[#:eval rosette-eval #:label #f 
+(eval:no-prompt
+(define (pre xs)
+  (assume (positive? (sum xs))))
+  
+(define (post xs)
+  (assert (ormap positive? xs)))
+
+(define (query xs)
+  (pre xs)
+  (verify (post xs)))
+
+(define example-tests 
+  (test-suite
+   "An example suite for a sum query."
+   #:before clear-vc!
+   #:after  clear-vc!
+
+   (test-case
+    "Test sum with concrete values."
+    (check = (sum '()) 0)
+    (check = (sum '(-1)) -1)
+    (check = (sum '(-2 2)) 0)
+    (check = (sum '(-1 0 3)) 2))
+
+   (test-case
+    "Test query post for exceptions."
+    (before
+     (clear-vc!)
+     (check-not-exn (thunk (pre xs)))))
+      
+   (test-case
+    "Test query post for exceptions."
+    (before
+     (clear-vc!)
+     (check-not-exn (thunk (post xs)))))
+  
+   (test-case
+    "Test query outcome."
+    (before
+     (clear-vc!)
+     (check-pred unsat? (query xs)))))))
+
+(eval:alts
+ (run-test example-tests)
+ (format-opaque "~a" (run-test example-tests)))
+] 
 
 One way to detect bugs of this kind is to run a "unit
 verification query" for each key procedure in the program,
 searching for assertion failures where none are expected:
 
-@examples[#:label #f #:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f 
 (test-case
  "Test sum for any failures."
  (check-pred unsat? (verify (sum xs))))
 ]
 
-But writing such queries is not always possible, or
+Another strategy is to avoid issuing any assumptions or
+assertions outside of queries:
+@examples[#:eval rosette-eval #:label #f 
+(verify
+ (begin
+   (assume (positive? (sum xs)))
+   (assert (ormap positive? xs))))]
+
+But neither strategy is always possible, or
 foolproof, for large programs. So, in addition to testing,
 we recommend debugging all important queries with 
 @tech[#:key "error tracer"]{error tracing}. 
@@ -255,15 +298,12 @@ The error tracer will open a web browser and stream
 all exceptions that Rosette intercepted. For instance,
 here is the output from the error tracer when running our
 last query on the buggy @racket[sum] example from the
-@seclink["sec:errors-under-symbolic-eval"]{previous
- section}:
+@seclink["sec:errors-under-symbolic-eval"]{previous section}:
 
-
-@examples[#:label #f #:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f #:no-prompt
+(assume (positive? (sum xs)))
 (verify
- #:assume (assert (positive? (sum xs)))
- #:guarantee (assert (ormap positive? xs)))
-]
+ (assert (ormap positive? xs)))]
 
 @(image interface.png #:scale 0.5)
 
@@ -300,9 +340,9 @@ The @exec{raco symtrace @nonterm{prog}} command accepts the following command-li
  @item{@DFlag{racket} --- instrument code in any language, not
   just those derived from Rosette.}
 
- @item{@DFlag{solver} --- do not show exceptions raised on
+ @;{@item{@DFlag{solver} --- do not show exceptions raised on
   infeasible paths, using the solver to decide if paths are
-  feasible. This option can cause significant performance degradation.}
+  feasible. This option can cause significant performance degradation.}}
 
  @item{@DFlag{assert} --- do not show exceptions due to
   assertion errors, which are usually expected exceptions.}
@@ -331,7 +371,7 @@ verifying the following buggy implementation of the
 @link["https://en.wikipedia.org/wiki/Quickselect"]{
  quickselect algorithm}.
 
-@examples[#:label #f #:eval rosette-eval
+@examples[#:eval rosette-eval #:label #f #:no-prompt
 (define (select xs n)
   (cond
     [(empty? xs) (assert #f "unexpected empty list")]
@@ -342,62 +382,39 @@ verifying the following buggy implementation of the
           (define len< (length <pivot))
           (cond
             [(= n len<) pivot]
-            [(< n len<) (select <pivot)] (code:comment "bug: should be (select <pivot n)")
+            [(< n len<) (select <pivot)] (code:comment "Bug: should be (select <pivot n).")
             [else (select >=pivot (- n len< 1))])]))
 
+(define-symbolic n k integer?)
+
+(assume
+ (and (<= 0 n (sub1 (length xs)))
+      (= k (select xs n))))
+
 (verify
- #:assume (assert (and (<= 0 n (sub1 (length xs)))
-                       (= k (select xs n))))
- #:guarantee (assert (= k (list-ref (sort xs <) n))))
+ (assert (= k (list-ref (sort xs <) n))))
 ]
 
 As before, the verification query succeeds despite the bug.
-But unlike before, the bug is much harder to detect. So we
+But unlike before, the bug is harder to detect. So we
 run the error tracer on it and obtain the following output:
 
 @(image quickselect.png #:scale 0.5)
 
-The output from the error tracer includes 9 exceptions. Four
+The output from the error tracer includes 8 exceptions. Four
 are arity mismatch exceptions that are due to the bug, and
 the rest are benign assertion failures that cannot happen in
-any concrete execution.
+our example.
 
 Because benign assertion failures are so common, the error
-tracer provides an option to suppress them from the output
-via the @seclink["sec:symtrace:opts"]{@DFlag{assert}}
-flag. With the flag enabled, the output contains only the
-four arity mismatch exceptions.
+tracer provides an option to heuristically suppress them
+from the output via the
+@seclink["sec:symtrace:opts"]{@DFlag{assert}} flag. With the
+flag enabled, the output contains only the four arity
+mismatch exceptions.
 
-@define-footnote[pc-note make-pc-note]
+Some assertion failures are bugs, however, so filtering with
+@DFlag{assert} can end up hiding true positives and should
+be used with this caveat in mind.
 
-Some assertion failures are bugs, however, so aggressive
-filtering with @DFlag{assert} can end up hiding true
-positives. For this reason, the error tracer also includes a
-more conservative filtering option, @DFlag{solver}, that
-will never miss true positives, at the cost of showing more
-false alarms. The @DFlag{solver} option suppresses
-exceptions that are raised on paths with
-@seclink["sec:state-reflection"]{infeasible path
- conditions}, which involves calling the solver to check the
-feasibility of the path condition for each
-exception.@pc-note{Exceptions with infeasible path
- conditions are guaranteed to be unreachable, so no true
- positive are missed. But exceptions with feasible path
- conditions may still be unreachable due to the way that
- Rosette represents symbolic state, so some false positives
- may be included in the output.} Solver calls are expensive,
-however, so enabling this flag can cause significant
-performance degradation. In our example, using the @DFlag{solver}
-flag is both fast and effective at pruning false
-positives: it suppresses all the assertion failures as well
-as one of the arity mismatch errors.
 
-Lastly, it is possible to use both of these filtering flags,
-@DFlag{solver} and @DFlag{assert}, together. In our case,
-the result is the same as using the @DFlag{solver} flag
-alone. But in general, using both flags can lead to better
-performance compared to using @DFlag{solver} alone, with the
-caveat that the inclusion of @DFlag{assert} may filter out
-true positives.
-
-@make-pc-note[]
