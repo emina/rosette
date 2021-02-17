@@ -1,10 +1,9 @@
 #lang scribble/manual
 
-@(require (for-label racket) scribble/core scribble/eval)
+@(require (for-label racket) scribble/core scribble/example)
 @(require (for-label rosette/base/form/define rosette/query/query rosette/solver/solution
-                     rosette/base/core/term 
-                     (only-in rosette/base/core/safe assert) )
-          racket/runtime-path)
+                     (only-in rosette/base/base assert vc-true? vc) )
+          racket/runtime-path racket/sandbox)
 @(require (only-in "../refs.scrbl" ~cite rosette:pldi14))
 @(require "../util/lifted.rkt")
 
@@ -31,7 +30,7 @@ by @racket[rosette/safe] code.
 
 The following snippet demonstrates the non-standard execution that the SVM needs to 
 perform in order to assign the expected meaning to Rosette code:
-@interaction[#:eval rosette-eval
+@examples[#:eval rosette-eval
 (define y (vector 0 1 2))
  
 (define-symbolic b boolean?)
@@ -48,11 +47,11 @@ perform in order to assign the expected meaning to Rosette code:
 
 y
 
-(define env1 (solve (assert b)))
-(evaluate y env1)
+(define sol1 (solve (assert b)))
+(evaluate y sol1)
 
-(define env2 (solve (assert (not b))))
-(evaluate y env2)]
+(define sol2 (solve (assert (not b))))
+(evaluate y sol2)]
 
 Because the SVM controls only the execution of @racket[rosette/safe] code, 
 it cannot, in general, guarantee the safety or correctness of arbitrary @racket[rosette] programs. 
@@ -68,11 +67,11 @@ The procedures @racket[make-hash], @racket[hash-ref], and @racket[hash-clear!] a
 Whenever they are invoked, the execution escapes to the Racket interpreter.
 
 @(rosette-eval '(require (only-in racket make-hash hash-clear! hash-ref)))
-@defs+int[#:eval rosette-eval
+@examples[#:eval rosette-eval
 
-[(define h (make-hash '((1 . 2))))
+(define h (make-hash '((1 . 2))))
 (define-symbolic key integer?)
-(define-symbolic b boolean?)]
+(define-symbolic b boolean?)
 
 
 (code:comment "The following call produces an incorrect value. Intuitively, we expect the")
@@ -84,6 +83,7 @@ Whenever they are invoked, the execution escapes to the Racket interpreter.
 (code:comment "The following call produces an incorrect state. Intuitively, we expect h")
 (code:comment "to be empty if b is true and unchanged otherwise.")
 (when b
+  (pretty-print (vc))
   (hash-clear! h))
 h]  
 
@@ -91,12 +91,12 @@ When is it safe to use a Racket procedure or macro?  The answer depends on their
 A conservative rule is to only use an unlifted construct @var[c] in an @deftech{effectively concrete} @tech{program state}. 
 The SVM is in such a state when 
 @itemlist[#:style 'ordered
-  @item{the current @tech{path condition} is @racket[#t];}
-  @item{the @tech{assertion store} is empty; and,}
+  @item{the current @tech{verification condition} is true, i.e., @racket[(vc-true? (vc))]; and,}
   @item{all local and global variables that may be read by @var[c] contain @deftech{fully concrete value}s. A  
 value (e.g., a list) is fully concrete if no symbolic values can be reached by recursively traversing its structure.}] 
-The two uses of @racket[hash-ref] and @racket[hash-clear!] in our buggy example violate the third and first 
-requirements, respectively.
+The above uses of @racket[hash-ref] and @racket[hash-clear!] violate these 
+requirements: @racket[hash-ref] is reading a symbolic value, and @racket[hash-clear!] is
+evaluated in a state with a symbolic verification condition.
 
 Being conservative, the above rule disallows many scenarios in which it is still safe to use 
 Racket constructs.  These, however, have to be considered on a case-by-case basis.  For example, 
@@ -104,3 +104,5 @@ it is safe to use Racket's iteration and comprehension constructs, such as @rack
 as long as they iterate over concrete sequences, and all guard expressions produce fully concrete values in 
 each iteration.  In practice, Rosette programs can safely use many common Racket constructs, and with a 
 bit of experience, it becomes easy to see when it is okay to break the effectively-concrete rule.
+
+@(kill-evaluator rosette-eval)

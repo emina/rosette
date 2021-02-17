@@ -14,19 +14,41 @@
   0
   ()
   ()
-  (c values c (v! 0 (0 (u . "(ite b 3 1)")) (0 (u . "(ite b 2 4)")))))
+  (c values c (0 (u . "(vector 0 (ite b 3 1) (ite b 2 4))"))))
  #""
  #"")
-((define env1 (solve (assert b)))
+((define sol1 (solve (assert b)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate y env1) ((3) 0 () 0 () () (c values c (v! 0 3 2))) #"" #"")
-((define env2 (solve (assert (not b))))
+((evaluate y sol1)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'#(0 3 2)"))))
+ #""
+ #"")
+((define sol2 (solve (assert (not b))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-((evaluate y env2) ((3) 0 () 0 () () (c values c (v! 0 1 4))) #"" #"")
+((evaluate y sol2)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'#(0 1 4)"))))
+ #""
+ #"")
 ((require (only-in racket make-hash hash-clear! hash-ref))
  ((3) 0 () 0 () () (c values c (void)))
  #""
@@ -38,5 +60,19 @@
 ((define-symbolic key integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((hash-ref h key 0) ((3) 0 () 0 () () (q values 0)) #"" #"")
-((when b (hash-clear! h)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-(h ((3) 0 () 0 () () (c values c (h ! (equal)))) #"" #"")
+((when b (pretty-print (vc)) (hash-clear! h))
+ ((3) 0 () 0 () () (c values c (void)))
+ #"(vc b #t)\n"
+ #"")
+(h
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "'#hash()"))))
+ #""
+ #"")
