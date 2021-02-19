@@ -77,9 +77,9 @@
      @take @drop @split-at @take-right @drop-right @split-at-right
      @add-between @append* @flatten @remove-duplicates 
      @filter-map @count @partition @append-map @filter-not @shuffle 
-     @argmin @argmax 
+     @argmin @argmax @list-set
      ; adt/list.rkt : Non-Standard Functions
-     @insert @replace
+     @insert 
      ; adt/vector.rkt : Basic Functions
      @vector? @vector @vector-immutable 
      @vector-length @vector-ref @vector-set! @vector->list @list->vector @vector->immutable-vector 

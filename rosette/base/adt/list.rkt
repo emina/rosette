@@ -510,29 +510,26 @@
            (merge** ys (insert* _ i v))]))))
            
 (splicing-local
-    [(define (replace xs i v)
-       (let-values ([(left right) (split-at xs i)])
-         (append left (cons v (cdr right)))))
-     (define (replace* xs i v)
-       (apply merge* (for/list ([(x idx) (in-indexed xs)])
-                     (cons (@= i idx) (replace xs idx v)))))]
-  (define (@replace xs i v)
-    (or (and (list? xs) (number? i) (replace xs i v))
-        (match* ((type-cast @list? xs 'replace) (type-cast @integer? i 'replace))
-          [((? list? xs) (? number? i)) (replace xs i v)]
+    [(define ($list-set xs i v)
+       (for/list ([(x idx) (in-indexed xs)])
+         (merge (@= i idx) v x)))]
+  (define (@list-set xs i v)
+    (or (and (list? xs) (number? i) (list-set xs i v))
+        (match* ((type-cast @list? xs 'list-set) (type-cast @integer? i 'list-set))
+          [((? list? xs) (? number? i)) (list-set xs i v)]
           [((? list? xs) i) 
-           (assert-bound [0 @<= i @< (length xs)] 'replace)
-           (replace* xs i v)]
+           (assert-bound [0 @<= i @< (length xs)] 'list-set)
+           ($list-set xs i v)]
           [((union ys) (? number? i))
-           (assert-bound [0 <= i] 'replace)
+           (assert-bound [0 <= i] 'list-set)
            (apply merge* (assert-some 
                         (for/list ([y ys] #:when (< i (length (cdr y))))
-                          (cons (car y) (replace (cdr y) i v)))
+                          (cons (car y) (list-set (cdr y) i v)))
                         #:unless (length ys)
-                        (index-too-large-error 'replace xs i)))]
+                        (index-too-large-error 'list-set xs i)))]
           [((union ys) i)
-           (assert-bound [0 @<= i @< (@length xs)] 'replace)
-           (merge** ys (replace* _ i v))]))))
+           (assert-bound [0 @<= i @< (@length xs)] 'list-set)
+           (merge** ys ($list-set _ i v))]))))
            
 
 #|

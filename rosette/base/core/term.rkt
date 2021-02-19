@@ -5,7 +5,7 @@
          "type.rkt" "reporter.rkt")
 
 (provide
- terms terms-count terms-ref with-terms clear-terms! gc-terms! term-cache
+ terms terms-count terms-ref with-terms clear-terms! gc-terms!
  term? constant? expression? 
  (rename-out [a-term term] [an-expression expression] [a-constant constant] [term-ord term-id]) 
  term-type term<? sublist? @app
@@ -13,21 +13,21 @@
  (all-from-out "type.rkt"))
 
 #|-----------------------------------------------------------------------------------|#
-; Term cache stores terms for the purposes of partial cannonicalization.
+; The current-terms cache stores terms for the purposes of partial cannonicalization.
 ; That is, it ensures that no syntactically identical terms are created.
-; It also assigns unique IDs (creation timestamps) to terms.  These IDs
-; are never reused, and they are used to impose an ordering on the children
+; The current-index parameter is used to assign unique IDs (creation timestamps) to terms.
+; These IDs are never reused, and they are used to impose an ordering on the children
 ; of expressions with commutative operators.
 #|-----------------------------------------------------------------------------------|#
-(define term-cache (make-parameter (make-hash)))
-(define term-count (make-parameter 0))
+(define current-terms (make-parameter (make-hash)))
+(define current-index (make-parameter 0))
 
-; Clears the entire term-cache if invoked with #f (default), or 
+; Clears the entire term cache if invoked with #f (default), or 
 ; it clears all terms reachable from the given set of leaf terms.
 (define (clear-terms! [terms #f])
   (if (false? terms)
-      (hash-clear! (term-cache))
-      (let ([cache (term-cache)]
+      (hash-clear! (current-terms))
+      (let ([cache (current-terms)]
             [evicted (list->mutable-set terms)])
         (for ([t terms])
           (hash-remove! cache (term-val t)))
@@ -41,10 +41,10 @@
               (set-add! evicted t))
             (loop))))))
 
-; Sets the current term-cache to a garbage-collected (weak) hash.
-; The setting preserves all reachable terms from (term-cache).
+; Sets the current term cache to a garbage-collected (weak) hash.
+; The setting preserves all reachable terms from (current-terms).
 (define (gc-terms!)
-  (unless (hash-weak? (term-cache)) ; Already a weak hash.
+  (unless (hash-weak? (current-terms)) ; Already a weak hash.
     (define cache
       (impersonate-hash
        (make-weak-hash)
@@ -55,23 +55,23 @@
        (lambda (h k) k)
        (lambda (h k) k)
        hash-clear!))
-    (for ([(k v) (term-cache)])
+    (for ([(k v) (current-terms)])
       (hash-set! cache k v))
-    (term-cache cache)))
+    (current-terms cache)))
 
-; Returns the term in the given term cache that has the given contents. If
+; Returns the term from current-terms that has the given contents. If
 ; no such term exists, failure-result is returned, unless it is a procedure.
 ; If failure-result is a procedure, it is called and its result is returned instead.
 (define (terms-ref contents [failure-result (lambda () (error 'terms-ref "no term for ~a" contents))])
-  (hash-ref (term-cache) contents failure-result))
+  (hash-ref (current-terms) contents failure-result))
 
-; Returns a list of all terms in the current term cache, in an unspecified order.
+; Returns a list of all terms in the current-term scache, in an unspecified order.
 (define (terms)
-  (hash-values (term-cache)))
+  (hash-values (current-terms)))
 
-; Returns the size of the current term cache.
+; Returns the size of the current-terms cache.
 (define (terms-count)
-  (hash-count (term-cache)))
+  (hash-count (current-terms)))
 
 ; Evaluates expr with (terms) set to terms-expr, returns the result, and
 ; restores (terms) to its old value. If terms-expr is not given, it defaults to
@@ -79,12 +79,12 @@
 (define-syntax (with-terms stx)
   (syntax-parse stx
     [(_ expr)
-     #'(parameterize ([term-cache (hash-copy (term-cache))])
+     #'(parameterize ([current-terms (hash-copy (current-terms))])
          expr)]
     [(_ terms-expr expr)
-     #'(parameterize ([term-cache (hash-copy-clear (term-cache))])
+     #'(parameterize ([current-terms (hash-copy-clear (current-terms))])
          (let ([ts terms-expr]
-               [cache (term-cache)])
+               [cache (current-terms)])
            (for ([t ts])
              (hash-set! cache (term-val t) t))
            expr))]))
@@ -122,12 +122,12 @@
 
 (define-syntax-rule (make-term term-constructor args type rest ...) 
   (let ([val args])
-    (or (hash-ref (term-cache) val #f)
-        (let* ([ord (term-count)]
+    (or (hash-ref (current-terms) val #f)
+        (let* ([ord (current-index)]
                [out (term-constructor val type ord rest ...)])
-          (term-count (add1 ord))
+          (current-index (add1 ord))
           ((current-reporter) 'new-term out)
-          (hash-set! (term-cache) val out)
+          (hash-set! (current-terms) val out)
           out))))
            
 (define (make-const id t) 

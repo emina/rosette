@@ -153,8 +153,6 @@
   (define φ   (append assumes asserts))
   
   (define ¬φ `(,@assumes ,(apply || (map ! asserts))))
-   
-  (define trial 0)
   
   (define (guess sol)
     (solver-assert guesser (evaluate φ sol))
@@ -180,8 +178,7 @@
         (let ([cex (check candidate)])
           (cond 
             [(unsat? cex) candidate]
-            [else (set! trial (add1 trial))
-                  (loop (guess cex))]))])))
+            [else (loop (guess cex))]))])))
 
 
         

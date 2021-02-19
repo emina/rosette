@@ -18,7 +18,7 @@
 @(define list-filtering (select '(filter remove remq remv remove* remq* remv* sort)))
 @(define list-searching (select '(member memv memq memf findf assoc assv assq assf)))
 @(define more-pair-ops (select '(caar cadr cdar cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr caaaar caaadr caadar caaddr cadaar cadadr caddar cadddr cdaaar cdaadr cdadar cdaddr cddaar cddadr cdddar cddddr)))
-@(define more-list-ops (select '(empty cons? empty? first rest second third fourth fifth sixth seventh eighth ninth tenth last last-pair make-list take drop split-at takef dropf splitf-at take-right drop-right split-at-right takef-right dropf-right splitf-at-right add-between append* flatten remove-duplicates filter-map count partition range append-map filter-not shuffle permutations in-permutations argmin argmax )))
+@(define more-list-ops (select '(empty cons? empty? first rest second third fourth fifth sixth seventh eighth ninth tenth last last-pair make-list take drop split-at takef dropf splitf-at take-right drop-right split-at-right takef-right dropf-right splitf-at-right add-between append* flatten remove-duplicates filter-map count partition range append-map filter-not shuffle permutations in-permutations argmin argmax list-set)))
 
 @title[#:tag "sec:pair"]{Pairs and Lists}
 
