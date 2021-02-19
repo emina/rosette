@@ -22,7 +22,7 @@ The name "Rosette" refers both to the language and the whole system.
 
 To install Rosette, you will need to
 
-@itemlist[@item{Download and install @hyperlink["http://racket-lang.org"]{Racket} (version 7.0 or later).}
+@itemlist[@item{Download and install @hyperlink["http://racket-lang.org"]{Racket} (version 8.0 or later).}
            @item{Use Racket's @tt{raco} tool to install Rosette:
                  @nested{
                          @verbatim|{> raco pkg install rosette}|}}]
@@ -50,5 +50,9 @@ To use the unsafe dialect, type this line instead:
 
 @racketmod[rosette]
 
-We strongly recommend that you start with the safe dialect, which includes a core subset of Racket.  The unsafe dialect includes all of Racket, but unless you understand and observe the restrictions on using non-core features, your seemingly correct programs may crash or produce unexpected results.
-
+We strongly recommend that you start with the safe dialect,
+which includes a core subset of Racket. The unsafe dialect
+includes all of Racket, but unless you understand and
+observe the restrictions on using non-core features,
+seemingly correct programs may crash or produce unexpected
+results.

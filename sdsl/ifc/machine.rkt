@@ -93,7 +93,7 @@
 ; Functionally stores the given value at the given index in the machine's memory.
 ; (-> machine? integer? value? machine?)
 (define (write m idx v) 
-  (struct-copy machine m [mem (replace (machine-mem m) idx v)]))
+  (struct-copy machine m [mem (list-set (machine-mem m) idx v)]))
 
 ; Functionally sets the machine's pc to the given value. 
 ; (-> machine? value? machine?)
