@@ -10,12 +10,12 @@ jobs:
   test:
     strategy:
       matrix:
-        racket-version: ['7.0', 'current']
-        racket-variant: ['regular']
+        racket-version: ['8.0', 'current']
+        racket-variant: ['CS']
         allow-failure: [false]
         include:
           - racket-version: 'current'
-            racket-variant: 'CS'
+            racket-variant: 'BC'
             allow-failure: true
     name: Racket ${{ matrix.racket-version }} (${{ matrix.racket-variant }})
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Setup Racket
-        uses: Bogdanp/setup-racket@v0.10
+        uses: Bogdanp/setup-racket@v1.1
         with:
           architecture: x64
           version: ${{ matrix.racket-version }}

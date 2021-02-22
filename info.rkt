@@ -5,7 +5,7 @@
 (define deps '("custom-load"
                "sandbox-lib"
                "scribble-lib"
-               ("racket" #:version "7.0")
+               ("racket" #:version "8.0")
                "r6rs-lib"
                "rfc6455"
                "net-lib"
@@ -28,4 +28,4 @@
 (define test-omit-paths (if (getenv "PLT_PKG_BUILD_SERVICE") 'all '()))
 
 (define pkg-desc "Rosette solver-aided host language")
-(define version "3.0")
+(define version "4.0")
