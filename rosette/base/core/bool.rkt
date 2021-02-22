@@ -95,18 +95,15 @@
     [(eq? y #f) (! x)]
     [(cancel? x y) y]
     [else
-     (define !x (! x))
      (match y
        [(expression (== @||) _ ... (== x) _ ...) #t]
-       [(expression (== @||) (== !x) b) (=> x b)]
-       [(expression (== @||) b (== !x)) (=> x b)]
        [(expression (== @&&) (== x) b) (=> x b)]
        [(expression (== @&&) b (== x)) (=> x b)]
        [(expression (== @&&) (expression (== @||) _ ... (== x) _ ...) b) (=> x b)]
        [(expression (== @&&) b (expression (== @||) _ ... (== x) _ ...)) (=> x b)]
        [(expression (== @<=>) (== x) b) (=> x b)]
        [(expression (== @<=>) b (== x)) (=> x b)]
-       [_ (|| !x y)])]))
+       [_ (|| (! x) y)])]))
        
 (define (<=> x y) 
   (cond [(equal? x y) #t]
@@ -326,9 +323,9 @@
   (match y
     [(== x) #t]                                                                ; x && (g => x)  
     [(expression (== @&&) (== x) (== g)) #t]                                   ; x && (g => (x && g)) 
-    [(expression (== @&&) (== g) (== x)) #t]                                   ; (g => (x && g)) && x  
+    [(expression (== @&&) (== g) (== x)) #t]                                   ; x && (g => (x && g))  
     [(expression (== @&&) (== x) (expression (== @||) _ ... (== g) _ ...)) #t] ; x && (g => (x && (_ => g))) 
-    [(expression (== @&&) (expression (== @||) _ ... (== g) _ ...) (== x)) #t] ; (g => (x && (_ => g))) && x  
+    [(expression (== @&&) (expression (== @||) _ ... (== g) _ ...) (== x)) #t] ; x && (g => ((_ => g) && x))  
     [_ #f]))
   
 ; Returns (field x) && (gs[0] => (field ys[0])) ... && (gs[n-1] => (field gs[n-1])).
