@@ -363,8 +363,8 @@
 ; are false? and if so, throws either an exn:fail:svm:assume? or
 ; exn:fail:svm:assert? exception. This procedure makes the following assumptions:
 ; * at most one of the given guards is true in any model,
-; * (vc-assumes specs[i]) => (vc-assumes (current-vc)) for all i, and 
-; * (vc-asserts specs[i]) => (vc-asserts (current-vc)) for all i.
+; * (vc-assumes vcs[i]) => (vc-assumes (current-vc)) for all i, and 
+; * (vc-asserts vcs[i]) => (vc-asserts (current-vc)) for all i.
 (define (merge-vc! guards vcs)
   (unless (null? vcs)
     (define vc*
