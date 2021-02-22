@@ -1,6 +1,6 @@
 #lang rosette
 
-(require rackunit rackunit/text-ui rosette/lib/roseunit
+(require rackunit rackunit/text-ui rosette/lib/roseunit 
          rosette/lib/synthax "synthax-external.rkt")
 
 (define-symbolic x y integer?)
@@ -58,44 +58,62 @@
 (define (mutually-recursive x)
   (add-one x 3))
 
-(define-syntax-rule (check-synth expr expected)
-  (let ([sol (synthesize #:forall x #:guarantee (assert expr))])
+(define-namespace-anchor tests)
+(define ns (namespace-anchor->namespace tests))
+
+(define (verified-equal? impl spec)
+  (or (equal? impl spec)
+      (begin 
+        (match-define `(,_ ... (define ,impl-h ,_ ...)) impl)
+        (match-define `(,_ ... (define ,spec-h ,_ ...)) spec)
+        (define consts (take '(x y) (sub1 (length impl-h))))
+        (define body `(let ([impl (lambda ,(cdr impl-h) ,@impl ,impl-h)]
+                            [spec (lambda ,(cdr spec-h) ,@spec ,spec-h)])
+                        (unsat?
+                         (verify
+                          (assert
+                           (equal? (impl ,@consts) (spec ,@consts)))))))
+        (eval body ns))))
+  
+(define-syntax-rule (check-synth vars expr expected)
+  (let* ([sol (synthesize #:forall vars #:guarantee (assert expr))])
     (check-sat sol)
-    (check-equal? (list->set (map syntax->datum (generate-forms sol)))
-                  (list->set expected))))
+    (check-true
+     (verified-equal? (map syntax->datum (generate-forms sol))
+                      expected))))
 
 (define basic-tests
   (test-suite+ "Basic hole tests."
-    (check-synth (= (+ 2 x) (+ (h0) x)) '((define (h0) 2)))
-    (check-synth (= x (h1 x))           '((define (h1 x) x)))
-    (check-synth (= (* 2 x) (+ (h1 x) (h1 x))) '((define (h1 x) x)))
-    (check-synth (= (+ 2 x) (h3 x)) '((define (h0) 2)
+    (check-synth x (= (+ 2 x) (+ (h0) x)) '((define (h0) 2)))
+    (check-synth x (= x (h1 x))           '((define (h1 x) x)))
+    (check-synth x (= (* 2 x) (+ (h1 x) (h1 x))) '((define (h1 x) x)))
+    (check-synth x (= (+ 2 x) (h3 x)) '((define (h0) 2)
                                       (define (h2 x) (+ x (h0)))
                                       (define (h3 x) (h2 x))))
-    (check-synth (= (+ x 1) (h6 x)) '((define (h5) (let () 1))
+    (check-synth x (= (+ x 1) (h6 x)) '((define (h5) (let () 1))
                                       (define (h6 x) (+ x (h5)))))))
 
 
 (define recursive-hole-tests
   (test-suite+ "Tests for recursive holes."
     (check-unsat (synthesize #:forall x #:guarantee (assert (= (* 2 x) (r1 x)))))
-    (check-synth (= -1 (r1 x)) '((define (r1 x)
+    (check-synth x (= -1 (r1 x)) '((define (r1 x)
                                    (let ((x x) (k 0))
                                      (assert (>= k 0))
                                      -1))))
-    (check-synth (= -1 (r2 x)) '((define (r2 x)
+    (check-synth x (= -1 (r2 x)) '((define (r2 x)
                                    (let ((x x) (k 1))
                                      (assert (>= k 0))
                                      -1))))
-    (check-synth (= -1 (r3 x)) '((define (r3 x)
+    (check-synth x (= -1 (r3 x)) '((define (r3 x)
                                    (let ((x x) (k 2))
                                      (assert (>= k 0))
                                      -1))))
-    (check-synth (= x (r1 x)) '((define (r1 x)
+    (check-synth x (= x (r1 x)) '((define (r1 x)
                                   (let ((x x) (k 0))
                                     (assert (>= k 0))
                                     x))))
-    (check-synth (= (add1 x) (r2 x)) '((define (r2 x)
+    (check-synth x (= (add1 x) (r2 x)) '((define (r2 x)
                                          (let ((x x) (k 1))
                                            (assert (>= k 0))
                                            (+
@@ -104,7 +122,7 @@
                                               (assert (>= k 0))
                                               1))))))
     (check-unsat (synthesize #:forall x #:guarantee (assert (= (* 3 x) (r2 x)))))
-    (check-synth (= (* 3 x) (r3 x)) '((define (r3 x)
+    (check-synth x (= (* 3 x) (r3 x)) '((define (r3 x)
                                         (let ((x x) (k 2))
                                           (assert (>= k 0))
                                           (+
@@ -117,7 +135,7 @@
                                                     (k (sub1 k)))
                                                 (assert (>= k 0))
                                                 x))))))))
-    (check-synth (= (+ x 3) (mutually-recursive x))
+    (check-synth x (= (+ x 3) (mutually-recursive x))
                  '((define (mutually-recursive x)
                      (let ((z x) (depth 3))
                        (assert (>= depth 0))
@@ -135,25 +153,25 @@
 
 (define imported-hole-tests
   (test-suite+ "Tests that use holes defined in imported modules."
-    (check-synth (= (+ 2 x) (+ (c0) x)) '((define (c0) 2)))
-    (check-synth (= (* 2 x) (+ (c1 x) (c1 x))) '((define (c1 x) x)))
-    (check-synth (= (+ 2 x) (c3 x)) '((define (c0) 2)
+    (check-synth x (= (+ 2 x) (+ (c0) x)) '((define (c0) 2)))
+    (check-synth x (= (* 2 x) (+ (c1 x) (c1 x))) '((define (c1 x) x)))
+    (check-synth x (= (+ 2 x) (c3 x)) '((define (c0) 2)
                                       (define (c2 x) (+ x (c0)))
                                       (define (c3 x) (c2 x))))
-    (check-synth (= (+ 2 x) (m1 x)) '((define (c0) 2)
+    (check-synth x (= (+ 2 x) (m1 x)) '((define (c0) 2)
                                       (define (c2 x) (+ x (c0)))
                                       (define (m1 x) (c2 x))))
-    (check-synth (= -1 (m2 x)) '((define (c0) -1)
+    (check-synth x (= -1 (m2 x)) '((define (c0) -1)
                                  (define (m2 x)
                                    (let ((x x) (k 0))
                                      (assert (>= k 0))
                                      (c0)))))
-    (check-synth (= -1 (m3 x)) '((define (c0) -1)
+    (check-synth x (= -1 (m3 x)) '((define (c0) -1)
                                  (define (m3 x)
                                    (let ((x x) (k 2))
                                      (assert (>= k 0))
                                      (c0)))))
-    (check-synth (= (+ x 2) (m4 x)) '((define (c0) 2)
+    (check-synth x (= (+ x 2) (m4 x)) '((define (c0) 2)
                                        (define (h1 x) x)
                                        (define (m4 x)
                                          (let ((x (h1 x)) (k 1))
@@ -167,7 +185,7 @@
 (define stress-tests
   (test-suite+ "Stress tests for recursive holes."
     
-    (check-synth (= (+ x 3) (f0 x)) '((define (f0 x)
+    (check-synth x (= (+ x 3) (f0 x)) '((define (f0 x)
                                         (let ((x x) (k 3))
                                           (assert (>= k 0))
                                           (+
@@ -185,7 +203,7 @@
                                                        (k (sub1 k)))
                                                    (assert (>= k 0))
                                                    x))))))))))
-    (check-synth (= (+ x 3) (f1 x)) '((define (s1) 1)
+    (check-synth x (= (+ x 3) (f1 x)) '((define (s1) 1)
                                       (define (f1 x)
                                         (let ((x x) (k 3))
                                           (assert (>= k 0))
@@ -204,7 +222,7 @@
                                                        (k (sub1 k)))
                                                    (assert (>= k 0))
                                                    x))))))))))
-    (check-synth (= (+ x 5) (f2 x)) '((define (f2 x)
+    (check-synth x (= (+ x 5) (f2 x)) '((define (f2 x)
                                         (let ((x x) (k 5))
                                           (assert (>= k 0))
                                           (+
@@ -243,20 +261,22 @@
 (define regression-tests
   (test-suite+ "Regression tests for synthax."
 
-    (check-synth (= x (cidx1 x y)) '((define (cidx1 tid step)
-                                       (let ((tid tid) (step step) (depth 1)) (assert (>= depth 0)) tid))))
-    (check-synth (= (+ x y) (cidx1 x y)) '((define (cidx1 tid step)
-                                             (let ((tid tid) (step step) (depth 1))
-                                               (assert (>= depth 0))
-                                               (let ((left
-                                                      (let ((tid tid) (step step) (depth (- depth 1)))
-                                                        (assert (>= depth 0))
-                                                        tid))
-                                                     (right
-                                                      (let ((tid tid) (step step) (depth (- depth 1)))
-                                                        (assert (>= depth 0))
-                                                        step)))
-                                                 (+ left right))))))))
+    (check-synth (list x y) (= x (cidx1 x y))
+                 '((define (cidx1 tid step)
+                     (let ((tid tid) (step step) (depth 1)) (assert (>= depth 0)) tid))))
+    (check-synth (list x y) (= (+ x y) (cidx1 x y))
+                 '((define (cidx1 tid step)
+                     (let ((tid tid) (step step) (depth 1))
+                       (assert (>= depth 0))
+                       (let ((left
+                              (let ((tid tid) (step step) (depth (- depth 1)))
+                                (assert (>= depth 0))
+                                tid))
+                             (right
+                              (let ((tid tid) (step step) (depth (- depth 1)))
+                                (assert (>= depth 0))
+                                step)))
+                         (+ left right))))))))
                
 (module+ test
   (time (run-tests basic-tests))

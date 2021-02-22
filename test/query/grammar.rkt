@@ -71,12 +71,31 @@
 (define (h-times-inc-or-dec* x d)
   (times-inc-or-dec* x #:depth d))
 
+(define-namespace-anchor tests)
+(define ns (namespace-anchor->namespace tests))
+
+(define (verified-equal? vars impl spec)
+  (or (equal? impl spec)
+      (begin 
+        (match-define `(,_ ... (define ,impl-h ,_ ...)) impl)
+        (match-define `(,_ ... (define ,spec-h ,_ ...)) spec)
+        (define consts
+          (append (map term->datum vars)
+                  (make-list (- (length impl-h) (length vars) 1) #f)))
+        (define body `(let ([impl (lambda ,(cdr impl-h) ,@impl ,impl-h)]
+                            [spec (lambda ,(cdr spec-h) ,@spec ,spec-h)])
+                        (unsat?
+                         (verify
+                          (assert
+                           (equal? (impl ,@consts) (spec ,@consts)))))))
+        (eval body ns))))
+  
 (define-syntax-rule (check-synth vars expr expected)
-  (with-terms
-    (let ([sol (synthesize #:forall vars #:guarantee (assert expr))])
-      (check-sat sol)
-      (check-equal? (list->set (map syntax->datum (generate-forms sol)))
-                    (list->set expected)))))
+  (let* ([vs (symbolics vars)]
+         [sol (synthesize #:forall vs #:guarantee (assert expr))])
+    (check-sat sol)
+    (check-true
+     (verified-equal? vs (map syntax->datum (generate-forms sol)) expected))))
 
 (define-syntax-rule (check-unsynth vars expr)
   (with-terms
@@ -85,10 +104,10 @@
 
 (define basic-tests
   (test-suite+ "Basic grammar tests."
-   (check-synth a (= 1 (h5)) '((define (h5) 1)))
-   (check-unsynth a (! (|| (= (h5) 1) (= (h5) 2))))
-   (check-synth a (= 4 (+ (h5) (h5))) '((define (h5) 2)))
-   (check-unsynth a (= 3 (+ (h5) (h5))))
+   (check-synth null (= 1 (h5)) '((define (h5) 1)))
+   (check-unsynth null (! (|| (= (h5) 1) (= (h5) 2))))
+   (check-synth null (= 4 (+ (h5) (h5))) '((define (h5) 2)))
+   (check-unsynth null (= 3 (+ (h5) (h5))))
    (check-synth a (= (+ a 1) (h6 a)) '((define (h5) 1)
                                        (define (h6 x) (+ x (h5)))))
    (check-unsynth a (= (+ a a) (h6 a)))
@@ -113,8 +132,8 @@
     (check-unsynth (list a b) (= (+ a a) (hLIA a b 0)))
     (check-synth (list a b) (= (+ a b) (hLIA a b 1)) '((define (hLIA x y d) (+ y x))))
     (check-unsynth (list a b) (= (- a 1) (hLIA a b 1)))
-    (check-synth (list a b) (= (- a 1) (hLIA a b 2)) '((define (hLIA x y d) (+ (* -1 1) (+ 0 x)))))
-    (check-synth (list a b) (= (- (* 2 a) (* 2 b)) (hLIA a b 2)) '((define (hLIA x y d) (+ (+ x x) (* -2 y)))))
+    (check-synth (list a b) (= (- a 1) (hLIA a b 2)) '((define (hLIA x y d) (+ (* -1 1) x))))
+    (check-synth (list a b) (= (- (* 2 a) (* 2 b)) (hLIA a b 2)) '((define (hLIA x y d) (+ (* -2 y) (+ x x)))))
     (check-unsynth (list a b) (= (* a b) (hLIA a b 1)))))
 
 (define mutually-recursive-grammar-tests
