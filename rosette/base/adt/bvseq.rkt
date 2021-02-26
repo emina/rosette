@@ -99,11 +99,13 @@
     (define (get-bv xs idx) ; (-> type? bv-lit-or-term? any/c)
       (if (bv? idx)
           (seq-get xs (@bitvector->natural idx))
-          (lift-body
-           #:with (get-bv xs idx seq-length)
-           #:type t
-           #:max  n
-           #:body
+          (let* ([t   (get-type idx)]
+                 [2^k (expt 2 (bitvector-size t))]
+                 [sz  (seq-length xs)]
+                 [n   (add1 (min sz 2^k))])
+            (when (> (- 2^k 1) sz)
+              (assert (@bvule idx  (@integer->bitvector sz t))
+                      (argument-error 'id "a number less than or equal to the list size" idx)))
             (apply
              merge*
              (for/list ([i n])

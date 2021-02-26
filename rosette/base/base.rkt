@@ -7,7 +7,7 @@
   "core/bool.rkt" "core/real.rkt" "core/numerics.rkt" "core/bitvector.rkt" "core/bvlib.rkt"
   "core/function.rkt"
   "core/procedure.rkt" "core/equality.rkt" "core/distinct.rkt" "core/reflect.rkt"  
-  "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" 
+  "adt/box.rkt" "adt/list.rkt" "adt/vector.rkt" "adt/bvseq.rkt"
   "struct/struct.rkt" "struct/generics.rkt"
   "form/define.rkt" "form/control.rkt" "form/module.rkt" "form/app.rkt") 
 
@@ -87,7 +87,13 @@
      ; adt/vector.rkt : Additional Vector Functions
      @vector-append
      ; adt/procedure.rkt
-     @procedure? @apply @procedure-rename @negate @void? 
+     @procedure? @apply @procedure-rename @negate @void?
+     ; adt/bvseq.rkt
+     @list-ref-bv @list-set-bv @length-bv
+     @take-bv @take-right-bv
+     @drop-bv @drop-right-bv
+     @split-at-bv @split-at-right-bv
+     @vector-ref-bv @vector-set!-bv @vector-length-bv
      ; struct/struct.rkt
      struct struct-field-index define/generic define-struct
      ; struct/generics.rkt

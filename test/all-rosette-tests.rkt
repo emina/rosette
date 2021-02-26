@@ -26,6 +26,7 @@
  "base/eval-guarded.rkt"
  "base/list.rkt"
  "base/vector.rkt"
+ "base/bvseq.rkt"
  "base/forall.rkt"
  "base/bitvector.rkt"
  "base/bvlib.rkt"
