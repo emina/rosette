@@ -37,7 +37,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(4 0 0)"))))
+  (c values c (0 (u . "'(4 0 0)\n"))))
  #""
  #"")
 ((evaluate vs sol)
@@ -49,7 +49,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#(4)"))))
+  (c values c (0 (u . "'#(4)\n"))))
  #""
  #"")
 ((evaluate xs sol)
@@ -61,6 +61,267 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(4)"))))
+  (c values c (0 (u . "'(4)\n"))))
+ #""
+ #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define xs (if b (vector 1 2) (vector 3 4 5 6)))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(xs
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(union [b #(1 2)] [(! b) #(3 4 5 6)])\n"))))
+ #""
+ #"")
+((integer->bitvector (vector-length xs) (bitvector 4))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(integer->bitvector (ite b 2 4) (bitvector 4))\n"))))
+ #""
+ #"")
+((vector-length-bv xs (bitvector 4))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(ite b (bv #x2 4) (bv #x4 4))\n"))))
+ #""
+ #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic p (bitvector 1))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define xs (vector 1 2 3 4)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vector-ref xs (bitvector->natural p))
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(ite*\n (⊢ (= 0 (bitvector->natural p)) 1)\n (⊢ (= 1 (bitvector->natural p)) 2)\n (⊢ (= 2 (bitvector->natural p)) 3)\n (⊢ (= 3 (bitvector->natural p)) 4))\n\n"))))
+ #""
+ #"")
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(vc #t (&& (<= 0 (bitvector->natural p)) (< (bitvector->natural p) 4)))\n"))))
+ #""
+ #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vector-ref-bv xs p)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0 (u . "(ite* (⊢ (bveq (bv #b0 1) p) 1) (⊢ (bveq (bv #b1 1) p) 2))\n"))))
+ #""
+ #"")
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(vc #t #t)\n"))))
+ #""
+ #"")
+((define-symbolic q (bitvector 4))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((vector-ref-bv xs q)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(ite*\n (⊢ (bveq (bv #x0 4) q) 1)\n (⊢ (bveq (bv #x1 4) q) 2)\n (⊢ (bveq (bv #x2 4) q) 3)\n (⊢ (bveq (bv #x3 4) q) 4))\n\n"))))
+ #""
+ #"")
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(vc #t (bvult q (bv #x4 4)))\n"))))
+ #""
+ #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define-symbolic p (bitvector 1))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define xs (vector 1 2 3 4)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vector-set! xs (bitvector->natural p) 5)
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+(xs
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(vector\n (ite (= 0 (bitvector->natural p)) 5 1)\n (ite (= 1 (bitvector->natural p)) 5 2)\n (ite (= 2 (bitvector->natural p)) 5 3)\n (ite (= 3 (bitvector->natural p)) 5 4))\n\n"))))
+ #""
+ #"")
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(vc #t (&& (<= 0 (bitvector->natural p)) (< (bitvector->natural p) 4)))\n"))))
+ #""
+ #"")
+((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((define xs (vector 1 2 3 4)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vector-set!-bv xs p 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(xs
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(vector (ite (bveq (bv #b0 1) p) 5 1) (ite (bveq (bv #b1 1) p) 5 2) 3 4)\n"))))
+ #""
+ #"")
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(vc #t #t)\n"))))
+ #""
+ #"")
+((define-symbolic q (bitvector 4))
+ ((3) 0 () 0 () () (c values c (void)))
+ #""
+ #"")
+((define xs (vector 1 2 3 4)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+((vector-set!-bv xs q 5) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(xs
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(vector\n (ite (bveq (bv #x0 4) q) 5 1)\n (ite (bveq (bv #x1 4) q) 5 2)\n (ite (bveq (bv #x2 4) q) 5 3)\n (ite (bveq (bv #x3 4) q) 5 4))\n\n"))))
+ #""
+ #"")
+((vc)
+ ((3)
+  1
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
+    .
+    deserialize-info:opaque-v0))
+  0
+  ()
+  ()
+  (c values c (0 (u . "(vc #t (bvult q (bv #x4 4)))\n"))))
  #""
  #"")

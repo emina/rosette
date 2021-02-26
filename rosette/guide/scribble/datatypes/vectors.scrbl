@@ -3,7 +3,10 @@
 @(require (for-label 
            rosette/base/form/define rosette/query/query 
            rosette/base/core/term  
-           (only-in rosette/base/base assert) 
+           (only-in rosette/base/base assert define-symbolic union?
+                    vc clear-vc! bitvector bitvector? bv?
+                    bitvector->natural integer->bitvector
+                    vector-length-bv vector-ref-bv vector-set!-bv) 
            racket)
           scribble/core scribble/html-properties scribble/examples racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
@@ -58,8 +61,74 @@ if they have the same length and @racket[equal?] contents.
 (evaluate vs sol)
 (evaluate xs sol)]
 
+@section{Lifted Operations on Vectors}
+
 The following vector operations are lifted to work on both concrete and symbolic values:
 @tabular[#:style (style #f (list (attributes '((id . "lifted")(class . "boxed")))))
-(list (list @elem{@vector-ops,  @more-vector-ops}))]
+(list (list @elem{Vector Operations} @elem{@vector-ops,  @more-vector-ops}))]
 
-@(kill-evaluator rosette-eval)
+@(rosette-eval '(clear-vc!))
+
+@section{Additional Operations on Vectors}
+
+Rosette provides the following procedures for operating on vectors using @seclink["sec:bitvectors"]{bitvector} indices and lengths. These procedures produce symbolic values that avoid @racketlink[bitvector->natural]{casting} their bitvector arguments to integers, leading to @seclink["sec:notes"]{more efficiently solvable queries}.
+
+@declare-exporting[rosette/base/base #:use-sources (rosette/base/base)]
+
+
+@defproc[(vector-length-bv [vec vector?] [t (or/c bitvector? union?)]) bv?]{
+Equivalent to @racket[(integer->bitvector (vector-length vec) t)] but avoids the @racket[integer->bitvector] cast for better solving performance.
+
+@examples[#:eval rosette-eval
+(define-symbolic b boolean?)
+(define xs (if b (vector 1 2) (vector 3 4 5 6)))
+xs
+(integer->bitvector (vector-length xs) (bitvector 4))
+(vector-length-bv xs (bitvector 4))]
+}
+
+@(rosette-eval '(clear-vc!))
+@defproc[(vector-ref-bv [vec vector?] [pos bv?]) any/c]{
+Equivalent to @racket[(vector-ref vec (bitvector->natural pos))] but avoids the @racket[bitvector->natural] cast for better solving performance.
+
+@examples[#:eval rosette-eval
+(define-symbolic p (bitvector 1))
+(define xs (vector 1 2 3 4))
+(code:comment "Uses a cast and generates a redundant assertion on the range of p:")
+(vector-ref xs (bitvector->natural p))
+(vc)
+(clear-vc!)
+(code:comment "No cast and no redundant range assertion:")
+(vector-ref-bv xs p)
+(vc)
+(code:comment "But the range assertion is generated when needed:")
+(define-symbolic q (bitvector 4))
+(vector-ref-bv xs q)
+(vc)]
+}
+
+@(rosette-eval '(clear-vc!))
+@defproc[(vector-set!-bv [vec vector?] [pos bv?] [val any/c]) void?]{
+Equivalent to @racket[(vector-set! vec (bitvector->natural pos) val)] but avoids the @racket[bitvector->natural] cast for better solving performance.
+
+@examples[#:eval rosette-eval
+(define-symbolic p (bitvector 1))
+(define xs (vector 1 2 3 4))
+(code:comment "Uses a cast and generates a redundant assertion on the range of p:")
+(vector-set! xs (bitvector->natural p) 5)
+xs
+(vc)
+(clear-vc!)
+(code:comment "No cast and no redundant range assertion:")
+(define xs (vector 1 2 3 4))
+(vector-set!-bv xs p 5)
+xs
+(vc)
+(code:comment "But the range assertion is generated when needed:")
+(define-symbolic q (bitvector 4))
+(define xs (vector 1 2 3 4))
+(vector-set!-bv xs q 5)
+xs
+(vc)]              
+}
+
