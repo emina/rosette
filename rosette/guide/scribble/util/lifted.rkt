@@ -65,19 +65,19 @@
     (define s (format "~v" v))
     (cond
       [(<= (string-length s) (pretty-print-columns))
-       (fprintf port "~a" s)]
+       (fprintf port "~a\n" s)]
       [else 
        (define out (open-output-string))
        (parameterize ([read-square-bracket-with-tag #t]
                       [read-curly-brace-with-tag #t]
-                      [current-readtable tuple-readtable])
+                      [current-readtable tuple-readtable-open])
          (pretty-write (showable (read (open-input-string s))) out))
        (let* ([str (get-output-string out)]
               [str (regexp-replace* #px"\\(⟦\\s*" str "[")]
               [str (regexp-replace* #px"\\s*⟧\\)" str "]")]
               [str (regexp-replace* #px"\\(⦃\\s*" str "{")]
               [str (regexp-replace* #px"\\s*⦄\\)" str "}")])
-         (fprintf port "~a" str))])))
+         (fprintf port "~a\n" str))])))
 
 (define (showable v)
   (match v
@@ -125,20 +125,24 @@
 (define parse-open-tuple
     (case-lambda
      [(ch port)
-      (wrap (parse port
-                   (lambda ()
-                     (read/recursive port #f ))
-                   (object-name port)))]
+      (parameterize ([current-readtable (tuple-readtable-close)])
+        (wrap (parse port
+                     (lambda ()
+                       (read/recursive port #f ))
+                     (object-name port))))]
      [(ch port src line col pos)
       (datum->syntax
        #f
-       (wrap (parse port
-                    (lambda ()
-                      (read-syntax/recursive src port #f))
-                    src))
+       (parameterize ([current-readtable (tuple-readtable-close)])
+         (wrap (parse port
+                      (lambda ()
+                        (read-syntax/recursive src port #f))
+                      src)))
        (let-values ([(l c p) (port-next-location port)])
          (list src line col pos (and pos (- p pos)))))]))
 
-(define tuple-readtable
-    (make-readtable #f #\< 'dispatch-macro parse-open-tuple
-                       #\> 'terminating-macro (lambda _ null)))
+(define tuple-readtable-open
+  (make-readtable #f #\< 'dispatch-macro parse-open-tuple))
+
+(define (tuple-readtable-close)
+  (make-readtable (current-readtable) #\> 'terminating-macro (lambda _ null)))

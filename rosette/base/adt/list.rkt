@@ -378,7 +378,7 @@
     [(_ proc)
      #`(define (#,(lift-id #'proc) xs pos)
          (define name (object-name proc))
-         (match* ((type-cast @list? xs name) (type-cast @integer? pos name))
+         (match* (xs (type-cast @integer? pos name))
            [((union vs) (? number? idx))
             (assert-bound [0 <= idx] name)
             (apply merge* (assert-some 

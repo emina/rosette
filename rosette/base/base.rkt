@@ -91,7 +91,7 @@
      ; adt/bvseq.rkt
      @list-ref-bv @list-set-bv @length-bv
      @take-bv @take-right-bv
-     @drop-bv @drop-right-bv
+     @drop-bv @drop-right-bv @list-tail-bv
      @split-at-bv @split-at-right-bv
      @vector-ref-bv @vector-set!-bv @vector-length-bv
      ; struct/struct.rkt

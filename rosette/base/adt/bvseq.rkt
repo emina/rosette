@@ -13,7 +13,7 @@
 
 (provide @list-ref-bv @list-set-bv
          @take-bv @take-right-bv
-         @drop-bv @drop-right-bv
+         @drop-bv @drop-right-bv @list-tail-bv
          @split-at-bv @split-at-right-bv
          @length-bv
          @vector-ref-bv @vector-set!-bv @vector-length-bv)
@@ -94,29 +94,48 @@
 
 (define-lift-bv (list-set-bv xs idx v) @list? list?)
 
-(define-syntax-rule (define-get-bv get-bv @seq? seq? seq-get seq-length)
-  (begin
-    (define (get-bv xs idx) ; (-> type? bv-lit-or-term? any/c)
-      (if (bv? idx)
-          (seq-get xs (@bitvector->natural idx))
-          (let* ([t   (get-type idx)]
-                 [2^k (expt 2 (bitvector-size t))]
-                 [sz  (seq-length xs)]
-                 [n   (add1 (min sz 2^k))])
-            (when (> (- 2^k 1) sz)
-              (assert (@bvule idx  (@integer->bitvector sz t))
-                      (argument-error 'id "a number less than or equal to the list size" idx)))
-            (apply
-             merge*
-             (for/list ([i n])
-               (cons (@bveq (bv i t) idx)
-                     (seq-get xs i)))))))
-    (define-lift-bv (get-bv xs idx) @seq? seq?)))
-    
-(define-get-bv take-bv @list? list? take length)      
-(define-get-bv take-right-bv @list? list? take-right length)
-(define-get-bv drop-bv @list? list? drop length)      
-(define-get-bv drop-right-bv @list? list? drop-right length)
+(define (pair-length ps bound)
+  (if (list? ps)
+      (min (length ps) bound)
+      (let loop ([ps ps] [acc 0])
+        (if (and (pair? ps) (< acc bound))
+            (loop (cdr ps) (add1 acc))
+            acc))))
+                     
+(define-syntax (define-get-bv stx)
+  (syntax-case stx ()
+    [(_ get-bv seq-get)
+     #`(begin
+         (define (get-bv xs idx) 
+           (if (bv? idx)
+               (seq-get xs (@bitvector->natural idx))
+               (let* ([t   (get-type idx)]
+                      [2^k (expt 2 (bitvector-size t))]
+                      [sz  (pair-length xs (sub1 2^k))])
+                 (when (> (- 2^k 1) sz)
+                   (assert (@bvule idx  (@integer->bitvector sz t))
+                           (index-too-large-error 'id xs idx)))
+                 (apply
+                  merge*
+                  (for/list ([i (add1 sz)])
+                    (cons (@bveq (bv i t) idx)
+                          
+                          (seq-get xs i)))))))
+         (define (#,(lift-id #'get-bv) xs idx)
+           (if (and (not (union? xs)) (bv-lit-or-term? idx))
+               (get-bv xs idx)
+               (match* (xs (bvcoerce idx 'get-bv))
+                 [((not (? union? xs)) (? bv-lit-or-term? idx))
+                  (get-bv xs idx)]
+                 [(xs idx)
+                  (for*/all ([xs xs][idx idx])
+                    (get-bv xs idx))]))))]))
+
+(define-get-bv take-bv take)
+(define-get-bv take-right-bv take-right)
+(define-get-bv drop-bv drop)      
+(define-get-bv drop-right-bv drop-right)
+(define-get-bv list-tail-bv list-tail)
 
 (define (@split-at-bv xs idx)
   (values (@take-bv xs idx) (@drop-bv xs idx)))

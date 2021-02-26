@@ -20,7 +20,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'()"))))
+  (c values c (0 (u . "'()\n"))))
  #""
  #"")
 ((define sol
@@ -41,7 +41,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(-1 0)"))))
+  (c values c (0 (u . "'(-1 0)\n"))))
  #""
  #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -62,7 +62,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(4 . #f)"))))
+  (c values c (0 (u . "'(4 . #f)\n"))))
  #""
  #"")
 ((define sol (solve (assert (odd? (car p)))))
@@ -78,6 +78,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(1 . 2)"))))
+  (c values c (0 (u . "'(1 . 2)\n"))))
  #""
  #"")

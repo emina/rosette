@@ -3,7 +3,13 @@
 @(require (for-label 
            rosette/base/form/define rosette/query/query  
            rosette/base/core/term  
-           (only-in rosette/base/base assert) 
+           (only-in rosette/base/base assert vc clear-vc! define-symbolic
+                    length-bv list-ref-bv list-set-bv
+                    take-bv take-right-bv
+                    drop-bv drop-right-bv
+                    list-tail-bv split-at-bv split-at-right-bv
+                    union? bitvector bitvector? bv?
+                    bitvector->natural integer->bitvector) 
            racket)
           scribble/core scribble/html-properties scribble/examples racket/sandbox racket/runtime-path
           "../util/lifted.rkt")
@@ -57,6 +63,8 @@ pattern for creating non-primitive symbolic values generalizes to all unsolvable
 (evaluate p sol)
 ]
 
+@section{Lifted Operations on Pairs and Lists}
+
 Rosette lifts the following operations on pairs and lists:
 @tabular[#:style (style #f (list (attributes '((id . "lifted")(class . "boxed")))))
 (list (list @elem{Pair Operations} @pairs:constructors+selectors)
@@ -66,5 +74,120 @@ Rosette lifts the following operations on pairs and lists:
       (list @elem{List Searching} @list-searching)
       (list @elem{Additional Pair Operations} @more-pair-ops)
       (list @elem{Additional List Operations} @more-list-ops))]
+
+@(kill-evaluator rosette-eval)
+@(set! rosette-eval (rosette-evaluator))
+
+@section{Additional Operations on Pairs and Lists}
+
+Rosette provides the following procedures for operating on lists using @seclink["sec:bitvectors"]{bitvector} indices and lengths. These procedures produce symbolic values that avoid @racketlink[bitvector->natural]{casting} their bitvector arguments to integers, leading to @seclink["sec:notes"]{more efficiently solvable queries}. 
+
+@declare-exporting[rosette/base/base #:use-sources (rosette/base/base)]
+
+@defproc[(length-bv [lst list?] [t (or/c bitvector? union?)]) bv?]{
+Equivalent to @racket[(integer->bitvector (length lst) t)] but avoids the @racket[integer->bitvector] cast for better solving performance.
+
+@examples[#:eval rosette-eval
+(define-symbolic b boolean?)
+(define xs (if b '(1 2) '(3 4 5 6)))
+xs
+(integer->bitvector (length xs) (bitvector 4))
+(length-bv xs (bitvector 4))]
+}
+
+@defproc[(list-ref-bv [lst list?] [pos bv?]) any/c]{
+Equivalent to @racket[(list-ref lst (bitvector->natural pos))] but avoids the @racket[bitvector->natural] cast for better solving performance.
+
+@examples[#:eval rosette-eval
+(define-symbolic p (bitvector 1))
+(define xs '(1 2 3 4))
+(code:comment "Uses a cast and generates a redundant assertion on the range of p:")
+(list-ref xs (bitvector->natural p))
+(vc)
+(clear-vc!)
+(code:comment "No cast and no redundant range assertion:")
+(list-ref-bv xs p)
+(vc)
+(code:comment "But the range assertion is generated when needed:")
+(define-symbolic q (bitvector 4))
+(list-ref-bv xs q)
+(vc)]
+              
+}
+
+@(rosette-eval '(clear-vc!))
+@defproc[(list-set-bv [lst list?] [pos bv?] [val any/c]) list?]{
+Equivalent to @racket[(list-set lst (bitvector->natural pos) val)] but avoids the @racket[bitvector->natural] cast for better solving performance.
+
+@examples[#:eval rosette-eval
+(define-symbolic p (bitvector 1))
+(define xs '(1 2 3 4))
+(code:comment "Uses a cast and generates a redundant assertion on the range of p:")
+(list-set xs (bitvector->natural p) 5)
+(vc)
+(clear-vc!)
+(code:comment "No cast and no redundant range assertion:")
+(list-set-bv xs p 5)
+(vc)
+(code:comment "But the range assertion is generated when needed:")
+(define-symbolic q (bitvector 4))
+(list-set-bv xs q 5)
+(vc)]              
+}
+
+@(rosette-eval '(clear-vc!))
+@defproc*[([(take-bv [lst any/c] [pos bv?]) list?]
+           [(take-right-bv [lst any/c] [pos bv?]) any/c]
+           [(drop-bv [lst any/c] [pos bv?]) any/c]
+           [(drop-right-bv [lst any/c] [pos bv?]) list?]
+           [(list-tail-bv [lst any/c] [pos bv?]) any/c])]{
+                                                          
+ Equivalent to @racket[take], @racket[take-right],
+ @racket[drop], @racket[drop-right], or @racket[list-tail]
+ applied to @racket[lst] and
+ @racket[(bitvector->natural pos)], but avoids the
+ @racket[bitvector->natural] cast for better solving
+ performance.
+
+ @examples[#:eval rosette-eval
+(define-symbolic p (bitvector 1))
+(define xs (cons 1 (cons 2 (cons 3 4))))
+(code:comment "Uses a cast and generates a redundant assertion on the range of p:")
+(take xs (bitvector->natural p))
+(vc)
+(clear-vc!)
+(code:comment "No cast and no redundant range assertion:")
+(take-bv xs p)
+(vc)
+(code:comment "But the range assertion is generated when needed:")
+(define-symbolic q (bitvector 4))
+(take-bv xs q)
+(vc)]              
+}
+
+@(rosette-eval '(clear-vc!))
+@defproc*[([(split-at-bv [lst any/c] [pos bv?]) (list? any/c)]
+           [(split-at-right-bv [lst any/c] [pos bv?]) (list? any/c)])]{
+
+ Equivalent to
+ @racket[(split-at lst (bitvector->natural pos))] or
+ @racket[(split-at-right lst (bitvector->natural pos))], but
+ avoids the @racket[bitvector->natural] cast for better
+ solving performance.
+
+ @examples[#:eval rosette-eval
+(define-symbolic p (bitvector 1))
+(define xs (cons 1 2))
+(code:comment "Uses a cast and generates a redundant assertion on the range of p:")
+(split-at xs (bitvector->natural p))
+(vc)
+(clear-vc!)
+(code:comment "No cast and no redundant range assertion:")
+(split-at-bv xs p)
+(vc)
+(code:comment "But the range assertion is generated when needed:")
+(define-symbolic q (bitvector 4))
+(split-at-bv xs q)
+(vc)]}
 
 @(kill-evaluator rosette-eval)

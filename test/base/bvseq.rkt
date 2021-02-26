@@ -156,11 +156,12 @@
 
 (define tests:list-get-bv
   (test-suite+
-   "Tests for take-bv, take-right-bv, drop, and drop-right in rosette/base/adt/bvseq.rkt"
+   "Tests for take-bv, take-right-bv, drop, drop-right, and list-tail in rosette/base/adt/bvseq.rkt"
    (check-get-bv take-bv take)
    (check-get-bv take-right-bv take-right)
    (check-get-bv drop-bv drop)
-   (check-get-bv drop-right-bv drop-right)))
+   (check-get-bv drop-right-bv drop-right)
+   (check-get-bv list-tail-bv list-tail)))
 
 (define tests:list-split-bv
   (test-suite+

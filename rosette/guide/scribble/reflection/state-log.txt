@@ -16,7 +16,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list b c d a)"))))
+  (c values c (0 (u . "(list a d b c)"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -81,13 +81,7 @@
   0
   ()
   ()
-  (c
-   values
-   c
-   (0
-    (u
-     .
-     "(list\n b\n c\n d\n a\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n ...)\n"))))
+  (c values c (0 (u . "(list a d b c (! d) ...)"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -345,7 +339,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (! (= a a)) (= a a) a)"))))
+  (c values c (0 (u . "(list (= a a) (! (= a a)) a)"))))
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -363,7 +357,7 @@
 ((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 402 real time: 410 gc time: 49\n"
+ #"cpu time: 369 real time: 375 gc time: 30\n"
  #"")
 ((length (terms)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -374,7 +368,7 @@
 ((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 420 real time: 427 gc time: 42\n"
+ #"cpu time: 423 real time: 430 gc time: 44\n"
  #"")
 (50000 ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -389,7 +383,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list b a)"))))
+  (c values c (0 (u . "(list a b)"))))
  #""
  #"")
 ((with-terms (begin0 (verify (assert (= (+ a b) 0))) (println (terms))))
@@ -402,7 +396,7 @@
   ()
   ()
   (c values c (0 (u . "(model\n [a 1]\n [b 0])"))))
- #"(list (! (= 0 (+ a b))) a b (= 0 (+ a b)) (+ a b))\n"
+ #"(list a (= 0 (+ a b)) (+ a b) (! (= 0 (+ a b))) b)\n"
  #"")
 ((terms)
  ((3)
@@ -413,7 +407,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list b a)"))))
+  (c values c (0 (u . "(list a b)"))))
  #""
  #"")
 ((with-terms
@@ -431,6 +425,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list b a)"))))
+  (c values c (0 (u . "(list a b)"))))
  #""
  #"")
