@@ -124,7 +124,7 @@
   ()
   (q
    exn
-   "~>: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: at least 2\n  given: 1\n  arguments...:\n   real?"))
+   "~>: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: at least 2\n  given: 1"))
  #""
  #"")
 ((define t0? (~> integer? real? boolean? (bitvector 4)))

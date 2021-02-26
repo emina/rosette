@@ -11,7 +11,7 @@
 ((verify (assert (= (sum xs) (sum (filter-not zero? xs)))))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -28,7 +28,7 @@
   (assert (= (sum xs) (apply (if opt + -) xs))))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -71,7 +71,7 @@
 ((format-opaque "~a" (run-test example-tests))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -93,7 +93,7 @@
 ((verify (assert (ormap positive? xs)))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -142,7 +142,7 @@
 ((format-opaque "~a" (run-test example-tests))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -160,11 +160,11 @@
 ((test-case "Test sum for any failures." (check-pred unsat? (verify (sum xs))))
  ((3) 0 () 0 () () (c values c (void)))
  #""
- #"--------------------\nTest sum for any failures.\neval:20:0: FAILURE\nname:       check-pred\nlocation:   eval:20:0\nparams:\n  '(#<procedure:unsat?> (model\n   [xs$0 0]\n   [xs$1 0]\n   [xs$2 0]\n   [xs$3 0]))\n--------------------\n")
+ #"--------------------\nTest sum for any failures.\nFAILURE\nname:       check-pred\nlocation:   eval:20:0\nparams:\n  '(#<procedure:unsat?> (model\n   [xs$0 0]\n   [xs$1 0]\n   [xs$2 0]\n   [xs$3 0]))\n--------------------\n")
 ((verify (begin (assume (positive? (sum xs))) (assert (ormap positive? xs))))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -177,7 +177,7 @@
 ((verify (assert (ormap positive? xs)))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0
@@ -210,7 +210,7 @@
 ((verify (assert (= k (list-ref (sort xs <) n))))
  ((3)
   1
-  ((#"/Users/emina/Projects/rosette4/rosette/guide/scribble/util/lifted.rkt"
+  (((lib "rosette/guide/scribble/util/lifted.rkt")
     .
     deserialize-info:opaque-v0))
   0

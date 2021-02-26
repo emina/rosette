@@ -52,7 +52,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(union #:size 6 #:hash 2883417510948978588)"))))
+  (c values c (0 (u . "(union #:size 6 #:hash -437127353640646723)"))))
  #""
  #"")
 ((define (list-set* lst idx val)
@@ -86,7 +86,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(union #:size 4 #:hash 3537189751407371886)"))))
+  (c values c (0 (u . "(union #:size 4 #:hash 350627999700259086)"))))
  #""
  #"")
 ((define-values (width height) (values 5 5))

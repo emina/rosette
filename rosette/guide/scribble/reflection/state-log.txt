@@ -16,7 +16,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list a d b c)"))))
+  (c values c (0 (u . "(list b c d a)"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -87,7 +87,7 @@
    (0
     (u
      .
-     "(list\n (|| d (! (&& a (! b))))\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n (! d)\n (|| (! b) (|| c (! (&& a b))))\n (! a)\n ...)\n"))))
+     "(list\n b\n c\n d\n a\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n ...)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -363,7 +363,7 @@
 ((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 240 real time: 240 gc time: 20\n"
+ #"cpu time: 402 real time: 410 gc time: 49\n"
  #"")
 ((length (terms)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -374,7 +374,7 @@
 ((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 321 real time: 321 gc time: 27\n"
+ #"cpu time: 420 real time: 427 gc time: 42\n"
  #"")
 (50000 ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -402,7 +402,7 @@
   ()
   ()
   (c values c (0 (u . "(model\n [a 1]\n [b 0])"))))
- #"(list (= 0 (+ a b)) b (! (= 0 (+ a b))) a (+ a b))\n"
+ #"(list (! (= 0 (+ a b))) a b (= 0 (+ a b)) (+ a b))\n"
  #"")
 ((terms)
  ((3)

@@ -125,7 +125,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list y$0 y$1)"))))
+  (c values c (0 (u . "(list y$4 y$5)"))))
  #""
  #"")
 ((always-different-n 3)
@@ -137,7 +137,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list y$2 y$3 y$4)"))))
+  (c values c (0 (u . "(list y$6 y$7 y$8)"))))
  #""
  #"")
 ((equal? (always-different-n 4) (always-different-n 4))
@@ -152,7 +152,7 @@
   (c
    values
    c
-   (0 (u . "(&& (= y$5 y$9) (= y$6 y$10) (= y$7 y$11) (= y$8 y$12))"))))
+   (0 (u . "(&& (= y$9 y$13) (= y$10 y$14) (= y$11 y$15) (= y$12 y$16))"))))
  #""
  #"")
 ((assert #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -669,7 +669,7 @@
   ()
   (q
    exn
-   "solver-push: contract violation:\nexpected: solver?\ngiven: #f\nargument position: 1st"))
+   "solver-push: contract violation:\n  expected: solver?\n  given: #f\n  argument position: 1st"))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
