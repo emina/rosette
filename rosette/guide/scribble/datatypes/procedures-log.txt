@@ -19,7 +19,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "*"))))
+  (c values c (0 (u . "*\n"))))
  #""
  #"")
 ((define sol (synthesize #:forall (list x) #:guarantee (assert (= x (p x 0)))))
@@ -35,6 +35,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "-"))))
+  (c values c (0 (u . "-\n"))))
  #""
  #"")

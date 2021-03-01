@@ -13,7 +13,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(! b)"))))
+  (c values c (0 (u . "(! b)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -30,7 +30,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t b)"))))
+  (c values c (0 (u . "(vc #t b)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -50,7 +50,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "a"))))
+  (c values c (0 (u . "a\n"))))
  #""
  #"")
 ((vc)
@@ -62,7 +62,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t b)"))))
+  (c values c (0 (u . "(vc #t b)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -80,7 +80,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "a"))))
+  (c values c (0 (u . "a\n"))))
  #""
  #"")
 ((vc)
@@ -92,7 +92,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t b)"))))
+  (c values c (0 (u . "(vc #t b)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -108,7 +108,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(exists (x y) (= x y))"))))
+  (c values c (0 (u . "(exists (x y) (= x y))\n"))))
  #""
  #"")
 ((define-symbolic b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -121,7 +121,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(forall (b x y) (= y (+ 1 x)))"))))
+  (c values c (0 (u . "(forall (b x y) (= y (+ 1 x)))\n"))))
  #""
  #"")
 ((vc)
@@ -133,7 +133,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t b)"))))
+  (c values c (0 (u . "(vc #t b)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -150,7 +150,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(normal (= y (+ 1 x)) (vc #t b))"))))
+  (c values c (0 (u . "(normal (= y (+ 1 x)) (vc #t b))\n"))))
  #""
  #"")
 ((define out-val (result-value out))
@@ -172,7 +172,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(forall (b x y) (|| (! b) (= y (+ 1 x))))"))))
+  (c values c (0 (u . "(forall (b x y) (|| (! b) (= y (+ 1 x))))\n"))))
  #""
  #"")
 ((vc)
@@ -184,7 +184,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((define-symbolic x y integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -201,7 +201,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model)"))))
+  (c values c (0 (u . "(model)\n"))))
  #""
  #"")
 ((define g (forall (list x) (= x (+ x y))))
@@ -217,7 +217,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [y 0])"))))
+  (c values c (0 (u . "(model\n [y 0])\n"))))
  #""
  #"")
 ((define h (exists (list x) (forall (list x) (= x (+ x x)))))
@@ -233,6 +233,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")

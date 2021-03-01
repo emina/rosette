@@ -13,7 +13,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(app f 1)"))))
+  (c values c (0 (u . "(app f 1)\n"))))
  #""
  #"")
 ((define-symbolic x real?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -26,7 +26,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(app f (real->integer x))"))))
+  (c values c (0 (u . "(app f (real->integer x))\n"))))
  #""
  #"")
 ((vc)
@@ -38,7 +38,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t (int? x))"))))
+  (c values c (0 (u . "(vc #t (int? x))\n"))))
  #""
  #"")
 ((define sol (solve (assert (not (equal? (f x) (f 1))))))
@@ -55,7 +55,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(fv integer?~>boolean?)"))))
+  (c values c (0 (u . "(fv integer?~>boolean?)\n"))))
  #""
  #"")
 ((evaluate x sol) ((3) 0 () 0 () () (q values 0)) #"" #"")
@@ -71,7 +71,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(ite (= 1 (real->integer x)) #f #t)"))))
+  (c values c (0 (u . "(ite (= 1 (real->integer x)) #f #t)\n"))))
  #""
  #"")
 ((define t (~> integer? real? boolean? (bitvector 4)))
@@ -87,7 +87,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "integer?~>real?~>boolean?~>(bitvector 4)"))))
+  (c values c (0 (u . "integer?~>real?~>boolean?~>(bitvector 4)\n"))))
  #""
  #"")
 ((~> t integer?)
@@ -158,7 +158,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "b"))))
+  (c values c (0 (u . "b\n"))))
  #""
  #"")
 ((define sol (solve (begin (assert (not (f #t))) (assert (f #f)))))
@@ -175,7 +175,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(fv boolean?~>boolean?)"))))
+  (c values c (0 (u . "(fv boolean?~>boolean?)\n"))))
  #""
  #"")
 ((fv? g) ((3) 0 () 0 () () (q values #t)) #"" #"")
@@ -188,6 +188,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")

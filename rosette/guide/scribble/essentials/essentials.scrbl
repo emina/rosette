@@ -470,14 +470,14 @@ To illustrate, consider the procedure @racket[bvsqrt] for computing the @hyperli
 (eval:error (error 'call-with-deep-time-limit "out of time")))]
 The reason is simple: a call to @racket[bvsqrt] terminates when @racket[n] becomes less than 2. But if we start with a symbolic @racket[n], this never happens because Rosette right-shifts @racket[n] by 2 in each recursive call to generate a new symbolic value:
 @examples[#:eval rosette-eval #:label #f
-(define n l)
-n
-(define n (bvlshr n (int32 2)))      
-n
-(define n (bvlshr n (int32 2))) 
-n
-(define n (bvlshr n (int32 2))) 
-n]
+(define n0 l)
+n0
+(define n1 (bvlshr n0 (int32 2)))      
+n1
+(define n2 (bvlshr n1 (int32 2))) 
+n2
+(define n3 (bvlshr n2 (int32 2))) 
+n3]
 In general, recursion terminates under symbolic evaluation only when the stopping condition is reached with concrete values.
 
 We can force termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. The following code shows how to implement a @emph{sound} finitization policy. If a @racket[verify] query returns @racket[(unsat)] under a sound policy, we know that (1) the unrolling bound @var{k} is sufficient to execute all possible inputs to  @racket[bvsqrt], and (2) all of these executions satisfy the query. If we pick a bound that is too small, the query will generate a counterexample input that needs a larger bound to compute the result. In our example, the bound of 16 is sufficient to verify the correctness of @racket[sqrt] on all inputs: 

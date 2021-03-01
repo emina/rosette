@@ -16,7 +16,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list a d b c)"))))
+  (c values c (0 (u . "(list a c d b)\n"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -29,7 +29,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a #t)"))))
+  (c values c (0 (u . "(vc a #t)\n"))))
  #""
  #"")
 ((if b
@@ -51,7 +51,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(ite b 1 2)"))))
+  (c values c (0 (u . "(ite b 1 2)\n"))))
  #"Then branch:\n #(struct:vc (&& a b) #t)\n #(struct:vc (&& a b) (|| c (! (&& a b))))\nElse branch:\n #(struct:vc (&& a (! b)) #t)\n #(struct:vc (&& a (! b)) (|| d (! (&& a (! b)))))\n"
  #"")
 ((vc)
@@ -69,7 +69,7 @@
    (0
     (u
      .
-     "(vc a (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b)))))))"))))
+     "(vc a (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b)))))))\n"))))
  #""
  #"")
 ((append (take (terms) 5) (list (opaque "...")))
@@ -81,7 +81,13 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list a d b c (! d) ...)"))))
+  (c
+   values
+   c
+   (0
+    (u
+     .
+     "(list\n a\n c\n d\n b\n (&& (|| (! b) (|| c (! (&& a b)))) (|| b (|| d (! (&& a (! b))))))\n ...)\n\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -94,7 +100,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((vc? vc-true) ((3) 0 () 0 () () (q values #t)) #"" #"")
@@ -111,7 +117,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -124,7 +130,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -137,7 +143,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a #t)"))))
+  (c values c (0 (u . "(vc a #t)\n"))))
  #""
  #"")
 ((assert b) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -150,7 +156,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a (|| b (! a)))"))))
+  (c values c (0 (u . "(vc a (|| b (! a)))\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -163,7 +169,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -177,7 +183,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a #t)"))))
+  (c values c (0 (u . "(vc a #t)\n"))))
  #""
  #"")
 ((with-vc (begin (when b (error 'b "No b allowed!")) 1))
@@ -189,7 +195,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(normal 1 (vc a (|| (! b) (! (&& a b)))))"))))
+  (c values c (0 (u . "(normal 1 (vc a (|| (! b) (! (&& a b)))))\n"))))
  #""
  #"")
 ((vc)
@@ -201,7 +207,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a #t)"))))
+  (c values c (0 (u . "(vc a #t)\n"))))
  #""
  #"")
 ((with-vc vc-true (if b (assume #f) (assert #f)))
@@ -219,7 +225,7 @@
    (0
     (u
      .
-     "(failed\n (exn:fail:svm:merge \"[merge] failed\" #<continuation-mark-set>)\n (vc (! b) b))\n"))))
+     "(failed\n (exn:fail:svm:merge \"[merge] failed\" #<continuation-mark-set>)\n (vc (! b) b))\n\n"))))
  #""
  #"")
 ((vc)
@@ -231,7 +237,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a #t)"))))
+  (c values c (0 (u . "(vc a #t)\n"))))
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -245,7 +251,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'()"))))
+  (c values c (0 (u . "'()\n"))))
  #""
  #"")
 ((define (get-a) (define-symbolic a integer?) a)
@@ -262,7 +268,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(+ 3 a)"))))
+  (c values c (0 (u . "(+ 3 a)\n"))))
  #""
  #"")
 ((terms)
@@ -274,7 +280,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (+ 3 a) a)"))))
+  (c values c (0 (u . "(list a (+ 3 a))\n"))))
  #""
  #"")
 ((define (query-a a) (verify (assert (= a (get-a)))))
@@ -290,7 +296,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((terms)
@@ -302,7 +308,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (+ 3 a) a)"))))
+  (c values c (0 (u . "(list a (+ 3 a))\n"))))
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -315,7 +321,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'()"))))
+  (c values c (0 (u . "'()\n"))))
  #""
  #"")
 ((query-a a0)
@@ -327,7 +333,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a 1]\n [a 0])"))))
+  (c values c (0 (u . "(model\n [a 1]\n [a 0])\n"))))
  #""
  #"")
 ((terms)
@@ -339,7 +345,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (= a a) (! (= a a)) a)"))))
+  (c values c (0 (u . "(list a (! (= a a)) (= a a))\n"))))
  #""
  #"")
 ((clear-terms!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -357,7 +363,7 @@
 ((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 369 real time: 375 gc time: 30\n"
+ #"cpu time: 357 real time: 365 gc time: 17\n"
  #"")
 ((length (terms)) ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -368,7 +374,7 @@
 ((length (terms)) ((3) 0 () 0 () () (q values 0)) #"" #"")
 ((time (unused-terms! 50000))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 423 real time: 430 gc time: 44\n"
+ #"cpu time: 410 real time: 416 gc time: 40\n"
  #"")
 (50000 ((3) 0 () 0 () () (q values 50000)) #"" #"")
 ((collect-garbage) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -383,7 +389,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list a b)"))))
+  (c values c (0 (u . "(list b a)\n"))))
  #""
  #"")
 ((with-terms (begin0 (verify (assert (= (+ a b) 0))) (println (terms))))
@@ -395,8 +401,8 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a 1]\n [b 0])"))))
- #"(list a (= 0 (+ a b)) (+ a b) (! (= 0 (+ a b))) b)\n"
+  (c values c (0 (u . "(model\n [a 1]\n [b 0])\n"))))
+ #"(list (+ a b) b a (! (= 0 (+ a b))) (= 0 (+ a b)))\n"
  #"")
 ((terms)
  ((3)
@@ -407,7 +413,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list a b)"))))
+  (c values c (0 (u . "(list b a)\n"))))
  #""
  #"")
 ((with-terms
@@ -425,6 +431,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list a b)"))))
+  (c values c (0 (u . "(list b a)\n"))))
  #""
  #"")

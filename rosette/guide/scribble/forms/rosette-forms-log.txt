@@ -12,7 +12,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "x"))))
+  (c values c (0 (u . "x\n"))))
  #""
  #"")
 ((always-same)
@@ -24,7 +24,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "x"))))
+  (c values c (0 (u . "x\n"))))
  #""
  #"")
 ((equal? (always-same) (always-same)) ((3) 0 () 0 () () (q values #t)) #"" #"")
@@ -41,7 +41,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list y$0 y$1 y$2)"))))
+  (c values c (0 (u . "(list y$0 y$1 y$2)\n"))))
  #""
  #"")
 ((always-same-3)
@@ -53,7 +53,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list y$0 y$1 y$2)"))))
+  (c values c (0 (u . "(list y$0 y$1 y$2)\n"))))
  #""
  #"")
 ((equal? (always-same-3) (always-same-3))
@@ -85,7 +85,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "x$0"))))
+  (c values c (0 (u . "x$0\n"))))
  #""
  #"")
 ((always-different)
@@ -97,7 +97,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "x$1"))))
+  (c values c (0 (u . "x$1\n"))))
  #""
  #"")
 ((eq? (always-different) (always-different))
@@ -109,7 +109,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(= x$2 x$3)"))))
+  (c values c (0 (u . "(= x$2 x$3)\n"))))
  #""
  #"")
 ((define (always-different-n n) (define-symbolic* y integer? #:length n) y)
@@ -125,7 +125,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list y$4 y$5)"))))
+  (c values c (0 (u . "(list y$4 y$5)\n"))))
  #""
  #"")
 ((always-different-n 3)
@@ -137,7 +137,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list y$6 y$7 y$8)"))))
+  (c values c (0 (u . "(list y$6 y$7 y$8)\n"))))
  #""
  #"")
 ((equal? (always-different-n 4) (always-different-n 4))
@@ -152,7 +152,7 @@
   (c
    values
    c
-   (0 (u . "(&& (= y$9 y$13) (= y$10 y$14) (= y$11 y$15) (= y$12 y$16))"))))
+   (0 (u . "(&& (= y$9 y$13) (= y$10 y$14) (= y$11 y$15) (= y$12 y$16))\n"))))
  #""
  #"")
 ((assert #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -166,7 +166,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((define-symbolic x boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -180,7 +180,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t x)"))))
+  (c values c (0 (u . "(vc #t x)\n"))))
  #""
  #"")
 ((assert #f "bad value")
@@ -196,7 +196,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #f)"))))
+  (c values c (0 (u . "(vc #t #f)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -209,7 +209,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((vc)
@@ -221,7 +221,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((assume #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -235,7 +235,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((define-symbolic x boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -249,7 +249,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc x #t)"))))
+  (c values c (0 (u . "(vc x #t)\n"))))
  #""
  #"")
 ((assume #f "bad value")
@@ -265,7 +265,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #f #t)"))))
+  (c values c (0 (u . "(vc #f #t)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -278,7 +278,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((define-symbolic a b c d boolean?)
@@ -294,7 +294,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((verify (assert a))
@@ -306,7 +306,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a #f])"))))
+  (c values c (0 (u . "(model\n [a #f])\n"))))
  #""
  #"")
 ((vc)
@@ -318,7 +318,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((assume a) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -332,7 +332,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a (|| b (! a)))"))))
+  (c values c (0 (u . "(vc a (|| b (! a)))\n"))))
  #""
  #"")
 ((verify (begin (assume c) (assert d)))
@@ -344,7 +344,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a #t]\n [b #t]\n [c #t]\n [d #f])"))))
+  (c values c (0 (u . "(model\n [a #t]\n [b #t]\n [c #t]\n [d #f])\n"))))
  #""
  #"")
 ((vc)
@@ -356,7 +356,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc a (|| b (! a)))"))))
+  (c values c (0 (u . "(vc a (|| b (! a)))\n"))))
  #""
  #"")
 ((verify (assert a))
@@ -368,7 +368,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -381,7 +381,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((verify (assert a))
@@ -393,7 +393,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a #f])"))))
+  (c values c (0 (u . "(model\n [a #f])\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -407,7 +407,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((synthesize
@@ -423,7 +423,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [c 1])"))))
+  (c values c (0 (u . "(model\n [c 1])\n"))))
  #""
  #"")
 ((vc)
@@ -435,7 +435,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((assume (odd? x)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -448,7 +448,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc (! (= 0 (remainder x 2))) #t)"))))
+  (c values c (0 (u . "(vc (! (= 0 (remainder x 2))) #t)\n"))))
  #""
  #"")
 ((synthesize #:forall (list x) #:guarantee (assert (odd? (+ x c))))
@@ -460,7 +460,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [c 0])"))))
+  (c values c (0 (u . "(model\n [c 0])\n"))))
  #""
  #"")
 ((vc)
@@ -472,7 +472,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc (! (= 0 (remainder x 2))) #t)"))))
+  (c values c (0 (u . "(vc (! (= 0 (remainder x 2))) #t)\n"))))
  #""
  #"")
 ((synthesize
@@ -488,7 +488,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -501,7 +501,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((synthesize
@@ -517,7 +517,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [c 1])"))))
+  (c values c (0 (u . "(model\n [c 1])\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -532,7 +532,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc x #t)"))))
+  (c values c (0 (u . "(vc x #t)\n"))))
  #""
  #"")
 ((solve (assert y))
@@ -544,7 +544,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x #t]\n [y #t])"))))
+  (c values c (0 (u . "(model\n [x #t]\n [y #t])\n"))))
  #""
  #"")
 ((vc)
@@ -556,7 +556,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc x #t)"))))
+  (c values c (0 (u . "(vc x #t)\n"))))
  #""
  #"")
 ((solve (assert (not x)))
@@ -568,7 +568,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -581,7 +581,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc #t #t)"))))
+  (c values c (0 (u . "(vc #t #t)\n"))))
  #""
  #"")
 ((solve (assert (not x)))
@@ -593,7 +593,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x #f])"))))
+  (c values c (0 (u . "(model\n [x #f])\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -608,7 +608,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 0]\n [y 1])"))))
+  (c values c (0 (u . "(model\n [x 0]\n [y 1])\n"))))
  #""
  #"")
 ((inc (> x 5))
@@ -620,7 +620,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 6]\n [y 7])"))))
+  (c values c (0 (u . "(model\n [x 6]\n [y 7])\n"))))
  #""
  #"")
 ((inc (< y 4))
@@ -632,7 +632,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((inc 1)
@@ -644,7 +644,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 6]\n [y 7])"))))
+  (c values c (0 (u . "(model\n [x 6]\n [y 7])\n"))))
  #""
  #"")
 ((inc (< y 9))
@@ -656,7 +656,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 6]\n [y 7])"))))
+  (c values c (0 (u . "(model\n [x 6]\n [y 7])\n"))))
  #""
  #"")
 ((inc 'shutdown) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -687,7 +687,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 1]\n [y 1])"))))
+  (c values c (0 (u . "(model\n [x 1]\n [y 1])\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -707,7 +707,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 3])"))))
+  (c values c (0 (u . "(model\n [x 3])\n"))))
  #""
  #"")
 ((solve (assert (= x 64)))
@@ -719,7 +719,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 0])"))))
+  (c values c (0 (u . "(model\n [x 0])\n"))))
  #""
  #"")
 ((solve (assert (and (= x 64) (= x 0))))
@@ -731,7 +731,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 0])"))))
+  (c values c (0 (u . "(model\n [x 0])\n"))))
  #""
  #"")
 ((solve (assert (forall (list x) (= x (+ x y)))))
@@ -768,7 +768,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 7/2])"))))
+  (c values c (0 (u . "(model\n [x 7/2])\n"))))
  #""
  #"")
 ((solve (assert (= x 64)))
@@ -780,7 +780,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 64])"))))
+  (c values c (0 (u . "(model\n [x 64])\n"))))
  #""
  #"")
 ((solve (assert (and (= x 64) (= x 0))))
@@ -792,7 +792,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((solve (assert (forall (list x) (= x (+ x y)))))
@@ -804,7 +804,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [y 0])"))))
+  (c values c (0 (u . "(model\n [y 0])\n"))))
  #""
  #"")
 ((solve (assert (= x (f x))))
@@ -816,7 +816,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 0]\n [f (fv real?~>real?)])"))))
+  (c values c (0 (u . "(model\n [x 0]\n [f (fv real?~>real?)])\n"))))
  #""
  #"")
 ((define-symbolic i j integer?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -833,6 +833,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unknown)"))))
+  (c values c (0 (u . "(unknown)\n"))))
  #""
  #"")

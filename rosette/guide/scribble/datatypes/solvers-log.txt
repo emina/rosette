@@ -8,7 +8,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "#<z3>"))))
+  (c values c (0 (u . "#<z3>\n"))))
  #""
  #"")
 ((define-symbolic a b boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -27,7 +27,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(4 5 1)"))))
+  (c values c (0 (u . "'(4 5 1)\n"))))
  #""
  #"")
 ((define vec (vector a)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -40,7 +40,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#(#t)"))))
+  (c values c (0 (u . "'#(#t)\n"))))
  #""
  #"")
 ((eq? vec (evaluate vec sol)) ((3) 0 () 0 () () (q values #f)) #"" #"")
@@ -54,7 +54,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "b"))))
+  (c values c (0 (u . "b\n"))))
  #""
  #"")
 ((define-symbolic a boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -72,7 +72,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a #t])"))))
+  (c values c (0 (u . "(model\n [a #t])\n"))))
  #""
  #"")
 ((complete-solution sol (list a x))
@@ -84,7 +84,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [a #t]\n [x 0])"))))
+  (c values c (0 (u . "(model\n [a #t]\n [x 0])\n"))))
  #""
  #"")
 ((complete-solution (solve (assert #f)) (list a x))
@@ -96,6 +96,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")

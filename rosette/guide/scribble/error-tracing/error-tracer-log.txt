@@ -17,7 +17,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model)"))))
+  (c values c (0 (u . "(model)\n"))))
  #""
  #"")
 ((define-symbolic opt boolean?) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -34,7 +34,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((require rackunit) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -77,7 +77,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(#<test-error> #<test-failure> #<test-failure>)"))))
+  (c values c (0 (u . "(#<test-error> #<test-failure> #<test-failure>)\n"))))
  #""
  #"")
 ((define (sum xs)
@@ -99,7 +99,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((define (pre xs) (assume (positive? (sum xs))))
@@ -154,7 +154,7 @@
    (0
     (u
      .
-     "(#<test-success> #<test-success> #<test-success> #<test-success>)"))))
+     "(#<test-success> #<test-success> #<test-success> #<test-success>)\n"))))
  #""
  #"")
 ((test-case "Test sum for any failures." (check-pred unsat? (verify (sum xs))))
@@ -170,7 +170,10 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [xs$0 1]\n [xs$1 1]\n [xs$2 1]\n [xs$3 1])"))))
+  (c
+   values
+   c
+   (0 (u . "(model\n [xs$0 1]\n [xs$1 1]\n [xs$2 1]\n [xs$3 1])\n"))))
  #""
  #"")
 ((assume (positive? (sum xs))) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -183,7 +186,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((define (select xs n)
@@ -216,6 +219,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")

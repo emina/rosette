@@ -24,7 +24,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [x 4]\n [b #t])"))))
+  (c values c (0 (u . "(model\n [x 4]\n [b #t])\n"))))
  #""
  #"")
 ((evaluate v1 sol)
@@ -36,7 +36,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#&4"))))
+  (c values c (0 (u . "'#&4\n"))))
  #""
  #"")
 ((evaluate v2 sol)
@@ -48,7 +48,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#&4"))))
+  (c values c (0 (u . "'#&4\n"))))
  #""
  #"")
 ((evaluate (eq? v1 v2) sol) ((3) 0 () 0 () () (q values #t)) #"" #"")

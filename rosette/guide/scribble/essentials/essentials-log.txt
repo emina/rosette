@@ -9,7 +9,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "b"))))
+  (c values c (0 (u . "b\n"))))
  #""
  #"")
 ((boolean? b) ((3) 0 () 0 () () (q values #t)) #"" #"")
@@ -23,7 +23,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vector b 1)"))))
+  (c values c (0 (u . "(vector b 1)\n"))))
  #""
  #"")
 ((not b)
@@ -35,7 +35,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(! b)"))))
+  (c values c (0 (u . "(! b)\n"))))
  #""
  #"")
 ((boolean? (not b)) ((3) 0 () 0 () () (q values #t)) #"" #"")
@@ -58,7 +58,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(= y$1 y$2)"))))
+  (c values c (0 (u . "(= y$1 y$2)\n"))))
  #""
  #"")
 ((define (yet-another-x) (define-symbolic x boolean?) x)
@@ -74,7 +74,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(<=> x x)"))))
+  (c values c (0 (u . "(<=> x x)\n"))))
  #""
  #"")
 ((assert #t) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -92,7 +92,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(! b)"))))
+  (c values c (0 (u . "(! b)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -112,7 +112,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(< 0 j)"))))
+  (c values c (0 (u . "(< 0 j)\n"))))
  #""
  #"")
 ((assert (< (- i j) i)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -125,7 +125,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(|| (! (< 0 j)) (< (+ i (- j)) i))"))))
+  (c values c (0 (u . "(|| (! (< 0 j)) (< (+ i (- j)) i))\n"))))
  #""
  #"")
 ((vc)
@@ -137,7 +137,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vc (< 0 j) (|| (! (< 0 j)) (< (+ i (- j)) i)))"))))
+  (c values c (0 (u . "(vc (< 0 j) (|| (! (< 0 j)) (< (+ i (- j)) i)))\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -157,7 +157,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x00000001 32)"))))
+  (c values c (0 (u . "(bv #x00000001 32)\n"))))
  #""
  #"")
 ((define (bvmid lo hi) (bvsdiv (bvadd lo hi) (int32 2)))
@@ -209,7 +209,7 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
+   (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])\n"))))
  #""
  #"")
 ((define cl (evaluate l cex)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -223,7 +223,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (bv #x394f0402 32) (bv #x529e7c00 32))"))))
+  (c values c (0 (u . "(list (bv #x394f0402 32) (bv #x529e7c00 32))\n"))))
  #""
  #"")
 ((define il (bitvector->integer cl))
@@ -243,7 +243,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(961479682 1386118144)"))))
+  (c values c (0 (u . "'(961479682 1386118144)\n"))))
  #""
  #"")
 ((define m (bvmid cl ch)) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -256,7 +256,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #xc5f6c001 32)"))))
+  (c values c (0 (u . "(bv #xc5f6c001 32)\n"))))
  #""
  #"")
 ((bitvector->integer m) ((3) 0 () 0 () () (q values -973684735)) #"" #"")
@@ -270,7 +270,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x45f6c001 32)"))))
+  (c values c (0 (u . "(bv #x45f6c001 32)\n"))))
  #""
  #"")
 ((check-mid bvmid cl ch) ((3) 0 () 0 () () (q exn "[assert] failed")) #"" #"")
@@ -284,7 +284,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x8bed8002 32)"))))
+  (c values c (0 (u . "(bv #x8bed8002 32)\n"))))
  #""
  #"")
 ((bitvector->integer (bvadd cl ch))
@@ -307,7 +307,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((require rosette/lib/synthax) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -347,7 +347,7 @@
    (0
     (u
      .
-     "(model\n [0$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #f]\n [1$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #f]\n [2$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #f]\n [3$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #t]\n ...)\n"))))
+     "(model\n [0$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #f]\n [1$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #f]\n [2$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #f]\n [3$choose:bvmid:37:9$expr:bvmid:37:3$fast-int32:bvmid:45:3 #t]\n ...)\n\n"))))
  #""
  #"")
 ((print-forms-alt sol)
@@ -381,7 +381,7 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x3f761e94 32)]\n [h (bv #x3f761e95 32)])"))))
+   (0 (u . "(model\n [l (bv #x3f761e94 32)]\n [h (bv #x3f761e95 32)])\n"))))
  #""
  #"")
 ((evaluate (bvand l h) sol)
@@ -393,7 +393,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x3f761e94 32)"))))
+  (c values c (0 (u . "(bv #x3f761e94 32)\n"))))
  #""
  #"")
 ((evaluate (bvmid-fast l h) sol)
@@ -405,7 +405,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x3f761e94 32)"))))
+  (c values c (0 (u . "(bv #x3f761e94 32)\n"))))
  #""
  #"")
 ((define (bvmid-and? lo hi) #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -437,8 +437,8 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
- #"cpu time: 0 real time: 37 gc time: 0\n"
+   (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])\n"))))
+ #"cpu time: 0 real time: 38 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid l h)))
  ((3)
@@ -452,7 +452,7 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x2faef9a1 32)]\n [h (bv #x5eefb8dd 32)])"))))
+   (0 (u . "(model\n [l (bv #x2faef9a1 32)]\n [h (bv #x5eefb8dd 32)])\n"))))
  #"cpu time: 1 real time: 172 gc time: 0\n"
  #"")
 ((time (verify (check-mid bvmid-no-overflow l h)))
@@ -464,8 +464,8 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
- #"cpu time: 1 real time: 157 gc time: 0\n"
+  (c values c (0 (u . "(unsat)\n"))))
+ #"cpu time: 0 real time: 160 gc time: 0\n"
  #"")
 ((error 'call-with-deep-time-limit "out of time")
  ((3) 0 () 0 () () (q exn "call-with-deep-time-limit: out of time"))
@@ -485,8 +485,8 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x00000001 32)]\n [h (bv #x7fffffff 32)])"))))
- #"cpu time: 1 real time: 23 gc time: 0\n"
+   (0 (u . "(model\n [l (bv #x00000001 32)]\n [h (bv #x7fffffff 32)])\n"))))
+ #"cpu time: 0 real time: 23 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid-no-overflow l h)))
  ((3)
@@ -497,8 +497,8 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
- #"cpu time: 0 real time: 157 gc time: 0\n"
+  (c values c (0 (u . "(unsat)\n"))))
+ #"cpu time: 0 real time: 159 gc time: 0\n"
  #"")
 ((current-bitwidth 32) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((time (verify (check-mid-slow bvmid l h)))
@@ -510,7 +510,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #"cpu time: 0 real time: 0 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid-no-overflow l h)))
@@ -525,7 +525,7 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x71979fa3 32)]\n [h (bv #x76b91b88 32)])"))))
+   (0 (u . "(model\n [l (bv #x71979fa3 32)]\n [h (bv #x76b91b88 32)])\n"))))
  #"cpu time: 1 real time: 152 gc time: 0\n"
  #"")
 ((current-bitwidth 512) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -541,8 +541,8 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x70000006 32)]\n [h (bv #x73fffffa 32)])"))))
- #"cpu time: 1 real time: 379 gc time: 0\n"
+   (0 (u . "(model\n [l (bv #x70000006 32)]\n [h (bv #x73fffffa 32)])\n"))))
+ #"cpu time: 1 real time: 385 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid-no-overflow l h)))
  ((3)
@@ -553,8 +553,8 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
- #"cpu time: 0 real time: 429 gc time: 0\n"
+  (c values c (0 (u . "(unsat)\n"))))
+ #"cpu time: 0 real time: 430 gc time: 0\n"
  #"")
 ((current-bitwidth #f) ((3) 0 () 0 () () (c values c (void))) #"" #"")
 ((require rosette/solver/smt/z3)
@@ -577,8 +577,8 @@
   (c
    values
    c
-   (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])"))))
- #"cpu time: 4 real time: 33 gc time: 0\n"
+   (0 (u . "(model\n [l (bv #x394f0402 32)]\n [h (bv #x529e7c00 32)])\n"))))
+ #"cpu time: 3 real time: 33 gc time: 0\n"
  #"")
 ((time (verify (check-mid-slow bvmid l h)))
  ((3)
@@ -613,7 +613,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x00000001 32)"))))
+  (c values c (0 (u . "(bv #x00000001 32)\n"))))
  #""
  #"")
 ((bvsqrt (int32 4))
@@ -625,7 +625,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x00000002 32)"))))
+  (c values c (0 (u . "(bv #x00000002 32)\n"))))
  #""
  #"")
 ((bvsqrt (int32 15))
@@ -637,7 +637,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x00000003 32)"))))
+  (c values c (0 (u . "(bv #x00000003 32)\n"))))
  #""
  #"")
 ((bvsqrt (int32 16))
@@ -649,15 +649,15 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bv #x00000004 32)"))))
+  (c values c (0 (u . "(bv #x00000004 32)\n"))))
  #""
  #"")
 ((error 'call-with-deep-time-limit "out of time")
  ((3) 0 () 0 () () (q exn "call-with-deep-time-limit: out of time"))
  #""
  #"")
-((define n l) ((3) 0 () 0 () () (c values c (void))) #"" #"")
-(n
+((define n0 l) ((3) 0 () 0 () () (c values c (void))) #"" #"")
+(n0
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -666,14 +666,14 @@
   0
   ()
   ()
-  (c values c (0 (u . "l"))))
+  (c values c (0 (u . "l\n"))))
  #""
  #"")
-((define n (bvlshr n (int32 2)))
+((define n1 (bvlshr n0 (int32 2)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-(n
+(n1
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -682,14 +682,14 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bvlshr l (bv #x00000002 32))"))))
+  (c values c (0 (u . "(bvlshr l (bv #x00000002 32))\n"))))
  #""
  #"")
-((define n (bvlshr n (int32 2)))
+((define n2 (bvlshr n1 (int32 2)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-(n
+(n2
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -701,14 +701,14 @@
   (c
    values
    c
-   (0 (u . "(bvlshr (bvlshr l (bv #x00000002 32)) (bv #x00000002 32))"))))
+   (0 (u . "(bvlshr (bvlshr l (bv #x00000002 32)) (bv #x00000002 32))\n"))))
  #""
  #"")
-((define n (bvlshr n (int32 2)))
+((define n3 (bvlshr n2 (int32 2)))
  ((3) 0 () 0 () () (c values c (void)))
  #""
  #"")
-(n
+(n3
  ((3)
   1
   (((lib "rosette/guide/scribble/util/lifted.rkt")
@@ -723,7 +723,7 @@
    (0
     (u
      .
-     "(bvlshr\n (bvlshr (bvlshr l (bv #x00000002 32)) (bv #x00000002 32))\n (bv #x00000002 32))\n"))))
+     "(bvlshr\n (bvlshr (bvlshr l (bv #x00000002 32)) (bv #x00000002 32))\n (bv #x00000002 32))\n\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -765,7 +765,7 @@
  #"")
 ((define cex (time (verify (check-sqrt bvsqrt l))))
  ((3) 0 () 0 () () (c values c (void)))
- #"cpu time: 4 real time: 1016 gc time: 0\n"
+ #"cpu time: 4 real time: 1143 gc time: 0\n"
  #"")
 ((bvsqrt (evaluate l cex))
  ((3) 0 () 0 () () (q exn "[assert] Out of fuel."))
@@ -782,6 +782,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
- #"cpu time: 4 real time: 68673 gc time: 0\n"
+  (c values c (0 (u . "(unsat)\n"))))
+ #"cpu time: 4 real time: 67938 gc time: 0\n"
  #"")

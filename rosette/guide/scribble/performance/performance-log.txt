@@ -14,7 +14,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((define (list-set lst idx val)
@@ -32,7 +32,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(a d c)"))))
+  (c values c (0 (u . "'(a d c)\n"))))
  #""
  #"")
 ((define-symbolic idx len integer?)
@@ -52,7 +52,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(union #:size 6 #:hash -437127353640646723)"))))
+  (c values c (0 (u . "(union #:size 6 #:hash -437123915298968900)\n"))))
  #""
  #"")
 ((define (list-set* lst idx val)
@@ -74,7 +74,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'(a d c)"))))
+  (c values c (0 (u . "'(a d c)\n"))))
  #""
  #"")
 ((format-opaque "~a" (list-set* lst idx 'd))
@@ -86,7 +86,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(union #:size 4 #:hash 350627999700259086)"))))
+  (c values c (0 (u . "(union #:size 4 #:hash -976833215883912073)\n"))))
  #""
  #"")
 ((define-values (width height) (values 5 5))
@@ -130,7 +130,7 @@
    (0
     (u
      .
-     "(ite\n (&& (<= 0 idx) (<= idx 1))\n (ite* (⊢ (= 0 idx) 5) (⊢ (= 1 idx) 6) (⊢ (= 2 idx) 7))\n -1)\n"))))
+     "(ite\n (&& (<= 0 idx) (<= idx 1))\n (ite* (⊢ (= 0 idx) 5) (⊢ (= 1 idx) 6) (⊢ (= 2 idx) 7))\n -1)\n\n"))))
  #""
  #"")
 ((define (maybe-ref* lst idx)
@@ -147,7 +147,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(ite (= 0 idx) 5 (ite (= 1 idx) 6 -1))"))))
+  (c values c (0 (u . "(ite (= 0 idx) 5 (ite (= 1 idx) 6 -1))\n"))))
  #""
  #"")
 ((define-values (Add Sub Sqr Nop) (values (bv 0 2) (bv 1 2) (bv 2 2) (bv 3 2)))
@@ -210,7 +210,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((clear-vc!) ((3) 0 () 0 () () (c values c (void))) #"" #"")
@@ -231,7 +231,7 @@
    (0
     (u
      .
-     "(list\n (ite (= 0 idx) 4 1)\n (ite (= 0 idx) 2 (ite (= 0 (+ -1 idx)) 4 2))\n (ite (= 0 idx) 3 (ite (= 0 (+ -1 idx)) 3 (ite (= 0 (+ -2 idx)) 4 3))))\n"))))
+     "(list\n (ite (= 0 idx) 4 1)\n (ite (= 0 idx) 2 (ite (= 0 (+ -1 idx)) 4 2))\n (ite (= 0 idx) 3 (ite (= 0 (+ -1 idx)) 3 (ite (= 0 (+ -2 idx)) 4 3))))\n\n"))))
  #""
  #"")
 ((define (list-set* lst idx val)
@@ -257,6 +257,6 @@
    (0
     (u
      .
-     "(list\n (ite (= 0 idx) 4 1)\n (ite (= 0 (+ -1 idx)) 4 2)\n (ite (= 0 (+ -2 idx)) 4 3))\n"))))
+     "(list\n (ite (= 0 idx) 4 1)\n (ite (= 0 (+ -1 idx)) 4 2)\n (ite (= 0 (+ -2 idx)) 4 3))\n\n"))))
  #""
  #"")

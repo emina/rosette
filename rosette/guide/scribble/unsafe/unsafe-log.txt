@@ -14,7 +14,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(vector 0 (ite b 3 1) (ite b 2 4))"))))
+  (c values c (0 (u . "(vector 0 (ite b 3 1) (ite b 2 4))\n"))))
  #""
  #"")
 ((define sol1 (solve (assert b)))
@@ -30,7 +30,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#(0 3 2)"))))
+  (c values c (0 (u . "'#(0 3 2)\n"))))
  #""
  #"")
 ((define sol2 (solve (assert (not b))))
@@ -46,7 +46,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#(0 1 4)"))))
+  (c values c (0 (u . "'#(0 1 4)\n"))))
  #""
  #"")
 ((require (only-in racket make-hash hash-clear! hash-ref))
@@ -73,6 +73,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "'#hash()"))))
+  (c values c (0 (u . "'#hash()\n"))))
  #""
  #"")

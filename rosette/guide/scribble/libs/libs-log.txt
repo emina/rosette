@@ -17,7 +17,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bvshl (bv #x01 8) ??:bvmul2:9:12)"))))
+  (c values c (0 (u . "(bvshl (bv #x01 8) ??:bvmul2:9:12)\n"))))
  #""
  #"")
 ((bvmul2_?? (bv 3 8))
@@ -29,7 +29,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bvshl (bv #x03 8) ??:bvmul2:9:12)"))))
+  (c values c (0 (u . "(bvshl (bv #x03 8) ??:bvmul2:9:12)\n"))))
  #""
  #"")
 ((define-symbolic x (bitvector 8))
@@ -45,7 +45,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(bvshl x ??:bvmul2:9:12)"))))
+  (c values c (0 (u . "(bvshl x ??:bvmul2:9:12)\n"))))
  #""
  #"")
 ((equal? (bvmul2_?? x) (bvmul2_?? x)) ((3) 0 () 0 () () (q values #t)) #"" #"")
@@ -67,7 +67,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(model\n [??:bvmul2:9:12 (bv #x01 8)])"))))
+  (c values c (0 (u . "(model\n [??:bvmul2:9:12 (bv #x01 8)])\n"))))
  #""
  #"")
 ((print-forms-alt sol)
@@ -97,7 +97,7 @@
    (0
     (u
      .
-     "(ite*\n (⊢ 0$choose:bvmul2:12:4 (bvshl x ??:bvmul2:12:35))\n (⊢\n  (&& 1$choose:bvmul2:12:4 (! 0$choose:bvmul2:12:4))\n  (bvashr x ??:bvmul2:12:35))\n (⊢\n  (&& (! 0$choose:bvmul2:12:4) (! 1$choose:bvmul2:12:4))\n  (bvlshr x ??:bvmul2:12:35)))\n"))))
+     "(ite*\n (⊢ 0$choose:bvmul2:12:4 (bvshl x ??:bvmul2:12:35))\n (⊢\n  (&& 1$choose:bvmul2:12:4 (! 0$choose:bvmul2:12:4))\n  (bvashr x ??:bvmul2:12:35))\n (⊢\n  (&& (! 0$choose:bvmul2:12:4) (! 1$choose:bvmul2:12:4))\n  (bvlshr x ??:bvmul2:12:35)))\n\n"))))
  #""
  #"")
 ((equal? (bvmul2_choose x) (bvmul2_choose x))
@@ -128,7 +128,7 @@
    (0
     (u
      .
-     "(model\n [0$choose:bvmul2:12:4 #t]\n [1$choose:bvmul2:12:4 #f]\n [??:bvmul2:12:35 (bv #x01 8)])\n"))))
+     "(model\n [0$choose:bvmul2:12:4 #t]\n [1$choose:bvmul2:12:4 #f]\n [??:bvmul2:12:35 (bv #x01 8)])\n\n"))))
  #""
  #"")
 ((print-forms-alt sol)
@@ -228,7 +228,7 @@
   0
   ()
   ()
-  (c values c (0 (u . "(unsat)"))))
+  (c values c (0 (u . "(unsat)\n"))))
  #""
  #"")
 ((define-grammar
@@ -315,7 +315,7 @@
    (0
     (u
      .
-     "'((union\n   [xi?$1 #(struct:Add arg$0)]\n   [(&& xi?$2 (! xi?$1)) #(struct:Mul arg$0)]\n   [(&& (! xi?$1) (! xi?$2)) #(struct:Sqr)])\n  (union\n   [xi?$4 #(struct:Add arg$3)]\n   [(&& xi?$5 (! xi?$4)) #(struct:Mul arg$3)]\n   [(&& (! xi?$4) (! xi?$5)) #(struct:Sqr)])\n  (union\n   [xi?$7 #(struct:Add arg$6)]\n   [(&& xi?$8 (! xi?$7)) #(struct:Mul arg$6)]\n   [(&& (! xi?$7) (! xi?$8)) #(struct:Sqr)]))\n"))))
+     "'((union\n   [xi?$1 #(struct:Add arg$0)]\n   [(&& xi?$2 (! xi?$1)) #(struct:Mul arg$0)]\n   [(&& (! xi?$1) (! xi?$2)) #(struct:Sqr)])\n  (union\n   [xi?$4 #(struct:Add arg$3)]\n   [(&& xi?$5 (! xi?$4)) #(struct:Mul arg$3)]\n   [(&& (! xi?$4) (! xi?$5)) #(struct:Sqr)])\n  (union\n   [xi?$7 #(struct:Add arg$6)]\n   [(&& xi?$8 (! xi?$7)) #(struct:Mul arg$6)]\n   [(&& (! xi?$7) (! xi?$8)) #(struct:Sqr)]))\n\n"))))
  #""
  #"")
 ((define sol
@@ -339,6 +339,6 @@
   0
   ()
   ()
-  (c values c (0 (u . "(list (Sqr) (Add (bv #x55 8)) (Mul (bv #x03 8)))"))))
+  (c values c (0 (u . "(list (Sqr) (Add (bv #x55 8)) (Mul (bv #x03 8)))\n"))))
  #""
  #"")
