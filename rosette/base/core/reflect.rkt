@@ -10,7 +10,7 @@
          term->datum clear-terms! term-cache
          union? union union-contents union-guards union-values
          union-filter in-union in-union* in-union-guards in-union-values
-         symbolics)
+         symbolics concrete?)
 
 (define (term=? s0 s1)
   (and (term? s0) (term? s1) (equal? s0 s1)))
@@ -38,6 +38,21 @@
                   [components (for-each loop components)])]
                [_ (void)])))
          (reverse result))]))
+
+(define (concrete? val)
+  (match val
+    [(? union?) #f]
+    [(? expression?) #f]
+    [(? constant?) #f]
+    [(box v) (concrete? v)]
+    [(? list?) (for/and ([v val]) (concrete? v))]
+    [(cons x y) (and (concrete? x) (concrete? y))]
+    [(vector vs ...) (for/and ([v vs]) (concrete? v))]
+    [(and (? typed?) (app get-type t))
+     (match (type-deconstruct t val)
+       [(list (== val)) #t]
+       [components (for/and ([v components]) (concrete? v))])]
+    [_ #t]))
 
 (define (term->datum val)
   (let convert ([val val] [cache (make-hash)])
