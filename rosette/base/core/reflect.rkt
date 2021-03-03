@@ -11,7 +11,7 @@
          union? union union-contents union-guards union-values
          union-filter in-union in-union* in-union-guards in-union-values
          (struct-out normal) (struct-out failed) result? result-value result-state
-         symbolics)
+         symbolics concrete? symbolic?)
 
 (define (term=? s0 s1)
   (and (term? s0) (term? s1) (equal? s0 s1)))
@@ -46,6 +46,29 @@
                       [components (for-each loop components)])]
                    [_ (void)]))))
          (reverse result))]))
+
+(define (concrete? val)
+  (define objs (mutable-set))
+  (let all-concrete? ([val val])
+    (and (not (term? val))
+         (not (union? val))
+         (or
+          (set-member? objs val)
+          (begin
+            (set-add! objs val)
+            (match val
+              [(box v) (all-concrete? v)]
+              [(? list?) (for/and ([v val]) (all-concrete? v))]
+              [(cons x y) (and (all-concrete? x) (all-concrete? y))]
+              [(? vector?) (for/and ([v val]) (all-concrete? v))]
+              [(and (? typed?) (app get-type t))
+               (match (type-deconstruct t val)
+                 [(list (== val)) #t]
+                 [components (for/and ([v components]) (all-concrete? v))])]
+              [_ #t]))))))
+
+(define (symbolic? val) (not (concrete? val)))
+    
 
 (define (term->datum val)
   (let convert ([val val] [cache (make-hash)])

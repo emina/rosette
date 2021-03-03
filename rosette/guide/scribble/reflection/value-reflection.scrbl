@@ -5,7 +5,7 @@
            rosette/base/form/define  
            rosette/base/core/term rosette/base/core/type rosette/base/core/union
            (only-in rosette/base/base vc clear-vc! bitvector ~>)
-           (only-in rosette/base/core/reflect symbolics)
+           (only-in rosette/base/core/reflect symbolics concrete? symbolic?)
            rosette/base/core/forall racket)
           scribble/core scribble/html-properties scribble/example racket/sandbox
           "../util/lifted.rkt")
@@ -83,7 +83,24 @@ transitively contained in the given value.
 (symbolics (if (= x y) 2 #f))
 (symbolics (list y z y))
 (struct cell (value) #:transparent)
+(symbolics (list (vector (box 1) 3) (cell (cons 4 5))))
 (symbolics (list 5 (cons (box y) z) (vector (cell x) z)))]
+}
+
+@defproc[(concrete? [v any/c]) boolean?]{
+Equivalent to @racket[(null? (symbolics v))] but more efficient.
+@examples[#:eval rosette-eval
+(define-symbolic x y z integer?) 
+(concrete? x)
+(concrete? (if (= x y) 2 #f))
+(concrete? (list y z y))
+(struct cell (value) #:transparent)
+(concrete? (list (vector (box 1) 3) (cell (cons 4 5))))
+(concrete? (list 5 (cons (box y) z) (vector (cell x) z)))]              
+}
+
+@defproc[(symbolic? [v any/c]) boolean?]{
+Equivalent to @racket[(not (concrete? v))].
 }
 
 @defproc*[([(type-of [v any/c] ...+) type?])]{

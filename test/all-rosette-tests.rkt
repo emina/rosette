@@ -38,6 +38,7 @@
  "base/distinct.rkt"
  "base/generics.rkt"
  "base/push-pop.rkt"
+ "base/reflect.rkt"
  "base/decode.rkt"
  "query/solve.rkt"
  "query/verify.rkt"
