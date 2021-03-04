@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 3.2
+
+This release includes minor updates and a new [value destructuring library].
+
+[value destructuring library]: https://docs.racket-lang.org/rosette-guide/sec_utility-libs.html#%28part._.Value_.Destructuring_.Library%29
+
 ## Version 3.1
 
 This release includes bug fixes and updates Rosette to use the latest version of Z3 as its default SMT solver. 
