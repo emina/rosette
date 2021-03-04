@@ -61,12 +61,12 @@
 (define-namespace-anchor tests)
 (define ns (namespace-anchor->namespace tests))
 
-(define (verified-equal? impl spec)
+(define (verified-equal? vars impl spec)
   (or (equal? impl spec)
       (begin 
         (match-define `(,_ ... (define ,impl-h ,_ ...)) impl)
         (match-define `(,_ ... (define ,spec-h ,_ ...)) spec)
-        (define consts (take '(x y) (sub1 (length impl-h))))
+        (define consts (map term->datum vars))
         (define body `(let ([impl (lambda ,(cdr impl-h) ,@impl ,impl-h)]
                             [spec (lambda ,(cdr spec-h) ,@spec ,spec-h)])
                         (unsat?
@@ -76,11 +76,11 @@
         (eval body ns))))
   
 (define-syntax-rule (check-synth vars expr expected)
-  (let* ([sol (synthesize #:forall vars #:guarantee (assert expr))])
+  (let* ([vs (symbolics vars)]
+         [sol (synthesize #:forall vs #:guarantee (assert expr))])
     (check-sat sol)
     (check-true
-     (verified-equal? (map syntax->datum (generate-forms sol))
-                      expected))))
+     (verified-equal? vs (map syntax->datum (generate-forms sol)) expected))))
 
 (define basic-tests
   (test-suite+ "Basic hole tests."
