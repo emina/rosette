@@ -46,7 +46,7 @@ jobs:
           cp boolector/build/bin/boolector bin/ &&
           rm -rf boolector*
       - name: Install Rosette
-        run: raco pkg install --auto
+        run: raco pkg install --auto --name rosette
       - name: Compile Rosette tests
         run: raco make test/all-rosette-tests.rkt
       - name: Run Rosette tests
