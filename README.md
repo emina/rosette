@@ -9,7 +9,7 @@ The Rosette Language
 
 The easiest way to install Rosette is from Racket's package manager:
 
-* Download and install Racket 7.0 or later from http://racket-lang.org
+* Download and install Racket 8.0 or later from http://racket-lang.org
 
 * Use Racket's `raco` tool to install Rosette:
 
@@ -19,7 +19,7 @@ The easiest way to install Rosette is from Racket's package manager:
 
 Alternatively, you can install Rosette from source:
 
-* Download and install Racket 7.0 or later from http://racket-lang.org
+* Download and install Racket 8.0 or later from http://racket-lang.org
 
 * Clone the rosette repository:
 
@@ -63,7 +63,7 @@ Alternatively, you can install Rosette from source:
 
 * The `rosette` language includes all of Racket.  This places the burden
   on the programmer to decide whether a given Racket construct (which
-  is not overriden by Rosette) is safe to use in a given context.
+  is not overridden by Rosette) is safe to use in a given context.
   Rosette provides no guarantees or checks for programs that use
   unsafe constructs.  In the best case, such a program will fail with
   an exception if a symbolic value flows to a construct that does not

@@ -1,5 +1,26 @@
 # Release Notes
 
+## Version 4.0
+
+This is a major release with significant changes to the language and the runtime.  Rosette 4.0 is *not backward compatible* with Rosette 3.x. But porting Rosette 3.x code to Rosette 4.0 should be straightforward for most applications.
+
+This release includes the following features:
+
+- Support for assumptions (see `assume`). 
+- New symbolic evaluation core that tracks verification conditions (VCs) rather than path conditions and assertions. 
+- New symbolic reflection constructs for working with VCs, including `vc`, `with-vc`, and `clear-vc!`.
+- New symbolic reflection facilities for managing symbolic `terms`, including the option of using a garbage-collected data structure.
+- Updated `verify`, `synthesize`, `solve`, and `optimize` queries.
+- New synthesis library with efficient support for grammar holes (see `define-grammar`).
+- New list and vector operators that use bitvectors instead of integers.
+- Updates to The Rosette Guide to document the new language in detail.
+
+The following features have been removed:
+
+- The `debug` query.
+- Reflection facilities for working with path conditions and assertions: `pc`, `with-asserts`, `with-asserts-only`, `clear-asserts!`, and `asserts`.  
+- Support for CPLEX.
+
 ## Version 3.2
 
 This release includes minor updates and a new [value destructuring library].
