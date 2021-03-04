@@ -64,10 +64,9 @@
 (define (verified-equal? vars impl spec)
   (or (equal? impl spec)
       (begin 
-        (match-define `(,_ ... (define ,impl-h ,_ ...)) impl)
         (match-define `(,_ ... (define ,spec-h ,_ ...)) spec)
-        (define consts (map term->datum vars))
-        (define body `(let ([impl (lambda ,(cdr impl-h) ,@impl ,impl-h)]
+        (define consts (take (map term->datum vars) (sub1 (length spec-h))))
+        (define body `(let ([impl (lambda ,(cdr spec-h) ,@impl ,spec-h)]
                             [spec (lambda ,(cdr spec-h) ,@spec ,spec-h)])
                         (unsat?
                          (verify

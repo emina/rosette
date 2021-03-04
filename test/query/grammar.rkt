@@ -77,12 +77,11 @@
 (define (verified-equal? vars impl spec)
   (or (equal? impl spec)
       (begin 
-        (match-define `(,_ ... (define ,impl-h ,_ ...)) impl)
         (match-define `(,_ ... (define ,spec-h ,_ ...)) spec)
         (define consts
           (append (map term->datum vars)
-                  (make-list (- (length impl-h) (length vars) 1) #f)))
-        (define body `(let ([impl (lambda ,(cdr impl-h) ,@impl ,impl-h)]
+                  (make-list (- (length spec-h) (length vars) 1) #f)))
+        (define body `(let ([impl (lambda ,(cdr spec-h) ,@impl ,spec-h)]
                             [spec (lambda ,(cdr spec-h) ,@spec ,spec-h)])
                         (unsat?
                          (verify
