@@ -4,12 +4,12 @@
          (for-syntax "types.rkt" "errors.rkt" (only-in racket make-list) (only-in syntax/stx stx-null?))
          "types.rkt" "util.rkt"
          (prefix-in rosette/ (only-in rosette if assert void))
-         (only-in rosette/lib/synthax define-synthax [?? @??] choose)
+         (only-in rosette/lib/synthax define-simple-grammar [?? @??] choose)
          (only-in "../model/runtime.rkt" address-of malloc)
          (only-in "builtins.rkt" NULL clCreateProgramWithSource))
 
 (provide assert 
-         print procedure kernel grammar grammar* ?? choose
+         print procedure kernel grammar ?? choose
          sizeof @ : = 
          app-or-ref locally-scoped if-statement for-statement range)
 
@@ -156,35 +156,14 @@
           (set! param ((type) param)) ...
           expr ...))]))
 
-; Grammar syntax.  We assume (but don't enforce) that
-; grammar bodies are free of side effects, and that
-; grammars are invoked on side-effect free expressions.
-; This assumption is needed only for simplified code generation,
-; where we treat each grammar application as a substition
-; in the codegen phase. Synthesis works fine without this
-; assumption, and a better code generator could get rid of it
-; by lifting all the lets/lambda to the top level.
-(define-syntax (grammar* stx)
-  (syntax-case stx ()
-    [(_ out (id [type param] ... [int depth]) expr)
-     (quasisyntax/loc stx
-       (define-synthax id
-         [(param ... depth)
-          (assert (>= depth 0))
-          expr]
-         (lambda (e sol)
-           (define vars (syntax->list #'(param ... depth)))
-           (define vals (cdr (syntax->list e)))
-           #`(let (#,@(map list vars vals)) expr))))]))
-
 (define-syntax (grammar stx)
   (syntax-case stx ()
     [(grammar out (id [type param] ...) expr)
      (quasisyntax/loc stx
-       (define-synthax (id param ...) expr))]))
+       (define-simple-grammar (id param ...) expr))]))
 
 ; Constant syntax.
-(define-synthax (?? t) (@?? (type-base t)))
+(define-simple-grammar (?? t) (@?? (type-base t)))
 
 ; Syntax for creating a local scope for a sequence of statements. 
 (define-syntax (locally-scoped stx)

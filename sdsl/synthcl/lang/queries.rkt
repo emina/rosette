@@ -4,7 +4,7 @@
          (only-in rackunit test-pred) 
          (for-syntax (only-in racket/syntax with-syntax*))
          (only-in "forms.rkt" range :)
-         (only-in rosette/lib/synthax generate-forms)
+         (only-in rosette/lib/synthax current-grammar-depth print-forms)
          (prefix-in @ (only-in rosette verify synthesize)))
 
 (provide verify synth expected? query-output-port)
@@ -39,25 +39,10 @@
                    (printf "No counterexample found.\n")
                    (unsat))))))))))]))
 
-(define (inline-let f [env (hash)])
-  (syntax-case f (let)
-    [(let ([x e] ...) body)
-     (let ([vars (syntax->datum #'(x ...))]
-           [exps (map (curryr inline-let env) (syntax->list #'(e ...)))])
-       (inline-let #'body (apply hash-set* env (flatten (map cons vars exps)))))]
-    [(_ ...)
-     #`(#,@(map (curryr inline-let env) (syntax->list f)))]
-    [_ (hash-ref env (syntax->datum f) f)])) 
-
-(define (print-forms sol)
-  (for ([f (generate-forms sol)])
-    (printf "~a:~a:~a\n" (syntax-source f) (syntax-line f) (syntax-column f))
-    (printf "~a\n" (pretty-format (syntax->datum  (inline-let f))))))  
-
 ; The synthesize form.
 (define-syntax (synth stx)
   (syntax-case stx ()
-    [(synthesize #:forall [decl ...] #:bitwidth bw #:ensure expr)
+    [(synthesize #:forall [decl ...] #:bitwidth bw #:grammar-depth depth #:ensure expr)
      (with-syntax* ([([id seq] ...) (map id&range (syntax->list #'(decl ...)))]
                     [(tmp ...) (generate-temporaries #'(id ...))])
        (quasisyntax/loc stx 
@@ -68,6 +53,7 @@
            (expected?)
            (with-terms 
              (parameterize ([current-bitwidth bw]
+                            [current-grammar-depth depth]
                             [current-output-port (query-output-port)])
                (printf "Synthesizing ~a\n" (source-of #'synthesize))
                (define-values (id ...)
@@ -79,9 +65,11 @@
                   (if (sat? m) 
                       (print-forms m)
                       (printf "No solution found.\n"))
-                  m))))))))] 
+                  m))))))))]
+    [(synthesize #:forall ds #:bitwidth bw #:ensure e) 
+     (syntax/loc stx (synthesize #:forall ds #:bitwidth bw #:grammar-depth 3 #:ensure e))]
     [(synthesize #:forall ds #:ensure e) 
-     (syntax/loc stx (synthesize #:forall ds #:bitwidth 8 #:ensure e))]))
+     (syntax/loc stx (synthesize #:forall ds #:bitwidth 8 #:grammar-depth 3 #:ensure e))]))
 
 
 ; Returns the declared id and the Racket sequence

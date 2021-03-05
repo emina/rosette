@@ -35,8 +35,7 @@
        (and (identifier? #'proc)
             (or (free-label-identifier=? #'proc #'procedure)
                 (free-label-identifier=? #'proc #'kernel)
-                (free-label-identifier=? #'proc #'grammar)
-                (free-label-identifier=? #'proc #'grammar*)))
+                (free-label-identifier=? #'proc #'grammar)))
        (let ([out-type (identifier->type #'out stx)]
              [arg-types (map (curryr identifier->type stx) (syntax->list #'(type ...)))])
          (when (free-label-identifier=? #'proc #'kernel) 
@@ -202,13 +201,29 @@
 ; Typechecks the verify or synthesis query statement.
 (define (typecheck-query stx)
   (syntax-case stx ()
+    [(query #:forall [decl ...] #:bitwidth bw #:grammar-depth depth #:ensure form)
+     (parameterize ([current-env (env)])
+       (with-syntax ([(typed-decl ...) (map typecheck-query-declaration (syntax->list #'(decl ...)))]
+                     [typed-form       (typecheck #'form)]
+                     [typed-bw         (typecheck #'bw)]
+                     [typed-depth      (typecheck #'depth)])
+         (check-no-conversion (type-ref #'typed-bw) int #'typed-bw stx)
+         (check-no-conversion (type-ref #'typed-depth) int #'typed-depth stx)
+         (type-set (syntax/loc stx (query #:forall [typed-decl ...]
+                                          #:bitwidth typed-bw
+                                          #:grammar-depth typed-depth
+                                          #:ensure typed-form))
+                   void)))]
     [(query #:forall [decl ...] #:bitwidth bw #:ensure form)
      (parameterize ([current-env (env)])
        (with-syntax ([(typed-decl ...) (map typecheck-query-declaration (syntax->list #'(decl ...)))]
                      [typed-form       (typecheck #'form)]
                      [typed-bw         (typecheck #'bw)])
          (check-no-conversion (type-ref #'typed-bw) int #'typed-bw stx)
-         (type-set (syntax/loc stx (query #:forall [typed-decl ...] #:bitwidth typed-bw #:ensure typed-form)) void)))]
+         (type-set (syntax/loc stx (query #:forall [typed-decl ...]
+                                          #:bitwidth typed-bw
+                                          #:ensure typed-form))
+                   void)))]
     [(query #:forall [decl ...] #:ensure form)
      (parameterize ([current-env (env)])
        (with-syntax ([(typed-decl ...) (map typecheck-query-declaration (syntax->list #'(decl ...)))]
@@ -435,7 +450,6 @@
     (dict-set! procs #'choose         typecheck-choose)
     (dict-set! procs #'??             typecheck-??)
     (dict-set! procs #'grammar        typecheck-grammar)
-    (dict-set! procs #'grammar*       typecheck-grammar)
     
     (dict-set! procs #'procedure      typecheck-procedure)
     (dict-set! procs #'kernel         typecheck-procedure)
