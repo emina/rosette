@@ -37,8 +37,8 @@ Example Rosette programs can be found in the @tt{rosette/sdsl} folder.  Most of 
 
 The Rosette system ships with two dialects of the Rosette language: 
 
-@itemlist[@item{a @emph{safe} dialect, which is used throughout this guide, and}
-          @item{an @emph{unsafe} dialect, which is briefly described in the @seclink["ch:unsafe"]{last chapter}.}]
+@itemlist[@item{a @emph{safe} dialect, which is used in most of this guide, and}
+          @item{an @emph{unsafe} dialect, which is briefly described in @seclink["ch:unsafe"]{Chapter 8}.}]
 
 
 
