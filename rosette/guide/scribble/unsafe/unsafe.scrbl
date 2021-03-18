@@ -13,20 +13,20 @@
 @title[#:tag "ch:unsafe"]{Unsafe Operations}
 
 Throughout this guide, we have assumed that Rosette programs are 
-written in the @racket[rosette/safe] dialect of the full language.  
+written in the @racketmodname[rosette/safe] dialect of the full language.
 This dialect extends a core subset of Racket with @seclink["ch:essentials"]{solver-aided 
-functionality}.  In this chapter, we briefly discuss the @racket[rosette] 
+functionality}.  In this chapter, we briefly discuss the @racketmodname[rosette]
 dialect of the language, which exports all of Racket.  
 
-Safe use of the full @racket[rosette] language requires a basic understanding 
+Safe use of the full @racketmodname[rosette] language requires a basic understanding
 of how Rosette's Symbolic Virtual Machine (SVM) works  @~cite[rosette:pldi14].  
 Briefly, the SVM hijacks the normal Racket execution for all procedures and 
-constructs that are exported by @racket[rosette/safe].  Any programs that are 
-implemented exclusively in the @racket[rosette/safe] language are therefore 
+constructs that are exported by @racketmodname[rosette/safe].  Any programs that are
+implemented exclusively in the @racketmodname[rosette/safe] language are therefore
 fully under the SVM's control.  This means that the SVM can correctly interpret 
 the application of a procedure or a macro to a symbolic value, and it 
 can correctly handle any side-effects (in particular, writes to memory) performed 
-by @racket[rosette/safe] code.
+by @racketmodname[rosette/safe] code.
 
 The following snippet demonstrates the non-standard execution that the SVM needs to 
 perform in order to assign the expected meaning to Rosette code:
@@ -53,17 +53,17 @@ y
 (define sol2 (solve (assert (not b))))
 (evaluate y sol2)]
 
-Because the SVM controls only the execution of @racket[rosette/safe] code, 
-it cannot, in general, guarantee the safety or correctness of arbitrary @racket[rosette] programs. 
-As soon as a @racket[rosette] program calls an @tech[#:key "lifted construct"]{unlifted} Racket construct  
-(that is, a procedure or a macro not implemented in or provided by the @racket[rosette/safe] language), 
+Because the SVM controls only the execution of @racketmodname[rosette/safe] code,
+it cannot, in general, guarantee the safety or correctness of arbitrary @racketmodname[rosette] programs.
+As soon as a @racketmodname[rosette] program calls an @tech[#:key "lifted construct"]{unlifted} Racket construct
+(that is, a procedure or a macro not implemented in or provided by the @racketmodname[rosette/safe] language),
 the execution escapes back to the Racket interpreter.  The SVM has no control over the side-effects 
 performed by the Racket interpreter, or the meaning that it (perhaps incorrectly) assigns to programs 
 in the presence of symbolic values.  As a result, the programmer is responsible for ensuring that 
-a @racket[rosette] program continues to behave correctly after the execution returns from the Racket interpreter.
+a @racketmodname[rosette] program continues to behave correctly after the execution returns from the Racket interpreter.
 
-As an example of incorrect behavior, consider the following @racket[rosette] snippet.  
-The procedures @racket[make-hash], @racket[hash-ref], and @racket[hash-clear!] are not in @racket[rosette/safe].
+As an example of incorrect behavior, consider the following @racketmodname[rosette] snippet.
+The procedures @racket[make-hash], @racket[hash-ref], and @racket[hash-clear!] are not in @racketmodname[rosette/safe].
 Whenever they are invoked, the execution escapes to the Racket interpreter.
 
 @(rosette-eval '(require (only-in racket make-hash hash-clear! hash-ref)))

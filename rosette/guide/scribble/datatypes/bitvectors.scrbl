@@ -140,7 +140,7 @@ equality (@racket[bveq]) and signed / unsigned versions of
            [(bvor  [x (bitvector n)] ...+) (bitvector n)]
            [(bvxor [x (bitvector n)] ...+) (bitvector n)])]{
                                                             
-Returns the bitwise "and", "or", "xor" of one or more bitvector values of the same type.
+Returns the bitwise ``and'', ``or'', ``xor'' of one or more bitvector values of the same type.
 
  @examples[#:eval rosette-eval
  (bvand (bv -1 4) (bv 2 4))
