@@ -55,7 +55,7 @@ integers and reals (while being correct under the
 finite-precision semantics). For example, this program
 incorrectly says that no integer greater than 15 exists,
 because the setting of @racket[current-bitwidth] causes it
-to consider only values of @racket{x} that can be
+to consider only values of @racket[x] that can be
 represented as a 5-bit bitvector.
 
 @examples[#:eval rosette-eval #:label #f
@@ -387,15 +387,15 @@ the performance of @tt{verify-xform} to degrade, from a
 couple of seconds when @tt{N} = 5 to over a minute when @tt{N}
 = 20. To identify the source of this performance issue, we
 can invoke the @tech{symbolic profiler} on the verifier,
-producing the output below (after selecting the "Collapse
-solver time" checkbox):
+producing the output below (after selecting the ``Collapse
+solver time'' checkbox):
 
 @(image profile-xform.png #:scale 0.425)
 
 The symbolic profiler identifies @tt{list-set} as the
 bottleneck in this program. The output shows that @tt{list-set}
 creates many symbolic terms, and performs many symbolic
-operations (the "Union Size" and "Merge Cases" columns).
+operations (the ``Union Size'' and ``Merge Cases'' columns).
 
 The core issue here is an @tech{algorithmic mismatch}: @tt{list-set}
 makes a recursive call guarded by a short-circuiting

@@ -2,7 +2,8 @@
 
 @(require (for-label 
            rosette/base/form/define rosette/query/query 
-           rosette/base/core/term  
+           rosette/base/core/term
+           rosette/solver/solution
            (only-in rosette/base/base assert define-symbolic union?
                     vc clear-vc! bitvector bitvector? bv?
                     bitvector->natural integer->bitvector

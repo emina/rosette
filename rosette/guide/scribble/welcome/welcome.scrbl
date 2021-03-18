@@ -16,7 +16,7 @@ Rosette is a @emph{solver-aided} programming system with two components:
                 compiles them to logical constraints.  The SVM enables Rosette 
                 to use the solver to automatically reason about program behaviors.}]
 
-The name "Rosette" refers both to the language and the whole system.
+The name ``Rosette'' refers both to the language and the whole system.
 
 @section[#:tag "sec:get"]{Installing Rosette}
 

@@ -1,19 +1,21 @@
 #lang scribble/manual
 
-@(require (for-label racket (only-in racket/sandbox with-deep-time-limit))
-          (for-label  
+@(require (for-label
+           racket
+           (only-in racket/sandbox with-deep-time-limit)
            rosette/base/form/define
-           (only-in rosette/base/base assert assume vc vc-asserts vc-assumes clear-vc!)
-           rosette/query/query 
-           (only-in rosette/base/base bv? bitvector
+           rosette/query/query
+           rosette/solver/solution
+           (only-in rosette/base/base
+                    assert assume vc vc-asserts vc-assumes clear-vc!
+                    bv? bitvector
                     bvsdiv bvadd bvsle bvsub bvand
                     bvor bvxor bvshl bvlshr bvashr
                     bvnot bvneg)
            rosette/lib/synthax))
 
-@(require racket/sandbox  racket/runtime-path  scribble/core scribble/racket
-          scribble/example scribble/html-properties scriblib/footnote 
-          (only-in racket [unsyntax racket/unsyntax]))
+@(require racket/sandbox racket/runtime-path scribble/core scribble/racket
+          scribble/example scribble/html-properties scriblib/footnote)
 
 @(require (only-in "../refs.scrbl" ~cite rosette:onward13 rosette:pldi14)
           "../util/lifted.rkt")
@@ -140,7 +142,7 @@ Assumptions behave analogously to assertions on both concrete and symbolic value
 
 @section[#:tag "sec:queries"]{Solver-Aided Queries}
 
-The solver reasons about assumed and asserted properties only when we ask a question about them---for example, "Does my program have an execution that violates an assertion while satisfying all the assumptions?"  We pose such @emph{solver-aided queries} with the help of constructs explained in the remainder of this chapter.
+The solver reasons about assumed and asserted properties only when we ask a question about them---for example, ``Does my program have an execution that violates an assertion while satisfying all the assumptions?''  We pose such @emph{solver-aided queries} with the help of constructs explained in the remainder of this chapter.
 
 We will illustrate the queries on the following toy example. Suppose that we want to implement a
 procedure @racket[bvmid] that takes as input two non-negative 32-bit integers, @racket[lo] ≤ @racket[hi],
@@ -321,7 +323,7 @@ The synthesis query takes the form @racket[(synthesize #:forall #, @var[input] #
 
 Rosette supports one more solver-aided query, which we call angelic execution. This query is the dual of verification.  Given a program with symbolic values, it instructs the solver to find a binding for them that will cause the program to execute normally---that is, without any assumption or assertion failures. 
 
-Angelic execution can be used to solve puzzles, to run incomplete code, or to "invert" a program, by searching for inputs that produce a desired output.  For example, we can ask the solver to search for two distinct legal inputs, @racket[l] and @racket[h], whose midpoint is the bitwise-and of their bits: 
+Angelic execution can be used to solve puzzles, to run incomplete code, or to ``invert'' a program, by searching for inputs that produce a desired output.  For example, we can ask the solver to search for two distinct legal inputs, @racket[l] and @racket[h], whose midpoint is the bitwise-and of their bits:
 @examples[#:eval rosette-eval #:label #f 
 (define (bvmid-fast lo hi)
   (bvlshr (bvadd hi lo) (bv #x00000001 32)))
@@ -480,7 +482,7 @@ n2
 n3]
 In general, recursion terminates under symbolic evaluation only when the stopping condition is reached with concrete values.
 
-We can force termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. The following code shows how to implement a @emph{sound} finitization policy. If a @racket[verify] query returns @racket[(unsat)] under a sound policy, we know that (1) the unrolling bound @var{k} is sufficient to execute all possible inputs to  @racket[bvsqrt], and (2) all of these executions satisfy the query. If we pick a bound that is too small, the query will generate a counterexample input that needs a larger bound to compute the result. In our example, the bound of 16 is sufficient to verify the correctness of @racket[sqrt] on all inputs: 
+We can force termination by placing a concrete bound @var{k} on the number of times @racket[bvsqrt] can call itself recursively. This approach is called @deftech{finitization}, and it is the standard way to handle unbounded loops and recursion under symbolic evaluation. The following code shows how to implement a @emph{sound} finitization policy. If a @racket[verify] query returns @racket[(unsat)] under a sound policy, we know that (1) the unrolling bound @var{k} is sufficient to execute all possible inputs to  @racket[bvsqrt], and (2) all of these executions satisfy the query. If we pick a bound that is too small, the query will generate a counterexample input that needs a larger bound to compute the result. In our example, the bound of 16 is sufficient to verify the correctness of @racket[bvsqrt] on all inputs:
 @(rosette-eval '(clear-vc!))
 @(rosette-eval '(require (only-in racket make-parameter parameterize)))
 @examples[#:eval rosette-eval #:label #f #:no-prompt

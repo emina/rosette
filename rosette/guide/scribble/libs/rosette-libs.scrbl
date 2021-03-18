@@ -367,7 +367,7 @@ sol
   generated for programs that have been saved to disk.
 
   This procedure cooperates with the constructs in the
-  @racket[rosette/lib/synthax] library to turn solutions into
+  @racketmodname[rosette/lib/synthax] library to turn solutions into
   code. It works by scanning program files for
   @racketlink[??]{constant}, @racketlink[choose]{choice}, and
   @racketlink[define-grammar]{grammar} holes, and replacing
