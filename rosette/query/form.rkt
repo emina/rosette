@@ -76,8 +76,10 @@
    #'(let ([obj opt]    ; evaluate objective first to add its spec to (vc)
            [post (query-vc expr)])
        (∃-solve `(,@(pre) ,(vc-assumes post) ,(vc-asserts post)) kw obj))]
-  [(_ #:minimize opt1 #:maximize opt2 #:guarantee expr)
+  [(_ {~and kw1 {~or* #:minimize #:maximize}} opt1
+      {~and kw2 {~or* #:minimize #:maximize}} opt2
+      #:guarantee expr)
    #'(let ([obj1 opt1]  ; evaluate objectives first to add their spec to (vc)
            [obj2 opt2]
            [post (query-vc expr)])
-       (∃-solve `(,@(pre) ,(vc-assumes post) ,(vc-asserts post)) #:minimize obj1 #:maximize obj2))])
+       (∃-solve `(,@(pre) ,(vc-assumes post) ,(vc-asserts post)) kw1 obj1 kw2 obj2))])
