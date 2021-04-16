@@ -272,13 +272,13 @@
 (define tests:rotate-left
   (test-suite+
    "Tests for rotate-left in rosette/base/bvlib.rkt"
-   #:features '(qf_lia qf_bv)
+   #:features '(qf_lia int2bv qf_bv)
    (check-rotate rotate-left rotate-right bvrol)))
 
 (define tests:rotate-right
   (test-suite+
    "Tests for rotate-right in rosette/base/bvlib.rkt"
-   #:features '(qf_lia qf_bv)
+   #:features '(qf_lia int2bv qf_bv)
    (check-rotate rotate-right rotate-left bvror)))
 
 (module+ test
