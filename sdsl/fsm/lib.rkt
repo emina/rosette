@@ -1,7 +1,6 @@
 #lang rosette
 
 (require 
- rosette/lib/lift 
  (prefix-in racket/ (only-in racket string-append symbol->string regexp-match?)))
 
 (provide (all-defined-out))

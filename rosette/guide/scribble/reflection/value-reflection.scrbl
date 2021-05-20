@@ -241,8 +241,8 @@ as well as for tuning the performance of symbolic
 evaluation.
 
 
-@declare-exporting[rosette/base/core/forall rosette/lib/lift
-                   #:use-sources (rosette/base/core/forall rosette/lib/lift)]
+@declare-exporting[rosette/base/core/forall
+                   #:use-sources (rosette/base/core/forall)]
 
 @defform[(for/all ([id val-expr maybe-exhaustive]) body ...+)
          #:grammar [(maybe-exhaustive (code:line) #:exhaustive)]]{
