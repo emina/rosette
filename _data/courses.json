@@ -7,6 +7,13 @@
     "url": "https://courses.cs.washington.edu/courses/cse507/19au/index.html",
     "terms": [ "19au", "19wi", "18sp", "17wi", "16sp", "14au" ]},
 
+  { "course": "CSC 530",
+    "title": "Languages and Translators",
+    "level": "graduate",
+    "institution": "Cal Poly",
+    "url": "https://www.brinckerhoff.org/clements/2214-csc530",
+    "terms": [ "21sp" ]},
+
   { "course": "CS162",
       "title": "Programming Languages",
       "level": "undergraduate",
