@@ -14,10 +14,8 @@
   ; the procedure for handling connections
   (define (ws-connection conn _state)
     ; only one client may connect
-    (let loop ([tries 128])
+    (let loop ()
       (cond
-        [(zero? tries) (channel-put channel "another client is already connected")
-                       (ws-close! conn)]
         [(box-cas! connected? #f #t)  ; we won the race to connect
          ; tell the main thread we're connected
          (channel-put channel 'connected)
@@ -45,7 +43,11 @@
                     (unless (eq? sync-result 'finish)
                       (channel-get channel))
                     (channel-put channel 'finish)]))))]
-        [else (loop (sub1 tries))])))
+        [(unbox connected?)
+         ;; it's already connected
+         (channel-put channel "another client is already connected")
+         (ws-close! conn)]
+        [else (loop)])))
 
   ; start the server
   (define conf-channel (make-async-channel))
