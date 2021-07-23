@@ -78,8 +78,13 @@
              ; all events from the box. if that happened then the ENTER we're trying
              ; to delete has already been published, and so we need to retain the
              ; corresponding EXIT.
-             (unless (box-cas! the-box evts (cdr evts))
-               (do-record-exit! out))]))))))
+             (let loop ()
+               (unless (box-cas! the-box evts (cdr evts))
+                 (if (eq? evts (unbox the-box))
+                     ; spurious CAS failure; retry
+                     (loop)
+                     ; box has changed, so we need to retain the EXIT
+                     (do-record-exit! out))))]))))))
 
 ; Default version just uses the current-profile/current-reporter params
 (define default-record-exit
