@@ -150,12 +150,12 @@
 ; ∃H. (∀I. assumes => asserts) ∧ (∃I. assumes).
 (define (cegis inputs assumes asserts guesser checker)
   
-  (define φ   (append assumes asserts))
+  (define  φ `(,(=> (apply && assumes) (apply && asserts))))
   
   (define ¬φ `(,@assumes ,(apply || (map ! asserts))))
-  
-  (define (guess sol)
-    (solver-assert guesser (evaluate φ sol))
+
+  (define (guess ψ)
+    (solver-assert guesser ψ)
     (match (solver-check guesser)
       [(model m) (sat (for/hash ([(c v) m] #:unless (member c inputs)) (values c v)))]
       [other other]))
@@ -171,14 +171,14 @@
                                          v)))))]
       [other other]))
     
-  (let loop ([candidate (begin0 (guess (sat)) (solver-clear guesser))])
+  (let loop ([candidate (guess (append assumes asserts))])
     (cond 
       [(unsat? candidate) candidate]
       [else
         (let ([cex (check candidate)])
           (cond 
             [(unsat? cex) candidate]
-            [else (loop (guess cex))]))])))
+            [else (loop (guess (evaluate φ cex)))]))])))
 
 
         
