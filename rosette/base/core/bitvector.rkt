@@ -19,15 +19,13 @@
 ;; ----------------- Bitvector Types ----------------- ;; 
 
 ; Cache of all bitvector types constructed so far, mapping sizes to types.
-(define bitvector-types (make-hash))
+(define bitvector-types (make-hasheq))
 
 ; Returns the bitvector type of the given size.
 (define (bitvector-type size)
-  (assert (exact-positive-integer? size) (argument-error 'bitvector "exact-positive-integer?" size))
-  (or (hash-ref bitvector-types size #f)
-      (let ([t (bitvector size)]) 
-        (hash-set! bitvector-types size t)
-        t)))
+  (assert (and (exact-positive-integer? size) (fixnum? size))
+          (argument-error 'bitvector "(and/c exact-positive-integer? fixnum?)" size))
+  (hash-ref! bitvector-types size (λ () (bitvector size))))
 
 ; Represents a bitvector type.
 (struct bitvector (size)
@@ -595,7 +593,7 @@
                       _))
      (if (< i size)
          (extract i j a)
-         (expression @bvop a (bitvector (add1 i))))]
+         (expression @bvop a (bitvector-type (add1 i))))]
     [(_ _ _) (expression @extract i j x)]))
         
 (define-operator @extract
