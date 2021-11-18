@@ -5,7 +5,7 @@
 (define deps '("custom-load"
                "sandbox-lib"
                "scribble-lib"
-               ("racket" #:version "8.0")
+               ("racket" #:version "8.1")
                "r6rs-lib"
                "rfc6455"
                "net-lib"
