@@ -10,7 +10,7 @@ jobs:
   test:
     strategy:
       matrix:
-        racket-version: ['8.0', 'current']
+        racket-version: ['8.1', 'current']
         racket-variant: ['CS']
         allow-failure: [false]
     name: Racket ${{ matrix.racket-version }} (${{ matrix.racket-variant }})
