@@ -152,7 +152,7 @@
   (match* ((car p) (cdr p))
     [(a (expression (== ite) a x _)) (cons a x)]
     [(a (expression (== ite) (expression (== @!) a) _ x)) (cons a x)]
-    [((expression (== @!) a) (expression (== ite) a _ x)) (cons a x)]
+    [((and (expression (== @!) a) !a) (expression (== ite) a _ x)) (cons !a x)]
     [(_ _) p]))
 
 
