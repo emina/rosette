@@ -124,6 +124,8 @@
           (match (server-read server (read))
             [(list (== 'model) ... (and def (list (== 'define-fun) _ ...)) ...)
              (for/hash ([d def]) (values (cadr d) d))]
+            [(list  (and def (list (== 'define-fun) _ ...)) ...)
+             (for/hash ([d def]) (values (cadr d) d))]
             [other (error 'read-solution "expected model, given ~a" other)])]
          [(== 'unsat) 'unsat]
          [(== 'unknown) 'unknown]
