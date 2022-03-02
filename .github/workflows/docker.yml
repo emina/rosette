@@ -1,0 +1,51 @@
+name: Docker
+
+on:
+  push:
+    tags:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.BOT_PAT }}
+          submodules: recursive
+
+      - name: Configure Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/emina/rosette
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Authenticate to Package Registry
+        uses: docker/login-action@v1
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and Publish Sekkou Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
