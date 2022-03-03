@@ -91,4 +91,4 @@ WORKDIR /rosette
 ## Rosette files are simply Racket files using the Rosette library: the default
 ## entry point of this image is therefore the Racket executable.
 ##
-ENTRYPOINT ["/usr/bin/racket"]
+ENTRYPOINT ["/usr/bin/racket", "-I", "rosette"]
