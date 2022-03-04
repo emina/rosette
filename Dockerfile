@@ -1,5 +1,3 @@
-# FROM racket/racket:8.3-full
-
 FROM alpine:3.15
 
 ## ==========================  [ Install Racket ] =========================== ##
