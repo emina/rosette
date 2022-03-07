@@ -9,14 +9,19 @@ FROM alpine:3.15
 ARG RACKET_VERSION=8.4
 ARG RACKET_VARIANT=cs
 
-## Install Racket. This goes by downloading the installer, running it with the
-## right parameters, then removing it. [gcompat] is needed for Racket.
+## Install Racket. We first install system dependencies: [gcompat] is needed for
+## Racket and [ncurses] is needed for the [xrepl] and [expeditor] packages,
+## providing the REPL. We then download the installer, run it with the right
+## parameters, then remove it. After that, all that remains is to set-up the
+## Racket packages and install [expeditor]. See later for a description of the
+## arguments to [raco pkg install].
 ##
-RUN apk add --no-cache gcompat
+RUN apk add --no-cache gcompat ncurses
 RUN wget "https://download.racket-lang.org/installers/${RACKET_VERSION}/racket-minimal-${RACKET_VERSION}-x86_64-linux-${RACKET_VARIANT}.sh"
 RUN echo 'yes\n1\n' | sh racket-minimal-${RACKET_VERSION}-x86_64-linux-${RACKET_VARIANT}.sh --create-dir --unix-style --dest /usr/
 RUN rm racket-minimal-${RACKET_VERSION}-x86_64-linux-${RACKET_VARIANT}.sh
 RUN raco setup --no-docs
+RUN raco pkg install -i --batch --auto --no-docs expeditor-lib
 
 ## =================== [ Install Rosette's Dependencies ] =================== ##
 
