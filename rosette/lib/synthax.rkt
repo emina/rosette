@@ -296,4 +296,4 @@
 (define (print-forms sol)
   (for ([f (generate-forms sol)])
     (printf "~a:~a:~a\n" (syntax-source f) (syntax-line f) (syntax-column f))
-    (pretty-print (syntax->datum f))))
+    (pretty-write (syntax->datum f))))
