@@ -1,13 +1,17 @@
 # Release Notes
 
+## Version 4.1
+
+This is a minor bug-fixing release.
+
 ## Version 4.0
 
 This is a major release with significant changes to the language and the runtime.  Rosette 4.0 is *not backward compatible* with Rosette 3.x. But porting Rosette 3.x code to Rosette 4.0 should be straightforward for most applications.
 
 This release includes the following features:
 
-- Support for assumptions (see `assume`). 
-- New symbolic evaluation core that tracks verification conditions (VCs) rather than path conditions and assertions. 
+- Support for assumptions (see `assume`).
+- New symbolic evaluation core that tracks verification conditions (VCs) rather than path conditions and assertions.
 - New symbolic reflection constructs for working with VCs, including `vc`, `with-vc`, and `clear-vc!`.
 - New symbolic reflection facilities for managing symbolic `terms`, including the option of using a garbage-collected data structure.
 - Updated `verify`, `synthesize`, `solve`, and `optimize` queries.
@@ -18,7 +22,7 @@ This release includes the following features:
 The following features have been removed:
 
 - The `debug` query.
-- Reflection facilities for working with path conditions and assertions: `pc`, `with-asserts`, `with-asserts-only`, `clear-asserts!`, and `asserts`.  
+- Reflection facilities for working with path conditions and assertions: `pc`, `with-asserts`, `with-asserts-only`, `clear-asserts!`, and `asserts`.
 - Support for CPLEX.
 
 ## Version 3.2
@@ -29,11 +33,11 @@ This release includes minor updates and a new [value destructuring library].
 
 ## Version 3.1
 
-This release includes bug fixes and updates Rosette to use the latest version of Z3 as its default SMT solver. 
+This release includes bug fixes and updates Rosette to use the latest version of Z3 as its default SMT solver.
 
 This release also includes the following new functionality contributed by [Sorawee Porncharoenwase][]:
 
-- An interactive [value browser][] to help programmers navigate and read complex symbolic values. 
+- An interactive [value browser][] to help programmers navigate and read complex symbolic values.
 - An *error tracer* for finding bugs in Rosette programs that manifest as exceptions intercepted during symbolic evaluation. To use the error tracer, run the command `raco symtrace <prog>`. The [debugging][] chapter in the Rosette guide describes some common issues due to intercepted exceptions, how to test for them, and how to find them with the error tracer.
 
 
@@ -67,7 +71,7 @@ This release also includes the following new functionality and features contribu
 
 This release includes bug fixes and the following updates:
 
-- Added support for quantified formulas.  Quantifiers can appear in assertions passed to `solve` and `verify` queries.  They should not be used with `synthesize` queries.  When using quantified formulas, `current-bitwidth` must be set to `#f`.  
+- Added support for quantified formulas.  Quantifiers can appear in assertions passed to `solve` and `verify` queries.  They should not be used with `synthesize` queries.  When using quantified formulas, `current-bitwidth` must be set to `#f`.
 - Added the `unknown` solution type. An `unknown` solution is returned if the underlying solver cannot decide if a given set of constraints is (un)satisfiable.
 - Added the `distinct?` predicate that returns true iff all of its arguments are pairwaise un-equal.  This has a direct (efficient) translation to Z3 if the arguments are primitive solvable values (booleans, integers, reals, or bitvectors).
 
