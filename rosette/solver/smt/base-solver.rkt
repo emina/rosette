@@ -142,6 +142,11 @@
             [(list (== 'model) def ...)
              (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
                (values (cadr d) d))]
+            ;; the result of a get-model command compatible with SMT-LIB standard
+            ;; https://groups.google.com/g/smt-lib/c/5xpcIxdQ8-A/m/X4uQ7dIgAwAJ
+            [(list def ...)
+             (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
+               (values (cadr d) d))]
             [other (error 'read-solution "expected model, given ~a" other)]))]
        [(== 'unsat)
         (if unsat-core?
