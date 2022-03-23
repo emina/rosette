@@ -107,27 +107,10 @@
 
 
 ; Reads the SMT solution from the server.
-; The solution consists of 'sat or 'unsat, followed by  
-; followed by a suitably formatted s-expression.  The 
-; output of this procedure is a hashtable from constant 
-; identifiers to their SMTLib values (if the solution is 'sat);
-; a non-empty list of assertion identifiers that form an
-; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); #f (if the solution is 
-; 'unsat and no core was extracted); or 'unknown otherwise.
+; This is the same as `base/read-solution` except that it applies some fixups
+; for quirks in how various versions of Boolector have emitted models.
 (define (boolector-read-solution server env)
-  (define raw-model
-    (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
-       (match (server-read server (read))
-         [(== 'sat)
-          (server-write server (get-model))
-          (match (server-read server (read))
-            [(list (== 'model) ... (and def (list (== 'define-fun) _ ...)) ...)
-             (for/hash ([d def]) (values (cadr d) d))]
-            [other (error 'read-solution "expected model, given ~a" other)])]
-         [(== 'unsat) 'unsat]
-         [(== 'unknown) 'unknown]
-         [other (error 'read-solution "unrecognized solver output: ~a" other)])))
+  (define raw-model (base/parse-solution server))
   ; First, we need to fix up the model's shadowing of incremental variables
   (define stripped-raw-model (if (hash? raw-model) (fixup-incremental-names raw-model) raw-model))
   ; Now decode in an environment with fake types for UFs

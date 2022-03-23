@@ -122,35 +122,40 @@
 
 
 ; Reads the SMT solution from the server.
-; The solution consists of 'sat or 'unsat, followed by  
-; followed by a suitably formatted s-expression.  The 
-; output of this procedure is a hashtable from constant 
+; The solution consists of 'sat or 'unsat, followed by
+; followed by a suitably formatted s-expression.  The
+; output of this procedure is a hashtable from constant
 ; identifiers to their SMTLib values (if the solution is 'sat);
 ; a non-empty list of assertion identifiers that form an
-; unsatisfiable core (if the solution is 'unsat and a 
-; core was extracted); #f (if the solution is 
+; unsatisfiable core (if the solution is 'unsat and a
+; core was extracted); #f (if the solution is
 ; 'unsat and no core was extracted); or 'unknown otherwise.
 (define (read-solution server env #:unsat-core? [unsat-core? #f])
-  (decode
-   (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
-     (match (server-read server (read))
-       [(== 'sat)
-        (server-write server (get-model))
-        (let loop ()
-          (match (server-read server (read))
-            [(list (== 'objectives) _ ...) (loop)]
-            [(list (== 'model) def ...)
-             (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
-               (values (cadr d) d))]
-            [other (error 'read-solution "expected model, given ~a" other)]))]
-       [(== 'unsat)
-        (if unsat-core?
-            (begin
-              (server-write server (get-unsat-core))
-              (match (server-read server (read))
-                [(list (? symbol? name) ...) name]
-                [other (error 'read-solution "expected unsat core, given ~a" other)]))
-            'unsat)]
-       [(== 'unknown) 'unknown]
-       [other (error 'read-solution "unrecognized solver output: ~a" other)]))
-   env))
+  (decode (parse-solution server #:unsat-core? unsat-core?) env))
+
+(define (parse-solution server #:unsat-core? [unsat-core? #f])
+  (parameterize ([current-readtable (make-readtable #f #\# #\a #f)]) ; read BV literals as symbols
+    (match (server-read server (read))
+      [(== 'sat)
+       (server-write server (get-model))
+       (let loop ()
+         (match (server-read server (read))
+           [(list (== 'objectives) _ ...) (loop)]
+           ; The SMT-LIB spec says that a model should be just a list of
+           ; `define-fun`s, but many SMT solvers used to prefix that list
+           ; with `model`, so let's support both versions.
+           ; https://groups.google.com/g/smt-lib/c/5xpcIxdQ8-A/m/X4uQ7dIgAwAJ
+           [(or (list (== 'model) def ...) (list def ...))
+            (for/hash ([d def] #:when (and (pair? d) (equal? (car d) 'define-fun)))
+              (values (cadr d) d))]
+           [other (error 'read-solution "expected model, given ~a" other)]))]
+      [(== 'unsat)
+       (if unsat-core?
+           (begin
+             (server-write server (get-unsat-core))
+             (match (server-read server (read))
+               [(list (? symbol? name) ...) name]
+               [other (error 'read-solution "expected unsat core, given ~a" other)]))
+           'unsat)]
+      [(== 'unknown) 'unknown]
+      [other (error 'read-solution "unrecognized solver output: ~a" other)])))
