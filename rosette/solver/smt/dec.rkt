@@ -116,7 +116,6 @@
         (hash-ref ~env id)]
        [(== true) #t]
        [(== false) #f]
-       [(? integer?) (inexact->exact expr)]
        [(? real?) expr]
        [(? symbol?)
         (cond
