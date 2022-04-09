@@ -48,10 +48,11 @@
 
 (define-simple-macro (destruct val [pat:clause-pattern e:expr ...+] ...)
   #:do [(for-each check-duplicate-identifier! (attribute pat.id-set))]
+  #:with match-expr (syntax/loc this-syntax (match var [pat (begin e ...)] ...))
   #:with result
   (syntax/loc this-syntax
     (for/all ([var val]);(guarded-values val)])
-      (match var [pat (begin e ...)] ...)))
+      match-expr))
   result)
 
 (define-simple-macro (destruct* (val ...) [(pat:clause-pattern ...) e:expr ...+] ...)
