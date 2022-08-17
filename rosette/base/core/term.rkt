@@ -121,14 +121,21 @@
 (define (term<? s1 s2) (< (term-ord s1) (term-ord s2)))
 
 (define-syntax-rule (make-term term-constructor args type rest ...) 
-  (let ([val args])
-    (or (hash-ref (current-terms) val #f)
-        (let* ([ord (current-index)]
-               [out (term-constructor val type ord rest ...)])
-          (current-index (add1 ord))
-          ((current-reporter) 'new-term out)
-          (hash-set! (current-terms) val out)
-          out))))
+  (let ([val args]
+        [ty type])
+    (define cached (hash-ref (current-terms) val #f))
+    (cond
+      [cached
+       (unless (equal? (term-type cached) ty)
+         (error 'define-symbolic "type should remain unchanged"))
+       cached]
+      [else
+       (define ord (current-index))
+       (define out (term-constructor val ty ord rest ...))
+       (current-index (add1 ord))
+       ((current-reporter) 'new-term out)
+       (hash-set! (current-terms) val out)
+       out])))
            
 (define (make-const id t) 
   (unless (and (type? t) (solvable? t))

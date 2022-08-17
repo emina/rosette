@@ -14,6 +14,10 @@
 (define-symbolic b @boolean?)
 (define-symbolic c @boolean?)
 
+(define (f type)
+  (define-symbolic x type)
+  x)
+
 (define (check-ordered v1 v2)
   (check-true (and (or (term<? v1 v2) (term<? v2 v1)) 
                    (not (and (term<? v1 v2) (term<? v2 v1))))))
@@ -49,7 +53,10 @@
    (check-cached @/ x y)
    (check-cached @remainder x y)
    (check-cached @= x y)
-   (check-cached @< x y)))
+   (check-cached @< x y)
+
+   (f @integer?)
+   (check-exn #px"type should remain unchanged" (lambda () (f @boolean?)))))
 
 (module+ test
   (time (run-tests value-tests)))
