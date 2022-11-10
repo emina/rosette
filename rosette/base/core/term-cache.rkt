@@ -95,14 +95,14 @@
   (match h
     [(term-cache nullary unary binary ternary nary)
      (+ (hash-count nullary)
-        (for/sum ([(_ h) (in-hash unary)])
+        (for/sum ([h (in-hash-values unary)])
           (hash-count h))
-        (for/sum ([(_ h) (in-hash binary)])
-          (for/sum ([(_ h) (in-hash h)])
+        (for/sum ([h (in-hash-values binary)])
+          (for/sum ([h (in-hash-values h)])
             (hash-count h)))
-        (for/sum ([(_ h) (in-hash ternary)])
-          (for/sum ([(_ h) (in-hash h)])
-            (for/sum ([(_ h) (in-hash h)])
+        (for/sum ([h (in-hash-values ternary)])
+          (for/sum ([h (in-hash-values h)])
+            (for/sum ([h (in-hash-values h)])
               (hash-count h))))
         (hash-count nary))]
     [_ (hash-count h)]))
@@ -118,11 +118,20 @@
     [_ (hash-copy h)]))
 
 (define (term-cache-copy-clear h)
+  ;; NOTE: we don't use hash-copy-clear because hash-copy-clear for Racket 8.1
+  ;; is buggy. See https://github.com/racket/racket/pull/4094
   (cond
     [(term-cache-weak? h) (make-weak-term-cache)]
     [else (make-term-cache)]))
 
 (define (term-cache->hash h term-val)
+  ;; NOTE: it is important that we use (term-val v) instead of reconstruct
+  ;; a hash key ourselves. Otherwise, the GC can potentially consider these
+  ;; freshly reconstructed terms unreachable, as they are not eq? to values
+  ;; that are currently reachable. In particular, after we gc-terms!,
+  ;; which switches the representation to ephemeron hash,
+  ;; the reconstructed terms would truly be unreachable, incorrectly dropping
+  ;; terms from the cache.
   (match h
     [(term-cache nullary unary binary ternary nary)
      (define h* (hash-copy nary))
