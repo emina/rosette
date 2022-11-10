@@ -58,5 +58,42 @@
    (f @integer?)
    (check-exn #px"type should remain unchanged" (lambda () (f @boolean?)))))
 
+(define clear-terms!+gc-terms!-tests
+  (test-suite+
+   "Tests for clear-terms! and gc-terms!"
+
+   (with-terms '()
+     (let ()
+       (define-symbolic x y z @integer?)
+       (define a (@+ x 1))
+       (define b (@+ y 2))
+       (define c (@+ z 3))
+       (check-equal? (length (terms)) 6)
+
+       ;; this should evict z and c
+       (clear-terms! (list z))
+
+       (check-equal? (length (terms)) 4)
+
+       ;; this doesn't affect strongly-held values
+       (set! b #f)
+
+       (check-equal? (length (terms)) 4)
+
+       (gc-terms!) ; change the representation
+       (collect-garbage)
+
+       (check-equal? (length (terms)) 3)
+
+       (clear-terms! (list x))
+       (collect-garbage)
+
+       (check-equal? (length (terms)) 1)
+
+       ;; this is a dummy check to reference a, b, and c so that
+       ;; they are not garbage-collected earlier
+       (check-equal? (length (list a b c)) 3)))))
+
 (module+ test
-  (time (run-tests value-tests)))
+  (time (run-tests value-tests))
+  (time (run-tests clear-terms!+gc-terms!-tests)))

@@ -19,7 +19,12 @@
 ; These IDs are never reused, and they are used to impose an ordering on the children
 ; of expressions with commutative operators.
 #|-----------------------------------------------------------------------------------|#
-(define current-terms (make-parameter (make-hash)))
+
+;; Initialize with #f so that the hash table cooperates with garbage collector.
+;; See #247
+(define current-terms (make-parameter #f))
+(current-terms (make-hash))
+
 (define current-index (make-parameter 0))
 
 ; Clears the entire term cache if invoked with #f (default), or 
@@ -41,7 +46,7 @@
               (set-add! evicted t))
             (loop))))))
 
-; Sets the current term cache to a garbage-collected (weak) hash.
+; Sets the current term cache to a garbage-collected (ephemeron) hash.
 ; The setting preserves all reachable terms from (current-terms).
 (define (gc-terms!)
   (unless (hash-weak? (current-terms)) ; Already a weak hash.
@@ -77,17 +82,23 @@
 ; restores (terms) to its old value. If terms-expr is not given, it defaults to
 ; (terms), so (with-terms expr) is equivalent to (with-terms (terms) expr).
 (define-syntax (with-terms stx)
+  ;; Parameterize with #f so that the hash table cooperates with garbage collector.
+  ;; See #247
   (syntax-parse stx
     [(_ expr)
-     #'(parameterize ([current-terms (hash-copy (current-terms))])
-         expr)]
+     #'(let ([orig-terms (current-terms)])
+         (parameterize ([current-terms #f])
+           (current-terms (hash-copy orig-terms))
+           expr))]
     [(_ terms-expr expr)
-     #'(parameterize ([current-terms (hash-copy-clear (current-terms))])
-         (let ([ts terms-expr]
-               [cache (current-terms)])
-           (for ([t ts])
-             (hash-set! cache (term-val t) t))
-           expr))]))
+     #'(let ([orig-terms (current-terms)])
+         (parameterize ([current-terms #f])
+           (current-terms (hash-copy-clear orig-terms))
+           (let ([ts terms-expr]
+                 [cache (current-terms)])
+             (for ([t ts])
+               (hash-set! cache (term-val t) t))
+             expr)))]))
            
          
     
