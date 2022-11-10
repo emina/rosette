@@ -40,7 +40,7 @@
                  "Only install the compile handler; do not run the profiler"
                  (run-profiler? #f)]
                 [("-m" "--module") name
-                 "Run submodule <name> (defaults to 'main)"
+                 "Run submodule <name> (defaults to 'main')"
                  (module-name (string->symbol name))]
                 [("-r" "--racket")
                  "Instrument code in any language, not just `#lang rosette`"
