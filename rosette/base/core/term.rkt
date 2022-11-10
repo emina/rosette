@@ -2,7 +2,8 @@
 
 (require racket/syntax (for-syntax racket racket/syntax syntax/parse)
          racket/generic syntax/parse 
-         "type.rkt" "reporter.rkt")
+         "type.rkt" "reporter.rkt"
+         "term-cache.rkt")
 
 (provide
  terms terms-count terms-ref with-terms clear-terms! gc-terms!
@@ -10,6 +11,7 @@
  (rename-out [a-term term] [an-expression expression] [a-constant constant] [term-ord term-id]) 
  term-type term<? sublist? @app
  define-operator operator? operator-unsafe
+ prop:term-cachable
  (all-from-out "type.rkt"))
 
 #|-----------------------------------------------------------------------------------|#
@@ -23,7 +25,7 @@
 ;; Initialize with #f so that the hash table cooperates with garbage collector.
 ;; See #247
 (define current-terms (make-parameter #f))
-(current-terms (make-hash))
+(current-terms (make-term-cache))
 
 (define current-index (make-parameter 0))
 
@@ -31,52 +33,42 @@
 ; it clears all terms reachable from the given set of leaf terms.
 (define (clear-terms! [terms #f])
   (if (false? terms)
-      (hash-clear! (current-terms))
-      (let ([cache (current-terms)]
+      (current-terms (term-cache-copy-clear (current-terms)))
+      (let ([cache (term-cache->hash (current-terms) term-val)]
             [evicted (list->mutable-set terms)])
-        (for ([t terms])
+        (for ([t (in-list terms)])
           (hash-remove! cache (term-val t)))
         (let loop ()
-          (define delta  
-            (for/list ([(k t) cache] #:when (and (list? k) (for/or ([c k]) (set-member? evicted c))))
+          (define delta
+            (for/list ([(k t) (in-hash cache)] #:when (and (list? k) (for/or ([c (in-list k)]) (set-member? evicted c))))
               t))
           (unless (null? delta)
-            (for ([t delta])
+            (for ([t (in-list delta)])
               (hash-remove! cache (term-val t))
               (set-add! evicted t))
-            (loop))))))
+            (loop)))
+        (unless (term-cache-weak? (current-terms))
+          (current-terms (make-term-cache (hash->list cache)))))))
 
 ; Sets the current term cache to a garbage-collected (weak) hash.
 ; The setting preserves all reachable terms from (current-terms).
 (define (gc-terms!)
-  (unless (hash-weak? (current-terms)) ; Already a weak hash.
-    (define cache
-      (impersonate-hash
-       (make-weak-hash)
-       (lambda (h k)
-         (values k (lambda (h k e) (ephemeron-value e #f))))
-       (lambda (h k v)
-         (values k (make-ephemeron k v)))
-       (lambda (h k) k)
-       (lambda (h k) k)
-       hash-clear!))
-    (for ([(k v) (current-terms)])
-      (hash-set! cache k v))
-    (current-terms cache)))
+  (unless (term-cache-weak? (current-terms)) ; Already a weak hash.
+    (current-terms (make-weak-term-cache (hash->list (term-cache->hash (current-terms) term-val))))))
 
 ; Returns the term from current-terms that has the given contents. If
 ; no such term exists, failure-result is returned, unless it is a procedure.
 ; If failure-result is a procedure, it is called and its result is returned instead.
 (define (terms-ref contents [failure-result (lambda () (error 'terms-ref "no term for ~a" contents))])
-  (hash-ref (current-terms) contents failure-result))
+  (term-cache-ref (current-terms) contents failure-result))
 
 ; Returns a list of all terms in the current-term scache, in an unspecified order.
 (define (terms)
-  (hash-values (current-terms)))
+  (hash-values (term-cache->hash (current-terms) term-val)))
 
 ; Returns the size of the current-terms cache.
 (define (terms-count)
-  (hash-count (current-terms)))
+  (term-cache-count (current-terms)))
 
 ; Evaluates expr with (terms) set to terms-expr, returns the result, and
 ; restores (terms) to its old value. If terms-expr is not given, it defaults to
@@ -88,20 +80,17 @@
     [(_ expr)
      #'(let ([orig-terms (current-terms)])
          (parameterize ([current-terms #f])
-           (current-terms (hash-copy orig-terms))
+           (current-terms (term-cache-copy orig-terms))
            expr))]
     [(_ terms-expr expr)
      #'(let ([orig-terms (current-terms)])
          (parameterize ([current-terms #f])
-           (current-terms (hash-copy-clear orig-terms))
+           (current-terms (term-cache-copy-clear orig-terms))
            (let ([ts terms-expr]
                  [cache (current-terms)])
              (for ([t ts])
-               (hash-set! cache (term-val t) t))
+               (term-cache-set! cache (term-val t) t))
              expr)))]))
-           
-         
-    
 
 #|-----------------------------------------------------------------------------------|#
 ; The term structure defines a symbolic value, which can be a variable or an expression.
@@ -115,6 +104,7 @@
   (val                 ; (or/c any/c (cons/c function? (non-empty-listof any/c)))
    type                ; type?  
    ord)                ; integer?  
+  #:property prop:term-cachable #t
   #:methods gen:typed 
   [(define (get-type v) (term-type v))]
   #:property prop:custom-print-quotable 'never
@@ -133,8 +123,9 @@
 
 (define-syntax-rule (make-term term-constructor args type rest ...) 
   (let ([val args]
+        [the-terms (current-terms)]
         [ty type])
-    (define cached (hash-ref (current-terms) val #f))
+    (define cached (term-cache-ref the-terms val #f))
     (cond
       [cached
        (unless (equal? (term-type cached) ty)
@@ -145,7 +136,7 @@
        (define out (term-constructor val ty ord rest ...))
        (current-index (add1 ord))
        ((current-reporter) 'new-term out)
-       (hash-set! (current-terms) val out)
+       (term-cache-set! the-terms val out)
        out])))
            
 (define (make-const id t) 
