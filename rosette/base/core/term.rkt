@@ -46,7 +46,7 @@
               (set-add! evicted t))
             (loop))))))
 
-; Sets the current term cache to a garbage-collected (ephemeron) hash.
+; Sets the current term cache to a garbage-collected (weak) hash.
 ; The setting preserves all reachable terms from (current-terms).
 (define (gc-terms!)
   (unless (hash-weak? (current-terms)) ; Already a weak hash.
