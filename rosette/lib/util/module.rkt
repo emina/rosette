@@ -21,6 +21,8 @@
   (string-prefix? (path->string (resolve-path a))
                   (path->string (resolve-path b))))
 
+(define pkg-cache (make-hash))
+
 (define (make-rosette-load/use-compiled pkgs-to-instrument)
   (make-custom-load/use-compiled
    #:blacklist
@@ -28,6 +30,6 @@
      (cond
        [(path-prefix? path (find-collects-dir)) #f]
        [else
-        (match (path->pkg path)
+        (match (path->pkg path #:cache pkg-cache)
           [#f #t]
           [pkg-name (member pkg-name pkgs-to-instrument)])]))))
