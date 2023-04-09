@@ -66,15 +66,19 @@
          (not (equal? (resolve-path p) p)))))
 
 (define (get-z3-url)
-  (define site "https://github.com/Z3Prover/z3/releases/download")
-  (define-values (os exe)
-    (match (list (system-type 'os*) (system-type 'arch))
-      ['(linux x86_64)   (values "x64-ubuntu-16.04" "z3")]
-      ; TODO: use a native aarch64 Z3 build on macOS when we upgrade to a newer Z3
-      [`(macosx ,_)      (values "x64-osx-10.14.6" "z3")]
-      ['(windows x86_64) (values "x64-win" "z3.exe")]
-      [any               (raise-user-error 'get-z3-url "No Z3 binary available for system type '~a" any)]))
-  (define name (format "z3-~a-~a" z3-version os))
-  (values
-   (format "~a/z3-~a/~a.zip" site z3-version name)
-   (format "~a/bin/~a" name exe)))
+  ; TODO: Z3 packages a macOS aarch64 binary as of 4.8.16, so remove this special case when we update
+  ; to a newer Z3 version.
+  (if (and (equal? (system-type 'os*) 'macosx) (equal? (system-type 'arch) 'aarch64))
+      (values "https://github.com/emina/rosette/releases/download/4.1/z3-4.8.8-aarch64-osx-13.3.1.zip" "z3")
+      (let ()
+        (define site "https://github.com/Z3Prover/z3/releases/download")
+        (define-values (os exe)
+          (match (list (system-type 'os*) (system-type 'arch))
+            ['(linux x86_64)   (values "x64-ubuntu-16.04" "z3")]
+            [`(macosx ,_)      (values "x64-osx-10.14.6" "z3")]
+            ['(windows x86_64) (values "x64-win" "z3.exe")]
+            [any               (raise-user-error 'get-z3-url "No Z3 binary available for system type '~a" any)]))
+        (define name (format "z3-~a-~a" z3-version os))
+        (values
+         (format "~a/z3-~a/~a.zip" site z3-version name)
+         (format "~a/bin/~a" name exe)))))
