@@ -66,65 +66,19 @@
          (not (equal? (resolve-path p) p)))))
 
 (define (get-z3-url)
-  (define site "https://github.com/Z3Prover/z3/releases/download")
-  (define-values (os exe)
-    (match (list (system-type 'os*) (system-type 'arch))
-      ['(linux x86_64)   (values "x64-ubuntu-16.04" "z3")]
-      ; TODO: use a native aarch64 Z3 build on macOS when we upgrade to a newer Z3
-      [`(macosx ,_)      (values "x64-osx-10.14.6" "z3")]
-      ['(windows x86_64) (values "x64-win" "z3.exe")]
-      [any               (raise-user-error 'get-z3-url "No Z3 binary available for system type '~a" any)]))
-  (define name (format "z3-~a-~a" z3-version os))
-  (values
-   (format "~a/z3-~a/~a.zip" site z3-version name)
-   (format "~a/bin/~a" name exe)))
-
-
-;; A copy of net/url's get-pure-port/headers, except with the Location header
-;; for redirects made case-insensitive, fixing https://github.com/racket/racket/pull/3057
-(require net/http-client net/url-connect)
-(define (get-pure-port url #:redirections [redirections 0])
-  (let redirection-loop ([redirections redirections] [url url])
-    (define hc (http-conn-open (url-host url)
-                               #:ssl? (if (equal? "https" (url-scheme url))
-                                          (current-https-protocol)
-                                          #f)))
-    (define access-string
-      (url->string
-       ;; RFCs 1945 and 2616 say:
-       ;;   Note that the absolute path cannot be empty; if none is present in
-       ;;   the original URI, it must be given as "/" (the server root).
-       (let-values ([(abs? path)
-                     (if (null? (url-path url))
-                         (values #t (list (make-path/param "" '())))
-                         (values (url-path-absolute? url) (url-path url)))])
-         (make-url #f #f #f #f abs? path (url-query url) (url-fragment url)))))
-    (http-conn-send! hc access-string #:method #"GET" #:content-decode '())
-    (define-values (status headers response-port)
-      (http-conn-recv! hc #:method #"GET" #:close? #t #:content-decode '()))
-
-    (define new-url
-      (ormap (λ (h)
-               (match (regexp-match #rx#"^[Ll]ocation: (.*)$" h)
-                 [#f #f]
-                 [(list _ m1b)
-                  (define m1 (bytes->string/utf-8 m1b))
-                  (with-handlers ((exn:fail? (λ (x) #f)))
-                    (define next-url (string->url m1))
-                    (make-url
-                     (or (url-scheme next-url) (url-scheme url))
-                     (or (url-user next-url) (url-user url))
-                     (or (url-host next-url) (url-host url))
-                     (or (url-port next-url) (url-port url))
-                     (url-path-absolute? next-url)
-                     (url-path next-url)
-                     (url-query next-url)
-                     (url-fragment next-url)))]))
-             headers))
-    (define redirection-status-line?
-      (regexp-match #rx#"^HTTP/[0-9]+[.][0-9]+ 3[0-9][0-9]" status))
-    (cond
-      [(and redirection-status-line? new-url (not (zero? redirections)))
-       (redirection-loop (- redirections 1) new-url)]
-      [else
-       response-port])))
+  ; TODO: Z3 packages a macOS aarch64 binary as of 4.8.16, so remove this special case when we update
+  ; to a newer Z3 version.
+  (if (and (equal? (system-type 'os*) 'macosx) (equal? (system-type 'arch) 'aarch64))
+      (values "https://github.com/emina/rosette/releases/download/4.1/z3-4.8.8-aarch64-osx-13.3.1.zip" "z3")
+      (let ()
+        (define site "https://github.com/Z3Prover/z3/releases/download")
+        (define-values (os exe)
+          (match (list (system-type 'os*) (system-type 'arch))
+            ['(linux x86_64)   (values "x64-ubuntu-16.04" "z3")]
+            [`(macosx ,_)      (values "x64-osx-10.14.6" "z3")]
+            ['(windows x86_64) (values "x64-win" "z3.exe")]
+            [any               (raise-user-error 'get-z3-url "No Z3 binary available for system type '~a" any)]))
+        (define name (format "z3-~a-~a" z3-version os))
+        (values
+         (format "~a/z3-~a/~a.zip" site z3-version name)
+         (format "~a/bin/~a" name exe)))))
