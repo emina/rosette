@@ -4,7 +4,7 @@
 @(require (for-label rosette/base/form/define rosette/query/query rosette/solver/solution
                      (only-in rosette/base/base assert vc-true? vc) )
           racket/runtime-path racket/sandbox)
-@(require (only-in "../refs.scrbl" ~cite rosette:pldi14))
+@(require (only-in "../refs.scrbl" ~cite rosette:pldi14 rosette:popl22))
 @(require "../util/lifted.rkt")
 
 @(define-runtime-path root ".")
@@ -19,7 +19,7 @@ functionality}.  In this chapter, we briefly discuss the @racketmodname[rosette]
 dialect of the language, which exports all of Racket.  
 
 Safe use of the full @racketmodname[rosette] language requires a basic understanding
-of how Rosette's Symbolic Virtual Machine (SVM) works  @~cite[rosette:pldi14].  
+of how Rosette's Symbolic Virtual Machine (SVM) works  @~cite[rosette:pldi14 rosette:popl22].  
 Briefly, the SVM hijacks the normal Racket execution for all procedures and 
 constructs that are exported by @racketmodname[rosette/safe].  Any programs that are
 implemented exclusively in the @racketmodname[rosette/safe] language are therefore
