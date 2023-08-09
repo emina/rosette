@@ -17,7 +17,7 @@
    #:features '(optimize)
 
   (define solver (current-solver))
-
+  (solver-clear solver)
   (solver-assert solver (list (< x z) (< y z) (< z 5) (not (= x y))))
   (solver-maximize solver (list x))
   (solver-maximize solver (list y))
