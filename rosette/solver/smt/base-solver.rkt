@@ -12,6 +12,8 @@
 
 (provide (all-defined-out))
 
+(define (unique/reverse xs)
+  (reverse (unique xs)))
 
 (define (find-solver binary base-path [user-path #f])
   (cond
@@ -42,14 +44,15 @@
   (unless (list? bools)
     (raise-argument-error 'solver-assert "(listof boolean?)" bools))
   (define wfcheck-cache (mutable-set))
-  (set-solver-asserts! self 
-    (append (solver-asserts self)
-            (for/list ([b bools] #:unless (equal? b #t))
-              (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
-                (error 'assert "expected a boolean value, given ~s" b))
-              (when wfcheck
-                (wfcheck b wfcheck-cache))
-              b))))
+  (set-solver-asserts!
+   self
+   (append (for/list ([b bools] #:unless (equal? b #t))
+             (unless (or (boolean? b) (and (term? b) (equal? @boolean? (term-type b))))
+               (error 'assert "expected a boolean value, given ~s" b))
+             (when wfcheck
+               (wfcheck b wfcheck-cache))
+             b)
+           (solver-asserts self))))
 
 (define (solver-minimize self nums)
   (unless (null? nums)
@@ -68,7 +71,7 @@
   (server-shutdown (solver-server self)))
 
 (define (solver-push self)
-  (match-define (solver server _ (app unique asserts) (app unique mins) (app unique maxs) env level) self)
+  (match-define (solver server _ (app unique asserts) (app unique/reverse mins) (app unique/reverse maxs) env level) self)
   (server-write
    server
    (begin
@@ -90,7 +93,7 @@
   (set-solver-level! self (drop level k)))
      
 (define (solver-check self [read-solution read-solution])
-  (match-define (solver server _ (app unique asserts) (app unique mins) (app unique maxs) env _) self)
+  (match-define (solver server _ (app unique asserts) (app unique/reverse mins) (app unique/reverse maxs) env _) self)
   (cond [(ormap false? asserts) (unsat)]
         [else (server-write
                server
