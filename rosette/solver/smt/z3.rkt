@@ -52,10 +52,10 @@
      (base/solver-assert self bools))
 
    (define (solver-minimize self nums)
-     (base/set-solver-mins! self (append (base/solver-mins self) (numeric-terms nums 'solver-minimize))))
+     (base/set-solver-mins! self (append (reverse (numeric-terms nums 'solver-minimize)) (base/solver-mins self))))
    
    (define (solver-maximize self nums)
-     (base/set-solver-maxs! self (append (base/solver-maxs self) (numeric-terms nums 'solver-maximize))))
+     (base/set-solver-maxs! self (append (reverse (numeric-terms nums 'solver-maximize)) (base/solver-maxs self))))
    
    (define (solver-clear self) 
      (base/solver-clear-stacks! self)
