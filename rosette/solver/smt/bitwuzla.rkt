@@ -1,22 +1,21 @@
+;;; Requires Bitwuzla 0.1.0 or later.
 #lang racket
 
 (require racket/runtime-path 
          "server.rkt" "cmd.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt"
          (prefix-in base/ "base-solver.rkt")
-         (only-in "smtlib2.rkt" get-model)
          (only-in "../../base/core/term.rkt" term term? term-type constant? expression constant with-terms)
          (only-in "../../base/core/bool.rkt" @boolean? @forall @exists)
          (only-in "../../base/core/bitvector.rkt" bitvector bitvector? bv? bv bv-value @extract @sign-extend @zero-extend @bveq)
          (only-in "../../base/core/function.rkt" function-domain function-range function? function fv)
          (only-in "../../base/core/type.rkt" type-of)
-         (only-in "../../base/form/control.rkt" @if)
-         (only-in "../../base/core/reporter.rkt" current-reporter))
+         (only-in "../../base/form/control.rkt" @if))
 
 (provide (rename-out [make-bitwuzla bitwuzla]) bitwuzla? bitwuzla-available?)
 
 (define-runtime-path bitwuzla-path (build-path ".." ".." ".." "bin" "bitwuzla"))
-(define bitwuzla-opts '("-m" "--pp-elim-extracts"))
+(define bitwuzla-opts '("-m"))
 
 (define (bitwuzla-available?)
   (not (false? (base/find-solver "bitwuzla" bitwuzla-path #f))))
