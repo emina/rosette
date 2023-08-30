@@ -5,6 +5,8 @@ on: [push, pull_request]
 env:
   CVC4_URL: "http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.8-x86_64-linux-opt"
   BOOLECTOR_URL: "https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
+  CVC5_URL: "https://github.com/cvc5/cvc5/releases/download/cvc5-1.0.7/cvc5-Linux"
+  BITWUZLA_URL: "https://github.com/bitwuzla/bitwuzla/archive/refs/tags/0.1.1.tar.gz"
 
 jobs:
   test:
@@ -40,7 +42,22 @@ jobs:
           make &&
           popd &&
           cp boolector/build/bin/boolector bin/ &&
-          rm -rf boolector*
+          rm -rf boolector* &&
+          wget $CVC5_URL -nv -O bin/cvc5 &&
+          chmod +x bin/cvc5 &&
+          apt-get update &&
+          apt-get install -y ninja-build &&
+          pip3 install meson &&
+          wget $BITWUZLA_URL -nv -O bitwuzla.tar.gz &&
+          mkdir bitwuzla &&
+          tar xzf bitwuzla.tar.gz -C bitwuzla --strip-components=1 &&
+          pushd bitwuzla &&
+          ./configure.py &&
+          pushd build &&
+          ninja &&
+          popd &&
+          popd &&
+          cp bitwuzla/build/src/main/bitwuzla bin/ 
       - name: Install Rosette
         run: raco pkg install --auto --name rosette
       - name: Compile Rosette tests
