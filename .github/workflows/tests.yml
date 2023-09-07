@@ -45,8 +45,8 @@ jobs:
           rm -rf boolector* &&
           wget $CVC5_URL -nv -O bin/cvc5 &&
           chmod +x bin/cvc5 &&
-          apt-get update &&
-          apt-get install -y ninja-build &&
+          sudo apt-get update &&
+          sudo apt-get install -y ninja-build &&
           pip3 install meson &&
           wget $BITWUZLA_URL -nv -O bitwuzla.tar.gz &&
           mkdir bitwuzla &&
