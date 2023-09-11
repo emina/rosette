@@ -39,7 +39,7 @@
   #:methods gen:solver
   [
    (define (solver-features self)
-     '(qf_bv qf_uf))
+     '(qf_bv))
    
    (define (solver-options self)
      (base/solver-options self))
