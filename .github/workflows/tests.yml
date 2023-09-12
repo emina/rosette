@@ -6,7 +6,7 @@ env:
   CVC4_URL: "http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.8-x86_64-linux-opt"
   BOOLECTOR_URL: "https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
   CVC5_URL: "https://github.com/cvc5/cvc5/releases/download/cvc5-1.0.7/cvc5-Linux"
-  BITWUZLA_URL: "https://github.com/bitwuzla/bitwuzla/archive/refs/tags/0.1.1.tar.gz"
+  BITWUZLA_URL: "https://github.com/bitwuzla/bitwuzla/archive/93a3d930f622b4cef0063215e63b7c3bd10bd663.tar.gz"
 
 jobs:
   test:
