@@ -4,6 +4,8 @@
          rosette/lib/roseunit
          rosette/solver/smt/z3 rosette/solver/smt/cvc4 
          rosette/solver/smt/boolector 
+         rosette/solver/smt/cvc5
+         rosette/solver/smt/bitwuzla
          "config.rkt")
 
 (error-print-width default-error-print-width)
@@ -81,6 +83,14 @@
   (when (boolector-available?)
     (printf "===== Running Boolector tests =====\n")
     (run-tests-with-solver boolector))
+
+  (when (cvc5-available?)
+    (printf "===== Running cvc5 tests =====\n")
+    (run-tests-with-solver cvc5))
+
+  (when (bitwuzla-available?)
+    (printf "===== Running bitwuzla tests =====\n")
+    (run-tests-with-solver bitwuzla))
 )
 
 (module+ test
