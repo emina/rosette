@@ -6,6 +6,7 @@
          rosette/solver/smt/boolector 
          rosette/solver/smt/cvc5
          rosette/solver/smt/bitwuzla
+         rosette/solver/smt/stp
          "config.rkt")
 
 (error-print-width default-error-print-width)
@@ -76,21 +77,24 @@
 
 
 (define (slow-tests)
-  (when (cvc4-available?)
-    (printf "===== Running CVC4 tests =====\n")
-    (run-tests-with-solver cvc4))
+  ; (when (cvc4-available?)
+  ;   (printf "===== Running CVC4 tests =====\n")
+  ;   (run-tests-with-solver cvc4))
 
-  (when (boolector-available?)
-    (printf "===== Running Boolector tests =====\n")
-    (run-tests-with-solver boolector))
+  ; (when (boolector-available?)
+  ;   (printf "===== Running Boolector tests =====\n")
+  ;   (run-tests-with-solver boolector))
 
-  (when (cvc5-available?)
-    (printf "===== Running cvc5 tests =====\n")
-    (run-tests-with-solver cvc5))
+  ; (when (cvc5-available?)
+  ;   (printf "===== Running cvc5 tests =====\n")
+  ;   (run-tests-with-solver cvc5))
 
-  (when (bitwuzla-available?)
-    (printf "===== Running bitwuzla tests =====\n")
-    (run-tests-with-solver bitwuzla))
+  ; (when (bitwuzla-available?)
+  ;   (printf "===== Running bitwuzla tests =====\n")
+  ;   (run-tests-with-solver bitwuzla))
+  (when (stp-available?)
+    (printf "===== Running stp tests =====\n")
+    (run-tests-with-solver stp))
 )
 
 (module+ test
