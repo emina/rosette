@@ -2,14 +2,11 @@
 
 (require rackunit rackunit/text-ui racket/generator (rename-in rackunit [check-exn rackunit/check-exn])
          rosette/solver/solution
-        ;  (only-in rosette solver-features current-solver) "solver.rkt"
-        ;  rosette/solver/smt/yices-smt2
          rosette/lib/roseunit rosette/solver/smt/boolector
          racket/fixnum 
          rosette/base/core/term
          rosette/base/core/bool
          rosette/base/core/result
-        ;  rosette/solver/smt/server
          (except-in rosette/base/core/bitvector bv)
          (only-in rosette/base/core/bitvector [bv @bv])
          rosette/base/core/polymorphic rosette/base/core/merge 
@@ -29,7 +26,6 @@
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
 (define maxval (sub1 maxval+1))
 (define (bv v [t BV]) (@bv v t))
-; (output-smt "output-debug/")
 (define-syntax-rule (check-exn e ...)
   (begin
     (rackunit/check-exn e ...)
