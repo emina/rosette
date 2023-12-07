@@ -8,7 +8,7 @@
 (provide (rename-out [make-stp stp]) stp? stp-available?)
 
 (define-runtime-path stp-path (build-path ".." ".." ".." "bin" "stp"))
-(define stp-opts '())
+(define stp-opts '("--SMTLIB2" "-p"))
 
 (define (stp-available?)
   (not (false? (base/find-solver "stp" stp-path #f))))
