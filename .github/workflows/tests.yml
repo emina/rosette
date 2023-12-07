@@ -73,9 +73,9 @@ jobs:
           cmake .. &&
           cmake --build . &&
           cp stp bin/ &&
-          add-apt-repository -y ppa:sri-csl/formal-methods &&
-          apt-get update &&
-          apt-get install -y yices2 
+          sudo add-apt-repository -y ppa:sri-csl/formal-methods &&
+          sudo apt-get update &&
+          sudo apt-get install -y yices2 
 
       - name: Install Rosette
         run: raco pkg install --auto --name rosette
