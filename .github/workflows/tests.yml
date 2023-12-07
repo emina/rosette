@@ -70,7 +70,7 @@ jobs:
           cd build &&
           cmake .. &&
           cmake --build . &&
-          cp stp bin/ &&
+          cp stp bin/stp &&
           sudo add-apt-repository -y ppa:sri-csl/formal-methods &&
           sudo apt-get update &&
           sudo apt-get install -y yices2 
