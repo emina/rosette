@@ -26,6 +26,7 @@
 (define maxval+1 (expt 2 (sub1 (bitvector-size BV)))) 
 (define maxval (sub1 maxval+1))
 (define (bv v [t BV]) (@bv v t))
+
 (define-syntax-rule (check-exn e ...)
   (begin
     (rackunit/check-exn e ...)
