@@ -67,12 +67,12 @@ jobs:
           ./scripts/deps/setup-cms.sh &&
           ./scripts/deps/setup-minisat.sh &&
           mkdir build &&
-          cd build &&
+          pushd build &&
           cmake .. &&
           cmake --build . &&
           popd &&
           popd &&
-          cp stp bin/stp &&
+          cp stp/build/stp bin/stp &&
           sudo add-apt-repository -y ppa:sri-csl/formal-methods &&
           sudo apt-get update &&
           sudo apt-get install -y yices2 
