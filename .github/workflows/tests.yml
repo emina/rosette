@@ -29,6 +29,7 @@ jobs:
       - name: Install solvers
         run: |
           mkdir bin &&
+
           wget $CVC4_URL -nv -O bin/cvc4 &&
           chmod +x bin/cvc4 &&
           wget $BOOLECTOR_URL -nv -O boolector.tar.gz &&
@@ -57,7 +58,25 @@ jobs:
           ninja &&
           popd &&
           popd &&
-          cp bitwuzla/build/src/main/bitwuzla bin/ 
+          cp bitwuzla/build/src/main/bitwuzla bin/ &&
+
+          sudo apt-get install -y git cmake bison flex libboost-all-dev python2 perl &&
+          git clone https://github.com/stp/stp &&
+          pushd stp &&
+          git submodule init && git submodule update &&
+          ./scripts/deps/setup-gtest.sh &&
+          ./scripts/deps/setup-outputcheck.sh &&
+          ./scripts/deps/setup-cms.sh &&
+          ./scripts/deps/setup-minisat.sh &&
+          mkdir build &&
+          cd build &&
+          cmake .. &&
+          cmake --build . &&
+          cp stp bin/ &&
+          add-apt-repository -y ppa:sri-csl/formal-methods &&
+          apt-get update &&
+          apt-get install -y yices2 
+
       - name: Install Rosette
         run: raco pkg install --auto --name rosette
       - name: Compile Rosette tests
