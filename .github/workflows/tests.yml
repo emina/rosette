@@ -70,6 +70,8 @@ jobs:
           cd build &&
           cmake .. &&
           cmake --build . &&
+          popd &&
+          popd &&
           cp stp bin/stp &&
           sudo add-apt-repository -y ppa:sri-csl/formal-methods &&
           sudo apt-get update &&
