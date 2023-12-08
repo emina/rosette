@@ -31,7 +31,7 @@
 ;  "base/vector.rkt"
 ;  "base/bvseq.rkt"
 ;  "base/forall.rkt"
-;  "base/bitvector.rkt"
+ "base/bitvector.rkt"
 ;  "base/bvlib.rkt"
 ;  "base/equality.rkt"
 ;  "base/uninterpreted.rkt"
@@ -40,7 +40,7 @@
 ;  "base/finitize.rkt"
 ;  "base/distinct.rkt"
 ;  "base/generics.rkt"
- "base/push-pop.rkt"
+;  "base/push-pop.rkt"
 ;  "base/optimize-order.rkt"
 ;  "base/reflect.rkt"
 ;  "base/decode.rkt"
@@ -95,9 +95,9 @@
   (when (stp-available?)
     (printf "===== Running stp tests =====\n")
     (run-tests-with-solver stp))
-  ; (when (yices-smt2-available?)
-  ;   (printf "===== Running yices-smt2 tests =====\n")
-  ;   (run-tests-with-solver yices-smt2))
+  (when (yices-smt2-available?)
+    (printf "===== Running yices-smt2 tests =====\n")
+    (run-tests-with-solver yices-smt2))
 )
 
 (module+ test
