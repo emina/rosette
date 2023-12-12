@@ -58,8 +58,25 @@
    (define (solver-pop self [k 1])
      (base/solver-pop self k))
 
-   (define (solver-check self)
-     (base/solver-check self))
+
+(define (solver-check self)
+  (define (read-solution server env #:unsat-core? [unsat-core? #f])
+    ;;; Ignore the ASSERT lines, if present.
+    (server-read server
+    ; Peek at the first five characters, which should always be present. They'll either be "unsat" or
+    ; "ASSER", the latter of which is the first five characters of "ASSERT".
+    (let loop ()
+     (if (and (not (equal? (peek-string 3 0) "sat"))
+              (not (equal? (peek-string 5 0) "unsat")))
+          (begin 
+           (when (not (string-prefix? (read-line) "ASSERT"))
+            (error "Expected extra line to start with ASSERT"))
+           (loop))
+          (void))))
+   (base/read-solution server env #:unsat-core? unsat-core?))
+   
+  (base/solver-check self read-solution)
+  )
 
    (define (solver-debug self)
      (base/solver-debug self))])
