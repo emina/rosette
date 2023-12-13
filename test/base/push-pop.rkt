@@ -14,7 +14,7 @@
 (define push-pop-tests
   (test-suite+ "Tests for the push / pop interface."
    #:features '(qf_bv)
-  (output-smt "push-pop-tests.smt2")
+         
   (define solver (current-solver))
   (check-exn exn:fail? (thunk (solver-pop solver)))
 
