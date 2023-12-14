@@ -26,6 +26,10 @@
                    rosette/solver/smt/z3
                    rosette/solver/smt/cvc4
                    rosette/solver/smt/boolector
+                   rosette/solver/smt/bitwuzla
+                   rosette/solver/smt/cvc5
+                   rosette/solver/smt/stp
+                   rosette/solver/smt/yices
                    #:use-sources 
                    (rosette/query/finitize
                     rosette/query/query
@@ -33,7 +37,11 @@
                     rosette/solver/solution
                     rosette/solver/smt/z3
                     rosette/solver/smt/cvc4
-                    rosette/solver/smt/boolector)]
+                    rosette/solver/smt/boolector
+                    rosette/solver/smt/bitwuzla
+                    rosette/solver/smt/cvc5
+                    rosette/solver/smt/stp
+                    rosette/solver/smt/yices)]
 
 A @deftech{solver} is an automatic reasoning engine, used to answer 
 @seclink["sec:queries"]{queries} about Rosette programs.  The result of
