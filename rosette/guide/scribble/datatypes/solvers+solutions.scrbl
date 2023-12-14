@@ -4,6 +4,10 @@
            rosette/solver/solver rosette/solver/solution 
            rosette/solver/smt/z3 rosette/solver/smt/cvc4
            rosette/solver/smt/boolector 
+           rosette/solver/smt/bitwuzla
+           rosette/solver/smt/cvc5
+           rosette/solver/smt/stp
+           rosette/solver/smt/yices
            rosette/base/form/define rosette/query/query 
            rosette/base/core/term (only-in rosette/base/base bv?)
            (only-in rosette/base/base assert) 
