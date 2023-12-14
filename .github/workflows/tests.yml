@@ -82,10 +82,10 @@ jobs:
           tar xvf yices2.tar.gz -C yices2 --strip-components=1 &&
           pushd yices2 &&
           autoconf &&
-          ./configure &&
-          make &&
+          ./configure --prefix=$PWD/out/ &&
+          make install &&
           popd &&
-          cp yices2/build/x86_64-pc-linux-gnu-release/bin/yices_smt2 bin/yices_smt2
+          cp yices2/out/bin/yices-smt2 bin/yices-smt2
       - name: Install Rosette
         run: raco pkg install --auto --name rosette
       - name: Compile Rosette tests
