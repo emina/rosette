@@ -381,20 +381,19 @@ without its optional @racket[path] argument.}
 
 @subsection{Yices2}
 
-@defmodule[rosette/solver/smt/yices-smt2 #:no-declare]
+@defmodule[rosette/solver/smt/yices #:no-declare]
 
-@defproc*[([(yices-smt2 [#:path path (or/c path-string? #f) #f]
-                        [#:logic logic (or/c symbol? #f) 'QF_BV]
-                        [#:options options (hash/c symbol? any/c) (hash)]) solver?]
-           [(yices-smt2? [v any/c]) boolean?])]{
+@defproc*[([(yices [#:path path (or/c path-string? #f) #f]
+                   [#:logic logic (or/c symbol? #f) 'QF_BV]
+                   [#:options options (hash/c symbol? any/c) (hash)]) solver?]
+           [(yices? [v any/c]) boolean?])]{
                                                
 Returns a @racket[solver?] wrapper for the @hyperlink["https://yices.csl.sri.com/"]{Yices2} solver.
 
 To use this solver, download prebuilt Yices2 or build it yourself,
 and ensure the executable is on your @tt{PATH} or pass the path to the 
 executable as the optional @racket[path] argument.
-Rosette specifically uses the @tt{yices_smt2} executable, which is the Yices2
-solver with SMTLIB2 as its frontend.
+Rosette specifically uses the @tt{yices} executable.
 Rosette currently tests Yices2 at commit 
 @tt{e27cf308cffb0ecc6cc7165c10e81ca65bc303b3}.
 
@@ -409,9 +408,9 @@ For example, setting @racket[options] to @racket[(hash ':seed 5)]
 will send the command @tt{(set-option :seed 5)} to Yices2 prior to solving.
 }
 
-@defproc[(yices-smt2-available?) boolean?]{
-Returns true if the Yices2 solver is available for use (i.e., Rosette can locate a @tt{yices_smt2} binary).
-If this returns @racket[#f], @racket[(yices-smt2)] will not succeed
+@defproc[(yices-available?) boolean?]{
+Returns true if the Yices2 solver is available for use (i.e., Rosette can locate a @tt{yices} binary).
+If this returns @racket[#f], @racket[(yices)] will not succeed
 without its optional @racket[path] argument.}
 
 
