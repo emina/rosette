@@ -83,6 +83,7 @@ jobs:
           pushd yices2 &&
           autoconf &&
           ./configure --prefix=$PWD/out/ &&
+          make &&
           make install &&
           popd &&
           cp yices2/out/bin/yices-smt2 bin/yices-smt2
