@@ -400,8 +400,9 @@ executable as the optional @racket[path] argument.
 Rosette specifically uses the @tt{yices-smt2} executable, which is the Yices2
 solver with its SMTLIB2 frontend enabled.
 Note that just building (without installing) Yices2 will produce an executable
-named @tt{yices_smt2}. This executable can safely be renamed or symlinked to
-@tt{yices-smt2}.
+named @tt{yices_smt2}. Running the installation step produces an executable
+with the correct name. However, it is safe to skip the installation step and
+simply rename or symlink the @tt{yices_smt2} executable to @tt{yices-smt2}.
 Rosette currently tests Yices2 at commit 
 @tt{e27cf308cffb0ecc6cc7165c10e81ca65bc303b3}.
 
