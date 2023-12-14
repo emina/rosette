@@ -4,6 +4,10 @@
            rosette/solver/solver rosette/solver/solution 
            rosette/solver/smt/z3 rosette/solver/smt/cvc4
            rosette/solver/smt/boolector 
+           rosette/solver/smt/bitwuzla
+           rosette/solver/smt/cvc5
+           rosette/solver/smt/stp
+           rosette/solver/smt/yices
            rosette/base/form/define rosette/query/query 
            rosette/base/core/term (only-in rosette/base/base bv?)
            (only-in rosette/base/base assert) 
@@ -22,6 +26,10 @@
                    rosette/solver/smt/z3
                    rosette/solver/smt/cvc4
                    rosette/solver/smt/boolector
+                   rosette/solver/smt/bitwuzla
+                   rosette/solver/smt/cvc5
+                   rosette/solver/smt/stp
+                   rosette/solver/smt/yices
                    #:use-sources 
                    (rosette/query/finitize
                     rosette/query/query
@@ -29,7 +37,11 @@
                     rosette/solver/solution
                     rosette/solver/smt/z3
                     rosette/solver/smt/cvc4
-                    rosette/solver/smt/boolector)]
+                    rosette/solver/smt/boolector
+                    rosette/solver/smt/bitwuzla
+                    rosette/solver/smt/cvc5
+                    rosette/solver/smt/stp
+                    rosette/solver/smt/yices)]
 
 A @deftech{solver} is an automatic reasoning engine, used to answer 
 @seclink["sec:queries"]{queries} about Rosette programs.  The result of
@@ -278,6 +290,146 @@ will send the command @tt{(set-option :seed 5)} to Boolector prior to solving.
 Returns true if the Boolector solver is available for use (i.e., Rosette can locate a @tt{boolector} binary).
 If this returns @racket[#f], @racket[(boolector)] will not succeed
 without its optional @racket[path] argument.}
+
+@subsection{Bitwuzla}
+
+@defmodule[rosette/solver/smt/bitwuzla #:no-declare]
+
+@defproc*[([(bitwuzla [#:path path (or/c path-string? #f) #f]
+                      [#:logic logic (or/c symbol? #f) #f]
+                      [#:options options (hash/c symbol? any/c) (hash)]) solver?]
+           [(bitwuzla? [v any/c]) boolean?])]{
+                                               
+Returns a @racket[solver?] wrapper for the @hyperlink["https://bitwuzla.github.io/"]{Bitwuzla} solver.
+
+To use this solver, download prebuilt Bitwuzla or build it yourself,
+and ensure the executable is on your @tt{PATH} or pass the path to the 
+executable as the optional @racket[path] argument.
+Rosette currently tests Bitwuzla at commit 
+@tt{93a3d930f622b4cef0063215e63b7c3bd10bd663}.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket[#f],
+which uses Bitwuzla's default logic.
+
+The @racket[options] argument provides additional options that are sent to Bitwuzla
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':seed 5)]
+will send the command @tt{(set-option :seed 5)} to Bitwuzla prior to solving.
+}
+
+@defproc[(bitwuzla-available?) boolean?]{
+Returns true if the Bitwuzla solver is available for use (i.e., Rosette can locate a @tt{bitwuzla} binary).
+If this returns @racket[#f], @racket[(bitwuzla)] will not succeed
+without its optional @racket[path] argument.}
+
+@subsection{CVC5}
+
+@defmodule[rosette/solver/smt/cvc5 #:no-declare]
+
+@defproc*[([(cvc5 [#:path path (or/c path-string? #f) #f]
+                  [#:logic logic (or/c symbol? #f) #f]
+                  [#:options options (hash/c symbol? any/c) (hash)]) solver?]
+           [(cvc5? [v any/c]) boolean?])]{
+                                               
+Returns a @racket[solver?] wrapper for the @hyperlink["https://cvc5.github.io/"]{CVC5} solver.
+
+To use this solver, download prebuilt CVC5 or build it yourself,
+and ensure the executable is on your @tt{PATH} or pass the path to the 
+executable as the optional @racket[path] argument.
+Rosette currently tests CVC5 at version 1.0.7.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket[#f],
+which uses CVC5's default logic.
+
+The @racket[options] argument provides additional options that are sent to CVC5
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':seed 5)]
+will send the command @tt{(set-option :seed 5)} to CVC5 prior to solving.
+}
+
+@defproc[(cvc5-available?) boolean?]{
+Returns true if the CVC5 solver is available for use (i.e., Rosette can locate a @tt{cvc5} binary).
+If this returns @racket[#f], @racket[(cvc5)] will not succeed
+without its optional @racket[path] argument.}
+
+@subsection{STP}
+
+@defmodule[rosette/solver/smt/stp #:no-declare]
+
+@defproc*[([(stp [#:path path (or/c path-string? #f) #f]
+                 [#:logic logic (or/c symbol? #f) #f]
+                 [#:options options (hash/c symbol? any/c) (hash)]) solver?]
+           [(stp? [v any/c]) boolean?])]{
+                                               
+Returns a @racket[solver?] wrapper for the @hyperlink["https://stp.github.io/"]{STP} solver.
+
+To use this solver, download prebuilt STP or build it yourself,
+and ensure the executable is on your @tt{PATH} or pass the path to the 
+executable as the optional @racket[path] argument.
+Rosette currently tests STP at commit 
+@tt{0510509a85b6823278211891cbb274022340fa5c}.
+Note that as of December 2023, the STP version on Mac Homebrew is too old to be
+supported by Rosette.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. The default is @racket[#f],
+which uses STP's default logic.
+
+The @racket[options] argument provides additional options that are sent to STP
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':seed 5)]
+will send the command @tt{(set-option :seed 5)} to STP prior to solving.
+}
+
+@defproc[(stp-available?) boolean?]{
+Returns true if the STP solver is available for use (i.e., Rosette can locate a @tt{stp} binary).
+If this returns @racket[#f], @racket[(stp)] will not succeed
+without its optional @racket[path] argument.}
+
+@subsection{Yices2}
+
+@defmodule[rosette/solver/smt/yices #:no-declare]
+
+@defproc*[([(yices [#:path path (or/c path-string? #f) #f]
+                   [#:logic logic (or/c symbol? #f) 'QF_BV]
+                   [#:options options (hash/c symbol? any/c) (hash)]) solver?]
+           [(yices? [v any/c]) boolean?])]{
+                                               
+Returns a @racket[solver?] wrapper for the @hyperlink["https://yices.csl.sri.com/"]{Yices2} solver.
+
+To use this solver, download prebuilt Yices2 or build it yourself,
+and ensure the executable is on your @tt{PATH} or pass the path to the 
+executable as the optional @racket[path] argument.
+Rosette specifically uses the @tt{yices-smt2} executable, which is the Yices2
+solver with its SMTLIB2 frontend enabled.
+Note that just building (without installing) Yices2 will produce an executable
+named @tt{yices_smt2}. Running the installation step produces an executable
+with the correct name. However, it is safe to skip the installation step and
+simply rename or symlink the @tt{yices_smt2} executable to @tt{yices-smt2}.
+Rosette currently tests Yices2 at commit 
+@tt{e27cf308cffb0ecc6cc7165c10e81ca65bc303b3}.
+
+The optional @racket[logic] argument specifies an SMT logic for the solver to use (e.g., @racket['QF_BV]).
+Specifying a logic can improve solving performance, but Rosette makes no effort to check that
+emitted constraints fall within the chosen logic. Yices2 expects a logic to be
+set; Rosette defaults to @racket['QF_BV].
+
+The @racket[options] argument provides additional options that are sent to Yices2
+via the @tt{set-option} SMT command.
+For example, setting @racket[options] to @racket[(hash ':seed 5)]
+will send the command @tt{(set-option :seed 5)} to Yices2 prior to solving.
+}
+
+@defproc[(yices-available?) boolean?]{
+Returns true if the Yices2 solver is available for use (i.e., Rosette can locate a @tt{yices-smt2} binary).
+If this returns @racket[#f], @racket[(yices)] will not succeed
+without its optional @racket[path] argument.}
+
 
 @section{Solutions}
 

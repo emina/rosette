@@ -7,6 +7,8 @@ env:
   BOOLECTOR_URL: "https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
   CVC5_URL: "https://github.com/cvc5/cvc5/releases/download/cvc5-1.0.7/cvc5-Linux"
   BITWUZLA_URL: "https://github.com/bitwuzla/bitwuzla/archive/93a3d930f622b4cef0063215e63b7c3bd10bd663.tar.gz"
+  STP_URL: "https://github.com/stp/stp/archive/0510509a85b6823278211891cbb274022340fa5c.tar.gz"
+  YICES2_URL: "https://github.com/SRI-CSL/yices2/archive/e27cf308cffb0ecc6cc7165c10e81ca65bc303b3.tar.gz"
 
 jobs:
   test:
@@ -57,7 +59,34 @@ jobs:
           ninja &&
           popd &&
           popd &&
-          cp bitwuzla/build/src/main/bitwuzla bin/ 
+          cp bitwuzla/build/src/main/bitwuzla bin/ &&
+          sudo apt-get install -y git cmake bison flex libboost-all-dev python2 perl &&
+          wget $STP_URL -nv -O stp.tar.gz &&
+          mkdir stp &&
+          tar xzf stp.tar.gz -C stp --strip-components=1 &&
+          pushd stp &&
+          ./scripts/deps/setup-gtest.sh &&
+          ./scripts/deps/setup-outputcheck.sh &&
+          ./scripts/deps/setup-cms.sh &&
+          ./scripts/deps/setup-minisat.sh &&
+          mkdir build &&
+          pushd build &&
+          cmake .. &&
+          cmake --build . &&
+          popd &&
+          popd &&
+          cp stp/build/stp bin/stp &&
+          sudo apt-get install -y gperf &&
+          wget $YICES2_URL -nv -O yices2.tar.gz &&
+          mkdir yices2 &&
+          tar xvf yices2.tar.gz -C yices2 --strip-components=1 &&
+          pushd yices2 &&
+          autoconf &&
+          ./configure --prefix=$PWD/out/ &&
+          make &&
+          make install &&
+          popd &&
+          cp yices2/out/bin/yices-smt2 bin/yices-smt2
       - name: Install Rosette
         run: raco pkg install --auto --name rosette
       - name: Compile Rosette tests
