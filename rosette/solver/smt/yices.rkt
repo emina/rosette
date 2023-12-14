@@ -7,11 +7,11 @@
 
 (provide (rename-out [make-yices yices]) yices? yices-available?)
 
-(define-runtime-path yices-path (build-path ".." ".." ".." "bin" "yices"))
+(define-runtime-path yices-path (build-path ".." ".." ".." "bin" "yices-smt2"))
 (define yices-opts '("--incremental"))
 
 (define (yices-available?)
-  (not (false? (base/find-solver "yices" yices-path #f))))
+  (not (false? (base/find-solver "yices-smt2" yices-path #f))))
 (define default-logic 'QF_BV) ;; Yices2 needs a default logic set otherwise it will error
 (define (make-yices [solver #f] #:options [options (hash)] #:logic [logic default-logic] #:path [path #f])
   (define config
@@ -19,9 +19,9 @@
       [(yices? solver)
        (base/solver-config solver)]
       [else
-       (define real-yices-path (base/find-solver "yices" yices-path path))
+       (define real-yices-path (base/find-solver "yices-smt2" yices-path path))
        (when (and (false? real-yices-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-         (error 'yices "yices binary is not available (expected to be at ~a); try passing the #:path argument to (yices)" (path->string (simplify-path yices-path))))
+         (error 'yices "yices-smt2 binary is not available (expected to be at ~a); try passing the #:path argument to (yices)" (path->string (simplify-path yices-path))))
        (base/config options real-yices-path logic)]))
   (yices (server (base/config-path config) yices-opts (base/make-send-options config)) config '() '() '() (env) '()))
 
