@@ -413,7 +413,7 @@ will send the command @tt{(set-option :seed 5)} to Yices2 prior to solving.
 }
 
 @defproc[(yices-available?) boolean?]{
-Returns true if the Yices2 solver is available for use (i.e., Rosette can locate a @tt{yices} binary).
+Returns true if the Yices2 solver is available for use (i.e., Rosette can locate a @tt{yices-smt2} binary).
 If this returns @racket[#f], @racket[(yices)] will not succeed
 without its optional @racket[path] argument.}
 
