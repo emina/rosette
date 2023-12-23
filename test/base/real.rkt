@@ -1,6 +1,7 @@
 #lang racket
 
-(require rackunit rackunit/text-ui  "common.rkt" "solver.rkt" 
+(require rackunit rackunit/text-ui  "common.rkt" "solver.rkt"
+         rosette/solver/smt/enc-lit
          rosette/solver/smt/z3
          rosette/solver/solution 
          rosette/lib/roseunit 
@@ -256,7 +257,19 @@
   (parameterize ([solver (z3  #:options (hash ':pp.decimal 'true ':pp.decimal-precision 15))])
     (check-= (abs ((solve (@= (@* xr xr) 2)) xr)) (abs (sqrt 2)) 1e-15)
     (solver-shutdown (solver))))
-  
+
+(define (check-qf-nra)
+  (parameterize ([solver (z3 #:logic 'QF_NRA)]
+                 [current-enc-lit
+                  (let ([enc-lit (current-enc-lit)])
+                    (λ (x)
+                      (cond
+                        [(real? x) (enc-real x)]
+                        [else (enc-lit x)])))])
+    (define-symbolic x @real?)
+    (check-pred sat? (solve (@= -2.0 x)))
+    (solver-shutdown (solver))))
+
 (define (check-division-simplifications div x y z [epsilon 0])
   (check-valid? (div 0 x) 0)
   (check-valid? (div x 1) x)
@@ -563,6 +576,7 @@
    (check-*-simplifications xr yr zr)
    (check-*-real-simplifications)
    (check-irrationals)
+   (check-qf-nra)
    (check-semantics @* xi yi zi)
    (check-semantics @* xr yr zr)))
 

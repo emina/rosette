@@ -1,7 +1,8 @@
 #lang racket
 
-(require "env.rkt" 
-         (prefix-in $ "smtlib2.rkt") 
+(require "env.rkt"
+         "enc-lit.rkt"
+         (prefix-in $ "smtlib2.rkt")
          (only-in "../../base/core/term.rkt" expression expression? constant? term? get-type @app)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
          (only-in "../../base/core/distinct.rkt" @distinct?)
@@ -74,19 +75,7 @@
     [_ (error 'enc "cannot encode ~a to SMT" v)]))
 
 (define (enc-lit v env quantified)
-  (match v 
-    [#t $true]
-    [#f $false]
-    [(? integer?) (enc-integer v)]
-    [(? real?) (enc-real v)]
-    [(bv lit t) ($bv lit (bitvector-size t))]
-    [_ (error 'enc "expected a boolean?, integer?, real?, or bitvector?, given ~a" v)]))
-
-(define-syntax-rule (enc-real v)
-  (if (exact? v) ($/ (numerator v) (denominator v)) (string->symbol (~r v))))
-(define-syntax-rule (enc-integer v)
-  (let ([v* (inexact->exact v)])
-    (if (< v* 0) ($- (abs v*)) v*)))
+  ((current-enc-lit) v))
 
 (define-syntax define-encoder
   (syntax-rules ()
