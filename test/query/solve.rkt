@@ -65,8 +65,9 @@
       (check-pred
        unknown?
        (solve
-        (begin (assert (> (* xi xi) 3))
-               (assert (= (+ (* xr xr xr) (* xr yr)) 3.0))))))))
+        (assert (forall (list xi)
+                        (exists (list xr)
+                                (= yi (* (- xi xr) (- xi xr)))))))))))
      
 (define regression-tests 
   (test-suite+ "Solve regression tests."
