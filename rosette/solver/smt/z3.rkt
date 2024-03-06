@@ -74,7 +74,7 @@
      (base/solver-pop self k))
    
    (define (solver-check self)
-     (base/solver-check self))
+     (base/solver-check self z3-read-solution))
 
    (define (solver-debug self)
      (match-define (z3 server _ (app unique asserts) _ _ _ _) self)
@@ -86,7 +86,7 @@
                   server
                   (begin (encode-for-proof (base/solver-env self) asserts)
                          (check-sat)))
-                 (base/read-solution server (base/solver-env self) #:unsat-core? #t)]))])
+                 (z3-read-solution server (base/solver-env self) #:unsat-core? #t)]))])
 
 (define (set-core-options server)
   (server-write server
@@ -99,3 +99,27 @@
     (match t
       [(term _ (or (== @integer?) (== @real?) (? bitvector?))) t]
       [_ (error caller "expected a numeric term, given ~s" t)])))
+
+(define (z3-read-solution server env #:unsat-core? [unsat-core? #f])
+  (decode (match (base/parse-solution server #:unsat-core? unsat-core?)
+            [(? hash? sol) (prune-model sol)]
+            [soln soln])
+          env))
+
+; Given a map M from symbols to SMTLib function definitions of the form
+; (define-fun id ((param type) ...) ret body),
+; this procedure eliminate bindings for intermediate expressions,
+; which are ids that start with "e" (e.g. "e20"),
+; originally defined with define-fun (as opposed to declare-fun) in the query.
+; In particular, old versions of Z3 did this pruning automatically,
+; and Rosette had been working under this assumption.
+; Newer versions of Z3 however included extra bindings,
+; so we are pruning them away.
+(define (prune-model sol)
+  (for/hash ([(k v) (in-immutable-hash sol)]
+             #:unless (match v
+                        [`(define-fun ,(? symbol? (app symbol->string id)) ,_ ,_ ,_)
+                         #:when (string-prefix? id "e")
+                         #t]
+                        [_ #f]))
+    (values k v)))
