@@ -69,13 +69,9 @@
                 [((? racket-contract?) (union vs)) (unsafe-merge** vs (proc xs _))]
                 [((union vs) (? racket-contract?)) (unsafe-merge** vs (proc _ ys))] 
                 [((union vs) (union ws))
-                 (apply unsafe-merge* 
-                        (assert-some 
-                         (for*/list ([v vs] [w ws] [g (in-value (&& (car v) (car w)))] #:when g)
-                           (cons g (proc (cdr v) (cdr w))))
-                         #:unless (* (length vs) (length ws))
-                         (arguments-error (quote proc) (format "expected ~a ~a" rosette-contract? rosette-contract?)
-                                          "first argument" vs "second argument" ws)))]))] 
+                 (apply unsafe-merge*
+                        (for*/list ([v vs] [w ws] [g (in-value (&& (car v) (car w)))] #:when g)
+                          (cons g (proc (cdr v) (cdr w)))))]))]
          (define #,(lift-id #'proc)
            (case-lambda 
              [()      (racket-constructor)]
@@ -83,8 +79,9 @@
              [(xs ys) (unsafe/append (type-cast rosette-contract? xs (quote proc)) 
                                      (type-cast rosette-contract? ys (quote proc)))]                                               
              [xss     (for/fold ([out (racket-constructor)])
-                        ([xs (for/list ([ys xss]) (type-cast rosette-contract? ys (quote proc)))])
-                        (unsafe/append out xs))])))]))
+                                ([xs (for/list ([ys (in-list (reverse xss))])
+                                       (type-cast rosette-contract? ys (quote proc)))])
+                        (unsafe/append xs out))])))]))
 
 (define-syntax (define/lift/split stx)
   (syntax-case stx ()
