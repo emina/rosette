@@ -7,7 +7,7 @@ env:
   BOOLECTOR_URL: "https://github.com/Boolector/boolector/archive/3.2.1.tar.gz"
   CVC5_URL: "https://github.com/cvc5/cvc5/releases/download/cvc5-1.0.7/cvc5-Linux"
   BITWUZLA_URL: "https://github.com/bitwuzla/bitwuzla/archive/93a3d930f622b4cef0063215e63b7c3bd10bd663.tar.gz"
-  STP_URL: "https://github.com/stp/stp/archive/0510509a85b6823278211891cbb274022340fa5c.tar.gz"
+  STP_URL: "https://github.com/stp/stp/archive/d70085462f07c8a5a2f1225f727cda3ef505b141.tar.gz"
   YICES2_URL: "https://github.com/SRI-CSL/yices2/archive/e27cf308cffb0ecc6cc7165c10e81ca65bc303b3.tar.gz"
 
 jobs:
@@ -29,6 +29,8 @@ jobs:
           version: ${{ matrix.racket-version }}
           variant: ${{ matrix.racket-variant }}
       - name: Install solvers
+        # Note that setting LD_LIBRARY_PATH can be removed once this bug is
+        # fixed: https://github.com/stp/stp/issues/485
         run: |
           mkdir bin &&
           wget $CVC4_URL -nv -O bin/cvc4 &&
@@ -65,6 +67,7 @@ jobs:
           mkdir stp &&
           tar xzf stp.tar.gz -C stp --strip-components=1 &&
           pushd stp &&
+          echo "LD_LIBRARY_PATH=$PWD/deps/cadical/build:$PWD/deps/cadiback/:$LD_LIBRARY_PATH" >> $GITHUB_ENV &&
           ./scripts/deps/setup-gtest.sh &&
           ./scripts/deps/setup-outputcheck.sh &&
           ./scripts/deps/setup-cms.sh &&
@@ -75,7 +78,7 @@ jobs:
           cmake --build . &&
           popd &&
           popd &&
-          cp stp/build/stp bin/stp &&
+          ln -s stp/build/stp bin/stp &&
           sudo apt-get install -y gperf &&
           wget $YICES2_URL -nv -O yices2.tar.gz &&
           mkdir yices2 &&
