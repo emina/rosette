@@ -37,7 +37,7 @@
      ; core/bvlib.rkt
      bit lsb msb bvzero? bvadd1 bvsub1
      bvsmin bvsmax bvumin bvumax
-     rotate-left rotate-right bvrol bvror
+     rotate-left rotate-right bvrol bvror bvlength
      bool->bitvector bitvector->bool bitvector->bits
      ; core/function.rkt
      @fv? ~> function?
