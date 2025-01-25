@@ -8,7 +8,7 @@
 
 (provide bit lsb msb bvzero? bvadd1 bvsub1
          bvsmin bvsmax bvumin bvumax
-         rotate-left rotate-right bvrol bvror
+         rotate-left rotate-right bvrol bvror bvlength
          bool->bitvector bitvector->bool bitvector->bits)
 
 (define-syntax (define-lifted stx)
@@ -31,6 +31,9 @@
 (define-lifted bvsmax (curry extreme @bvsge))
 (define-lifted bvumin (curry extreme @bvule))
 (define-lifted bvumax (curry extreme @bvuge))
+
+(define (bvlength x)
+  (bitvector-size (get-type x)))
 
 (define (bool->bitvector x [t 1])
   (merge (@false? x) (bv 0 t) (bv 1 t)))
