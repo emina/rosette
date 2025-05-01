@@ -33,7 +33,7 @@
          (fprintf (current-error-port)
                   "warning: could not find z3 executable at ~a\n"
                   (path->string (simplify-path z3-path))))
-(define opts (hash-union default-options options #:combine (lambda (a b) b)))
+       (define opts (hash-union default-options options #:combine (lambda (a b) b)))
        (base/config opts real-z3-path logic)]))
   (z3 (server (base/config-path config) z3-opts (base/make-send-options config)) config '() '() '() (env) '()))
   
