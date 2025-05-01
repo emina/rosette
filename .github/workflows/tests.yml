@@ -62,7 +62,7 @@ jobs:
           popd &&
           popd &&
           cp bitwuzla/build/src/main/bitwuzla bin/ &&
-          sudo apt-get install -y git cmake bison flex libboost-all-dev python2 perl &&
+          sudo apt-get install -y build-essential git cmake bison flex libboost-all-dev libtinfo-dev python3 perl &&
           wget $STP_URL -nv -O stp.tar.gz &&
           mkdir stp &&
           tar xzf stp.tar.gz -C stp --strip-components=1 &&
