@@ -30,8 +30,10 @@
       [else
        (define real-z3-path (base/find-solver "z3" z3-path path))
        (when (and (false? real-z3-path) (not (getenv "PLT_PKG_BUILD_SERVICE")))
-         (printf "warning: could not find z3 executable at ~a\n" (path->string (simplify-path z3-path))))
-       (define opts (hash-union default-options options #:combine (lambda (a b) b)))
+         (fprintf (current-error-port)
+                  "warning: could not find z3 executable at ~a\n"
+                  (path->string (simplify-path z3-path))))
+(define opts (hash-union default-options options #:combine (lambda (a b) b)))
        (base/config opts real-z3-path logic)]))
   (z3 (server (base/config-path config) z3-opts (base/make-send-options config)) config '() '() '() (env) '()))
   
