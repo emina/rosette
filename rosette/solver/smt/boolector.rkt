@@ -14,7 +14,8 @@
 
 (provide (rename-out [make-boolector boolector]) boolector? boolector-available?)
 
-(define-runtime-path boolector-path (build-path ".." ".." ".." "bin" "boolector"))
+(define-runtime-path bin-path (build-path ".." ".." ".." "bin"))
+(define boolector-path (build-path bin-path "boolector"))
 (define boolector-opts '("-m" "--output-format=smt2" "-i"))
 
 (define (boolector-available?)
