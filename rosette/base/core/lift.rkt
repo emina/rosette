@@ -63,10 +63,12 @@
              (id val)
              (match (type-cast rosette-type? val (quote id))
                [(? contracted? v) (id v)]
-               [(union vs) (apply merge* (assert-some 
-                                      (for/list ([v vs] #:when (contracted? (cdr v))) 
-                                        (cons (car v) (id (cdr v))))
-                                      (contract-error (quote id) contracted? val)))]
+               [(union vs)
+                (merge+
+                 (for/list ([v (in-list vs)] #:when (contracted? (cdr v)))
+                   (cons (car v) (id (cdr v))))
+                 #:unless (length vs)
+                 #:error (contract-error (quote id) contracted? val))]
                [_ (assert #f (contract-error (quote id) contracted? val))])))]
     [(_ (id0 id ...) : racket-contract? -> rosette-type?)
      #'(splicing-let ([contracted? racket-contract?]) 
@@ -79,10 +81,12 @@
              (id val)
              (match (type-cast rosette-type? val (quote id))
                [(? contracted? v) (id v)]
-               [(union vs) (apply merge* (assert-some 
-                                      (for/list ([v vs] #:when (contracted? (cdr v))) 
-                                        (cons (car v) (id (cdr v))))
-                                      (contract-error (quote id) contracted? val)))]
+               [(union vs)
+                (merge+
+                 (for/list ([v (in-list vs)] #:when (contracted? (cdr v)))
+                   (cons (car v) (id (cdr v))))
+                 #:unless (length vs)
+                 #:error (contract-error (quote id) contracted? val))]
                [_ (assert #f (contract-error (quote id) contracted? val))])))]
     [(_ id : racket-contract? -> rosette-type?)  
      #`(splicing-let ([contracted? racket-contract?])
