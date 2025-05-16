@@ -434,7 +434,7 @@ leads to faster solving times.
 
 @(rosette-eval '(clear-vc!))
 
-@defproc[(bitvector->bits [x (bitvector n)]) (listof (bitvector n))]{
+@defproc[(bitvector->bits [x (bitvector n)]) (listof (bitvector 1))]{
                                                                      
 Returns the bits of @racket[x] as a list, i.e., @racket[(list (bit 0 x) ... (bit (- n 1) x))].
                     
