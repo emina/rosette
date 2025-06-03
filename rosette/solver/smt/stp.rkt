@@ -7,7 +7,8 @@
 
 (provide (rename-out [make-stp stp]) stp? stp-available?)
 
-(define-runtime-path stp-path (build-path ".." ".." ".." "bin" "stp"))
+(define-runtime-path bin-path (build-path ".." ".." ".." "bin"))
+(define stp-path (build-path bin-path "stp"))
 (define stp-opts '("--SMTLIB2"))
 
 (define (stp-available?)
@@ -66,4 +67,3 @@
 
 (define (set-default-options server)
   void)
-  
