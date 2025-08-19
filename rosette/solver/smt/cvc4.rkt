@@ -7,7 +7,8 @@
 
 (provide (rename-out [make-cvc4 cvc4]) cvc4? cvc4-available?)
 
-(define-runtime-path cvc4-path (build-path ".." ".." ".." "bin" "cvc4"))
+(define-runtime-path bin-path (build-path ".." ".." ".." "bin"))
+(define cvc4-path (build-path bin-path "cvc4"))
 (define cvc4-opts '("-L" "smt2" "-q" "-m" "-i" "--bv-print-consts-as-indexed-symbols" "--bv-div-zero-const"))
 
 (define (cvc4-available?)
