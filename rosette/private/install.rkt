@@ -9,6 +9,7 @@
 (require racket/match
          racket/file
          racket/port
+         racket/system
          net/url
          file/unzip)
 
@@ -47,23 +48,40 @@
                                (set! z3-install-failure (cons z3-path (exn-message e)))
                                (print-failure z3-path (exn-message e)))])
     (unless (custom-z3-symlink? z3-path)
-      (define-values (z3-url z3-path-in-zip) (get-z3-url))
-      (define z3-port (get-pure-port (string->url z3-url) #:redirections 10))  
-      (make-directory* bin-path) ;; Ensure that `bin-path` exists
-      (delete-directory/files z3-path #:must-exist? #f) ;; Delete old version of Z3, if any
-      (parameterize ([current-directory bin-path])    
-        (call-with-unzip z3-port
-                         (λ (dir)
-                           (copy-directory/files (build-path dir z3-path-in-zip) z3-path)))
-        ;; Unzipping loses file permissions, so we reset the z3 binary here
-        (file-or-directory-permissions 
-          z3-path 
-          (if (equal? (system-type) 'windows) #o777 #o755))))))
+      (unless (z3-already-installed? z3-path)
+        (define-values (z3-url z3-path-in-zip) (get-z3-url))
+        (define z3-port (get-pure-port (string->url z3-url) #:redirections 10))
+        (make-directory* bin-path) ;; Ensure that `bin-path` exists
+        (delete-directory/files z3-path #:must-exist? #f) ;; Delete old version of Z3, if any
+        (parameterize ([current-directory bin-path])
+          (call-with-unzip z3-port
+                           (λ (dir)
+                             (copy-directory/files (build-path dir z3-path-in-zip) z3-path)))
+          ;; Unzipping loses file permissions, so we reset the z3 binary here
+          (file-or-directory-permissions
+           z3-path
+           (if (equal? (system-type) 'windows) #o777 #o755)))))))
 
 (define (custom-z3-symlink? z3-path)
   (and (file-exists? z3-path)
        (let ([p (simplify-path z3-path)])
          (not (equal? (resolve-path p) p)))))
+
+(define (z3-already-installed? z3-path)
+  (cond
+    [(and (file-exists? z3-path)
+          (member 'execute (file-or-directory-permissions z3-path)))
+     (define sp (open-output-string))
+     (define success?
+       (parameterize ([current-output-port sp]
+                      [current-error-port sp]
+                      [current-input-port (open-input-bytes #"")])
+         (system* z3-path "--version")))
+     (and success?
+          (regexp-match? (regexp (string-append "Z3 version "
+                                                (regexp-quote z3-version)))
+                         (get-output-string sp)))]
+    [else #f]))
 
 (define (get-z3-url)
   ; TODO: Z3 packages a macOS aarch64 binary as of 4.8.16, so remove this special case when we update
