@@ -15,7 +15,7 @@
 (provide (rename-out [make-bitwuzla bitwuzla]) bitwuzla? bitwuzla-available?)
 
 (define-runtime-path bitwuzla-path (build-path ".." ".." ".." "bin" "bitwuzla"))
-(define bitwuzla-opts '("-m"))
+(define bitwuzla-opts '("-i" "-m"))
 
 (define (bitwuzla-available?)
   (not (false? (base/find-solver "bitwuzla" bitwuzla-path #f))))
