@@ -269,6 +269,27 @@
    #:features '(qf_bv)
    (check-bvrotate bvror bvrol)))
 
+(define tests:bvrotate-enc
+  (test-suite+
+    "Tests for encoding of bvrol/bvror in rosette/base/bvlib.rkt"
+    #:features '(ext_rotate)
+    (define out (open-output-string))
+    (output-smt out)
+    (define-symbolic a b (bitvector 32))
+    (solve
+      (begin
+        (assert (bveq (bv #x0000abcd 32) (bvrol a b)))
+        (assert (bveq (bv #x00abcd00 32) (bvror a b)))))
+    (output-smt #f)
+    (check-pred
+      (λ (s)
+        (and
+          (or (string-contains? s "ext_rotate_left")
+              (string-contains? s "bvrol"))
+          (or (string-contains? s "ext_rotate_right")
+              (string-contains? s "bvror"))))
+      (get-output-string out))))
+
 (define tests:rotate-left
   (test-suite+
    "Tests for rotate-left in rosette/base/bvlib.rkt"
@@ -296,6 +317,7 @@
   (time (run-tests tests:bvsmax))
   (time (run-tests tests:bvrol))
   (time (run-tests tests:bvror)) 
+  (time (run-tests tests:bvrotate-enc)) 
   (time (run-tests tests:rotate-left))
   (time (run-tests tests:rotate-right))
   )

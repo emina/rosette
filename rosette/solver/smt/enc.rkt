@@ -2,6 +2,7 @@
 
 (require "env.rkt" 
          (prefix-in $ "smtlib2.rkt") 
+         (only-in "../solver.rkt" solver-custom-encode)
          (only-in "../../base/core/term.rkt" expression expression? constant? term? get-type @app)
          (only-in "../../base/core/polymorphic.rkt" ite ite* =? guarded-test guarded-value)
          (only-in "../../base/core/distinct.rkt" @distinct?)
@@ -26,54 +27,58 @@
 ; an error is thrown. 
 ; The environment will be modified (if needed) to include an encoding for 
 ; the given value and all of its subexpressions (if any).
-(define (enc v env [quantified '()])
+(define (enc solver v env [quantified '()])
   (match v
-    [(? expression?) (ref-expr! v env quantified enc-expr)]
+    [(? expression?) (ref-expr! solver v env quantified enc-expr)]
     [(? constant?)   (ref-const! v env quantified)]
-    [_               (ref-expr! v env quantified enc-lit)]))
+    [_               (ref-expr! solver v env quantified enc-lit)]))
 
-(define (enc-expr v env quantified)  
+(define (enc-expr solver v env quantified)  
   (match v
     [(and (expression (== ite*) gvs ...) (app get-type t))
      (let-values ([($0 $op) (if (bitvector? t) 
                                 (values ($bv 0 (bitvector-size t)) $bvor) 
                                 (values 0 $+))])
        (apply $op (for/list ([gv gvs]) 
-                    ($ite (enc (guarded-test gv) env quantified) 
-                          (enc (guarded-value gv) env quantified) 
+                    ($ite (enc solver (guarded-test gv) env quantified) 
+                          (enc solver (guarded-value gv) env quantified) 
                           $0))))]
     [(expression (== @abs) x)
-     ($real-abs (enc x env quantified) (get-type v))]
+     ($real-abs (enc solver x env quantified) (get-type v))]
     [(expression (== @extract) i j e)
-     ($extract i j (enc e env quantified))]
+     ($extract i j (enc solver e env quantified))]
     [(expression (== @sign-extend) v t)
      ($sign_extend (- (bitvector-size t) (bitvector-size (get-type v)))
-                   (enc v env quantified))]
+                   (enc solver v env quantified))]
     [(expression (== @zero-extend) v t)
      ($zero_extend (- (bitvector-size t) (bitvector-size (get-type v)))
-                   (enc v env quantified))]
+                   (enc solver v env quantified))]
     [(expression (== @integer->bitvector) v t) 
-     ($int->bv (enc v env quantified) (bitvector-size t))]
+     ($int->bv (enc solver v env quantified) (bitvector-size t))]
     [(expression (== @bitvector->integer) v) 
-     ($bv->int (enc v env quantified) (bitvector-size (get-type v)))]  
+     ($bv->int (enc solver v env quantified) (bitvector-size (get-type v)))]  
     [(expression (== @bitvector->natural) v) 
-     ($bv->nat (enc v env quantified) (bitvector-size (get-type v)))]
+     ($bv->nat (enc solver v env quantified) (bitvector-size (get-type v)))]
     [(expression (and (or (== @forall) (== @exists)) op) vars body)
      (let ([vars+quantified (remove-duplicates (append vars quantified))])
        ((if (equal? op @forall) $forall $exists)
         (for/list ([v vars])
           (list (ref-const! v env vars+quantified) (smt-type (get-type v))))
-        (enc body env vars+quantified)))]
+        (enc solver body env vars+quantified)))]
     [(expression (== @distinct?) (? real? rs) ..1 (? term? es) ...)
      (apply $distinct (append (if (equal? @real? (get-type (car es)))
                                   (for/list ([r rs]) (enc-real r))
                                   rs)
-                              (for/list ([e es]) (enc e env quantified))))]
+                              (for/list ([e es]) (enc solver e env quantified))))]
     [(expression (app rosette->smt (? procedure? $op)) es ...) 
-     (apply $op (for/list ([e es]) (enc e env quantified)))]
-    [_ (error 'enc "cannot encode ~a to SMT" v)]))
+     (apply $op (for/list ([e es]) (enc solver e env quantified)))]
+    [_
+     (define custom-enc (solver-custom-encode solver v env quantified))
+     (if custom-enc
+         custom-enc
+         (error 'enc "cannot encode ~a to SMT" v))]))
 
-(define (enc-lit v env quantified)
+(define (enc-lit solver v env quantified)
   (match v 
     [#t $true]
     [#f $false]
