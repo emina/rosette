@@ -22,14 +22,14 @@
 ; already bound in the environment.  The environment will 
 ; be augmented, if needed, with additional declarations and 
 ; definitions.  This procedure will not emit any other commands.
-(define (encode env asserts mins maxs)
+(define (encode solver env asserts mins maxs)
   ((current-reporter) 'to-solver asserts mins maxs)
   (for ([a asserts])
-    (assert (enc a env)))
+    (assert (enc solver a env)))
   (for ([m mins])
-    (minimize (enc m env)))
+    (minimize (enc solver m env)))
   (for ([m maxs])
-    (maximize (enc m env))))
+    (maximize (enc solver m env))))
 
 ; Given an encoding environment and a list of asserts, 
 ; the encode-labeled procedure prints an SMT encoding of the given assertions 
@@ -38,9 +38,9 @@
 ; solver's unsat-core-extraction option to be set.  The environment will be augmented, 
 ; if needed, with additional declarations and definitions.
 ; This procedure will not emit any other commands.
-(define (encode-for-proof env asserts)
+(define (encode-for-proof solver env asserts)
   (for ([a asserts])
-    (define id (enc a env))
+    (define id (enc solver a env))
     (assert id (id->name id))))
 
 ; Generates an assertion label for a declared or defined SMT id by prefixing that 

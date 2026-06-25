@@ -7,6 +7,7 @@
          solver-minimize solver-maximize
          solver-check solver-debug 
          solver-shutdown solver-features solver-options
+         solver-custom-encode
          prop:solver-constructor solver-constructor
          )
 
@@ -53,6 +54,10 @@
 ;
 ; The solver-options procedure returns a hash table of options the solver
 ; is configured with.
+;
+; The solver-custom-encode procedure allows extending the SMT-LIB encoding and decoding
+; operations for that specific solver to allow for custom extensions implemented by that
+; solver or behavior that differs between solvers.
 (define-generics solver
   [solver-assert solver bools]
   [solver-push solver]
@@ -64,7 +69,8 @@
   [solver-debug solver]
   [solver-shutdown solver]
   [solver-features solver]
-  [solver-options solver])
+  [solver-options solver]
+  [solver-custom-encode solver expr env quantified])
 
 ; Solvers should implement the prop:solver-constructor type property
 ; to provide the procedure used to construct new solvers of the same type.
