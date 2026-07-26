@@ -30,14 +30,14 @@
      ; core/bitvector.rkt
      bv @bv? bitvector bitvector-size bitvector? 
      @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
-     @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
+     @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr @bvrol @bvror
      @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
      @concat @extract @sign-extend @zero-extend 
      @integer->bitvector @bitvector->integer @bitvector->natural
      ; core/bvlib.rkt
      bit lsb msb bvzero? bvadd1 bvsub1
      bvsmin bvsmax bvumin bvumax
-     rotate-left rotate-right bvrol bvror
+     rotate-left rotate-right
      bool->bitvector bitvector->bool bitvector->bits
      ; core/function.rkt
      @fv? ~> function?

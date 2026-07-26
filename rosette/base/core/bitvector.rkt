@@ -11,7 +11,7 @@
  (rename-out [@bv bv]) @bv? bv? bv-value bv-type
  (rename-out [@bitvector bitvector]) bitvector-size bitvector? 
  @bveq @bvslt @bvsgt @bvsle @bvsge @bvult @bvugt @bvule @bvuge
- @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
+ @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr @bvrol @bvror
  @bvneg @bvadd @bvsub @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
  @concat @extract @sign-extend @zero-extend
  @integer->bitvector @bitvector->integer @bitvector->natural)
@@ -338,6 +338,29 @@
      (ite (bveq (bv 0 t) (bvand x (bv (bvsmin t) t))) (bv 0 t) (bv -1 t))]
     [(_ _) (expression @bvashr x y)]))
 
+(define (bvrol x y)
+  (match* (x y)
+    [((and a (bv _ (bitvector n))) (and b (bv _ _)))
+     (define n* (make-bv n n))
+     (define b* (@bvurem b n*))
+     (@bvor (@bvshl a b*) (@bvlshr a (@bvsub n* b*)))]
+    [(_ (bv 0 _)) x]
+    [((bv 0 _) _) x]
+    [((bv -1 _) _) x]
+    [(_ _) (expression @bvrol x y)]))
+
+(define (bvror x y)
+  (match* (x y)
+    [((and a (bv _ (bitvector n))) (and b (bv _ _)))
+     (define n* (make-bv n n))
+     (define b* (@bvurem b n*))
+     (@bvor (@bvlshr a b*) (@bvshl a (@bvsub n* b*)))]
+    [(_ (bv 0 _)) x]
+    [((bv 0 _) _) x]
+    [((bv -1 _) _) x]
+    [(_ _) (expression @bvror x y)]))
+
+
 (define-lifted-operator @bvnot bvnot T*->T)
 (define-lifted-operator @bvand bvand T*->T)
 (define-lifted-operator @bvor bvor T*->T)
@@ -345,6 +368,8 @@
 (define-lifted-operator @bvshl bvshl T*->T)
 (define-lifted-operator @bvlshr bvlshr T*->T)
 (define-lifted-operator @bvashr bvashr T*->T)
+(define-lifted-operator @bvrol bvrol T*->T)
+(define-lifted-operator @bvror bvror T*->T)
 
 ;; ----------------- Simplification ruules for bitwise operators ----------------- ;;
 

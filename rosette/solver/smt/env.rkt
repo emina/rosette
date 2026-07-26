@@ -67,7 +67,7 @@
 
 ; Retrieves the SMT encoding for the Rosette expression e in the environment env.
 ; If env has a binding for (cons e quantified), that binding is returned. 
-; Otherwise, ref-expr! evaluates (encoder e env quantified) to obtain the encoding enc.
+; Otherwise, ref-expr! evaluates (encoder solver e env quantified) to obtain the encoding enc.
 ; If enc is not an s-expression (a pair), it is returned. Otherwise, ref-expr! extends
 ; the SMT encoding with (define-fun id ([arg-id type] ...) enc), where arg-id's are the
 ; SMT identifiers for the values in the quantified list. The identifier id takes the form 
@@ -75,10 +75,10 @@
 ; If the quantified list is empty, env is extended with a binding from e to id, and id
 ; is returned. Otherwise, env is extended with a binding from e to (e arg-id ...) and
 ; (e arg-id ...) is returned.
-(define (ref-expr! e env quantified encoder)
+(define (ref-expr! solver e env quantified encoder)
   (let ([k (cons e quantified)])
     (or (hash-ref env k #f) 
-        (match (encoder e env quantified) 
+        (match (encoder solver e env quantified) 
           [(? pair? enc)
            (let ([id (smt-id 'e (hash-count env))])
              (cond [(null? quantified)

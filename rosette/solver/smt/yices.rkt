@@ -62,7 +62,10 @@
      (base/solver-check self))
 
    (define (solver-debug self)
-     (base/solver-debug self))])
+     (base/solver-debug self))
+
+   (define (solver-custom-encode self expr env quantified)
+     (base/solver-custom-encode self expr env quantified))])
 
 (define (set-default-options server)
   void)

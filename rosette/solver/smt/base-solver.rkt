@@ -1,12 +1,13 @@
 #lang racket
 
-(require "server.rkt" "cmd.rkt" "env.rkt" 
+(require "server.rkt" "cmd.rkt" "enc.rkt" "env.rkt" 
          "../solution.rkt" 
          (only-in racket [remove-duplicates unique])
          (only-in "smtlib2.rkt" reset set-option check-sat get-model get-unsat-core push pop set-logic)
-         (only-in "../../base/core/term.rkt" term term? term-type)
+         (only-in "../../base/core/term.rkt" expression expression? term term? term-type get-type)
          (only-in "../../base/core/bool.rkt" @boolean?)
-         (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
+         (only-in "../../base/core/bitvector.rkt" bitvector? bitvector-size bv bv?
+                  @bvshl @bvlshr @bvor @bvrol @bvror @bvsub @bvurem)
          (only-in "../../base/core/real.rkt" @integer? @real?)
          (only-in "../../base/core/reporter.rkt" current-reporter))
 
@@ -76,7 +77,7 @@
    server
    (begin
      ((current-reporter) 'encode-start)
-     (encode env asserts mins maxs)
+     (encode self env asserts mins maxs)
      ((current-reporter) 'encode-finish)
      (push)))
   (solver-clear-stacks! self)
@@ -99,7 +100,7 @@
                server
                (begin
                  ((current-reporter) 'encode-start)
-                 (encode env asserts mins maxs)
+                 (encode self env asserts mins maxs)
                  ((current-reporter) 'encode-finish)
                  (check-sat)))
               ((current-reporter) 'solve-start)
@@ -113,6 +114,29 @@
 
 (define (solver-options self)
   (config-options (solver-config self)))
+
+; x and y must be bitvectors (not unions) of the same length.
+; shift1 and shift2 are shift operators.
+(define-syntax-rule (bvrotate x y shift1 shift2)
+  (let* ([sz (bitvector-size (get-type y))]
+         [n (bv sz sz)]
+         [amount (@bvurem y n)])
+    (@bvor (shift1 x amount) (shift2 x (@bvsub n amount)))))
+
+; Implement basic support for non-indexed bit rotation operations which works
+; on all solvers that do not implement a specific extension for it. This
+; reduces the bit rotation to a bitwise or of left shift and right shift.
+; A solver which has a dedicated SMT-LIB extension for this operation could
+; override this method to encode directly to that extension. This results in
+; significantly improved performance with, e.g., Z3, so bit rotation SMT-LIB
+; extensions are preferred when available.
+(define (solver-custom-encode self expr env quantified)
+  (match expr
+    [(expression (== @bvrol) x y)
+     (enc self (bvrotate x y @bvshl @bvlshr) env quantified)]
+    [(expression (== @bvror) x y)
+     (enc self (bvrotate x y @bvlshr @bvshl) env quantified)]
+    [_ #f]))
 
 (define (solver-clear-stacks! self)
   (set-solver-asserts! self '())

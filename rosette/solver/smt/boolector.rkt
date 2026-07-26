@@ -1,13 +1,13 @@
 #lang racket
 
 (require racket/runtime-path 
-         "server.rkt" "cmd.rkt" "env.rkt" 
+         "server.rkt" "cmd.rkt" "enc.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt"
          (prefix-in base/ "base-solver.rkt")
          (only-in "smtlib2.rkt" get-model)
          (only-in "../../base/core/term.rkt" term term? term-type constant? expression constant with-terms)
          (only-in "../../base/core/bool.rkt" @boolean? @forall @exists)
-         (only-in "../../base/core/bitvector.rkt" bitvector bitvector? bv? bv bv-value @extract @sign-extend @zero-extend @bveq)
+         (only-in "../../base/core/bitvector.rkt" bitvector bitvector? bv? bv bv-value @extract @sign-extend @zero-extend @bveq @bvrol @bvror)
          (only-in "../../base/core/function.rkt" function-domain function-range function? function fv)
          (only-in "../../base/core/type.rkt" type-of)
          (only-in "../../base/form/control.rkt" @if))
@@ -69,7 +69,10 @@
      (base/solver-check self boolector-read-solution))
    
    (define (solver-debug self)
-     (base/solver-debug self))])
+     (base/solver-debug self))
+
+   (define (solver-custom-encode self expr env quantified)
+     (base/solver-custom-encode self expr env quantified))])
 
 (define (set-default-options server)
   void)

@@ -1,13 +1,13 @@
 #lang racket
 
 (require racket/runtime-path racket/hash
-         "server.rkt" "cmd.rkt" "env.rkt" 
+         "server.rkt" "cmd.rkt" "enc.rkt" "env.rkt" 
          "../solver.rkt" "../solution.rkt"
          (prefix-in base/ "base-solver.rkt")
          (only-in racket [remove-duplicates unique])
          (only-in "smtlib2.rkt" reset set-option check-sat)
-         (only-in "../../base/core/term.rkt" term term? term-type)
-         (only-in "../../base/core/bitvector.rkt" bitvector? bv?)
+         (only-in "../../base/core/term.rkt" expression expression? term term? term-type)
+         (only-in "../../base/core/bitvector.rkt" bitvector? bv? @bvrol @bvror)
          (only-in "../../base/core/real.rkt" @integer? @real?))
 
 (provide (rename-out [make-z3 z3]) z3?)
@@ -45,7 +45,7 @@
   #:methods gen:solver
   [
    (define (solver-features self)
-     '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers optimize unsat-cores int2bv))
+     '(qf_bv qf_uf qf_lia qf_nia qf_lra qf_nra quantifiers optimize unsat-cores int2bv ext_rotate))
    
    (define (solver-options self)
      (base/solver-options self))
@@ -86,9 +86,19 @@
                  (set-core-options (base/solver-server self))
                  (server-write
                   server
-                  (begin (encode-for-proof (base/solver-env self) asserts)
+                  (begin (encode-for-proof self (base/solver-env self) asserts)
                          (check-sat)))
-                 (base/read-solution server (base/solver-env self) #:unsat-core? #t)]))])
+                 (base/read-solution server (base/solver-env self) #:unsat-core? #t)]))
+
+   (define (solver-custom-encode self expr env quantified)
+     (match expr
+       [(expression (== @bvrol) a b)
+        (list 'ext_rotate_left
+              (enc self a env quantified) (enc self b env quantified))]
+       [(expression (== @bvror) a b)
+        (list 'ext_rotate_right
+              (enc self a env quantified) (enc self b env quantified))]
+       [_ (base/solver-custom-encode self expr env quantified)]))])
 
 (define (set-core-options server)
   (server-write server

@@ -12,7 +12,7 @@
          (only-in "../../base/core/bitvector.rkt" 
                   bitvector? bitvector bv bv? bitvector-size 
                   @bvslt @bvsle @bvult @bvule   
-                  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr
+                  @bvnot @bvor @bvand @bvxor @bvshl @bvlshr @bvashr @bvrol @bvror
                   @bvneg @bvadd @bvmul @bvudiv @bvsdiv @bvurem @bvsrem @bvsmod
                   @concat @extract))
 
@@ -161,6 +161,9 @@
         'bvslt @bvslt 'bvsle @bvsle 'bvult @bvult 'bvule @bvule   
         'bvnot @bvnot 'bvor @bvor 'bvand @bvand 'bvxor @bvxor
         'bvshl @bvshl 'bvlshr @bvlshr 'bvashr @bvashr
+        ;; Z3/Boolector and Bitwuzla have different names for non-indexed bit rotation. Include
+        ;; support for decoding either name.
+        'ext_rotate_left @bvrol 'ext_rotate_right @bvror 'bvrol @bvrol 'bvror @bvror
         'bvneg @bvneg 'bvadd @bvadd 'bvmul @bvmul
         'bvudiv @bvudiv 'bvsdiv @bvsdiv
         'bvurem @bvurem 'bvsrem @bvsrem

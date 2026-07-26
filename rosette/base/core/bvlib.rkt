@@ -8,7 +8,7 @@
 
 (provide bit lsb msb bvzero? bvadd1 bvsub1
          bvsmin bvsmax bvumin bvumax
-         rotate-left rotate-right bvrol bvror
+         rotate-left rotate-right
          bool->bitvector bitvector->bool bitvector->bits)
 
 (define-syntax (define-lifted stx)
@@ -79,15 +79,3 @@
 (define-rotate rotate-right
    (lambda (i sz x)
      (@concat (@extract (- i 1) 0 x) (@extract (- sz 1) i x))))        
-         
-; x and y must be bitvectors (not unions) of the same length.
-; shift1 and shift2 are shift operators.
-(define-syntax-rule (bvrotate x y shift1 shift2)
-  (let* ([sz (bitvector-size (get-type y))]
-         [n (bv sz sz)]
-         [amount (@bvurem y n)])
-    (@bvor (shift1 x amount) (shift2 x (@bvsub n amount)))))
-
-(define-lifted (bvrol x y) (bvrotate x y @bvshl @bvlshr))
-(define-lifted (bvror x y) (bvrotate x y @bvlshr @bvshl))
-  
