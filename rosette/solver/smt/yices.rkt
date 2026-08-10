@@ -7,7 +7,8 @@
 
 (provide (rename-out [make-yices yices]) yices? yices-available?)
 
-(define-runtime-path yices-path (build-path ".." ".." ".." "bin" "yices-smt2"))
+(define-runtime-path bin-path (build-path ".." ".." ".." "bin"))
+(define yices-path (build-path bin-path "yices-smt2"))
 (define yices-opts '("--incremental"))
 
 (define (yices-available?)
@@ -66,4 +67,3 @@
 
 (define (set-default-options server)
   void)
-  

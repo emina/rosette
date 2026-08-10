@@ -12,7 +12,8 @@
 
 (provide (rename-out [make-z3 z3]) z3?)
 
-(define-runtime-path z3-path (build-path ".." ".." ".." "bin" "z3"))
+(define-runtime-path bin-path (build-path ".." ".." ".." "bin"))
+(define z3-path (build-path bin-path "z3"))
 (define z3-opts '("-smt2" "-in"))
 
 (define default-options

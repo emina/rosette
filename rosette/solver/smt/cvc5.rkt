@@ -7,7 +7,8 @@
 
 (provide (rename-out [make-cvc5 cvc5]) cvc5? cvc5-available?)
 
-(define-runtime-path cvc5-path (build-path ".." ".." ".." "bin" "cvc5"))
+(define-runtime-path bin-path (build-path ".." ".." ".." "bin"))
+(define cvc5-path (build-path bin-path "cvc5"))
 (define cvc5-opts '("-L" "smt2" "-q" "-m" "-i" "--bv-print-consts-as-indexed-symbols"))
 
 (define (cvc5-available?)
